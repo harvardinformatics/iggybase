@@ -1,26 +1,35 @@
+import os
 from flask import Flask
 from flask.ext.bootstrap import Bootstrap
-from flask.ext.wtf import Form
-from wtforms import TextField, BooleanField, DateField, TextAreaField
-from wtforms.validators import Required, Email
 from flask.ext.mail import Mail
 from flask.ext.sqlalchemy import SQLAlchemy
+from flask.ext.login import LoginManager
 
 bootstrap = Bootstrap( )
 mail = Mail( )
-db = SQLAlchemy( )
+lm = LoginManager( )
 
-app = Flask( __name__ )
+instance = 'development'
 
-bootstrap.init_app( app )
-mail.init_app( app )
-db.init_app( app )
+iggybase = Flask( __name__ )
 
-@app.route( "/" )
-def hello( ):
-	return "hello"
+# import configuration
+cfg = os.path.join( os.path.dirname( os.path.dirname( os.path.realpath( __file__ ) ) ), 'config', instance + '.py' )
+iggybase.config.from_pyfile( cfg )
 
-if __name__ == "__main__":
-	app.run( )
+# initialize extensions
+bootstrap.init_app( iggybase )
+lm.init_app( iggybase )
+mail.init_app( iggybase )
 
+from iggybase.database import init_db
+init_db()
 
+from .mod_auth import mod_auth as mod_auth_blueprint
+iggybase.register_blueprint( mod_auth_blueprint )
+
+from .mod_core import mod_core as mod_core_blueprint
+iggybase.register_blueprint( mod_core_blueprint )
+
+if __name__ == '__main__':
+    iggybase.run( )

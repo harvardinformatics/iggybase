@@ -1,0 +1,53 @@
+{% extends "bootstrap/base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block title %}Iggybase{% endblock title %}
+
+{% block main %}
+    {% block banner %}
+        <div class="banner" id="banner">
+            <a  href="{{ url_for('mod_auth.index') }}">
+                <h1>Iggybase</h1>
+            </a>
+            <ul class="banner-right">
+                <li>
+                    {% if current_user.is_authenticated() %}
+                        <a href="{{ url_for('mod_auth.logout') }}">Logout</a>
+                    {% else %}
+                        <a href="{{ url_for('mod_auth.login') }}">Login</a>
+                    {% endif %}
+                </li>
+            </ul>
+        </div>
+    {% endblock banner %}
+
+    {% block navbar %}
+        {% if current_user.is_authenticated() %}
+            <nav class="navbar navbar-inverse" role="navigation">
+                <div class="container">
+                    <a class="navbar-brand" href="{{ url_for('mod_auth.index') }}">
+                        Iggybase
+                    </a>
+                </div>
+            </nav>
+        {% endif %}
+    {% endblock navbar %}
+
+    {% block sidebar %}
+        {% if current_user.is_authenticated() %}
+        {% endif %}
+    {% endblock sidebar %}
+
+    {% block content %}
+        <div class="container">
+            {% block page_content %}{% endblock page_content %}
+        </div>
+    {% endblock content %}
+
+    <div class="iggybasejs">
+        <script type="text/javascript" src="{{ url_for('static', filename='main.js') }}"></script>
+    </div>
+    <div class="iggybasecss">
+        <script type="text/javascript" src="{{ url_for('static', filename='main.css') }}"></script>
+    </div>
+{% endblock main %}

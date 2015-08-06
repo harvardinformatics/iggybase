@@ -2,7 +2,7 @@ cd /n/informatics/iggybase/
 
 git add -A
 git rm -r --cached iggybase_env/
-git rm -r --cached config/
+git rm -r --cached config.py
 
 git commit -m "$1"
 git push -f origin master
