@@ -3,7 +3,8 @@
 
 {% block title %}Iggybase{% endblock title %}
 
-{% block main %}
+{% block body %}
+    {{ super( ) }}
     {% block banner %}
         <div class="banner" id="banner">
             <a  href="{{ url_for('mod_auth.index') }}">
@@ -41,6 +42,7 @@
     {% block content %}
         <div class="container">
             {% block page_content %}{% endblock page_content %}
+            <input type = "button" value ="Register">
         </div>
     {% endblock content %}
 
@@ -50,4 +52,4 @@
     <div class="iggybasecss">
         <script type="text/javascript" src="{{ url_for('static', filename='main.css') }}"></script>
     </div>
-{% endblock main %}
+{% endblock body %}
