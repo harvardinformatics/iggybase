@@ -6,3 +6,7 @@ from flask import *
 from iggybase import *
 
 os.environ[ 'PYTHONINSPECT' ] = 'True'
+
+"""
+Skeleton
+"""
