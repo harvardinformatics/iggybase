@@ -42,9 +42,20 @@ class address( Base ):
     country = Column( String( 100 ) )
     active = Column( Boolean )
 
-class role( Base ):
-    __tablename__ = 'role'
-    role_id = Column( Integer, primary_key = True )
-    role_name = Column( String( 100 ), unique = True )
-    description = Column( String( 255 ) )
-    active = Column( Boolean )
+class building( Base ):
+    __tablename__ = 'building'
+    building_id = Column( Integer, primary_key = True )
+    building_name = Column( String( 100 ), unique = True )
+    building_desctiption = Column( String( 250) )
+    address_id = Column( Integer )
+
+    address = relationship( "address", foreign_keys = [ address_id ] )
+
+class room( Base ):
+    __tablename__ = 'room'
+    room_id = Column( Integer, primary_key = True )
+    room_name = Column( String( 100 ), unique = True )
+    room_description = Column( String( 250) )
+    building_id = Column( Integer )
+
+    building = relationship( "building", foreign_keys = [ building_id ] )

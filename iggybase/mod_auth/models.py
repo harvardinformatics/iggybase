@@ -49,3 +49,10 @@ class User( UserMixin, Base ):
 @lm.user_loader
 def load_user( user_id ):
     return User.query.get( int( user_id ) )
+
+class role( Base ):
+    __tablename__ = 'role'
+    role_id = Column( Integer, primary_key = True )
+    role_name = Column( String( 100 ), unique = True )
+    description = Column( String( 255 ) )
+    active = Column( Boolean )

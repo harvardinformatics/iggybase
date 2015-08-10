@@ -25,7 +25,7 @@
     {% block banner %}
         <div class="banner" id="banner">
             <a  href="{{ url_for('mod_auth.index') }}">
-                <h1>Iggybase</h1>
+                <img src="{{ url_for('static', filename='iggybase.gif') }}">
             </a>
             {% if current_user.is_authenticated() %}
                 <ul class="banner-right">
@@ -34,6 +34,7 @@
                     </li>
                 </ul>
             {% endif %}
+            <hr>
         </div>
     {% endblock banner %}
 

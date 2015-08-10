@@ -2,7 +2,7 @@ from flask import render_template, redirect, url_for, request
 from flask.ext.login import login_required, login_user, logout_user
 from .models import User
 from . import mod_auth
-from .forms import LoginForm
+from .forms import LoginForm, RegisterForm
 
 @mod_auth.route( '/login', methods = [ 'GET', 'POST' ] )
 def login():
@@ -14,6 +14,14 @@ def login():
         login_user( user, form.remember_me.data )
         return redirect( request.args.get( 'next' ) or url_for( 'main.index' ) )
     return render_template( 'mod_auth/login.html', form=form )
+
+
+@mod_auth.route( '/register' )
+def register():
+    form = RegisterForm( )
+    if form.validate_on_submit( ):
+        return redirect( url_for( 'main.login' ) )
+    return render_template( 'mod_auth/register.html', form=form )
 
 
 @mod_auth.route( '/logout' )
