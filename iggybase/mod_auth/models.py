@@ -3,6 +3,7 @@ from flask.ext.login import UserMixin
 from iggybase import lm
 from iggybase.database import Base
 from iggybase.mod_auth import constants as USER
+from iggybase.mod_core.models import Address
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey
 from sqlalchemy.orm import relationship
 
@@ -15,9 +16,12 @@ class User( UserMixin, Base ):
     last_name = Column( String( 50 ) )
     email = Column( String( 120 ) )
     description = Column( String( 250 ) )
-    address_id = Column( Integer )
+    address_id = Column( Integer, ForeignKey( 'address.address_id' ) )
+    home_page = String( 50 )
     role_id = Column( Integer, ForeignKey( 'role.role_id' ), default = USER.READONLY )
     active = Boolean( )
+
+    user_address = relationship( "Address", foreign_keys = [ address_id ] )
 
     def set_password( self, password ):
         self.password_hash = generate_password_hash( password )

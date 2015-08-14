@@ -5,9 +5,9 @@ from flask.ext.mail import Mail
 from flask.ext.sqlalchemy import SQLAlchemy
 from flask.ext.login import LoginManager
 
-bootstrap = Bootstrap( )
 mail = Mail( )
 lm = LoginManager( )
+bootstrap = Bootstrap( )
 
 instance = 'development'
 
