@@ -2,25 +2,13 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="0c55002e-b125-4a7b-8426-ddf669d25452" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/iggybase/mod_admin/__init__.py" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/iggybase/mod_static/__init__.py" afterPath="" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/iggybase/mod_static/constants.py" afterPath="$PROJECT_DIR$/iggybase/mod_admin/constants.py" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/iggybase/mod_static/decorators.py" afterPath="$PROJECT_DIR$/iggybase/mod_admin/decorators.py" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/iggybase/mod_static/forms.py" afterPath="$PROJECT_DIR$/iggybase/mod_admin/forms.py" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/iggybase/mod_static/models.py" afterPath="$PROJECT_DIR$/iggybase/mod_admin/models.py" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/iggybase/mod_static/routes.py" afterPath="$PROJECT_DIR$/iggybase/mod_admin/routes.py" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/iggybase/mod_static/views.py" afterPath="$PROJECT_DIR$/iggybase/mod_admin/views.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/iggybase/__init__.py" afterPath="$PROJECT_DIR$/iggybase/__init__.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/iggybase/templates/base.html" afterPath="$PROJECT_DIR$/iggybase/templates/base.html" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/iggybase/mod_auth/constants.py" afterPath="$PROJECT_DIR$/iggybase/mod_auth/constants.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/iggybase/database.py" afterPath="$PROJECT_DIR$/iggybase/database.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/iggybase/mod_auth/forms.py" afterPath="$PROJECT_DIR$/iggybase/mod_auth/forms.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/iggybase.log" afterPath="$PROJECT_DIR$/iggybase.log" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/iggybase/templates/index.html" afterPath="$PROJECT_DIR$/iggybase/templates/index.html" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/iggybase/static/mod_auth/main.js" afterPath="$PROJECT_DIR$/iggybase/static/mod_auth/main.js" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/iggybase/templates/mod_auth/failedlogin.html" afterPath="$PROJECT_DIR$/iggybase/templates/mod_auth/failedlogin.html" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/iggybase/templates/mod_auth/login.html" afterPath="$PROJECT_DIR$/iggybase/templates/mod_auth/login.html" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/iggybase/mod_admin/models.py" afterPath="$PROJECT_DIR$/iggybase/mod_admin/models.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/iggybase/mod_auth/models.py" afterPath="$PROJECT_DIR$/iggybase/mod_auth/models.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/iggybase/mod_core/models.py" afterPath="$PROJECT_DIR$/iggybase/mod_core/models.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/iggybase/mod_auth/routes.py" afterPath="$PROJECT_DIR$/iggybase/mod_auth/routes.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/iggybase/templates/mod_auth/regcomplete.html" afterPath="$PROJECT_DIR$/iggybase/templates/mod_auth/regcomplete.html" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/iggybase/templates/mod_auth/register.html" afterPath="$PROJECT_DIR$/iggybase/templates/mod_auth/register.html" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
     <ignored path="iggybase.iws" />
@@ -45,8 +33,8 @@
       <file leaf-file-name="base.html" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/iggybase/templates/base.html">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.30882353">
-              <caret line="26" column="55" selection-start-line="26" selection-start-column="55" selection-end-line="26" selection-end-column="55" />
+            <state vertical-scroll-proportion="0.5294118">
+              <caret line="51" column="32" selection-start-line="51" selection-start-column="32" selection-end-line="51" selection-end-column="32" />
               <folding />
             </state>
           </provider>
@@ -74,12 +62,10 @@
         <option value="$PROJECT_DIR$/iggybase/basedb.py" />
         <option value="$PROJECT_DIR$/run.py" />
         <option value="$PROJECT_DIR$/updategit" />
-        <option value="$PROJECT_DIR$/iggybase/templates/mod_auth/register.html" />
         <option value="$PROJECT_DIR$/iggybase_env/lib/python3.4/site-packages/wtforms/fields/core.py" />
         <option value="$PROJECT_DIR$/iggybase/static/main.js" />
         <option value="$PROJECT_DIR$/iggybase.wsgi" />
         <option value="$PROJECT_DIR$/iggybase/templates/macros.html" />
-        <option value="$PROJECT_DIR$/iggybase/templates/mod_auth/login.html" />
         <option value="$PROJECT_DIR$/iggybase/mod_auth/views.py" />
         <option value="$PROJECT_DIR$/iggybase/mod_static/views.py" />
         <option value="$PROJECT_DIR$/iggybase/mod_core/views.py" />
@@ -94,15 +80,18 @@
         <option value="$PROJECT_DIR$/iggybase/database.py" />
         <option value="$PROJECT_DIR$/config/development.py" />
         <option value="$PROJECT_DIR$/iggybase/mod_core/models.py" />
-        <option value="$PROJECT_DIR$/iggybase/templates/mod_auth/regcomplete.html" />
         <option value="$PROJECT_DIR$/iggybase/static/mod_auth/main.js" />
         <option value="$PROJECT_DIR$/iggybase/templates/index.html" />
-        <option value="$PROJECT_DIR$/iggybase/mod_auth/models.py" />
-        <option value="$PROJECT_DIR$/iggybase/templates/mod_auth/failedlogin.html" />
         <option value="$PROJECT_DIR$/iggybase/mod_auth/routes.py" />
         <option value="$PROJECT_DIR$/iggybase.log" />
-        <option value="$PROJECT_DIR$/iggybase/templates/base.html" />
         <option value="$PROJECT_DIR$/iggybase/mod_auth/constants.py" />
+        <option value="$PROJECT_DIR$/iggybase/mod_auth/models.py" />
+        <option value="$PROJECT_DIR$/iggybase/mod_admin/models.py" />
+        <option value="$PROJECT_DIR$/iggybase/templates/base.html" />
+        <option value="$PROJECT_DIR$/iggybase/templates/mod_auth/failedlogin.html" />
+        <option value="$PROJECT_DIR$/iggybase/templates/mod_auth/login.html" />
+        <option value="$PROJECT_DIR$/iggybase/templates/mod_auth/regcomplete.html" />
+        <option value="$PROJECT_DIR$/iggybase/templates/mod_auth/register.html" />
       </list>
     </option>
   </component>
@@ -1144,13 +1133,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/iggybase/mod_admin/models.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.10245901">
-          <caret line="5" column="24" selection-start-line="5" selection-start-column="24" selection-end-line="5" selection-end-column="24" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/iggybase/__init__.py">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
@@ -1206,16 +1188,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/iggybase/mod_auth/models.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="10" column="26" selection-start-line="10" selection-start-column="26" selection-end-line="10" selection-end-column="26" />
-          <folding>
-            <element signature="e#0#73#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/iggybase/mod_auth/forms.py">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
@@ -1223,38 +1195,6 @@
           <folding>
             <element signature="e#0#30#0" expanded="true" />
           </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/iggybase/templates/mod_auth/regcomplete.html">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-0.0">
-          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/iggybase/templates/mod_auth/register.html">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-0.0">
-          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/iggybase/templates/mod_auth/login.html">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-0.0">
-          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/iggybase/templates/mod_auth/failedlogin.html">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-7.5">
-          <caret line="12" column="10" selection-start-line="12" selection-start-column="10" selection-end-line="12" selection-end-column="10" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -1308,10 +1248,62 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/iggybase/templates/base.html">
+    <entry file="file://$PROJECT_DIR$/iggybase/mod_auth/models.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="-0.49147728">
+          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding>
+            <element signature="e#0#73#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/iggybase/mod_admin/models.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.33948863">
+          <caret line="86" column="52" selection-start-line="86" selection-start-column="52" selection-end-line="86" selection-end-column="52" />
+          <folding>
+            <element signature="e#0#40#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/iggybase/templates/mod_auth/login.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="-10.0">
+          <caret line="16" column="27" selection-start-line="16" selection-start-column="27" selection-end-line="16" selection-end-column="27" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/iggybase/templates/mod_auth/register.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.2647059">
+          <caret line="12" column="0" selection-start-line="12" selection-start-column="0" selection-end-line="12" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/iggybase/templates/mod_auth/regcomplete.html">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.30882353">
-          <caret line="26" column="55" selection-start-line="26" selection-start-column="55" selection-end-line="26" selection-end-column="55" />
+          <caret line="14" column="0" selection-start-line="14" selection-start-column="0" selection-end-line="14" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/iggybase/templates/mod_auth/failedlogin.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.41911766">
+          <caret line="19" column="27" selection-start-line="15" selection-start-column="0" selection-end-line="19" selection-end-column="27" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/iggybase/templates/base.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.5294118">
+          <caret line="51" column="32" selection-start-line="51" selection-start-column="32" selection-end-line="51" selection-end-column="32" />
           <folding />
         </state>
       </provider>

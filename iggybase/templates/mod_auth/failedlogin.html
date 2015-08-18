@@ -13,4 +13,9 @@
     </div>
     <input type="button" class="btn btn-default" id="regcompletelogin" value="Login" >
     <input type="button" class="btn btn-default" id="login_register" value="Register" >
+
+    {% block scripts %}
+        {{ super() }}
+        <script type="text/javascript" src="{{ url_for('static', filename='mod_auth/main.js') }}"></script>
+    {%- endblock scripts %}
 {% endblock %}

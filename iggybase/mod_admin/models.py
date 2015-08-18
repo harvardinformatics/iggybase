@@ -10,6 +10,12 @@ class Lab( StaticBase ):
     lab_description = Column( String( 250 ) )
     active = Column( Boolean )
 
+    def get_id( self ):
+        return self.lab_id
+
+    def get_active( self ):
+        return self.active
+
 class Iggybase_Instance( StaticBase ):
     __tablename__ = 'iggybase_instance'
     instance_id = Column( Integer, primary_key = True )
@@ -21,6 +27,12 @@ class Iggybase_Instance( StaticBase ):
 
     instance_lab = relationship( "Lab", foreign_keys = [ lab_id ] )
 
+    def get_id( self ):
+        return self.instance_id
+
+    def get_active( self ):
+        return self.active
+
 class Menu( StaticBase ):
     __tablename__ = 'menu'
     menu_id = Column( Integer, primary_key = True )
@@ -29,6 +41,12 @@ class Menu( StaticBase ):
     active = Column( Boolean )
 
     menu_lab = relationship( "Lab", foreign_keys = [ lab_id ] )
+
+    def get_id( self ):
+        return self.menu_id
+
+    def get_active( self ):
+        return self.active
 
 class Menu_Item( StaticBase ):
     __tablename__ = 'menu_item'
@@ -43,6 +61,12 @@ class Menu_Item( StaticBase ):
     menu_item_lab = relationship( "Lab", foreign_keys = [ lab_id ] )
     menu_item_menu = relationship( "Menu", foreign_keys = [ menu_id ] )
 
+    def get_id( self ):
+        return self.menu_item_id
+
+    def get_active( self ):
+        return self.active
+
 class Type( StaticBase ):
     __tablename__ = 'type'
     type_id = Column( Integer, primary_key = True )
@@ -51,6 +75,12 @@ class Type( StaticBase ):
     active = Column( Boolean )
 
     type_lab = relationship( "Lab", foreign_keys = [ lab_id ] )
+
+    def get_id( self ):
+        return self.type_id
+
+    def get_active( self ):
+        return self.active
 
 class Field( StaticBase ):
     __tablename__ = 'field'
@@ -63,6 +93,12 @@ class Field( StaticBase ):
     field_lab = relationship( "Lab", foreign_keys = [ lab_id ] )
     type = relationship( "Type", foreign_keys = [ type_id ] )
 
+    def get_id( self ):
+        return self.field_id
+
+    def get_active( self ):
+        return self.active
+
 class Page( StaticBase ):
     __tablename__ = 'page'
     page_id = Column( Integer, primary_key = True )
@@ -71,3 +107,9 @@ class Page( StaticBase ):
     active = Column( Boolean )
 
     page_lab = relationship( "Lab", foreign_keys = [ lab_id ] )
+
+    def get_id( self ):
+        return self.page_id
+
+    def get_active( self ):
+        return self.active

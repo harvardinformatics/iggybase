@@ -57,5 +57,8 @@ class role( Base ):
     description = Column( String( 255 ) )
     active = Column( Boolean )
 
+    def get_id( self ):
+        return self.role_id
+
     def get_active( self ):
         return self.active
