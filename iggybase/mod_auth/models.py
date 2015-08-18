@@ -14,12 +14,12 @@ class User( UserMixin, Base ):
     password_hash = Column( String( 120 ) )
     first_name = Column( String( 50 ) )
     last_name = Column( String( 50 ) )
-    email = Column( String( 120 ) )
+    email = Column( String( 120 ), unique = True )
     description = Column( String( 250 ) )
     address_id = Column( Integer, ForeignKey( 'address.address_id' ) )
-    home_page = String( 50 )
+    home_page = Column( String( 50 ) )
     role_id = Column( Integer, ForeignKey( 'role.role_id' ), default = USER.READONLY )
-    active = Boolean( )
+    active = Column( Boolean )
 
     user_address = relationship( "Address", foreign_keys = [ address_id ] )
 
@@ -29,17 +29,13 @@ class User( UserMixin, Base ):
     def verify_password( self, password ):
         return check_password_hash( self.password_hash, password )
 
-    @staticmethod
-    def register( login_name, password ):
-        user = User( login_name = login_name )
-        user.set_password( password )
-        #BaseDB..session.add( user )
-        #db.session.commit( )
-
-    def __init__( self, login_name = None, email = None, password = None ):
+    def __init__( self, login_name = None, password = None, email = None ):
         self.login_name = login_name
         self.email = email
-        self.password = password
+        self.set_password( password )
+
+    def get_id( self ):
+        return self.user_id
 
     def get_active( self ):
         return self.active
@@ -60,3 +56,6 @@ class role( Base ):
     role_name = Column( String( 100 ), unique = True )
     description = Column( String( 255 ) )
     active = Column( Boolean )
+
+    def get_active( self ):
+        return self.active

@@ -4,18 +4,18 @@ from wtforms.validators import DataRequired, Length, email
 from .models import User
 
 class LoginForm( Form ):
-    username = StringField( 'Username', validators = [ DataRequired( ), Length( 1, 16 ) ] )
+    login_name = StringField( 'Login name', validators = [ DataRequired( ), Length( 1, 16 ) ] )
     password = PasswordField( 'Password', validators = [ DataRequired( ) ] )
     remember_me = BooleanField( 'Remember me' )
     login = SubmitField( 'Login' )
 
 class RegisterForm( Form ):
     login_name = StringField( 'Login name', validators = [ DataRequired( ), Length( 1, 16 ) ] )
-    first = StringField( 'First Name', validators = [ DataRequired( ) ] )
-    last = StringField( 'Last Name', validators = [ DataRequired( ) ] )
+    first_name = StringField( 'First Name', validators = [ DataRequired( ) ] )
+    last_name = StringField( 'Last Name', validators = [ DataRequired( ) ] )
     password = PasswordField( 'Password', validators = [ DataRequired( ) ] )
     confpassword = PasswordField( 'Confirm Password', validators = [ DataRequired( ) ] )
-    email = StringField( 'Email', validators = [ email, DataRequired( ) ] )
+    email = StringField( 'Email', validators = [ email( ), DataRequired( ) ] )
     institution = StringField( 'Institution', validators = [ DataRequired( ) ] )
     address1 = StringField( 'Address 1', validators = [ DataRequired( ) ] )
     address2 = StringField( 'Address 2' )
@@ -31,6 +31,6 @@ class RegisterForm( Form ):
         if User.query.filter_by( email = field.data ).first( ):
             raise ValidationError( 'Email already exists' )
 
-    def validate_username( self, field ):
-        if User.query.filter_by( username = field.data ).first( ):
-            raise ValidationError( 'Username already in use' )
+    def validate_login_name( self, field ):
+        if User.query.filter_by( login_name = field.data ).first( ):
+            raise ValidationError( 'Login name already in use' )

@@ -5,14 +5,15 @@ from . import mod_auth
 from ..mod_core.models import Address
 from .forms import LoginForm, RegisterForm
 from iggybase.database import db_session
+import logging
 
 @mod_auth.route( '/login', methods = [ 'GET', 'POST' ] )
 def login():
     form = LoginForm( )
     if form.validate_on_submit( ):
-        user = User.query.filter_by( username=form.username.data ).first( )
-        if user is None or not user.verify_password( form.password.data ):
-            return redirect( url_for( 'mod_auth.login', **request.args ) )
+        user = User.query.filter_by( login_name=form.login_name.data ).first( )
+        if user is None or not user.get_active( ) or not user.verify_password( form.password.data ):
+            return render_template( 'mod_auth/failedlogin.html', form=form )
         login_user( user, form.remember_me.data )
         return redirect( request.args.get( 'next' ) or url_for( 'mod_auth.index' ) )
     temp = render_template( 'mod_auth/login.html', form=form )
@@ -24,29 +25,35 @@ def login():
 @mod_auth.route( '/register', methods = [ 'GET', 'POST' ] )
 def register():
     form = RegisterForm( )
-    if form.validate_on_submit( ):
+    if ( form.validate_on_submit( ) and form.password.data == form.confpassword.data ) :
         session = db_session( )
 
         address = Address( address_1 = form.address1.data,
-                           address_2 = form.address2.data,
                            city = form.city.data,
                            state = form.state.data,
                            postcode = form.zip.data )
+
+        address.address_2 = form.address2.data
+
         session.add( address )
+        session.flush( )
+
         user = User( login_name = form.login_name.data,
-                     first_name = form.first.data,
-                     last_name = form.last.data,
-                     email = form.email.data,
-                     address_id = address.address_id,
-                     active = False
-                     )
-        session.add( user )
+
+                     email = form.email.data
+        )
 
         user.set_password( form.password.data )
-        session.commit
+        user.first_name = form.first_name.data
+        user.last_name = form.last_name.data
+        user.address_id = address.get_id( )
+        user.active = False
 
-        flash( "Your credentials will be reviewed in 1 business day.")
-        return redirect( url_for( 'mod_auth.login' ) )
+        session.add( user )
+
+        session.commit( )
+
+        return redirect( url_for( 'mod_auth.regcomplete' ) )
     return render_template( 'mod_auth/register.html', form=form )
 
 
@@ -60,3 +67,7 @@ def logout():
 def index( ):
     return render_template( 'index.html' )
 
+
+@mod_auth.route( '/regcomplete' )
+def regcomplete( ):
+    return render_template( 'mod_auth/regcomplete.html' )

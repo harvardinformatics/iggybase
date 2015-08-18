@@ -3,17 +3,17 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 from iggybase import iggybase as Iggy
 
-staticengine = create_engine( Iggy.config[ 'SQLALCHEMY_DATABASE_URI' ] + Iggy.config[ 'STATIC_DB_NAME' ] )
-static_db_session = scoped_session( sessionmaker( autocommit = False, autoflush = False, bind = staticengine ) )
+adminengine = create_engine( Iggy.config[ 'SQLALCHEMY_DATABASE_URI' ] + Iggy.config[ 'ADMIN_DB_NAME' ] )
+admin_db_session = scoped_session( sessionmaker( autocommit = False, autoflush = False, bind = adminengine ) )
 StaticBase = declarative_base()
-StaticBase.query = static_db_session.query_property()
+StaticBase.query = admin_db_session.query_property()
 
-import iggybase.mod_static.models
-StaticBase.metadata.create_all( bind = staticengine )
+import iggybase.mod_admin.models
+StaticBase.metadata.create_all( bind = adminengine )
 
-from .mod_static.models import Lab, Iggybase_Instance
+from .mod_admin.models import Lab, Iggybase_Instance
 
-session = static_db_session( )
+session = admin_db_session( )
 lab = session.query( Lab ).filter( Lab.lab_name == Iggy.config[ 'LAB' ] ).first( )
 iggybaseinstance = session.query( Iggybase_Instance ).filter( Iggybase_Instance.lab_id == lab.lab_id ).filter( Iggybase_Instance.instance_name == Iggy.config[ 'INSTANCE_NAME' ] ).first( )
 

@@ -1,7 +1,7 @@
 from iggybase.database import StaticBase
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey
 from sqlalchemy.orm import relationship
-from iggybase.mod_static import constants as STATIC
+from iggybase.mod_admin import constants as STATIC
 
 class Lab( StaticBase ):
     __tablename__ = 'lab'

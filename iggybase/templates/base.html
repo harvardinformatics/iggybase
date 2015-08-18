@@ -28,11 +28,9 @@
                 <img src="{{ url_for('static', filename='iggybase.gif') }}">
             </a>
             {% if current_user.is_authenticated() %}
-                <ul class="banner-right">
-                    <li>
-                        <a href="{{ url_for('mod_auth.logout') }}">Logout</a>
-                    </li>
-                </ul>
+                <div id="logout">
+                    <a class="pull-right" href="{{ url_for('mod_auth.logout') }}">Logout</a>
+                </div>
             {% endif %}
             <hr>
         </div>

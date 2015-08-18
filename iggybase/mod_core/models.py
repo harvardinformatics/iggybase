@@ -42,6 +42,15 @@ class Address( Base ):
     country = Column( String( 100 ) )
     active = Column( Boolean )
 
+    def get_id( self ):
+        return self.address_id
+
+    def __init__( self, address_1 = None, city = None, state = None, postcode = None ):
+        self.address_1 = address_1
+        self.city = city
+        self.state = state
+        self.postcode = postcode
+
 class Building( Base ):
     __tablename__ = 'building'
     building_id = Column( Integer, primary_key = True )
