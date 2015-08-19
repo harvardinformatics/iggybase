@@ -1,9 +1,9 @@
 from flask import render_template, redirect, url_for, request, flash
 from flask.ext.login import login_required, login_user, logout_user
-from .models import User
+from iggybase.mod_auth.models import User
 from . import mod_auth
-from ..mod_core.models import Address
-from .forms import LoginForm, RegisterForm
+from iggybase.mod_core.models import Address
+from iggybase.mod_auth.forms import LoginForm, RegisterForm
 from iggybase.database import db_session
 import logging
 

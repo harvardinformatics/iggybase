@@ -1,6 +1,5 @@
 from flask import render_template, redirect, url_for, request, session
 from . import mod_core
-from ..mod_auth import mod_auth
 from .forms import DefaultForm
 
 

@@ -35,18 +35,9 @@
             {% endblock banner %}
 
             {% block navbar %}
-                {% if current_user.is_authenticated() %}
-                    <nav class="navbar navbar-inverse" role="navigation">
-                        <div class="container">
-                            <a class="navbar-brand" href="{{ url_for('mod_auth.index') }}">Iggybase</a>
-                        </div>
-                    </nav>
-                {% endif %}
             {%- endblock navbar %}
 
             {% block sidebar %}
-                {% if current_user.is_authenticated() %}
-                {% endif %}
             {% endblock sidebar %}
 
             {% block content -%}
