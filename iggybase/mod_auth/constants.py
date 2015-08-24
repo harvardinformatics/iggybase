@@ -1,14 +1,14 @@
-ADMIN = 0
-COREUSER = 1
-USER = 2
-READONLY = 3
-LABADMIN = 4
-COREMANAGER = 5
+ADMIN = 1
+COREUSER = 2
+USER = 3
+READONLY = 4
+LABADMIN = 5
+COREMANAGER = 6
 ROLE = {
-    ADMIN: 'admin',
-    COREUSER: 'staff',
-    USER: 'user',
-    READONLY: 'readonly',
-    LABADMIN: 'labadmin',
-    COREMANAGER: 'coremanager'
+    ADMIN: 'Admin',
+    COREUSER: 'CoreUser',
+    USER: 'User',
+    READONLY: 'ReadOnly',
+    LABADMIN: 'LabAdmin',
+    COREMANAGER: 'CoreManager'
 }

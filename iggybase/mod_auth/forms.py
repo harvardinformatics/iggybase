@@ -4,13 +4,13 @@ from wtforms.validators import DataRequired, Length, email
 from .models import User
 
 class LoginForm( Form ):
-    login_name = StringField( 'Login name', validators = [ DataRequired( ), Length( 1, 16 ) ] )
+    name = StringField( 'Login name', validators = [ DataRequired( ), Length( 1, 16 ) ] )
     password = PasswordField( 'Password', validators = [ DataRequired( ) ] )
     remember_me = BooleanField( 'Remember me' )
     login = SubmitField( 'Login' )
 
 class RegisterForm( Form ):
-    login_name = StringField( 'Login name', validators = [ DataRequired( ), Length( 1, 16 ) ] )
+    name = StringField( 'Login name', validators = [ DataRequired( ), Length( 1, 16 ) ] )
     first_name = StringField( 'First Name', validators = [ DataRequired( ) ] )
     last_name = StringField( 'Last Name', validators = [ DataRequired( ) ] )
     password = PasswordField( 'Password', validators = [ DataRequired( ) ] )
@@ -31,6 +31,6 @@ class RegisterForm( Form ):
         if User.query.filter_by( email = field.data ).first( ):
             raise ValidationError( 'Email already exists' )
 
-    def validate_login_name( self, field ):
-        if User.query.filter_by( login_name = field.data ).first( ):
+    def validate_name( self, field ):
+        if User.query.filter_by( name = field.data ).first( ):
             raise ValidationError( 'Login name already in use' )

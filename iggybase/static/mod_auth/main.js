@@ -6,10 +6,10 @@ $( document ).ready( function () {
 
 ( function( $ ) {
     $.fn.openRegistration = function ( ) {
-        window.open( '/register', '_self' );
+        window.open( '/auth/register', '_self' );
     }
 
     $.fn.openLogin = function ( ) {
-        window.open( '/login', '_self' );
+        window.open( '/auth/login', '_self' );
     }
 } ) ( jQuery );

@@ -1,4 +1,4 @@
-from flask import render_template, redirect, url_for, request, flash
+from flask import render_template, redirect, url_for, request
 from flask.ext.login import login_required, login_user, logout_user
 from iggybase.mod_auth.models import User
 from . import mod_auth
@@ -11,11 +11,15 @@ import logging
 def login():
     form = LoginForm( )
     if form.validate_on_submit( ):
-        user = User.query.filter_by( login_name=form.login_name.data ).first( )
+        user = User.query.filter_by( name=form.name.data ).first( )
         if user is None or not user.get_active( ) or not user.verify_password( form.password.data ):
             return render_template( 'mod_auth/failedlogin.html', form=form )
         login_user( user, form.remember_me.data )
-        return redirect( request.args.get( 'next' ) or url_for( 'mod_auth.index' ) )
+
+        if user.home_page is not None:
+            return render_template( user.home_page )
+        else:
+            return redirect( request.args.get( 'next' ) or url_for( 'mod_auth.index' ) )
     temp = render_template( 'mod_auth/login.html', form=form )
     index = temp.find( '</form>' )
     loginform = temp[ :index ] + '<input type="button" class="btn btn-default" id="login_register" value="Register" >' + temp[ index: ]
@@ -38,8 +42,7 @@ def register():
         session.add( address )
         session.flush( )
 
-        user = User( login_name = form.login_name.data,
-
+        user = User( name = form.name.data,
                      email = form.email.data
         )
 
