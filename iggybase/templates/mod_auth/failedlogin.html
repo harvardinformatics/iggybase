@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+{% import 'macros.html' as macros %}
+
+{% block title %}Iggybase Registration Complete{% endblock %}
+
+{% block page_content %}
+    <h1>Login Failed</h1>
+    <div>
+        <p>
+            Please verify your login credentials or register for an account.
+        </p>
+    </div>
+    <input type="button" class="btn btn-default" id="regcompletelogin" value="Login" >
+    <input type="button" class="btn btn-default" id="login_register" value="Register" >
+
+    {% block scripts %}
+        {{ super() }}
+        <script type="text/javascript" src="{{ url_for('static', filename='mod_auth/main.js') }}"></script>
+    {%- endblock scripts %}
+{% endblock %}

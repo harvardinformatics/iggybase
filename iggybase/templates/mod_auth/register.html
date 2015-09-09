@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block title %}Iggybase Register{% endblock %}
+
+{% block page_content %}
+    <h1>Register</h1>
+    <div class="row">
+        <div class="col-md-3">
+            {{ wtf.quick_form( form ) }}
+        </div>
+    </div>
+
+    {% block scripts %}
+        {{ super() }}
+        <script type="text/javascript" src="{{ url_for('static', filename='mod_auth/main.js') }}"></script>
+    {%- endblock scripts %}
+{% endblock %}

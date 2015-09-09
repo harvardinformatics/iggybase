@@ -1,18 +1,12 @@
 import os
-import sys
-import site
-import logging
+import socket
+from iggybase import create_app
 
-# Add the site-packages of the chosen virtualenv to work with
-site.addsitedir( os.path.dirname( os.path.realpath( __file__ ) ) + '/iggybase_env/lib/python3.4/site-packages' )
+rootdir = os.path.basename( os.path.dirname( os.path.abspath( __file__ ) ) )
+hostname = socket.gethostname()
+config_name = hostname + '.' + rootdir
 
-# Activate your virtual env
-activate_this = os.path.join( os.path.dirname( os.path.realpath( __file__ ) ), 'iggybase_env', 'bin', 'activate_this.py' )
-exec( compile( open( activate_this, 'rb' ).read( ), activate_this, 'exec' ), dict( __file__ = activate_this ) )
+iggybase = create_app( config_name )
 
-sys.path.insert( 0, os.path.dirname( os.path.realpath( __file__ ) ) )
-sys.path.insert( 0, os.path.join( os.path.dirname( os.path.realpath( __file__ ) ), 'iggybase.log' ) )
-
-logging.basicConfig( stream = sys.stderr )
-
-from iggybase import iggybase as application
+if __name__ == '__main__':
+    iggybase.run( )

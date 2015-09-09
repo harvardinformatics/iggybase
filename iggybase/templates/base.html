@@ -2,71 +2,57 @@
 
 {% block doc -%}
 <!DOCTYPE html>
-<html{% block html_attribs %}{% endblock html_attribs %}>
-{%- block html %}
-  <head>
-    {%- block head %}
-    <title>{% block title %}{% endblock title %}</title>
+    <html{% block html_attribs %}{% endblock html_attribs %}>
+    {%- block html %}
+        <head>
+        {%- block head %}
+            <title>{% block title %}{% endblock title %}</title>
 
-    {%- block metas %}
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    {%- endblock metas %}
+            {%- block metas %}
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            {%- endblock metas %}
 
-    {%- block styles %}
-    <!-- Bootstrap -->
-    <link href="{{bootstrap_find_resource('css/bootstrap.css', cdn='bootstrap')}}" rel="stylesheet">
-    <link href="{{ url_for('static', filename='main.css') }}" rel="stylesheet">
-    {%- endblock styles %}
-    {%- endblock head %}
-  </head>
-  <body{% block body_attribs %}{% endblock body_attribs %}>
-    {% block body -%}
-
-    {% block banner %}
-        <div class="banner" id="banner">
-            <a  href="{{ url_for('mod_auth.index') }}">
-                <h1>Iggybase</h1>
-            </a>
-            {% if current_user.is_authenticated() %}
-                <ul class="banner-right">
-                    <li>
-                        <a href="{{ url_for('mod_auth.logout') }}">Logout</a>
-                    </li>
-                </ul>
-            {% endif %}
-        </div>
-    {% endblock banner %}
-
-    {% block navbar %}
-        {% if current_user.is_authenticated() %}
-            <nav class="navbar navbar-inverse" role="navigation">
-                <div class="container">
-                    <a class="navbar-brand" href="{{ url_for('mod_auth.index') }}">
-                        Iggybase
+            {%- block styles %}
+                <!-- Bootstrap -->
+                <link href="{{bootstrap_find_resource('css/bootstrap.css', cdn='bootstrap')}}" rel="stylesheet">
+                <link href="{{ url_for('static', filename='main.css') }}" rel="stylesheet">
+            {%- endblock styles %}
+        {%- endblock head %}
+        </head>
+        <body{% block body_attribs %}{% endblock body_attribs %}>
+        {% block body -%}
+            {% block banner %}
+                <div class="banner" id="banner">
+                    <a  href="{{ url_for('mod_auth.index') }}">
+                        <img src="{{ url_for('static', filename='iggybase.gif') }}">
                     </a>
+                    {% if current_user.is_authenticated() %}
+                        <div id="logout">
+                            <a class="pull-right" href="{{ url_for('mod_auth.logout') }}">Logout</a>
+                        </div>
+                    {% endif %}
                 </div>
-            </nav>
-        {% endif %}
-    {%- endblock navbar %}
+            {% endblock banner %}
 
-    {% block sidebar %}
-        {% if current_user.is_authenticated() %}
-        {% endif %}
-    {% endblock sidebar %}
+            {% block navbar %}
+            {%- endblock navbar %}
 
-    {% block content -%}
-        <div class="container">
-            {% block page_content %}{% endblock page_content %}
-        </div>
-    {%- endblock content %}
+            {% block sidebar %}
+            {% endblock sidebar %}
 
-    {% block scripts %}
-    <script src="{{bootstrap_find_resource('jquery.js', cdn='jquery')}}"></script>
-    <script src="{{bootstrap_find_resource('js/bootstrap.js', cdn='bootstrap')}}"></script>
-    <script type="text/javascript" src="{{ url_for('static', filename='main.js') }}"></script>
-    {%- endblock scripts %}
-    {%- endblock body %}
-  </body>
-{%- endblock html %}
-</html>
+            {% block content -%}
+                <div class="container">
+                    {% block page_content %}{% endblock page_content %}
+                </div>
+            {%- endblock content %}
+
+            {% block scripts %}
+                <script src="{{bootstrap_find_resource('jquery.js', cdn='jquery')}}"></script>
+                <script src="{{bootstrap_find_resource('js/bootstrap.js', cdn='bootstrap')}}"></script>
+                <script type="text/javascript" src="{{ url_for('static', filename='main.js') }}"></script>
+            {%- endblock scripts %}
+        {%- endblock body %}
+        </body>
+    {%- endblock html %}
+    </html>
 {% endblock doc -%}
