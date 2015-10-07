@@ -13,12 +13,6 @@ class Lab( StaticBase ):
     last_modified = Column( DateTime, default = datetime.datetime.utcnow )
     active = Column( Boolean )
 
-    def get_id( self ):
-        return self.id
-
-    def get_active( self ):
-        return self.active
-
 class Role( StaticBase ):
     __tablename__ = 'role'
     id = Column( Integer, primary_key = True )
@@ -27,12 +21,6 @@ class Role( StaticBase ):
     date_created = Column( DateTime, default=datetime.datetime.utcnow )
     last_modified = Column( DateTime, default=datetime.datetime.utcnow )
     active = Column( Boolean )
-
-    def get_id( self ):
-        return self.id
-
-    def get_active( self ):
-        return self.active
 
 class LabRole( StaticBase ):
     __tablename__ = 'lab_role'
@@ -49,34 +37,6 @@ class LabRole( StaticBase ):
     lab_role_role = relationship( "Role", foreign_keys = [ role_id ] )
     lab_role_unq = UniqueConstraint( 'lab_id', 'role_id' )
 
-    def get_id( self ):
-        return self.id
-
-    def get_active( self ):
-        return self.active
-
-class Iggybase_Instance( StaticBase ):
-    __tablename__ = 'iggybase_instance'
-    id = Column( Integer, primary_key = True )
-    name = Column( String( 100 ), unique = True )
-    description = Column( String( 255 ) )
-    date_created = Column( DateTime, default = datetime.datetime.utcnow )
-    last_modified = Column( DateTime, default = datetime.datetime.utcnow )
-    active = Column( Boolean )
-    host_name = Column( String( 250 ) )
-    root_dir = Column( String( 250 ) )
-    database = Column( String( 250 ) )
-    lab_id = Column ( Integer, ForeignKey( 'lab.id' ) )
-
-    instance_lab = relationship( "Lab", foreign_keys = [ lab_id ] )
-    host_root = UniqueConstraint( 'host_name', 'root_dir' )
-
-    def get_id( self ):
-        return self.id
-
-    def get_active( self ):
-        return self.active
-
 class Menu( StaticBase ):
     __tablename__ = 'menu'
     id = Column( Integer, primary_key = True )
@@ -88,12 +48,6 @@ class Menu( StaticBase ):
     menu_type_id = Column( Integer, ForeignKey( 'menu_type.id' ) )
 
     menu_menu_type = relationship( "MenuType", foreign_keys = [ menu_type_id ] )
-
-    def get_id( self ):
-        return self.id
-
-    def get_active( self ):
-        return self.active
 
 class MenuLabRole( StaticBase ):
     __tablename__ = 'menu_lab_role'
@@ -110,12 +64,6 @@ class MenuLabRole( StaticBase ):
     menu_lab_role_menu = relationship( "Menu", foreign_keys = [ menu_id ] )
     menu_lab_role_unq = UniqueConstraint( 'lab_role_id', 'menu_id' )
 
-    def get_id( self ):
-        return self.id
-
-    def get_active( self ):
-        return self.active
-
 class MenuType( StaticBase ):
     __tablename__ = 'menu_type'
     id = Column( Integer, primary_key = True )
@@ -124,9 +72,6 @@ class MenuType( StaticBase ):
     date_created = Column( DateTime, default = datetime.datetime.utcnow )
     last_modified = Column( DateTime, default = datetime.datetime.utcnow )
     active = Column( Boolean )
-
-    def get_active( self ):
-        return self.active
 
 class MenuItem( StaticBase ):
     __tablename__ = 'menu_item'
@@ -140,12 +85,6 @@ class MenuItem( StaticBase ):
     menu_id = Column( Integer, ForeignKey( 'menu.id' ) )
 
     menu_item_menu = relationship( "Menu", foreign_keys = [ menu_id ] )
-
-    def get_id( self ):
-        return self.id
-
-    def get_active( self ):
-        return self.active
 
 class MenuItemLabRole( StaticBase ):
     __tablename__ = 'menu_item_lab_role'
@@ -162,14 +101,8 @@ class MenuItemLabRole( StaticBase ):
     menu_item_lab_role_menu_item = relationship( "MenuItem", foreign_keys = [ menu_item_id ] )
     menu_item_lab_role_unq = UniqueConstraint( 'lab_role_id', 'menu_item_id' )
 
-    def get_id( self ):
-        return self.id
-
-    def get_active( self ):
-        return self.active
-
-class Page( StaticBase ):
-    __tablename__ = 'page'
+class PageForm( StaticBase ):
+    __tablename__ = 'page_form'
     id = Column( Integer, primary_key = True )
     name = Column( String( 100 ), unique = True )
     description = Column( String( 255 ) )
@@ -177,11 +110,8 @@ class Page( StaticBase ):
     last_modified = Column( DateTime, default = datetime.datetime.utcnow )
     active = Column( Boolean )
 
-    def get_active( self ):
-        return self.active
-
-class PageLabRole( StaticBase ):
-    __tablename__ = 'page_lab_role'
+class PageFormLabRole( StaticBase ):
+    __tablename__ = 'page_form_lab_role'
     id = Column( Integer, primary_key = True )
     name = Column( String( 100 ), unique = True )
     description = Column( String( 255) )
@@ -189,17 +119,33 @@ class PageLabRole( StaticBase ):
     last_modified = Column( DateTime, default = datetime.datetime.utcnow )
     active = Column( Boolean )
     lab_role_id = Column( Integer, ForeignKey( 'lab_role.id' ) )
-    page_id = Column( Integer, ForeignKey( 'page.id' ) )
+    page_form_id = Column( Integer, ForeignKey( 'page_form.id' ) )
 
     page_lab_role_lab = relationship( "LabRole", foreign_keys = [ lab_role_id ] )
-    page_lab_role_page = relationship( "Page", foreign_keys = [ page_id ] )
-    page_lab_role_unq = UniqueConstraint( 'lab_role_id', 'page_id' )
+    page_lab_role_page = relationship( "PageForm", foreign_keys = [ page_form_id ] )
 
-    def get_id( self ):
-        return self.id
+class PageFormButtons( StaticBase ):
+    __tablename__ = 'page_form_buttons'
+    id = Column( Integer, primary_key = True )
+    name = Column( String( 100 ), unique = True )
+    description = Column( String( 255 ) )
+    date_created = Column( DateTime, default = datetime.datetime.utcnow )
+    last_modified = Column( DateTime, default = datetime.datetime.utcnow )
+    active = Column( Boolean )
 
-    def get_active( self ):
-        return self.active
+class IggyFormButtonsLabRole( StaticBase ):
+    __tablename__ = 'page_form_buttons_lab_role'
+    id = Column( Integer, primary_key = True )
+    name = Column( String( 100 ), unique = True )
+    description = Column( String( 255 ) )
+    date_created = Column( DateTime, default = datetime.datetime.utcnow )
+    last_modified = Column( DateTime, default = datetime.datetime.utcnow )
+    active = Column( Boolean )
+    lab_role_id = Column( Integer, ForeignKey( 'lab_role.id' ) )
+    page_form_buttons_id = Column( Integer, ForeignKey( 'page_form_buttons.id' ) )
+
+    page_form_buttons_lab_role_lab = relationship( "LabRole", foreign_keys = [ lab_role_id ] )
+    page_form_buttons_lab_role_page = relationship( "PageForm", foreign_keys = [ page_form_buttons_id ] )
 
 class Type( StaticBase ):
     __tablename__ = 'type'
@@ -209,12 +155,10 @@ class Type( StaticBase ):
     date_created = Column( DateTime, default = datetime.datetime.utcnow )
     last_modified = Column( DateTime, default = datetime.datetime.utcnow )
     active = Column( Boolean )
-
-    def get_id( self ):
-        return self.id
-
-    def get_active( self ):
-        return self.active
+    new_name_prefix = Column( String( 100 ), unique = True )
+    new_name_id = Column( Integer )
+    id_length = Column( Integer )
+    module = Column( String( 100 ) )
 
 class TypeLabRole( StaticBase ):
     __tablename__ = 'type_lab_role'
@@ -231,29 +175,27 @@ class TypeLabRole( StaticBase ):
     type_lab_role_type = relationship( "Type", foreign_keys = [ type_id ] )
     type_lab_role_unq = UniqueConstraint( 'lab_role_id', 'type_id' )
 
-    def get_id( self ):
-        return self.id
-
-    def get_active( self ):
-        return self.active
-
 class Field( StaticBase ):
     __tablename__ = 'field'
     id = Column( Integer, primary_key = True )
-    field_name = Column( String( 100 ), unique = True )
-    field_description = Column( String( 255 ) )
+    name = Column( String( 100 ), unique = True )
+    description = Column( String( 255 ) )
     date_created = Column( DateTime, default = datetime.datetime.utcnow )
     last_modified = Column( DateTime, default = datetime.datetime.utcnow )
     active = Column( Boolean )
     type_id = Column( Integer, ForeignKey( 'type.id' ) )
+    data_type_id = Column( Integer, ForeignKey( 'data_type.id' ) )
+    unique = Column( Boolean )
+    primary_key = Column( Boolean )
+    length = Column( Integer )
+    default = Column( String( 255 ) )
+    foreign_key_type_id = Column( Integer, ForeignKey( 'type.id' ) )
+    foreign_key_field_id = Column( Integer, ForeignKey( 'field.id' ) )
 
     field_type = relationship( "Type", foreign_keys = [ type_id ] )
-
-    def get_id( self ):
-        return self.id
-
-    def get_active( self ):
-        return self.active
+    field_data_type = relationship( "DataType", foreign_keys = [ data_type_id ] )
+    field_foreign_key_type = relationship( "Type", foreign_keys = [ foreign_key_type_id ] )
+    field_foreign_key_field = relationship( "Field", foreign_keys = [ foreign_key_field_id ] )
 
 class FieldLabRole( StaticBase ):
     __tablename__ = 'field_lab_role'
@@ -265,21 +207,25 @@ class FieldLabRole( StaticBase ):
     active = Column( Boolean )
     lab_role_id = Column( Integer, ForeignKey( 'lab_role.id' ) )
     field_id = Column( Integer, ForeignKey( 'field.id' ) )
-    page_id = Column( Integer, ForeignKey( 'page.id' ) )
+    display_name = Column( String( 100 ) )
+    order = Column( Integer )
     visible = Column( Boolean )
     required = Column( Boolean )
     permission_id = Column( Integer, ForeignKey( 'permission.id' ) )
-    type_id = Column( Integer, ForeignKey( 'type.id' ) )
 
     field_lab_role_lab = relationship( "LabRole", foreign_keys = [ lab_role_id ] )
     field_lab_role_field = relationship( "Field", foreign_keys = [ field_id ] )
-    field_lab_role_page = relationship( "Page", foreign_keys = [ page_id ] )
     field_lab_role_permission = relationship( "Permission", foreign_keys = [ permission_id ] )
-    field_lab_role_type = relationship( "Type", foreign_keys = [ type_id ] )
     field_lab_role_unq = UniqueConstraint( 'lab_role_id', 'field_id', 'page_id' )
 
-    def get_active( self ):
-        return self.active
+class DataType( StaticBase ):
+    __tablename__ = 'data_type'
+    id = Column( Integer, primary_key = True )
+    name = Column( String( 100 ), unique = True )
+    description = Column( String( 255 ) )
+    date_created = Column( DateTime, default = datetime.datetime.utcnow )
+    last_modified = Column( DateTime, default = datetime.datetime.utcnow )
+    active = Column( Boolean )
 
 class Permission( StaticBase ):
     __tablename__ = 'permission'
@@ -290,12 +236,6 @@ class Permission( StaticBase ):
     last_modified = Column( DateTime, default = datetime.datetime.utcnow )
     active = Column( Boolean )
 
-    def get_id( self ):
-        return self.id
-
-    def get_active( self ):
-        return self.active
-
 class Action( StaticBase ):
     __tablename__ = 'action'
     id = Column( Integer, primary_key = True )
@@ -305,12 +245,6 @@ class Action( StaticBase ):
     last_modified = Column( DateTime, default = datetime.datetime.utcnow )
     active = Column( Boolean )
     action_value = Column( String( 255 ) )
-
-    def get_id( self ):
-        return self.id
-
-    def get_active( self ):
-        return self.active
 
 class ActionLabRole( StaticBase ):
     __tablename__ = 'action_lab_role'
@@ -326,12 +260,6 @@ class ActionLabRole( StaticBase ):
     action_lab_role_lab = relationship( "LabRole", foreign_keys = [ lab_role_id ] )
     action_lab_role_action = relationship( "Action", foreign_keys = [ action_id ] )
     action_lab_role_unq = UniqueConstraint( 'lab_role_id', 'action_id' )
-
-    def get_id( self ):
-        return self.id
-
-    def get_active( self ):
-        return self.active
 
 class NewUser( StaticBase ):
     __tablename__ = 'new_user'
@@ -354,9 +282,70 @@ class NewUser( StaticBase ):
     phone = Column( String( 100 ) )
     pi = Column( String( 100 ) )
     group = Column( String( 100 ) )
+    server = Column( String( 100 ) )
+    directory = Column( String( 100 ) )
 
-    def get_id( self ):
-        return self.id
+class TableQuery( StaticBase ):
+    __tablename__ = 'table_query'
+    id = Column( Integer, primary_key = True )
+    name = Column( String( 100 ), unique = True )
+    description = Column( String( 255 ) )
+    date_created = Column( DateTime, default = datetime.datetime.utcnow )
+    last_modified = Column( DateTime, default = datetime.datetime.utcnow )
+    active = Column( Boolean )
 
-    def get_active( self ):
-        return self.active
+class TableQueryType( StaticBase ):
+    __tablename__ = 'table_query_type'
+    id = Column( Integer, primary_key = True )
+    name = Column( String( 100 ), unique = True )
+    description = Column( String( 255 ) )
+    date_created = Column( DateTime, default = datetime.datetime.utcnow )
+    last_modified = Column( DateTime, default = datetime.datetime.utcnow )
+    active = Column( Boolean )
+    table_query_id = Column( Integer, ForeignKey( 'table_query.id' ) )
+    type_id = Column( Integer, ForeignKey( 'type.id' ) )
+
+    table_query_type_type = relationship( "Type", foreign_keys = [ type_id ] )
+    table_query_type_table_query = relationship( "TableQuery", foreign_keys = [ table_query_id ] )
+
+class TableQueryField( StaticBase ):
+    __tablename__ = 'table_query_field'
+    id = Column( Integer, primary_key = True )
+    name = Column( String( 100 ), unique = True )
+    description = Column( String( 255 ) )
+    date_created = Column( DateTime, default = datetime.datetime.utcnow )
+    last_modified = Column( DateTime, default = datetime.datetime.utcnow )
+    active = Column( Boolean )
+    table_query_id = Column( Integer, ForeignKey( 'table_query.id' ) )
+    field_id = Column( Integer, ForeignKey( 'field.id' ) )
+
+    table_query_field_field = relationship( "Field", foreign_keys = [ field_id ] )
+    table_query_field_table_query = relationship( "TableQuery", foreign_keys = [ table_query_id ] )
+
+class TableQueryCriteria( StaticBase ):
+    __tablename__ = 'table_query_criteria'
+    id = Column( Integer, primary_key = True )
+    name = Column( String( 100 ), unique = True )
+    description = Column( String( 255 ) )
+    date_created = Column( DateTime, default = datetime.datetime.utcnow )
+    last_modified = Column( DateTime, default = datetime.datetime.utcnow )
+    active = Column( Boolean )
+    table_query_id = Column( Integer, ForeignKey( 'table_query.id' ) )
+    criteria = Column( String( 255 ) )
+
+    table_query_criteria_table_query = relationship( "TableQuery", foreign_keys = [ table_query_id ] )
+
+class TableQueryOrder( StaticBase ):
+    __tablename__ = 'table_query_order'
+    id = Column( Integer, primary_key = True )
+    name = Column( String( 100 ), unique = True )
+    description = Column( String( 255 ) )
+    date_created = Column( DateTime, default = datetime.datetime.utcnow )
+    last_modified = Column( DateTime, default = datetime.datetime.utcnow )
+    active = Column( Boolean )
+    table_query_id = Column( Integer, ForeignKey( 'table_query.id' ) )
+    field_id = Column( Integer, ForeignKey( 'field.id' ) )
+    direction = Column( String( 50 ) )
+
+    table_query_order_field = relationship( "Field", foreign_keys = [ field_id ] )
+    table_query_order_table_query = relationship( "TableQuery", foreign_keys = [ table_query_id ] )

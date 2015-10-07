@@ -26,4 +26,3 @@ def init_db( ):
     import iggybase.mod_auth.models
     import iggybase.mod_core.models
     Base.metadata.create_all( bind = engine )
-

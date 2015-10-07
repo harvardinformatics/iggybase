@@ -1,10 +1,13 @@
-from flask import render_template as Renderer
+from flask import g, render_template as renderer
 from flask_login import current_user
-from iggybase.mod_admin.models import Lab, Menu, MenuItem
+from iggybase.mod_admin.models import Menu, MenuItem
 import logging
 
-def render_template(template_name_or_list, **context):
+def render_template(template_name, **context):
+    g.user = current_user
     #context[ 'navbar' ] =
     #context[ 'sidemenu' ] =
 
-    return Renderer( template_name_or_list, **context )
+    context[ 'rows' ] = [ ( '1', 'test1' ), ( '2', 'test2' ) ]
+    context[ 'headers' ] = [ 'ID', 'Name' ]
+    return renderer( template_name, **context )

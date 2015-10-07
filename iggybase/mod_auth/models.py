@@ -3,9 +3,7 @@ from flask.ext.login import UserMixin
 from iggybase.extensions import lm
 from iggybase.database import Base
 from iggybase.mod_auth import constants as USER
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, DateTime, UniqueConstraint
-from sqlalchemy.orm import relationship
-from iggybase.mod_core.models import Address
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, DateTime
 import datetime
 
 class User( UserMixin, Base ):
@@ -22,15 +20,20 @@ class User( UserMixin, Base ):
     email = Column( String( 120 ), unique = True )
     address_id = Column( Integer, ForeignKey( 'address.id' ) )
     home_page = Column( String( 50 ) )
+    home_page_variable = Column( String( 50 ) )
     role_id = Column( Integer, default = USER.READONLY )
 
-    user_address = relationship( "Address", foreign_keys = [ address_id ] )
+    def is_authenticated( self ):
+        return True
 
-    def get_id( self ):
-        return self.id
-
-    def get_active( self ):
+    def is_active( self ):
         return self.active
+
+    def is_anonymous( self ):
+        return False
+
+    def get_id(self):
+        return str( self.id )
 
     def set_password( self, password ):
         self.password_hash = generate_password_hash( password )
@@ -38,15 +41,13 @@ class User( UserMixin, Base ):
     def verify_password( self, password ):
         return check_password_hash( self.password_hash, password )
 
+    @staticmethod
+    def get_password_hash( password ):
+        return generate_password_hash( password )
+
     def __init__( self, name = None, email = None ):
         self.name = name
         self.email = email
-
-    def get_id( self ):
-        return self.id
-
-    def get_active( self ):
-        return self.active
 
     def get_role( self ):
         return USER.ROLE[ self.role_id ]

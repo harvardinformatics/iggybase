@@ -1,7 +1,7 @@
 import os
+import socket
 import sys
 import site
-import socket
 import logging
 
 # Add the site-packages of the chosen virtualenv to work with
@@ -16,7 +16,7 @@ sys.path.insert( 0, os.path.join( os.path.dirname( os.path.realpath( __file__ ) 
 
 logging.basicConfig( filename=os.path.join( os.path.dirname( os.path.realpath( __file__ ) ), 'iggybase.log' ),level=logging.DEBUG )
 
-rootdir = os.path.basename( os.path.dirname( os.path.abspath( __file__ ) ) )
+rootdir = os.path.basename( os.path.dirname( os.path.dirname( os.path.abspath( __file__ ) ) ) )
 hostname = socket.gethostname()
 config_name = hostname + '.' + rootdir
 
