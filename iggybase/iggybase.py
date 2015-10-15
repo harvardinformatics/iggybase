@@ -1,5 +1,5 @@
 from flask import Flask
-from config import config
+from config import config, get_config
 from flask import render_template
 from iggybase.extensions import mail, lm, bootstrap
 from iggybase.mod_auth import mod_auth as mod_auth_blueprint
@@ -16,16 +16,17 @@ DEFAULT_BLUEPRINTS = (
 
 __all__ = [ 'create_app' ]
 
-conf = ''
+def create_app( config_name = None, app_name = None, blueprints = None ):
+    if config_name is None:
+        conf = get_config( )
+    else:
+        conf = config[ config_name ]( )
 
-def create_app( config_name, app_name = None, blueprints = None ):
-    global conf
-    conf = config( config_name )
     iggybase = Flask( __name__ )
     iggybase.config.from_object( conf )
 
     if app_name is None:
-        app_name = config.PROJECT
+        app_name = conf.PROJECT
 
     configure_extensions( iggybase )
     configure_hook( iggybase )

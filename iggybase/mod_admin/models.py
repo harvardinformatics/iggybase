@@ -132,8 +132,11 @@ class PageFormButtons( StaticBase ):
     date_created = Column( DateTime, default = datetime.datetime.utcnow )
     last_modified = Column( DateTime, default = datetime.datetime.utcnow )
     active = Column( Boolean )
+    page_form_id = Column( Integer, ForeignKey( 'page_form.id' ) )
 
-class IggyFormButtonsLabRole( StaticBase ):
+    page_form_buttons_lab_role_page = relationship( "PageForm", foreign_keys = [ page_form_id ] )
+
+class PageFormButtonsLabRole( StaticBase ):
     __tablename__ = 'page_form_buttons_lab_role'
     id = Column( Integer, primary_key = True )
     name = Column( String( 100 ), unique = True )
@@ -145,10 +148,10 @@ class IggyFormButtonsLabRole( StaticBase ):
     page_form_buttons_id = Column( Integer, ForeignKey( 'page_form_buttons.id' ) )
 
     page_form_buttons_lab_role_lab = relationship( "LabRole", foreign_keys = [ lab_role_id ] )
-    page_form_buttons_lab_role_page = relationship( "PageForm", foreign_keys = [ page_form_buttons_id ] )
+    page_form_buttons_lab_role_page_form = relationship( "PageFormButtons", foreign_keys = [ page_form_buttons_id ] )
 
-class Type( StaticBase ):
-    __tablename__ = 'type'
+class TableObject( StaticBase ):
+    __tablename__ = 'table_object'
     id = Column( Integer, primary_key = True )
     name = Column( String( 100 ), unique = True )
     description = Column( String( 255 ) )
@@ -160,8 +163,8 @@ class Type( StaticBase ):
     id_length = Column( Integer )
     module = Column( String( 100 ) )
 
-class TypeLabRole( StaticBase ):
-    __tablename__ = 'type_lab_role'
+class TableObjectLabRole( StaticBase ):
+    __tablename__ = 'table_object_lab_role'
     id = Column( Integer, primary_key = True )
     name = Column( String( 100 ), unique = True )
     description = Column( String( 255) )
@@ -169,11 +172,11 @@ class TypeLabRole( StaticBase ):
     last_modified = Column( DateTime, default = datetime.datetime.utcnow )
     active = Column( Boolean )
     lab_role_id = Column( Integer, ForeignKey( 'lab_role.id' ) )
-    type_id = Column( Integer, ForeignKey( 'type.id' ) )
+    table_object_id = Column( Integer, ForeignKey( 'table_object.id' ) )
 
     type_lab_role_lab = relationship( "LabRole", foreign_keys = [ lab_role_id ] )
-    type_lab_role_type = relationship( "Type", foreign_keys = [ type_id ] )
-    type_lab_role_unq = UniqueConstraint( 'lab_role_id', 'type_id' )
+    type_lab_role_type = relationship( "TableObject", foreign_keys = [ table_object_id ] )
+    type_lab_role_unq = UniqueConstraint( 'lab_role_id', 'table_object_id' )
 
 class Field( StaticBase ):
     __tablename__ = 'field'
@@ -183,18 +186,19 @@ class Field( StaticBase ):
     date_created = Column( DateTime, default = datetime.datetime.utcnow )
     last_modified = Column( DateTime, default = datetime.datetime.utcnow )
     active = Column( Boolean )
-    type_id = Column( Integer, ForeignKey( 'type.id' ) )
+    field_name = Column( String( 100 ) )
+    table_object_id = Column( Integer, ForeignKey( 'table_object.id' ) )
     data_type_id = Column( Integer, ForeignKey( 'data_type.id' ) )
     unique = Column( Boolean )
     primary_key = Column( Boolean )
     length = Column( Integer )
     default = Column( String( 255 ) )
-    foreign_key_type_id = Column( Integer, ForeignKey( 'type.id' ) )
+    foreign_key_table_object_id = Column( Integer, ForeignKey( 'table_object.id' ) )
     foreign_key_field_id = Column( Integer, ForeignKey( 'field.id' ) )
 
-    field_type = relationship( "Type", foreign_keys = [ type_id ] )
+    field_type = relationship( "TableObject", foreign_keys = [ table_object_id ] )
     field_data_type = relationship( "DataType", foreign_keys = [ data_type_id ] )
-    field_foreign_key_type = relationship( "Type", foreign_keys = [ foreign_key_type_id ] )
+    field_foreign_key_table_object = relationship( "TableObject", foreign_keys = [ foreign_key_table_object_id ] )
     field_foreign_key_field = relationship( "Field", foreign_keys = [ foreign_key_field_id ] )
 
 class FieldLabRole( StaticBase ):
@@ -303,9 +307,9 @@ class TableQueryType( StaticBase ):
     last_modified = Column( DateTime, default = datetime.datetime.utcnow )
     active = Column( Boolean )
     table_query_id = Column( Integer, ForeignKey( 'table_query.id' ) )
-    type_id = Column( Integer, ForeignKey( 'type.id' ) )
+    table_object_id = Column( Integer, ForeignKey( 'table_object.id' ) )
 
-    table_query_type_type = relationship( "Type", foreign_keys = [ type_id ] )
+    table_query_type_type = relationship( "TableObject", foreign_keys = [ table_object_id ] )
     table_query_type_table_query = relationship( "TableQuery", foreign_keys = [ table_query_id ] )
 
 class TableQueryField( StaticBase ):

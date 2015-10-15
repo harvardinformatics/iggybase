@@ -1,5 +1,5 @@
 from flask import redirect, url_for, request, session
-from flask.ext.login import login_required
+from flask.ext.login import login_required, current_user
 from iggybase.templating import render_template
 from . import mod_core
 #from .forms import SummaryForm

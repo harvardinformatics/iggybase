@@ -1,7 +1,7 @@
-from iggybase.mod_admin.models import Type, TypeLabRole, Field, FieldLabRole, LabRole, Lab, DataType
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, DateTime, UniqueConstraint, Text
+from iggybase.mod_admin.models import TableObject, TableObjectLabRole, Field, FieldLabRole, LabRole, Lab, DataType
+import sqlalchemy
 from sqlalchemy.orm import relationship
-from iggybase.mod_auth.lab_authenticator import LabAuthenticator
+from iggybase.mod_auth.lab_access_control import LabAccessControl
 from iggybase.database import admin_db_session, Base
 import datetime
 import logging
@@ -9,48 +9,55 @@ import logging
 class ModelFactory:
     def __init__ ( self, module ):
         self.module = module
-        self.authenticator = LabAuthenticator( )
+        self.lab_access_control = LabAccessControl( )
 
     def createmodel ( self, active = 1 ):
-        types = self.authenticator.module_types( self.module, active )
+        table_objects = self.lab_access_control.module_table_objects( self.module, active )
 
-        for modeltype in types:
-            typeprops = self.authenticator.module_fields( modeltype.id, active )
+        for table_object in table_objects:
 
-            props = [ row.fieldname for row in typeprops ]
+            #logging.info( 'table name: ' + ModelFactory.to_camel_case( table_object.name ) )
 
-            classname = self.to_camel_case( modeltype.name )
+            #colnames = [ row.field_name for row in table_object_cols ]
 
-            tableclass = self.createtype( classname, modeltype.name, props, Base )
+            class_name = ModelFactory.to_camel_case( table_object.name )
 
-            for propname in props:
-                attributes = self.authenticator.fields( modeltype.id, active )
-                coldef = self.columndefinition( attributes )
-                setattr( tableclass, propname, coldef )
+            self.table_object_factory ( class_name, table_object, active )
 
-    def createtype ( self, name, tablename, argnames, baseclass ):
+    def table_object_factory ( self, class_name, table_object, active = 1 ):
         def __init__( self, **kwargs ):
-            for key, value in kwargs.items( ):
-                if key not in argnames:
-                    raise TypeError( "Argument %s not valid for %s" % ( key, self.__class__.__name__ ) )
-                setattr( self, key, value )
-            baseclass.__init__( self, name[ :-len( "Class" ) ] )
-        newclass = type( name, ( baseclass, ), { "__init__": __init__, "__tablename__": tablename } )
+            Base.__init__( self, class_name )
+
+        classattr = { "__init__": __init__, "__tablename__": table_object.name }
+
+        table_object_cols = self.lab_access_control.module_fields( table_object.id, active )
+
+        for col in table_object_cols:
+            #logging.info( col.field_name )
+            classattr[ col.field_name ] = ModelFactory.create_column( col )
+
+        newclass = type( class_name, ( Base, ), classattr )
 
         return newclass
 
-    def to_camel_case( self, snake_str ):
+    @staticmethod
+    def to_camel_case( snake_str ):
         components = snake_str.split('_')
 
         return "".join( x.title( ) for x in components )
 
-    def createcolumn( self, attributes ):
+    @staticmethod
+    def create_column( attributes ):
         datatype = admin_db_session.query( DataType ).filter_by( id = attributes.data_type_id, active = 1 ).first( )
 
+        #logging.info( datatype.name )
+
+        dtclassname = getattr( sqlalchemy, datatype.name )
+
         if attributes.data_type_id == 2:
-            dtinst = datatype( attributes.length )
+            dtinst = dtclassname( attributes.length )
         else:
-            dtinst = datatype( )
+            dtinst = dtclassname( )
 
         arg = { }
 
@@ -63,4 +70,30 @@ class ModelFactory:
         if attributes.default != "":
             arg[ 'default' ] = attributes.default
 
-        return Column( dtinst, arg )
+        return sqlalchemy.Column( dtinst, **arg )
+
+    @staticmethod
+    def create_foreign_key( attributes ):
+        datatype = admin_db_session.query( DataType ).filter_by( id = attributes.data_type_id, active = 1 ).first( )
+
+        #logging.info( datatype.name )
+
+        dtclassname = getattr( sqlalchemy, datatype.name )
+
+        if attributes.data_type_id == 2:
+            dtinst = dtclassname( attributes.length )
+        else:
+            dtinst = dtclassname( )
+
+        arg = { }
+
+        if attributes.primary_key == 1:
+            arg[ 'primary_key' ] = True
+
+        if attributes.unique == 1:
+            arg[ 'unique' ] = True
+
+        if attributes.default != "":
+            arg[ 'default' ] = attributes.default
+
+        return sqlalchemy.Column( dtinst, **arg )

@@ -1,69 +1,48 @@
-from iggybase.query import SelectQuery
+from iggybase.database import admin_db_session
+from iggybase.mod_admin.models import Field, FieldLabRole, TableObject, TableObjectLabRole, Lab, LabRole
 from config import get_config
+import logging
 
 class LabAccessControl:
     def __init__ ( self ):
-        config = get_config( )
+        conf = get_config( )
+        #logging.debug( conf.LAB )
 
-        qry = SelectQuery( [ 'Lab' ] )
-        qry.criteria( [ 'name', '=', config.LAB ] )
-        res = qry.execute( )
+        lab = admin_db_session.query( Lab ).filter_by( name = conf.LAB ).first( )
 
-        self.lab = res[ 0 ]
+        self.labroles = admin_db_session.query( LabRole ).filter_by( lab_id = lab.id ).all( )
 
-        qry = SelectQuery( [ 'LabRole' ] )
-        qry.criteria( [ 'lab_id', '=', self.lab.id ] )
-        self.labroles = qry.execute( )
+    def module_table_objects( self, module, active = 1 ):
+        table_objects = [ ]
 
-    def module_types( self, module, active = 1 ):
-        types = [ ]
-        type_id = { }
+        #logging.debug( 'module_table_objects' )
+        #logging.info ( 'module: ' + module )
+        #logging.info ( 'active: ' + str( active ) )
+        res = admin_db_session.query( TableObject ).filter_by( module = module ).filter_by( active = active ).all( )
+        for row in res:
+            #logging.info ( 'table_object_id: ' + str( row.id ) + ' name: ' + row.name )
+            for lab_role in self.labroles:
+                #logging.info ( 'lab_role.id: ' + str( lab_role.id ) )
+                access = admin_db_session.query( TableObjectLabRole ).filter_by( table_object_id = row.id ).filter_by( lab_role_id = lab_role.id ).filter_by( active = active ).first( )
+                if access is not None:
+                    table_objects.append( row )
+                    break
 
-        for row1 in self.labroles:
-            qry = SelectQuery( [ 'TypeLabRole' ] )
-            qry.select( { 'type_id': 'type_id' } )
-            qry.criteria( [ 'lab_role_id', '=', row1.id ] )
-            qry.group_by( 'type_id' )
-            res = qry.execute( )
+        return table_objects
 
-            for row2 in res:
-                type_id[ row2.id ] = row2.id
-
-        for type in type_id:
-            qry = SelectQuery( [ 'Type' ] )
-            qry.criteria( [ 'id', '=', type ] )
-            qry.criteria( [ 'active', '=', active ] )
-            type_res = qry.execute( )
-            try:
-                types.append( type_res[ 0 ] )
-            except ValueError:
-                pass
-
-        return types
-
-    @staticmethod
-    def module_fields( self, type_id, active = 1 ):
+    def module_fields( self, table_object_id, active = 1 ):
         fields = [ ]
-        field_id = { }
 
-        for row1 in self.labroles:
-            qry = SelectQuery( [ 'FieldLabRole' ] )
-            qry.select( { 'field_id': 'field_id' } )
-            qry.criteria( [ 'lab_role_id', '=', row1.id ] )
-            qry.group_by( 'field_id' )
-            res = qry.execute( )
-
-            for row2 in res:
-                field_id[ row2.id ] = row2.id
-
-        for field in field_id:
-            qry = SelectQuery( [ 'Field' ] )
-            qry.criteria( [ 'id', '=', field ] )
-            qry.criteria( [ 'active', '=', active ] )
-            field_res = qry.execute( )
-            try:
-                fields.append( field_res[ 0 ] )
-            except ValueError:
-                pass
+        #logging.debug( 'module_fields' )
+        #logging.info ( 'table_object_id: ' + str( table_object_id ) )
+        #logging.info ( 'active: ' + str( active ) )
+        res = admin_db_session.query( Field ).filter_by( table_object_id = table_object_id, active = active ).all( )
+        for row in res:
+            #logging.info ( 'field_id: ' + str( row.id ) )
+            for lab_role in self.labroles:
+                access = admin_db_session.query( FieldLabRole ).filter_by( field_id = row.id, lab_role_id = lab_role.id, active = active ).first( )
+                if access is not None:
+                    fields.append( row )
+                    break
 
         return fields
