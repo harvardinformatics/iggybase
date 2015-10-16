@@ -1,6 +1,8 @@
 from flask import current_user
-from iggybase.query import SelectQuery
-from iggybase.mod_admin.models import LabRole, Lab
+from iggybase.database import admin_db_session
+from iggybase.mod_admin.models import LabRole, Lab, TableObject, TableObjectLabRole,\
+    Field, FieldLabRole, Action, ActionLabRole, Menu, MenuLabRole, MenuItem, MenuItemLabRole, \
+    PageForm, PageFormLabRole, PageFormButtons, PageFormButtonsLabRole
 from iggybase.mod_auth.models import load_user
 from config import get_config
 
@@ -10,111 +12,106 @@ class AccessControl:
 
         self.user = load_user( current_user.id )
 
-        qry = SelectQuery( [ 'Lab' ] )
-        qry.criteria( [ 'name', '=', config.LAB ] )
-        res = qry.execute( )
+        self.lab = admin_db_session.query( Lab ).filter_by( name = conf.LAB ).first( )
 
-        self.lab = res[ 0 ]
+        self.labrole = admin_db_session.query( LabRole ).filter_by( lab_id = lab.id, role_id = self.user.role_id ).first( )
 
-        qry = SelectQuery( [ 'LabRole' ] )
-        qry.criteria( [ 'lab_id', '=', self.lab.id ] )
-        qry.criteria( [ 'role_id', '=',  self.user.role_id ] )
-        res = qry.execute( )
+    def table_objects( self, active = 1 ):
+        table_objects = [ ]
 
-        self.labrole = res[ 0 ]
-
-    def types( self, active = 1 ):
-        qry = SelectQuery( 'TypeLabRole' )
-        qry.criteria( [ 'lab_role_id', '=', self.labrole.id ] )
-        res = qry.execute( )
-
-        types = [ ]
-
+        res = admin_db_session.query( TableObjectLabRole ).filter_by( lab_role_id = self.labrole.id ).filter_by( active = active ).all( )
         for row in res:
-            qry = SelectQuery( 'Type' )
-            qry.criteria( [ 'id', '=', row [ 'type_id' ] ] )
-            qry.criteria( [ 'active', '=', active ] )
-            type_res = qry.execute( )
-            types.append( type_res[ 0 ] )
+            table_object = admin_db_session.query( TableObject ).filter_by( id = row.table_object_id ).filter_by( active = active ).first( )
+            if table_object is not None:
+                table_objects.append( table_object )
+                break
 
-        return types
+        return table_objects
 
     def fields( self, type_id, active = 1 ):
-        qry = SelectQuery( 'FieldLabRole' )
-        qry.criteria( [ 'lab_role_id', '=', self.labrole.id ] )
-        res = qry.execute( )
-
         fields = [ ]
 
+        res = admin_db_session.query( FieldLabRole ).filter_by( lab_role_id = self.labrole.id ).filter_by( active = active ).all( )
         for row in res:
-            qry = SelectQuery( 'Field' )
-            qry.criteria( [ 'id', '=', row [ 'field_id' ] ] )
-            qry.criteria( [ 'active', '=', active ] )
-            field_res = qry.execute( )
-            fields.append( field_res[ 0 ] )
+            field = admin_db_session.query( Field ).filter_by( id = row.field_id ).filter_by( active = active ).first( )
+            if field is not None:
+                fields.append( field )
+                break
 
         return fields
 
     def actions( self, active = 1 ):
-        qry = SelectQuery( 'ActionLabRole' )
-        qry.criteria( [ 'lab_role_id', '=', self.labrole.id ] )
-        res = qry.execute( )
-
         actions = [ ]
 
+        res = admin_db_session.query( ActionLabRole ).filter_by( lab_role_id = self.labrole.id ).filter_by( active = active ).all( )
         for row in res:
-            qry = SelectQuery( 'Action' )
-            qry.criteria( [ 'id', '=', row [ 'action_id' ] ] )
-            qry.criteria( [ 'active', '=', active ] )
-            action_res = qry.execute( )
-            actions.append( action_res[ 0 ] )
+            action = admin_db_session.query( Action ).filter_by( id = row.action_id ).filter_by( active = active ).first( )
+            if action is not None:
+                actions.append( action )
+                break
 
         return actions
 
     def menus( self, active = 1 ):
-        qry = SelectQuery( 'MenuLabRole' )
-        qry.criteria( [ 'lab_role_id', '=', self.labrole.id ] )
-        res = qry.execute( )
-
         menus = [ ]
 
+        res = admin_db_session.query( MenuLabRole ).filter_by( lab_role_id = self.labrole.id ).filter_by( active = active ).all( )
         for row in res:
-            qry = SelectQuery( 'Menu' )
-            qry.criteria( [ 'id', '=', row [ 'menu_id' ] ] )
-            qry.criteria( [ 'active', '=', active ] )
-            menu_res = qry.execute( )
-            menus.append( menu_res[ 0 ] )
+            menu = admin_db_session.query( Menu ).filter_by( id = row.menu_id ).filter_by( active = active ).first( )
+            if menu is not None:
+                menus.append( menu )
+                break
 
         return menus
 
     def menu_items( self, menu_id, active = 1 ):
-        qry = SelectQuery( 'MenuItemLabRole' )
-        qry.criteria( [ 'lab_role_id', '=', self.labrole.id ] )
-        res = qry.execute( )
+        menu_items = [ ]
 
-        menuitems = [ ]
-
+        res = admin_db_session.query( MenuItemLabRole ).filter_by( lab_role_id = self.labrole.id ).filter_by( active = active ).all( )
         for row in res:
-            qry = SelectQuery( 'MenuItem' )
-            qry.criteria( [ 'id', '=', row [ 'menu_item_id' ] ] )
-            qry.criteria( [ 'active', '=', active ] )
-            field_res = qry.execute( )
-            menuitems.append( field_res[ 0 ] )
+            menuitem = admin_db_session.query( MenuItem ).filter_by( id = row.menu_item_id ).filter_by( active = active ).first( )
+            if menuitem is not None:
+                menu_items.append( menuitem )
+                break
 
-        return menuitems
+        return menu_items
 
-    def is_authorized( self, auth_type, name, active = 1 ):
-        qry = SelectQuery( auth_type )
-        qry.criteria( [ 'name', '=', name ] )
-        auth_type_res = qry.execute( )
+    def page_forms( self, active = 1 ):
+        page_forms = [ ]
 
-        auth_type_id = auth_type_res[ 0 ][ 'id' ]
-        qry = SelectQuery( auth_type + "LabRole" )
-        qry.criteria( [ 'lab_role_id', '=', self.labrole.id ] )
-        qry.criteria( [ auth_type + '_id', '=', auth_type_id ] )
-        res = qry.execute( )
+        res = admin_db_session.query( PageFormLabRole ).filter_by( lab_role_id = self.labrole.id ).filter_by( active = active ).all( )
+        for row in res:
+            page_form = admin_db_session.query( PageForm ).filter_by( id = row.page_form_id ).filter_by( active = active ).first( )
+            if page_form is not None:
+                page_forms.append( page_form )
+                break
 
-        if res[ 0 ][ 'permission' ]:
-            return res[ 0 ][ 'permission' ]
-        else:
-            return None
+        return page_forms
+
+    def page_form_buttons( self, menu_id, active = 1 ):
+        page_form_buttons = [ ]
+
+        res = admin_db_session.query( PageFormButtonsLabRole ).filter_by( lab_role_id = self.labrole.id ).filter_by( active = active ).all( )
+        for row in res:
+            page_form_button = admin_db_session.query( PageFormButtons ).filter_by( id = row.page_form_button_id ).filter_by( active = active ).first( )
+            if page_form_button is not None:
+                page_form_buttons.append( page_form_button )
+                break
+
+        return page_form_buttons
+
+    #def has_access( self, auth_type, name, active = 1 ):
+        #qry = SelectQuery( auth_type )
+        #qry.criteria( [ 'name', '=', name ] )
+        #auth_type_res = qry.execute( )
+
+        #auth_type_id = auth_type_res[ 0 ][ 'id' ]
+        #qry = SelectQuery( auth_type + "LabRole" )
+        #qry.criteria( [ 'lab_role_id', '=', self.labrole.id ] )
+        #qry.criteria( [ auth_type + '_id', '=', auth_type_id ] )
+        #res = qry.execute( )
+
+        #if res[ 0 ][ 'permission' ]:
+        #    return res[ 0 ][ 'permission' ]
+        #else:
+        #    return None

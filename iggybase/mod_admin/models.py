@@ -59,6 +59,7 @@ class MenuLabRole( StaticBase ):
     active = Column( Boolean )
     lab_role_id = Column( Integer, ForeignKey( 'lab_role.id' ) )
     menu_id = Column( Integer, ForeignKey( 'menu.id' ) )
+    order = Column( Integer )
 
     menu_lab_role_lab = relationship( "LabRole", foreign_keys = [ lab_role_id ] )
     menu_lab_role_menu = relationship( "Menu", foreign_keys = [ menu_id ] )
@@ -96,6 +97,7 @@ class MenuItemLabRole( StaticBase ):
     active = Column( Boolean )
     lab_role_id = Column( Integer, ForeignKey( 'lab_role.id' ) )
     menu_item_id = Column( Integer, ForeignKey( 'menu_item.id' ) )
+    order = Column( Integer )
 
     menu_item_lab_role_lab = relationship( "LabRole", foreign_keys = [ lab_role_id ] )
     menu_item_lab_role_menu_item = relationship( "MenuItem", foreign_keys = [ menu_item_id ] )
@@ -146,6 +148,7 @@ class PageFormButtonsLabRole( StaticBase ):
     active = Column( Boolean )
     lab_role_id = Column( Integer, ForeignKey( 'lab_role.id' ) )
     page_form_buttons_id = Column( Integer, ForeignKey( 'page_form_buttons.id' ) )
+    order = Column( Integer )
 
     page_form_buttons_lab_role_lab = relationship( "LabRole", foreign_keys = [ lab_role_id ] )
     page_form_buttons_lab_role_page_form = relationship( "PageFormButtons", foreign_keys = [ page_form_buttons_id ] )
