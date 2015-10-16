@@ -28,13 +28,12 @@ def create_app( config_name = None, app_name = None, blueprints = None ):
     if app_name is None:
         app_name = conf.PROJECT
 
-    configure_extensions( iggybase )
-    configure_hook( iggybase )
-
     from iggybase.database import init_db
     init_db( )
 
     configure_blueprints( iggybase, blueprints )
+    configure_extensions( iggybase )
+    configure_hook( iggybase )
 
     return iggybase
 

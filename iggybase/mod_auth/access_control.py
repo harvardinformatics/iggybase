@@ -1,4 +1,4 @@
-from flask import current_user
+from flask.ext.login import current_user
 from iggybase.database import admin_db_session
 from iggybase.mod_admin.models import LabRole, Lab, TableObject, TableObjectLabRole,\
     Field, FieldLabRole, Action, ActionLabRole, Menu, MenuLabRole, MenuItem, MenuItemLabRole, \

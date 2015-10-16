@@ -1,8 +1,6 @@
-from flask import redirect, url_for, request, session
-from flask.ext.login import login_required, current_user
+from flask.ext.login import login_required
 from iggybase.templating import render_template
-from . import mod_core
-#from .forms import SummaryForm
+from iggybase.mod_core import mod_core
 import logging
 
 @mod_core.before_request
@@ -17,6 +15,5 @@ def default():
 
 @mod_core.route( '/summary/<page_type>' )
 def summary( page_type = None ):
-    logging.info( 'summary page user' )
-    logging.info( current_user.name )
+    logging.info( page_type + ' summary page user' )
     return render_template( 'mod_core/summary.html', form_type = 'summary', page_type = page_type )
