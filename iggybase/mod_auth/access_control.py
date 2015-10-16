@@ -12,9 +12,9 @@ class AccessControl:
 
         self.user = load_user( current_user.id )
 
-        self.lab = admin_db_session.query( Lab ).filter_by( name = conf.LAB ).first( )
+        self.lab = admin_db_session.query( Lab ).filter_by( name = config.LAB ).first( )
 
-        self.labrole = admin_db_session.query( LabRole ).filter_by( lab_id = lab.id, role_id = self.user.role_id ).first( )
+        self.labrole = admin_db_session.query( LabRole ).filter_by( lab_id = self.lab.id, role_id = self.user.role_id ).first( )
 
     def table_objects( self, active = 1 ):
         table_objects = [ ]
