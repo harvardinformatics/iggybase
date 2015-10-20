@@ -26,14 +26,7 @@ create virtual environment
 python3.4 -m venv iggybase_env
 
 install flask and packages
+--------------------------
+pip install -r pip_installs.txt
 
-source iggybase_env/bin/activate
-pip install flask
-pip install flask-wtf
-pip install flask-login
-pip install flask-sqlalchemy
-pip install flask-bootstrap
-pip install flask-mail
-pip install mod_wsgi
-pip install --allow-external mysql-connector-python mysql-connector-python
 
