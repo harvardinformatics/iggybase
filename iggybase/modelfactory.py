@@ -1,7 +1,7 @@
-from iggybase.mod_admin.models import TableObject, TableObjectLabRole, Field, FieldLabRole, LabRole, Lab, DataType
+from iggybase.mod_admin.models import DataType
 import sqlalchemy
 from sqlalchemy.orm import relationship
-from iggybase.mod_auth.lab_access_control import LabAccessControl
+from iggybase.mod_auth.group_access_control import GroupAccessControl
 from iggybase.database import admin_db_session, Base
 import datetime
 import logging
@@ -9,10 +9,10 @@ import logging
 class ModelFactory:
     def __init__ ( self, module ):
         self.module = module
-        self.lab_access_control = LabAccessControl( )
+        self.group_access_control = GroupAccessControl( )
 
     def createmodel ( self, active = 1 ):
-        table_objects = self.lab_access_control.module_table_objects( self.module, active )
+        table_objects = self.group_access_control.module_table_objects( self.module, active )
 
         for table_object in table_objects:
 
@@ -30,7 +30,7 @@ class ModelFactory:
 
         classattr = { "__init__": __init__, "__tablename__": table_object.name }
 
-        table_object_cols = self.lab_access_control.module_fields( table_object.id, active )
+        table_object_cols = self.group_access_control.module_fields( table_object.id, active )
 
         for col in table_object_cols:
             #logging.info( col.field_name )

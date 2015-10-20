@@ -4,8 +4,8 @@ from sqlalchemy.orm import relationship
 from iggybase.mod_admin import constants as ADMIN
 import datetime
 
-class Lab( StaticBase ):
-    __tablename__ = 'lab'
+class Group( StaticBase ):
+    __tablename__ = 'group'
     id = Column( Integer, primary_key = True )
     name = Column( String( 100 ), unique = True )
     description = Column( String( 255 ) )
@@ -22,20 +22,20 @@ class Role( StaticBase ):
     last_modified = Column( DateTime, default=datetime.datetime.utcnow )
     active = Column( Boolean )
 
-class LabRole( StaticBase ):
-    __tablename__ = 'lab_role'
+class GroupRole( StaticBase ):
+    __tablename__ = 'group_role'
     id = Column( Integer, primary_key = True )
     name = Column( String( 100 ), unique = True )
     description = Column( String( 255) )
     date_created = Column( DateTime, default = datetime.datetime.utcnow )
     last_modified = Column( DateTime, default = datetime.datetime.utcnow )
     active = Column( Boolean )
-    lab_id = Column( Integer, ForeignKey( 'lab.id' ) )
+    group_id = Column( Integer, ForeignKey( 'group.id' ) )
     role_id = Column( Integer, ForeignKey( 'role.id' ) )
 
-    lab_role_lab = relationship( "Lab", foreign_keys = [ lab_id ] )
-    lab_role_role = relationship( "Role", foreign_keys = [ role_id ] )
-    lab_role_unq = UniqueConstraint( 'lab_id', 'role_id' )
+    group_role_group = relationship( "Group", foreign_keys = [ group_id ] )
+    group_role_role = relationship( "Role", foreign_keys = [ role_id ] )
+    group_role_unq = UniqueConstraint( 'group_id', 'role_id' )
 
 class Menu( StaticBase ):
     __tablename__ = 'menu'
@@ -49,21 +49,21 @@ class Menu( StaticBase ):
 
     menu_menu_type = relationship( "MenuType", foreign_keys = [ menu_type_id ] )
 
-class MenuLabRole( StaticBase ):
-    __tablename__ = 'menu_lab_role'
+class MenuGroupRole( StaticBase ):
+    __tablename__ = 'menu_group_role'
     id = Column( Integer, primary_key = True )
     name = Column( String( 100 ), unique = True )
     description = Column( String( 255) )
     date_created = Column( DateTime, default = datetime.datetime.utcnow )
     last_modified = Column( DateTime, default = datetime.datetime.utcnow )
     active = Column( Boolean )
-    lab_role_id = Column( Integer, ForeignKey( 'lab_role.id' ) )
+    group_role_id = Column( Integer, ForeignKey( 'group_role.id' ) )
     menu_id = Column( Integer, ForeignKey( 'menu.id' ) )
     order = Column( Integer )
 
-    menu_lab_role_lab = relationship( "LabRole", foreign_keys = [ lab_role_id ] )
-    menu_lab_role_menu = relationship( "Menu", foreign_keys = [ menu_id ] )
-    menu_lab_role_unq = UniqueConstraint( 'lab_role_id', 'menu_id' )
+    menu_group_role_group = relationship( "GroupRole", foreign_keys = [ group_role_id ] )
+    menu_group_role_menu = relationship( "Menu", foreign_keys = [ menu_id ] )
+    menu_group_role_unq = UniqueConstraint( 'group_role_id', 'menu_id' )
 
 class MenuType( StaticBase ):
     __tablename__ = 'menu_type'
@@ -87,21 +87,21 @@ class MenuItem( StaticBase ):
 
     menu_item_menu = relationship( "Menu", foreign_keys = [ menu_id ] )
 
-class MenuItemLabRole( StaticBase ):
-    __tablename__ = 'menu_item_lab_role'
+class MenuItemGroupRole( StaticBase ):
+    __tablename__ = 'menu_item_group_role'
     id = Column( Integer, primary_key = True )
     name = Column( String( 100 ), unique = True )
     description = Column( String( 255) )
     date_created = Column( DateTime, default = datetime.datetime.utcnow )
     last_modified = Column( DateTime, default = datetime.datetime.utcnow )
     active = Column( Boolean )
-    lab_role_id = Column( Integer, ForeignKey( 'lab_role.id' ) )
+    group_role_id = Column( Integer, ForeignKey( 'group_role.id' ) )
     menu_item_id = Column( Integer, ForeignKey( 'menu_item.id' ) )
     order = Column( Integer )
 
-    menu_item_lab_role_lab = relationship( "LabRole", foreign_keys = [ lab_role_id ] )
-    menu_item_lab_role_menu_item = relationship( "MenuItem", foreign_keys = [ menu_item_id ] )
-    menu_item_lab_role_unq = UniqueConstraint( 'lab_role_id', 'menu_item_id' )
+    menu_item_group_role_group = relationship( "GroupRole", foreign_keys = [ group_role_id ] )
+    menu_item_group_role_menu_item = relationship( "MenuItem", foreign_keys = [ menu_item_id ] )
+    menu_item_group_role_unq = UniqueConstraint( 'group_role_id', 'menu_item_id' )
 
 class PageForm( StaticBase ):
     __tablename__ = 'page_form'
@@ -112,19 +112,19 @@ class PageForm( StaticBase ):
     last_modified = Column( DateTime, default = datetime.datetime.utcnow )
     active = Column( Boolean )
 
-class PageFormLabRole( StaticBase ):
-    __tablename__ = 'page_form_lab_role'
+class PageFormGroupRole( StaticBase ):
+    __tablename__ = 'page_form_group_role'
     id = Column( Integer, primary_key = True )
     name = Column( String( 100 ), unique = True )
     description = Column( String( 255) )
     date_created = Column( DateTime, default = datetime.datetime.utcnow )
     last_modified = Column( DateTime, default = datetime.datetime.utcnow )
     active = Column( Boolean )
-    lab_role_id = Column( Integer, ForeignKey( 'lab_role.id' ) )
+    group_role_id = Column( Integer, ForeignKey( 'group_role.id' ) )
     page_form_id = Column( Integer, ForeignKey( 'page_form.id' ) )
 
-    page_lab_role_lab = relationship( "LabRole", foreign_keys = [ lab_role_id ] )
-    page_lab_role_page = relationship( "PageForm", foreign_keys = [ page_form_id ] )
+    page_group_role_group = relationship( "GroupRole", foreign_keys = [ group_role_id ] )
+    page_group_role_page = relationship( "PageForm", foreign_keys = [ page_form_id ] )
 
 class PageFormButtons( StaticBase ):
     __tablename__ = 'page_form_buttons'
@@ -136,22 +136,22 @@ class PageFormButtons( StaticBase ):
     active = Column( Boolean )
     page_form_id = Column( Integer, ForeignKey( 'page_form.id' ) )
 
-    page_form_buttons_lab_role_page = relationship( "PageForm", foreign_keys = [ page_form_id ] )
+    page_form_buttons_group_role_page = relationship( "PageForm", foreign_keys = [ page_form_id ] )
 
-class PageFormButtonsLabRole( StaticBase ):
-    __tablename__ = 'page_form_buttons_lab_role'
+class PageFormButtonsGroupRole( StaticBase ):
+    __tablename__ = 'page_form_buttons_group_role'
     id = Column( Integer, primary_key = True )
     name = Column( String( 100 ), unique = True )
     description = Column( String( 255 ) )
     date_created = Column( DateTime, default = datetime.datetime.utcnow )
     last_modified = Column( DateTime, default = datetime.datetime.utcnow )
     active = Column( Boolean )
-    lab_role_id = Column( Integer, ForeignKey( 'lab_role.id' ) )
+    group_role_id = Column( Integer, ForeignKey( 'group_role.id' ) )
     page_form_buttons_id = Column( Integer, ForeignKey( 'page_form_buttons.id' ) )
     order = Column( Integer )
 
-    page_form_buttons_lab_role_lab = relationship( "LabRole", foreign_keys = [ lab_role_id ] )
-    page_form_buttons_lab_role_page_form = relationship( "PageFormButtons", foreign_keys = [ page_form_buttons_id ] )
+    page_form_buttons_group_role_group = relationship( "GroupRole", foreign_keys = [ group_role_id ] )
+    page_form_buttons_group_role_page_form = relationship( "PageFormButtons", foreign_keys = [ page_form_buttons_id ] )
 
 class TableObject( StaticBase ):
     __tablename__ = 'table_object'
@@ -166,20 +166,20 @@ class TableObject( StaticBase ):
     id_length = Column( Integer )
     module = Column( String( 100 ) )
 
-class TableObjectLabRole( StaticBase ):
-    __tablename__ = 'table_object_lab_role'
+class TableObjectGroupRole( StaticBase ):
+    __tablename__ = 'table_object_group_role'
     id = Column( Integer, primary_key = True )
     name = Column( String( 100 ), unique = True )
     description = Column( String( 255) )
     date_created = Column( DateTime, default = datetime.datetime.utcnow )
     last_modified = Column( DateTime, default = datetime.datetime.utcnow )
     active = Column( Boolean )
-    lab_role_id = Column( Integer, ForeignKey( 'lab_role.id' ) )
+    group_role_id = Column( Integer, ForeignKey( 'group_role.id' ) )
     table_object_id = Column( Integer, ForeignKey( 'table_object.id' ) )
 
-    type_lab_role_lab = relationship( "LabRole", foreign_keys = [ lab_role_id ] )
-    type_lab_role_type = relationship( "TableObject", foreign_keys = [ table_object_id ] )
-    type_lab_role_unq = UniqueConstraint( 'lab_role_id', 'table_object_id' )
+    type_group_role_group = relationship( "GroupRole", foreign_keys = [ group_role_id ] )
+    type_group_role_type = relationship( "TableObject", foreign_keys = [ table_object_id ] )
+    type_group_role_unq = UniqueConstraint( 'group_role_id', 'table_object_id' )
 
 class Field( StaticBase ):
     __tablename__ = 'field'
@@ -204,15 +204,15 @@ class Field( StaticBase ):
     field_foreign_key_table_object = relationship( "TableObject", foreign_keys = [ foreign_key_table_object_id ] )
     field_foreign_key_field = relationship( "Field", foreign_keys = [ foreign_key_field_id ] )
 
-class FieldLabRole( StaticBase ):
-    __tablename__ = 'field_lab_role'
+class FieldGroupRole( StaticBase ):
+    __tablename__ = 'field_group_role'
     id = Column( Integer, primary_key = True )
     name = Column( String( 100 ), unique = True )
     description = Column( String( 255) )
     date_created = Column( DateTime, default = datetime.datetime.utcnow )
     last_modified = Column( DateTime, default = datetime.datetime.utcnow )
     active = Column( Boolean )
-    lab_role_id = Column( Integer, ForeignKey( 'lab_role.id' ) )
+    group_role_id = Column( Integer, ForeignKey( 'group_role.id' ) )
     field_id = Column( Integer, ForeignKey( 'field.id' ) )
     display_name = Column( String( 100 ) )
     order = Column( Integer )
@@ -220,10 +220,10 @@ class FieldLabRole( StaticBase ):
     required = Column( Boolean )
     permission_id = Column( Integer, ForeignKey( 'permission.id' ) )
 
-    field_lab_role_lab = relationship( "LabRole", foreign_keys = [ lab_role_id ] )
-    field_lab_role_field = relationship( "Field", foreign_keys = [ field_id ] )
-    field_lab_role_permission = relationship( "Permission", foreign_keys = [ permission_id ] )
-    field_lab_role_unq = UniqueConstraint( 'lab_role_id', 'field_id', 'page_id' )
+    field_group_role_group = relationship( "GroupRole", foreign_keys = [ group_role_id ] )
+    field_group_role_field = relationship( "Field", foreign_keys = [ field_id ] )
+    field_group_role_permission = relationship( "Permission", foreign_keys = [ permission_id ] )
+    field_group_role_unq = UniqueConstraint( 'group_role_id', 'field_id', 'page_id' )
 
 class DataType( StaticBase ):
     __tablename__ = 'data_type'
@@ -253,20 +253,20 @@ class Action( StaticBase ):
     active = Column( Boolean )
     action_value = Column( String( 255 ) )
 
-class ActionLabRole( StaticBase ):
-    __tablename__ = 'action_lab_role'
+class ActionGroupRole( StaticBase ):
+    __tablename__ = 'action_group_role'
     id = Column( Integer, primary_key = True )
     name = Column( String( 100 ), unique = True )
     description = Column( String( 255) )
     date_created = Column( DateTime, default = datetime.datetime.utcnow )
     last_modified = Column( DateTime, default = datetime.datetime.utcnow )
     active = Column( Boolean )
-    lab_role_id = Column( Integer, ForeignKey( 'lab_role.id' ) )
+    group_role_id = Column( Integer, ForeignKey( 'group_role.id' ) )
     action_id = Column( Integer, ForeignKey( 'action.id' ) )
 
-    action_lab_role_lab = relationship( "LabRole", foreign_keys = [ lab_role_id ] )
-    action_lab_role_action = relationship( "Action", foreign_keys = [ action_id ] )
-    action_lab_role_unq = UniqueConstraint( 'lab_role_id', 'action_id' )
+    action_group_role_group = relationship( "GroupRole", foreign_keys = [ group_role_id ] )
+    action_group_role_action = relationship( "Action", foreign_keys = [ action_id ] )
+    action_group_role_unq = UniqueConstraint( 'group_role_id', 'action_id' )
 
 class NewUser( StaticBase ):
     __tablename__ = 'new_user'
