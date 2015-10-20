@@ -1,24 +1,39 @@
 from flask import Flask
-from config import config
+from config import config, get_config
 from flask import render_template
 from iggybase.extensions import mail, lm, bootstrap
+from iggybase.mod_auth import mod_auth as mod_auth_blueprint
+from iggybase.mod_core import mod_core as mod_core_blueprint
+from iggybase.mod_admin import mod_admin as mod_admin_blueprint
+from iggybase.mod_api import mod_api as mod_api_blueprint
 
-__all__ = ['create_app']
+DEFAULT_BLUEPRINTS = (
+    mod_auth_blueprint,
+    mod_core_blueprint,
+    mod_admin_blueprint,
+    mod_api_blueprint
+)
 
-def create_app( config_name, app_name = None, blueprints = None ):
+__all__ = [ 'create_app' ]
+
+def create_app( config_name = None, app_name = None, blueprints = None ):
+    if config_name is None:
+        conf = get_config( )
+    else:
+        conf = config[ config_name ]( )
+
     iggybase = Flask( __name__ )
-    iggybase.config.from_object( config[ config_name ] )
+    iggybase.config.from_object( conf )
 
     if app_name is None:
-        app_name = config[ config_name ].PROJECT
-
-    configure_extensions( iggybase )
-    configure_hook( iggybase )
+        app_name = conf.PROJECT
 
     from iggybase.database import init_db
     init_db( )
 
     configure_blueprints( iggybase, blueprints )
+    configure_extensions( iggybase )
+    configure_hook( iggybase )
 
     return iggybase
 
@@ -30,17 +45,6 @@ def configure_extensions( app ):
 
 
 def configure_blueprints( app, blueprints ):
-    from iggybase.mod_auth import mod_auth as mod_auth_blueprint
-    from iggybase.mod_core import mod_core as mod_core_blueprint
-    from iggybase.mod_admin import mod_admin as mod_admin_blueprint
-    from iggybase.mod_api import mod_api as mod_api_blueprint
-
-    DEFAULT_BLUEPRINTS = (
-        mod_auth_blueprint,
-        mod_core_blueprint,
-        mod_admin_blueprint,
-        mod_api_blueprint
-    )
 
     if blueprints is None:
         blueprints = DEFAULT_BLUEPRINTS

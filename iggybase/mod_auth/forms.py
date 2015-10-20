@@ -2,6 +2,7 @@ from flask.ext.wtf import Form
 from wtforms import StringField, PasswordField, BooleanField, SubmitField, ValidationError
 from wtforms.validators import DataRequired, Length, email
 from .models import User
+from iggybase.mod_admin.models import NewUser
 
 class LoginForm( Form ):
     name = StringField( 'Login name', validators = [ DataRequired( ), Length( 1, 16 ) ] )
@@ -33,4 +34,6 @@ class RegisterForm( Form ):
 
     def validate_name( self, field ):
         if User.query.filter_by( name = field.data ).first( ):
+            raise ValidationError( 'Login name already in use' )
+        if NewUser.query.filter_by( name = field.data ).first( ):
             raise ValidationError( 'Login name already in use' )

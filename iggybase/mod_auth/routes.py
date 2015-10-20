@@ -1,10 +1,12 @@
 from flask import render_template, redirect, url_for, request
-from flask.ext.login import login_required, login_user, logout_user
+from flask.ext.login import login_required, login_user, logout_user, current_user
 from iggybase.mod_auth.models import User
+from iggybase.mod_admin.models import NewUser
 from . import mod_auth
-from iggybase.mod_core.models import Address
 from iggybase.mod_auth.forms import LoginForm, RegisterForm
-from iggybase.database import db_session
+from iggybase.database import admin_db_session
+import os
+import socket
 import logging
 
 @mod_auth.route( '/login', methods = [ 'GET', 'POST' ] )
@@ -12,12 +14,12 @@ def login():
     form = LoginForm( )
     if form.validate_on_submit( ):
         user = User.query.filter_by( name=form.name.data ).first( )
-        if user is None or not user.get_active( ) or not user.verify_password( form.password.data ):
+        if user is None or not user.is_active( ) or not user.verify_password( form.password.data ):
             return render_template( 'mod_auth/failedlogin.html', form=form )
         login_user( user, form.remember_me.data )
 
         if user.home_page is not None:
-            return render_template( user.home_page )
+            return redirect( request.args.get( 'next' ) or url_for( user.home_page, page_type = user.home_page_variable ) )
         else:
             return redirect( request.args.get( 'next' ) or url_for( 'mod_auth.index' ) )
     temp = render_template( 'mod_auth/login.html', form=form )
@@ -29,34 +31,38 @@ def login():
 @mod_auth.route( '/register', methods = [ 'GET', 'POST' ] )
 def register():
     form = RegisterForm( )
-    if ( form.validate_on_submit( ) and form.password.data == form.confpassword.data ) :
-        session = db_session( )
+    if ( form.validate_on_submit( ) and form.password.data == form.confpassword.data ):
+        rootdir = os.path.basename( os.path.dirname( os.path.dirname( os.path.dirname( os.path.abspath( __file__ ) ) ) ) )
+        hostname = socket.gethostname()
 
-        address = Address( address_1 = form.address1.data,
-                           city = form.city.data,
-                           state = form.state.data,
-                           postcode = form.zip.data )
+        session = admin_db_session( )
 
-        address.address_2 = form.address2.data
+        newuser = NewUser( )
 
-        session.add( address )
-        session.flush( )
+        newuser.address1 = form.address1.data
+        newuser.address2 = form.address2.data
+        newuser.active = False
+        newuser.city = form.city.data
+        newuser.email = form.email.data
+        newuser.first_name = form.first_name.data
+        newuser.group = form.group.data
+        newuser.institution = form.institution.data
+        newuser.last_name = form.last_name.data
+        newuser.name = form.name.data
+        newuser.phone = form.phone.data
+        newuser.pi = form.pi.data
+        newuser.postcode = form.zip.data
+        newuser.state = form.state.data
+        newuser.password_hash = User.get_password_hash( form.password.data )
+        newuser.server = hostname
+        newuser.directory = rootdir
 
-        user = User( name = form.name.data,
-                     email = form.email.data
-        )
-
-        user.set_password( form.password.data )
-        user.first_name = form.first_name.data
-        user.last_name = form.last_name.data
-        user.address_id = address.get_id( )
-        user.active = False
-
-        session.add( user )
+        session.add( newuser )
 
         session.commit( )
 
         return redirect( url_for( 'mod_auth.regcomplete' ) )
+
     return render_template( 'mod_auth/register.html', form=form )
 
 
@@ -74,3 +80,13 @@ def index( ):
 @mod_auth.route( '/regcomplete' )
 def regcomplete( ):
     return render_template( 'mod_auth/regcomplete.html' )
+
+
+@mod_auth.route( '/registererror' )
+def registererror( ):
+    return render_template( 'mod_auth/registererror.html' )
+
+
+@mod_auth.route( '/failedlogin' )
+def failedlogin( ):
+    return render_template( 'mod_auth/failedlogin.html' )

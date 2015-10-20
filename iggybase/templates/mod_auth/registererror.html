@@ -1,16 +1,16 @@
 {% extends "base.html" %}
 {% import "bootstrap/wtf.html" as wtf %}
 
-{% block title %}Iggybase Registration Complete{% endblock %}
+{% block title %}Iggybase Registration Error{% endblock %}
 
 {% block page_content %}
-    <h1>Registration Complete</h1>
+    <h1>Registration Error</h1>
     <div>
         <p>
-            Thank you for registering. Your registration will be reviewed within 1 business day.
+            Error encountered while registering.
         </p>
     </div>
-    <input type="button" class="btn btn-default" id="regcompletelogin" value="Login" >
+    <input type="button" class="btn btn-default" id="login_register" value="Register" >
 
     {% block scripts %}
         {{ super() }}

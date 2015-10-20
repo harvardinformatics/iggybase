@@ -1,10 +1,13 @@
-from flask import render_template as Renderer
-from flask_login import current_user
-from iggybase.mod_admin.models import Lab, Menu, MenuItem
+from flask import render_template as renderer
+from iggybase.mod_auth.access_control import AccessControl
+from iggybase.mod_admin.models import Menu, MenuItem
 import logging
 
-def render_template(template_name_or_list, **context):
+def render_template(template_name, **context):
+    acctrl = AccessControl( )
     #context[ 'navbar' ] =
-    #context[ 'sidemenu' ] =
+    #context[ 'sidebar' ] =
 
-    return Renderer( template_name_or_list, **context )
+    context[ 'rows' ] = [ ( '1', 'test1' ), ( '2', 'test2' ) ]
+    context[ 'headers' ] = [ 'ID', 'Name' ]
+    return renderer( template_name, **context )

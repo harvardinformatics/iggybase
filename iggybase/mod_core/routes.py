@@ -1,18 +1,19 @@
-from flask import redirect, url_for, request, session
+from flask.ext.login import login_required
 from iggybase.templating import render_template
-from . import mod_core
-from .forms import DefaultForm
-
+from iggybase.mod_core import mod_core
+import logging
 
 @mod_core.before_request
-def check_valid_login():
-    login_valid = 'user' in session
+@login_required
+def before_request():
+    pass
 
-    if not login_valid:
-        return redirect( url_for( 'mod_auth.login' ) )
-
-
-@mod_core.route( '/default' )
+@mod_core.route( '/' )
 def default():
-    form = DefaultForm( )
-    return render_template( 'mod_core/default.html', form=form )
+    return render_template( 'index.html' )
+
+
+@mod_core.route( '/summary/<page_type>' )
+def summary( page_type = None ):
+    logging.info( page_type + ' summary page user' )
+    return render_template( 'mod_core/summary.html', form_type = 'summary', page_type = page_type )
