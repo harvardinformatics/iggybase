@@ -1,5 +1,5 @@
 from flask import render_template as renderer
-from iggybase.mod_auth.access_control import AccessControl
+from iggybase.mod_auth.group_role_access_control import GroupRoleAccessControl
 from iggybase.mod_admin.models import Menu, MenuItem
 import logging
 

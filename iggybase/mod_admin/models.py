@@ -12,6 +12,8 @@ class Group( StaticBase ):
     date_created = Column( DateTime, default = datetime.datetime.utcnow )
     last_modified = Column( DateTime, default = datetime.datetime.utcnow )
     active = Column( Boolean )
+    organization_id = Column( Integer )
+    order = Column( Integer )
 
 class Role( StaticBase ):
     __tablename__ = 'role'
@@ -21,6 +23,8 @@ class Role( StaticBase ):
     date_created = Column( DateTime, default=datetime.datetime.utcnow )
     last_modified = Column( DateTime, default=datetime.datetime.utcnow )
     active = Column( Boolean )
+    organization_id = Column( Integer )
+    order = Column( Integer )
 
 class GroupRole( StaticBase ):
     __tablename__ = 'group_role'
@@ -30,6 +34,8 @@ class GroupRole( StaticBase ):
     date_created = Column( DateTime, default = datetime.datetime.utcnow )
     last_modified = Column( DateTime, default = datetime.datetime.utcnow )
     active = Column( Boolean )
+    organization_id = Column( Integer )
+    order = Column( Integer )
     group_id = Column( Integer, ForeignKey( 'group.id' ) )
     role_id = Column( Integer, ForeignKey( 'role.id' ) )
 
@@ -45,6 +51,8 @@ class Menu( StaticBase ):
     date_created = Column( DateTime, default = datetime.datetime.utcnow )
     last_modified = Column( DateTime, default = datetime.datetime.utcnow )
     active = Column( Boolean )
+    organization_id = Column( Integer )
+    order = Column( Integer )
     menu_type_id = Column( Integer, ForeignKey( 'menu_type.id' ) )
 
     menu_menu_type = relationship( "MenuType", foreign_keys = [ menu_type_id ] )
@@ -57,6 +65,8 @@ class MenuGroupRole( StaticBase ):
     date_created = Column( DateTime, default = datetime.datetime.utcnow )
     last_modified = Column( DateTime, default = datetime.datetime.utcnow )
     active = Column( Boolean )
+    organization_id = Column( Integer )
+    order = Column( Integer )
     group_role_id = Column( Integer, ForeignKey( 'group_role.id' ) )
     menu_id = Column( Integer, ForeignKey( 'menu.id' ) )
     order = Column( Integer )
@@ -82,6 +92,8 @@ class MenuItem( StaticBase ):
     date_created = Column( DateTime, default = datetime.datetime.utcnow )
     last_modified = Column( DateTime, default = datetime.datetime.utcnow )
     active = Column( Boolean )
+    organization_id = Column( Integer )
+    order = Column( Integer )
     menu_item_value = Column( String( 250 ) )
     menu_id = Column( Integer, ForeignKey( 'menu.id' ) )
 
@@ -95,6 +107,8 @@ class MenuItemGroupRole( StaticBase ):
     date_created = Column( DateTime, default = datetime.datetime.utcnow )
     last_modified = Column( DateTime, default = datetime.datetime.utcnow )
     active = Column( Boolean )
+    organization_id = Column( Integer )
+    order = Column( Integer )
     group_role_id = Column( Integer, ForeignKey( 'group_role.id' ) )
     menu_item_id = Column( Integer, ForeignKey( 'menu_item.id' ) )
     order = Column( Integer )
@@ -120,6 +134,8 @@ class PageFormGroupRole( StaticBase ):
     date_created = Column( DateTime, default = datetime.datetime.utcnow )
     last_modified = Column( DateTime, default = datetime.datetime.utcnow )
     active = Column( Boolean )
+    organization_id = Column( Integer )
+    order = Column( Integer )
     group_role_id = Column( Integer, ForeignKey( 'group_role.id' ) )
     page_form_id = Column( Integer, ForeignKey( 'page_form.id' ) )
 
@@ -134,6 +150,8 @@ class PageFormButtons( StaticBase ):
     date_created = Column( DateTime, default = datetime.datetime.utcnow )
     last_modified = Column( DateTime, default = datetime.datetime.utcnow )
     active = Column( Boolean )
+    organization_id = Column( Integer )
+    order = Column( Integer )
     page_form_id = Column( Integer, ForeignKey( 'page_form.id' ) )
 
     page_form_buttons_group_role_page = relationship( "PageForm", foreign_keys = [ page_form_id ] )
@@ -146,6 +164,8 @@ class PageFormButtonsGroupRole( StaticBase ):
     date_created = Column( DateTime, default = datetime.datetime.utcnow )
     last_modified = Column( DateTime, default = datetime.datetime.utcnow )
     active = Column( Boolean )
+    organization_id = Column( Integer )
+    order = Column( Integer )
     group_role_id = Column( Integer, ForeignKey( 'group_role.id' ) )
     page_form_buttons_id = Column( Integer, ForeignKey( 'page_form_buttons.id' ) )
     order = Column( Integer )
@@ -161,6 +181,8 @@ class TableObject( StaticBase ):
     date_created = Column( DateTime, default = datetime.datetime.utcnow )
     last_modified = Column( DateTime, default = datetime.datetime.utcnow )
     active = Column( Boolean )
+    organization_id = Column( Integer )
+    order = Column( Integer )
     new_name_prefix = Column( String( 100 ), unique = True )
     new_name_id = Column( Integer )
     id_length = Column( Integer )
@@ -174,6 +196,8 @@ class TableObjectGroupRole( StaticBase ):
     date_created = Column( DateTime, default = datetime.datetime.utcnow )
     last_modified = Column( DateTime, default = datetime.datetime.utcnow )
     active = Column( Boolean )
+    organization_id = Column( Integer )
+    order = Column( Integer )
     group_role_id = Column( Integer, ForeignKey( 'group_role.id' ) )
     table_object_id = Column( Integer, ForeignKey( 'table_object.id' ) )
 
@@ -189,6 +213,8 @@ class Field( StaticBase ):
     date_created = Column( DateTime, default = datetime.datetime.utcnow )
     last_modified = Column( DateTime, default = datetime.datetime.utcnow )
     active = Column( Boolean )
+    organization_id = Column( Integer )
+    order = Column( Integer )
     field_name = Column( String( 100 ) )
     table_object_id = Column( Integer, ForeignKey( 'table_object.id' ) )
     data_type_id = Column( Integer, ForeignKey( 'data_type.id' ) )
@@ -212,6 +238,8 @@ class FieldGroupRole( StaticBase ):
     date_created = Column( DateTime, default = datetime.datetime.utcnow )
     last_modified = Column( DateTime, default = datetime.datetime.utcnow )
     active = Column( Boolean )
+    organization_id = Column( Integer )
+    order = Column( Integer )
     group_role_id = Column( Integer, ForeignKey( 'group_role.id' ) )
     field_id = Column( Integer, ForeignKey( 'field.id' ) )
     display_name = Column( String( 100 ) )
@@ -233,6 +261,8 @@ class DataType( StaticBase ):
     date_created = Column( DateTime, default = datetime.datetime.utcnow )
     last_modified = Column( DateTime, default = datetime.datetime.utcnow )
     active = Column( Boolean )
+    organization_id = Column( Integer )
+    order = Column( Integer )
 
 class Permission( StaticBase ):
     __tablename__ = 'permission'
@@ -242,6 +272,8 @@ class Permission( StaticBase ):
     date_created = Column( DateTime, default = datetime.datetime.utcnow )
     last_modified = Column( DateTime, default = datetime.datetime.utcnow )
     active = Column( Boolean )
+    organization_id = Column( Integer )
+    order = Column( Integer )
 
 class Action( StaticBase ):
     __tablename__ = 'action'
@@ -261,6 +293,8 @@ class ActionGroupRole( StaticBase ):
     date_created = Column( DateTime, default = datetime.datetime.utcnow )
     last_modified = Column( DateTime, default = datetime.datetime.utcnow )
     active = Column( Boolean )
+    organization_id = Column( Integer )
+    order = Column( Integer )
     group_role_id = Column( Integer, ForeignKey( 'group_role.id' ) )
     action_id = Column( Integer, ForeignKey( 'action.id' ) )
 
@@ -276,6 +310,8 @@ class NewUser( StaticBase ):
     date_created = Column( DateTime, default = datetime.datetime.utcnow )
     last_modified = Column( DateTime, default = datetime.datetime.utcnow )
     active = Column( Boolean )
+    organization_id = Column( Integer )
+    order = Column( Integer )
     first_name = Column( String( 100 ) )
     last_name = Column( String( 100 ) )
     password_hash = Column( String( 100 ) )
@@ -309,6 +345,8 @@ class TableQueryType( StaticBase ):
     date_created = Column( DateTime, default = datetime.datetime.utcnow )
     last_modified = Column( DateTime, default = datetime.datetime.utcnow )
     active = Column( Boolean )
+    organization_id = Column( Integer )
+    order = Column( Integer )
     table_query_id = Column( Integer, ForeignKey( 'table_query.id' ) )
     table_object_id = Column( Integer, ForeignKey( 'table_object.id' ) )
 
@@ -323,6 +361,8 @@ class TableQueryField( StaticBase ):
     date_created = Column( DateTime, default = datetime.datetime.utcnow )
     last_modified = Column( DateTime, default = datetime.datetime.utcnow )
     active = Column( Boolean )
+    organization_id = Column( Integer )
+    order = Column( Integer )
     table_query_id = Column( Integer, ForeignKey( 'table_query.id' ) )
     field_id = Column( Integer, ForeignKey( 'field.id' ) )
 
@@ -337,6 +377,8 @@ class TableQueryCriteria( StaticBase ):
     date_created = Column( DateTime, default = datetime.datetime.utcnow )
     last_modified = Column( DateTime, default = datetime.datetime.utcnow )
     active = Column( Boolean )
+    organization_id = Column( Integer )
+    order = Column( Integer )
     table_query_id = Column( Integer, ForeignKey( 'table_query.id' ) )
     criteria = Column( String( 255 ) )
 
@@ -350,6 +392,8 @@ class TableQueryOrder( StaticBase ):
     date_created = Column( DateTime, default = datetime.datetime.utcnow )
     last_modified = Column( DateTime, default = datetime.datetime.utcnow )
     active = Column( Boolean )
+    organization_id = Column( Integer )
+    order = Column( Integer )
     table_query_id = Column( Integer, ForeignKey( 'table_query.id' ) )
     field_id = Column( Integer, ForeignKey( 'field.id' ) )
     direction = Column( String( 50 ) )

@@ -6,7 +6,9 @@ from iggybase.mod_admin.models import GroupRole, Group, TableObject, TableObject
 from iggybase.mod_auth.models import load_user
 from config import get_config
 
-class AccessControl:
+# Controls access to system based on Role (USER) and Group (config)
+# Uses the permissions stored in the admin db
+class GroupRoleAccessControl:
     def __init__ ( self ):
         config = get_config( )
 
