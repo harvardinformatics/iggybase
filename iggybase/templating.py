@@ -4,7 +4,7 @@ from iggybase.mod_admin.models import Menu, MenuItem
 import logging
 
 def render_template(template_name, **context):
-    acctrl = AccessControl( )
+    acctrl = GroupRoleAccessControl( )
     #context[ 'navbar' ] =
     #context[ 'sidebar' ] =
 
