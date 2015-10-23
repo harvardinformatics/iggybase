@@ -6,94 +6,94 @@ from iggybase.database import admin_db_session, Base
 import datetime
 import logging
 
-class ModelFactory:
-    def __init__ ( self, module ):
-        self.module = module
-        self.group_access_control = GroupAccessControl( )
+group_access_control = GroupAccessControl( )
 
-    def createmodel ( self, active = 1 ):
-        table_objects = self.group_access_control.module_table_objects( self.module, active )
+def createmodel ( module, active = 1 ):
+    table_objects = group_access_control.module_table_objects( module, active )
 
-        for table_object in table_objects:
+    for table_object in table_objects:
 
-            #logging.info( 'table name: ' + ModelFactory.to_camel_case( table_object.name ) )
+        #logging.info( 'table name: ' + to_camel_case( table_object.name ) )
 
-            #colnames = [ row.field_name for row in table_object_cols ]
+        #colnames = [ row.field_name for row in table_object_cols ]
 
-            class_name = ModelFactory.to_camel_case( table_object.name )
+        class_name = to_camel_case( table_object.name )
 
-            self.table_object_factory ( class_name, table_object, active )
+        table_object_factory ( class_name, table_object, active )
 
-    def table_object_factory ( self, class_name, table_object, active = 1 ):
-        def __init__( self, **kwargs ):
-            Base.__init__( self, class_name )
+    cont = Container()
 
-        classattr = { "__init__": __init__, "__tablename__": table_object.name }
+def table_object_factory ( class_name, table_object, active = 1 ):
+    def __init__( self, **kwargs ):
+        Base.__init__( self, class_name )
 
-        table_object_cols = self.group_access_control.module_fields( table_object.id, active )
+    classattr = { "__init__": __init__, "__tablename__": table_object.name }
 
-        for col in table_object_cols:
-            #logging.info( col.field_name )
-            classattr[ col.field_name ] = ModelFactory.create_column( col )
+    table_object_cols = group_access_control.module_fields( table_object.id, active )
 
-        newclass = type( class_name, ( Base, ), classattr )
+    for col in table_object_cols:
+        #logging.info( col.field_name )
+        classattr[ col.field_name ] = create_column( col )
 
-        return newclass
+    newclass = type( class_name, ( Base, ), classattr )
 
-    @staticmethod
-    def to_camel_case( snake_str ):
-        components = snake_str.split('_')
+    test = newclass( )
+    logging.info( 'new class: ' +  class_name )
+    logging.info( test )
 
-        return "".join( x.title( ) for x in components )
+    return newclass
 
-    @staticmethod
-    def create_column( attributes ):
-        datatype = admin_db_session.query( DataType ).filter_by( id = attributes.data_type_id, active = 1 ).first( )
+def to_camel_case( snake_str ):
+    components = snake_str.split('_')
 
-        #logging.info( datatype.name )
+    return "".join( x.title( ) for x in components )
 
-        dtclassname = getattr( sqlalchemy, datatype.name )
+def create_column( attributes ):
+    datatype = admin_db_session.query( DataType ).filter_by( id = attributes.data_type_id, active = 1 ).first( )
 
-        if attributes.data_type_id == 2:
-            dtinst = dtclassname( attributes.length )
-        else:
-            dtinst = dtclassname( )
+    #logging.info( datatype.name )
 
-        arg = { }
+    dtclassname = getattr( sqlalchemy, datatype.name )
 
-        if attributes.primary_key == 1:
-            arg[ 'primary_key' ] = True
+    if attributes.data_type_id == 2:
+        dtinst = dtclassname( attributes.length )
+    else:
+        dtinst = dtclassname( )
 
-        if attributes.unique == 1:
-            arg[ 'unique' ] = True
+    arg = { }
 
-        if attributes.default != "":
-            arg[ 'default' ] = attributes.default
+    if attributes.primary_key == 1:
+        arg[ 'primary_key' ] = True
 
-        return sqlalchemy.Column( dtinst, **arg )
+    if attributes.unique == 1:
+        arg[ 'unique' ] = True
 
-    @staticmethod
-    def create_foreign_key( attributes ):
-        datatype = admin_db_session.query( DataType ).filter_by( id = attributes.data_type_id, active = 1 ).first( )
+    if attributes.default != "":
+        arg[ 'default' ] = attributes.default
 
-        #logging.info( datatype.name )
+    return sqlalchemy.Column( dtinst, **arg )
 
-        dtclassname = getattr( sqlalchemy, datatype.name )
+def create_foreign_key( attributes ):
+    datatype = admin_db_session.query( DataType ).filter_by( id = attributes.data_type_id, active = 1 ).first( )
 
-        if attributes.data_type_id == 2:
-            dtinst = dtclassname( attributes.length )
-        else:
-            dtinst = dtclassname( )
+    #logging.info( datatype.name )
 
-        arg = { }
+    dtclassname = getattr( sqlalchemy, datatype.name )
 
-        if attributes.primary_key == 1:
-            arg[ 'primary_key' ] = True
+    if attributes.data_type_id == 2:
+        dtinst = dtclassname( attributes.length )
+    else:
+        dtinst = dtclassname( )
 
-        if attributes.unique == 1:
-            arg[ 'unique' ] = True
+    arg = { }
 
-        if attributes.default != "":
-            arg[ 'default' ] = attributes.default
+    if attributes.primary_key == 1:
+        arg[ 'primary_key' ] = True
 
-        return sqlalchemy.Column( dtinst, **arg )
+    if attributes.unique == 1:
+        arg[ 'unique' ] = True
+
+    if attributes.default != "":
+        arg[ 'default' ] = attributes.default
+
+    return sqlalchemy.Column( dtinst, **arg )

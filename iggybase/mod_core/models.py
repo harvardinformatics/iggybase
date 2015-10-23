@@ -1,5 +1,4 @@
-from iggybase.modelfactory import ModelFactory
+from iggybase.modelfactory import createmodel
 import logging
 
-model = ModelFactory( 'mod_core' )
-model.createmodel( )
+createmodel( 'mod_core' )
