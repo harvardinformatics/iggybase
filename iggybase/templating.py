@@ -1,10 +1,10 @@
 from flask import render_template as renderer
-from iggybase.mod_auth.group_role_access_control import GroupRoleAccessControl
+from iggybase.mod_auth.facility_role_access_control import FacilityRoleAccessControl
 from iggybase.mod_admin.models import Menu, MenuItem
 import logging
 
 def render_template(template_name, **context):
-    acctrl = GroupRoleAccessControl( )
+    acctrl = FacilityRoleAccessControl( )
     #context[ 'navbar' ] =
     #context[ 'sidebar' ] =
 

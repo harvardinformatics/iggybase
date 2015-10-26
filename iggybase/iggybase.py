@@ -7,6 +7,8 @@ from iggybase.mod_core import mod_core as mod_core_blueprint
 from iggybase.mod_admin import mod_admin as mod_admin_blueprint
 from iggybase.mod_api import mod_api as mod_api_blueprint
 
+__all__ = [ 'create_app' ]
+
 DEFAULT_BLUEPRINTS = (
     mod_core_blueprint,
     mod_auth_blueprint,
@@ -14,13 +16,14 @@ DEFAULT_BLUEPRINTS = (
     mod_api_blueprint
 )
 
-__all__ = [ 'create_app' ]
 
-def create_app( config_name = None, app_name = None, blueprints = None ):
+def create_app( config_name = None, app_name = None ):
     if config_name is None:
         conf = get_config( )
     else:
         conf = config[ config_name ]( )
+
+    blueprints = DEFAULT_BLUEPRINTS
 
     iggybase = Flask( __name__ )
     iggybase.config.from_object( conf )
@@ -45,9 +48,6 @@ def configure_extensions( app ):
 
 
 def configure_blueprints( app, blueprints ):
-
-    if blueprints is None:
-        blueprints = DEFAULT_BLUEPRINTS
 
     for blueprint in blueprints:
         app.register_blueprint( blueprint )

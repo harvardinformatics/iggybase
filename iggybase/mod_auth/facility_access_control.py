@@ -1,32 +1,34 @@
 from iggybase.database import admin_db_session
-from iggybase.mod_admin.models import Field, FieldGroupRole, TableObject, TableObjectGroupRole, Group, GroupRole
+from iggybase.mod_admin.models import Field, FieldFacilityRole, TableObject, TableObjectFacilityRole, Facility, FacilityRole, Module
 from config import get_config
 import logging
 
 # Controls access to system based on Group (config)
 # Uses the permissions stored in the admin db
 # independent of requests, used to build the models for sqlalchemy
-class GroupAccessControl:
+class FacilityAccessControl:
     def __init__ ( self ):
         conf = get_config( )
         #logging.debug( conf.LAB )
 
-        group = admin_db_session.query( Group ).filter_by( name = conf.GROUP ).first( )
+        facility = admin_db_session.query( Facility ).filter_by( name = conf.FACILITY ).first( )
 
-        self.grouproles = admin_db_session.query( GroupRole ).filter_by( group_id = group.id ).all( )
+        self.facilityroles = admin_db_session.query( FacilityRole ).filter_by( facility_id = facility.id ).all( )
 
     def module_table_objects( self, module, active = 1 ):
         table_objects = [ ]
 
+        module = admin_db_session.query( Module ).filter_by( name = module ).first( )
+
         #logging.debug( 'module_table_objects' )
         #logging.info ( 'module: ' + module )
         #logging.info ( 'active: ' + str( active ) )
-        res = admin_db_session.query( TableObject ).filter_by( module = module ).filter_by( active = active ).all( )
+        res = admin_db_session.query( TableObject ).filter_by( active = active ).all( )
         for row in res:
             #logging.info ( 'table_object_id: ' + str( row.id ) + ' name: ' + row.name )
-            for group_role in self.grouproles:
-                #logging.info ( 'group_role.id: ' + str( group_role.id ) )
-                access = admin_db_session.query( TableObjectGroupRole ).filter_by( table_object_id = row.id ).filter_by( group_role_id = group_role.id ).filter_by( active = active ).first( )
+            for facility_role in self.facilityroles:
+                #logging.info ( 'facility_role.id: ' + str( facility_role.id ) )
+                access = admin_db_session.query( TableObjectFacilityRole ).filter_by( table_object_id = row.id ).filter_by( module_id = module.id ).filter_by( facility_role_id = facility_role.id ).filter_by( active = active ).first( )
                 if access is not None:
                     table_objects.append( row )
                     break
@@ -42,8 +44,8 @@ class GroupAccessControl:
         res = admin_db_session.query( Field ).filter_by( table_object_id = table_object_id, active = active ).all( )
         for row in res:
             #logging.info ( 'field_id: ' + str( row.id ) )
-            for group_role in self.grouproles:
-                access = admin_db_session.query( FieldGroupRole ).filter_by( field_id = row.id, group_role_id = group_role.id, active = active ).first( )
+            for facility_role in self.facilityroles:
+                access = admin_db_session.query( FieldFacilityRole ).filter_by( field_id = row.id, facility_role_id = facility_role.id, active = active ).first( )
                 if access is not None:
                     fields.append( row )
                     break
