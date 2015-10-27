@@ -4,6 +4,8 @@ git add -A
 git rm -r --cached iggybase_env/
 git rm -r --cached .idea/
 git rm -r --cached config.py
+git rm -r --cached __pycache__/
+git rm -r --cached iggybase/__pycache__/
 
 git commit -m "$1"
 git push -f origin master
