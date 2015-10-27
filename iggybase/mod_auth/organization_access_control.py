@@ -4,7 +4,6 @@ from iggybase.mod_auth.models import load_user, UserUserType
 from iggybase.mod_core import models
 from iggybase.mod_admin.models import TableObject
 from config import get_config
-import sys, inspect
 import logging
 
 # Controls access to the data db data based on organization
@@ -16,10 +15,6 @@ class OrganizationAccessControl:
         self.user = load_user( current_user.id )
 
         self.orgs = db_session.query( UserUserType ).filter_by( user_id = self.user.id ).all( )
-
-        for name, obj in inspect.getmembers(sys.modules[__name__]):
-            if inspect.isclass(obj):
-                logging.info(obj)
 
     def table_rows( self, tablename, active = 1 ):
         pass

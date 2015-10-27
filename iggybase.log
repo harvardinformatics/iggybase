@@ -1,4 +1,1 @@
 INFO:root:New_User summary page user
-INFO:root:<class 'iggybase.mod_auth.organization_access_control.OrganizationAccessControl'>
-INFO:root:<class 'iggybase.mod_admin.models.TableObject'>
-INFO:root:<class 'iggybase.mod_auth.models.UserUserType'>

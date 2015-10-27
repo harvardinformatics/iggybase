@@ -1,17 +1,12 @@
-from iggybase.modelfactory import table_object_factory, to_camel_case
-from iggybase.mod_auth.facility_access_control import FacilityAccessControl
-import logging
+from iggybase.tablefactory import TableFactory
 
-facility_access_control = FacilityAccessControl( )
+table_factory = TableFactory( "mod_core" )
 
-tables = facility_access_control.module_table_objects( 'mod_core' )
+tables = table_factory.facility_access_control.module_table_objects( "mod_core" )
 
 for table_object in tables:
+    class_name = table_factory.to_camel_case( table_object.name )
 
-    #logging.info( 'table name: ' + to_camel_case( table_object.name ) )
+    globals()[ class_name ] = table_factory.table_object_factory ( class_name, table_object )
 
-    #colnames = [ row.field_name for row in table_object_cols ]
-
-    class_name = to_camel_case( table_object.name )
-
-    table_object_factory ( class_name, table_object )
+    globals()[ class_name ].__module__ = __name__
