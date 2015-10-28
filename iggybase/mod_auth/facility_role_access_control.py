@@ -1,8 +1,8 @@
 from flask.ext.login import current_user
 from iggybase.database import admin_db_session
 from iggybase.mod_admin.models import FacilityRole, Facility, TableObject, TableObjectFacilityRole,\
-    Field, FieldFacilityRole, Action, ActionFacilityRole, Menu, MenuFacilityRole, MenuItem, MenuItemFacilityRole, \
-    PageForm, PageFormFacilityRole, PageFormButtons, PageFormButtonsFacilityRole
+    Field, FieldFacilityRole, Menu, MenuFacilityRole, MenuItem, MenuItemFacilityRole, \
+    PageForm, PageFormFacilityRole, PageFormButton, PageFormButtonFacilityRole
 from iggybase.mod_auth.models import load_user
 from config import get_config
 
@@ -12,11 +12,14 @@ class FacilityRoleAccessControl:
     def __init__ ( self ):
         config = get_config( )
 
-        self.user = load_user( current_user.id )
-
         self.facility = admin_db_session.query( Facility ).filter_by( name = config.FACILITY ).first( )
 
-        self.facilityrole = admin_db_session.query( FacilityRole ).filter_by( facility_id = self.facility.id, role_id = self.user.role_id ).first( )
+        if current_user.is_authenticated( ):
+            self.user = load_user( current_user.id )
+            self.facilityrole = admin_db_session.query( FacilityRole ).filter_by( facility_id = self.facility.id, role_id = self.user.role_id ).first( )
+        else:
+            self.user = None
+            self.facilityrole = None
 
     def table_objects( self, active = 1 ):
         table_objects = [ ]
@@ -41,18 +44,6 @@ class FacilityRoleAccessControl:
                 break
 
         return fields
-
-    def actions( self, active = 1 ):
-        actions = [ ]
-
-        res = admin_db_session.query( ActionFacilityRole ).filter_by( facility_role_id = self.facilityrole.id ).filter_by( active = active ).all( )
-        for row in res:
-            action = admin_db_session.query( Action ).filter_by( id = row.action_id ).filter_by( active = active ).first( )
-            if action is not None:
-                actions.append( action )
-                break
-
-        return actions
 
     def menus( self, active = 1 ):
         menus = [ ]
@@ -93,9 +84,9 @@ class FacilityRoleAccessControl:
     def page_form_buttons( self, menu_id, active = 1 ):
         page_form_buttons = [ ]
 
-        res = admin_db_session.query( PageFormButtonsFacilityRole ).filter_by( facility_role_id = self.facilityrole.id ).filter_by( active = active ).all( )
+        res = admin_db_session.query( PageFormButtonFacilityRole ).filter_by( facility_role_id = self.facilityrole.id ).filter_by( active = active ).all( )
         for row in res:
-            page_form_button = admin_db_session.query( PageFormButtons ).filter_by( id = row.page_form_button_id ).filter_by( active = active ).first( )
+            page_form_button = admin_db_session.query( PageFormButton ).filter_by( id = row.page_form_button_id ).filter_by( active = active ).first( )
             if page_form_button is not None:
                 page_form_buttons.append( page_form_button )
                 break

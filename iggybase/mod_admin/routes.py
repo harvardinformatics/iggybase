@@ -1,5 +1,4 @@
 from flask import redirect, url_for, request, session
-from iggybase.templating import render_template
 from . import mod_admin
 
 @mod_admin.before_request

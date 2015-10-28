@@ -1,13 +1,20 @@
-from flask import render_template as renderer
+from flask import render_template
 from iggybase.mod_auth.facility_role_access_control import FacilityRoleAccessControl
-from iggybase.mod_admin.models import Menu, MenuItem
+from iggybase.mod_auth.facility_access_control import FacilityAccessControl
 import logging
 
-def render_template(template_name, **context):
-    acctrl = FacilityRoleAccessControl( )
-    #context[ 'navbar' ] =
-    #context[ 'sidebar' ] =
+def page_template( page_form, **context ):
+    access_ctrl = FacilityRoleAccessControl( )
 
-    context[ 'rows' ] = [ ( '1', 'test1' ), ( '2', 'test2' ) ]
-    context[ 'headers' ] = [ 'ID', 'Name' ]
-    return renderer( template_name, **context )
+    #logging.info( page_form )
+
+    if access_ctrl.user is None:
+        # add buttons only (login and related pages - no user)
+        facility_access_ctrl = FacilityAccessControl( )
+
+        buttons = facility_access_ctrl.facility_buttons( page_form )
+    else:
+        # add button, nav bar, side bar
+        pass
+
+    return render_template( page_form, **context )

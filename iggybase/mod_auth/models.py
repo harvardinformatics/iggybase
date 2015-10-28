@@ -26,15 +26,6 @@ class User( UserMixin, Base ):
     home_page_variable = Column( String( 50 ) )
     role_id = Column( Integer, default = USER.READONLY )
 
-    def is_authenticated( self ):
-        return True
-
-    def is_active( self ):
-        return self.active
-
-    def is_anonymous( self ):
-        return False
-
     def get_id(self):
         return str( self.id )
 

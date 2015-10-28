@@ -42,7 +42,14 @@
 
             {% block content -%}
                 <div class="container">
-                    {% block page_content %}{% endblock page_content %}
+                    {% block topbuttonbar %}
+                    {%- endblock topbuttonbar %}
+
+                    {% block page_content %}
+                    {% endblock page_content %}
+
+                    {% block bottombuttonbar %}
+                    {%- endblock bottombuttonbar %}
                 </div>
             {%- endblock content %}
 

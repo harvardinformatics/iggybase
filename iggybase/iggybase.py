@@ -10,10 +10,10 @@ from iggybase.mod_api import mod_api as mod_api_blueprint
 __all__ = [ 'create_app' ]
 
 DEFAULT_BLUEPRINTS = (
-    mod_core_blueprint,
-    mod_auth_blueprint,
     mod_admin_blueprint,
-    mod_api_blueprint
+    mod_auth_blueprint,
+    mod_api_blueprint,
+    mod_core_blueprint
 )
 
 

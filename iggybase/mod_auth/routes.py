@@ -1,4 +1,5 @@
-from flask import render_template, redirect, url_for, request
+from flask import redirect, url_for, request
+from iggybase.templating import page_template
 from flask.ext.login import login_required, login_user, logout_user, current_user
 from iggybase.mod_auth.models import User
 from iggybase.mod_admin.models import NewUser
@@ -15,14 +16,14 @@ def login():
     if form.validate_on_submit( ):
         user = User.query.filter_by( name=form.name.data ).first( )
         if user is None or not user.is_active( ) or not user.verify_password( form.password.data ):
-            return render_template( 'mod_auth/failedlogin.html', form=form )
+            return page_template( 'mod_auth/failedlogin.html', form=form )
         login_user( user, form.remember_me.data )
 
         if user.home_page is not None:
             return redirect( request.args.get( 'next' ) or url_for( user.home_page, page_type = user.home_page_variable ) )
         else:
             return redirect( request.args.get( 'next' ) or url_for( 'mod_auth.index' ) )
-    temp = render_template( 'mod_auth/login.html', form=form )
+    temp = page_template( 'mod_auth/login.html', form=form )
     index = temp.find( '</form>' )
     loginform = temp[ :index ] + '<input type="button" class="btn btn-default" id="login_register" value="Register" >' + temp[ index: ]
     return loginform
@@ -63,7 +64,7 @@ def register():
 
         return redirect( url_for( 'mod_auth.regcomplete' ) )
 
-    return render_template( 'mod_auth/register.html', form=form )
+    return page_template( 'mod_auth/register.html', form=form )
 
 
 @mod_auth.route( '/logout' )
@@ -74,19 +75,19 @@ def logout():
 
 @mod_auth.route( '/' )
 def index( ):
-    return render_template( 'index.html' )
+    return page_template( 'index.html' )
 
 
 @mod_auth.route( '/regcomplete' )
 def regcomplete( ):
-    return render_template( 'mod_auth/regcomplete.html' )
+    return page_template( 'mod_auth/regcomplete.html' )
 
 
 @mod_auth.route( '/registererror' )
 def registererror( ):
-    return render_template( 'mod_auth/registererror.html' )
+    return page_template( 'mod_auth/registererror.html' )
 
 
 @mod_auth.route( '/failedlogin' )
 def failedlogin( ):
-    return render_template( 'mod_auth/failedlogin.html' )
+    return page_template( 'mod_auth/failedlogin.html' )

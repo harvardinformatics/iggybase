@@ -70,7 +70,6 @@ class MenuFacilityRole( StaticBase ):
     order = Column( Integer )
     facility_role_id = Column( Integer, ForeignKey( 'facility_role.id' ) )
     menu_id = Column( Integer, ForeignKey( 'menu.id' ) )
-    order = Column( Integer )
 
     menu_facility_role_facility = relationship( "FacilityRole", foreign_keys = [ facility_role_id ] )
     menu_facility_role_menu = relationship( "Menu", foreign_keys = [ menu_id ] )
@@ -112,7 +111,6 @@ class MenuItemFacilityRole( StaticBase ):
     order = Column( Integer )
     facility_role_id = Column( Integer, ForeignKey( 'facility_role.id' ) )
     menu_item_id = Column( Integer, ForeignKey( 'menu_item.id' ) )
-    order = Column( Integer )
 
     menu_item_facility_role_facility = relationship( "FacilityRole", foreign_keys = [ facility_role_id ] )
     menu_item_facility_role_menu_item = relationship( "MenuItem", foreign_keys = [ menu_item_id ] )
@@ -126,6 +124,8 @@ class PageForm( StaticBase ):
     date_created = Column( DateTime, default = datetime.datetime.utcnow )
     last_modified = Column( DateTime, default = datetime.datetime.utcnow )
     active = Column( Boolean )
+    organization_id = Column( Integer )
+    order = Column( Integer )
 
 class PageFormFacilityRole( StaticBase ):
     __tablename__ = 'page_form_facility_role'
@@ -143,8 +143,8 @@ class PageFormFacilityRole( StaticBase ):
     page_facility_role_facility = relationship( "FacilityRole", foreign_keys = [ facility_role_id ] )
     page_facility_role_page = relationship( "PageForm", foreign_keys = [ page_form_id ] )
 
-class PageFormButtons( StaticBase ):
-    __tablename__ = 'page_form_buttons'
+class PageFormButton( StaticBase ):
+    __tablename__ = 'page_form_button'
     id = Column( Integer, primary_key = True )
     name = Column( String( 100 ), unique = True )
     description = Column( String( 255 ) )
@@ -154,11 +154,13 @@ class PageFormButtons( StaticBase ):
     organization_id = Column( Integer )
     order = Column( Integer )
     page_form_id = Column( Integer, ForeignKey( 'page_form.id' ) )
+    action_id = Column( Integer, ForeignKey( 'action.id' ) )
 
-    page_form_buttons_facility_role_page = relationship( "PageForm", foreign_keys = [ page_form_id ] )
+    page_form_button_page_form = relationship( "PageForm", foreign_keys = [ page_form_id ] )
+    page_form_button_action = relationship( "Action", foreign_keys = [ action_id ] )
 
-class PageFormButtonsFacilityRole( StaticBase ):
-    __tablename__ = 'page_form_buttons_facility_role'
+class PageFormButtonFacilityRole( StaticBase ):
+    __tablename__ = 'page_form_button_facility_role'
     id = Column( Integer, primary_key = True )
     name = Column( String( 100 ), unique = True )
     description = Column( String( 255 ) )
@@ -168,11 +170,10 @@ class PageFormButtonsFacilityRole( StaticBase ):
     organization_id = Column( Integer )
     order = Column( Integer )
     facility_role_id = Column( Integer, ForeignKey( 'facility_role.id' ) )
-    page_form_buttons_id = Column( Integer, ForeignKey( 'page_form_buttons.id' ) )
-    order = Column( Integer )
+    page_form_button_id = Column( Integer, ForeignKey( 'page_form_button.id' ) )
 
-    page_form_buttons_facility_role_facility = relationship( "FacilityRole", foreign_keys = [ facility_role_id ] )
-    page_form_buttons_facility_role_page_form = relationship( "PageFormButtons", foreign_keys = [ page_form_buttons_id ] )
+    page_form_button_facility_role_facility = relationship( "FacilityRole", foreign_keys = [ facility_role_id ] )
+    page_form_button_facility_role_page_form = relationship( "PageFormButton", foreign_keys = [ page_form_button_id ] )
 
 class TableObject( StaticBase ):
     __tablename__ = 'table_object'
@@ -286,23 +287,6 @@ class Action( StaticBase ):
     last_modified = Column( DateTime, default = datetime.datetime.utcnow )
     active = Column( Boolean )
     action_value = Column( String( 255 ) )
-
-class ActionFacilityRole( StaticBase ):
-    __tablename__ = 'action_facility_role'
-    id = Column( Integer, primary_key = True )
-    name = Column( String( 100 ), unique = True )
-    description = Column( String( 255) )
-    date_created = Column( DateTime, default = datetime.datetime.utcnow )
-    last_modified = Column( DateTime, default = datetime.datetime.utcnow )
-    active = Column( Boolean )
-    organization_id = Column( Integer )
-    order = Column( Integer )
-    facility_role_id = Column( Integer, ForeignKey( 'facility_role.id' ) )
-    action_id = Column( Integer, ForeignKey( 'action.id' ) )
-
-    action_facility_role_facility = relationship( "FacilityRole", foreign_keys = [ facility_role_id ] )
-    action_facility_role_action = relationship( "Action", foreign_keys = [ action_id ] )
-    action_facility_role_unq = UniqueConstraint( 'facility_role_id', 'action_id' )
 
 class NewUser( StaticBase ):
     __tablename__ = 'new_user'

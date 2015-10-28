@@ -15,7 +15,7 @@ class TableFactory:
     def table_object_factory( self, class_name, table_object ):
         classattr = { "__tablename__": table_object.name }
 
-        table_object_cols = self.facility_access_control.module_fields( table_object.id, self.active )
+        table_object_cols = self.facility_access_control.facility_module_fields( table_object.id, self.active )
 
         for col in table_object_cols:
             #logging.info( col.field_name )

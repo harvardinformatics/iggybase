@@ -1,8 +1,6 @@
 from flask.ext.login import login_required
-from iggybase.templating import render_template
+from iggybase.templating import page_template
 from iggybase.mod_core import mod_core
-from iggybase.mod_core import models
-from iggybase.mod_auth.organization_access_control import OrganizationAccessControl
 import logging
 
 @mod_core.before_request
@@ -12,14 +10,11 @@ def before_request():
 
 @mod_core.route( '/' )
 def default():
-    return render_template( 'index.html' )
+    return page_template( 'index.html' )
 
 
 @mod_core.route( '/summary/<page_type>' )
 def summary( page_type = None ):
     logging.info( page_type + ' summary page user' )
 
-    test = models.Container()
-    orgacc = OrganizationAccessControl()
-
-    return render_template( 'mod_core/summary.html', form_type = 'summary', page_type = page_type )
+    return page_template( 'mod_core/summary.html', form_type = 'summary', page_type = page_type )
