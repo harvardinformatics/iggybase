@@ -27,14 +27,12 @@ def page_buttons( buttons ):
     btns = [ ]
 
     for button in buttons:
-        btn_str = '<input value="' + button.button_value + '" id="' + button.button_id + \
-                                '" name="' + button.button_id + '" type="' + button.button_type + \
-                                '" class="' + button.button_class + '" '
+        btn_str = 'input value="' + button.button_value + '" id="' + button.button_id + \
+            '" name="' + button.button_id + '" type="' + button.button_type + \
+            '" class="' + button.button_class  + '"'
 
         if button.special_props is not None:
-            btn_str += button.special_props + '>'
-        else:
-            btn_str += '>'
+            btn_str += button.special_props
 
         btns.append( btn_str )
 

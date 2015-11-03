@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% import "bootstrap/wtf.html" as wtf %}
+{% import 'macros.html' as macros %}
 
 {% block title %}Iggybase Login{% endblock %}
 
@@ -18,8 +19,7 @@
 
             {% block bottombuttonbar %}
                 {{ super() }}
-                <input class="btn btn-default" id="login" name="login" type="submit" value="Login">
-                <input type="button" class="btn btn-default" id="login_register" value="Register" >
+                {{ macros.render_buttons( buttons ) }}
             {%- endblock bottombuttonbar %}
         </div>
     </form>

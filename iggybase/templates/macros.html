@@ -55,6 +55,6 @@
 
 {% macro render_buttons( buttons ) -%}
     {% for button in buttons %}
-        {{ button }}
+        <{{ button|safe }}>
     {% endfor %}
 {%- endmacro %}
