@@ -23,10 +23,8 @@ def login():
             return redirect( request.args.get( 'next' ) or url_for( user.home_page, page_type = user.home_page_variable ) )
         else:
             return redirect( request.args.get( 'next' ) or url_for( 'mod_auth.index' ) )
-    temp = page_template( 'mod_auth/login.html', form=form )
-    index = temp.find( '</form>' )
-    loginform = temp[ :index ] + '<input type="button" class="btn btn-default" id="login_register" value="Register" >' + temp[ index: ]
-    return loginform
+
+    return page_template( 'mod_auth/login.html', form=form )
 
 
 @mod_auth.route( '/register', methods = [ 'GET', 'POST' ] )

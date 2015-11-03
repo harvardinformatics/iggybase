@@ -154,10 +154,13 @@ class PageFormButton( StaticBase ):
     organization_id = Column( Integer )
     order = Column( Integer )
     page_form_id = Column( Integer, ForeignKey( 'page_form.id' ) )
-    action_id = Column( Integer, ForeignKey( 'action.id' ) )
+    button_type = Column( String( 100 ) )
+    button_class = Column( String( 100 ) )
+    button_value = Column( String( 100 ) )
+    button_id = Column( String( 100 ) )
+    special_props = Column( String( 255 ) )
 
     page_form_button_page_form = relationship( "PageForm", foreign_keys = [ page_form_id ] )
-    page_form_button_action = relationship( "Action", foreign_keys = [ action_id ] )
 
 class PageFormButtonFacilityRole( StaticBase ):
     __tablename__ = 'page_form_button_facility_role'

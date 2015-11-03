@@ -52,3 +52,9 @@
         </tbody>
     </table>
 {%- endmacro %}
+
+{% macro render_buttons( buttons ) -%}
+    {% for button in buttons %}
+        {{ button }}
+    {% endfor %}
+{%- endmacro %}

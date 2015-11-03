@@ -8,7 +8,6 @@ class LoginForm( Form ):
     name = StringField( 'Login name', validators = [ DataRequired( ), Length( 1, 16 ) ] )
     password = PasswordField( 'Password', validators = [ DataRequired( ) ] )
     remember_me = BooleanField( 'Remember me' )
-    login = SubmitField( 'Login' )
 
 class RegisterForm( Form ):
     name = StringField( 'Login name', validators = [ DataRequired( ), Length( 1, 16 ) ] )
@@ -26,7 +25,6 @@ class RegisterForm( Form ):
     phone = StringField( 'Phone', validators = [ DataRequired( ) ] )
     group = StringField( 'Group', validators = [ DataRequired( ) ] )
     pi = StringField( 'PI', validators = [ DataRequired( ) ] )
-    register = SubmitField( 'Register' )
 
     def validate_email( self, field ):
         if User.query.filter_by( email = field.data ).first( ):

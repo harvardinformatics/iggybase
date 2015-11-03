@@ -5,11 +5,24 @@
 
 {% block page_content %}
     <h1>Login</h1>
-    <div class="row">
+    <form action class="form" method="post" role="form">
         <div class="col-md-4">
-            {{ wtf.quick_form( form ) }}
+            {{ form.hidden_tag() }}
+            {{ wtf.form_errors(form, hiddens='only') }}
+
+            {%- for field in form %}
+                {% if not bootstrap_is_hidden_field( field ) -%}
+                    {{ wtf.form_field( field ) }}
+                {%- endif %}
+            {%- endfor %}
+
+            {% block bottombuttonbar %}
+                {{ super() }}
+                <input class="btn btn-default" id="login" name="login" type="submit" value="Login">
+                <input type="button" class="btn btn-default" id="login_register" value="Register" >
+            {%- endblock bottombuttonbar %}
         </div>
-    </div>
+    </form>
 {% endblock %}
 
 {% block scripts %}

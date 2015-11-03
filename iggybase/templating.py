@@ -13,8 +13,29 @@ def page_template( page_form, **context ):
         facility_access_ctrl = FacilityAccessControl( )
 
         buttons = facility_access_ctrl.facility_buttons( page_form )
+
+        context[ 'buttons' ] = page_buttons( buttons )
     else:
         # add button, nav bar, side bar
-        pass
+        buttons = access_ctrl.facility_buttons( page_form )
+
+        context[ 'buttons' ] = page_buttons( buttons )
 
     return render_template( page_form, **context )
+
+def page_buttons( buttons ):
+    btns = [ ]
+
+    for button in buttons:
+        btn_str = '<input value="' + button.button_value + '" id="' + button.button_id + \
+                                '" name="' + button.button_id + '" type="' + button.button_type + \
+                                '" class="' + button.button_class + '" '
+
+        if button.special_props is not None:
+            btn_str += button.special_props + '>'
+        else:
+            btn_str += '>'
+
+        btns.append( btn_str )
+
+    return btns
