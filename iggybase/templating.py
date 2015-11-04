@@ -6,7 +6,7 @@ import logging
 def page_template( page_form_name, **context ):
     access_ctrl = FacilityRoleAccessControl( )
 
-    #logging.info( page_form )
+    # logging.info( context )
 
     if access_ctrl.user is None:
         # add buttons only (login and related pages - no user)
@@ -36,6 +36,8 @@ def page_template( page_form_name, **context ):
         buttons = access_ctrl.page_form_buttons( page_form.id )
 
         context[ 'buttons' ] = page_buttons( buttons )
+
+    # logging.info( context )
 
     return render_template( page_form.page_template, **context )
 

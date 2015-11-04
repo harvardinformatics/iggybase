@@ -16,7 +16,7 @@ def login():
     if form.validate_on_submit( ):
         user = User.query.filter_by( name=form.name.data ).first( )
         if user is None or not user.is_active( ) or not user.verify_password( form.password.data ):
-            return page_template( 'mod_auth/failedlogin', form=form )
+            return page_template( 'mod_auth/failedlogin', form=form, page_msg = 'Please verify your login credentials or register for an account.' )
         login_user( user, form.remember_me.data )
 
         if user.home_page is not None:
@@ -73,18 +73,14 @@ def logout():
 
 @mod_auth.route( '/regcomplete' )
 def regcomplete( ):
-    context = { 'page_msg': 'Thank you for registering. Your registration will be reviewed within 1 business day.' }
-    return page_template( 'mod_auth/regcomplete', context )
+    return page_template( 'mod_auth/regcomplete', page_msg = 'Thank you for registering. Your registration will be reviewed within 1 business day.'  )
 
 
 @mod_auth.route( '/registererror' )
 def registererror( ):
-    context = { 'page_msg': 'Error encountered while registering.' }
-    return page_template( 'mod_auth/regerror', context )
+    return page_template( 'mod_auth/regerror', page_msg = 'Error encountered while registering.' )
 
 
 @mod_auth.route( '/failedlogin' )
 def failedlogin( ):
-    context = []
-    context = { 'page_msg': 'Please verify your login credentials or register for an account.' }
-    return page_template( 'mod_auth/failedlogin', context )
+    return page_template( 'mod_auth/failedlogin', page_msg = 'Please verify your login credentials or register for an account.' )

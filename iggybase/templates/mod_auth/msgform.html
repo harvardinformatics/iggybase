@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% import "bootstrap/wtf.html" as wtf %}
+{% import 'macros.html' as macros %}
 
 {% block title %}{{ page_title }}{% endblock %}
 
@@ -10,8 +11,11 @@
             {{ page_msg }}
         </p>
     </div>
-    <input type="button" class="btn btn-default" id="regcompletelogin" value="Login" >
-    <input type="button" class="btn btn-default" id="login_register" value="Register" >
+
+    {% block bottombuttonbar %}
+        {{ super() }}
+        {{ macros.render_buttons( buttons ) }}
+    {%- endblock bottombuttonbar %}
 
     {% block scripts %}
         {{ super() }}

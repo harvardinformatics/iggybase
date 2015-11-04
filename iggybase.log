@@ -1,0 +1,4 @@
+INFO:root:{'form': <iggybase.mod_auth.forms.LoginForm object at 0x7f607240fb00>}
+INFO:root:{'page_header': 'Login Failed', 'page_title': 'Iggybase - Login Failed', 'form': <iggybase.mod_auth.forms.LoginForm object at 0x7f607240fb00>, 'buttons': []}
+INFO:root:{'form': <iggybase.mod_auth.forms.LoginForm object at 0x7f607240eac8>, 'page_msg': 'Please verify your login credentials or register for an account.'}
+INFO:root:{'buttons': [], 'page_header': 'Login Failed', 'form': <iggybase.mod_auth.forms.LoginForm object at 0x7f607240eac8>, 'page_msg': 'Please verify your login credentials or register for an account.', 'page_title': 'Iggybase - Login Failed'}
