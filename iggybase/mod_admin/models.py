@@ -126,6 +126,24 @@ class PageForm( StaticBase ):
     active = Column( Boolean )
     organization_id = Column( Integer )
     order = Column( Integer )
+    page_title = Column( String( 50 ) )
+    page_header = Column( String( 50 ) )
+    page_template = Column( String( 100 ) )
+
+class PageFormJavaScript( StaticBase ):
+    __tablename__ = 'page_form_javascript'
+    id = Column( Integer, primary_key = True )
+    name = Column( String( 100 ), unique = True )
+    description = Column( String( 255 ) )
+    date_created = Column( DateTime, default = datetime.datetime.utcnow )
+    last_modified = Column( DateTime, default = datetime.datetime.utcnow )
+    active = Column( Boolean )
+    organization_id = Column( Integer )
+    order = Column( Integer )
+    page_form_id = Column( Integer, ForeignKey( 'page_form.id' ) )
+    page_javascript = Column( String( 100 ) )
+
+    page_javascript_page = relationship( "PageForm", foreign_keys = [ page_form_id ] )
 
 class PageFormFacilityRole( StaticBase ):
     __tablename__ = 'page_form_facility_role'

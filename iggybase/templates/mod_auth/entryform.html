@@ -2,10 +2,10 @@
 {% import "bootstrap/wtf.html" as wtf %}
 {% import 'macros.html' as macros %}
 
-{% block title %}Iggybase Login{% endblock %}
+{% block title %}{{ page_title }}{% endblock %}
 
 {% block page_content %}
-    <h1>Login</h1>
+    <h1>{{ page_header }}</h1>
     <form action class="form" method="post" role="form">
         <div class="col-md-4">
             {{ form.hidden_tag() }}

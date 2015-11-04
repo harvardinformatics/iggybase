@@ -15,6 +15,4 @@ def default():
 
 @mod_core.route( '/summary/<page_type>' )
 def summary( page_type = None ):
-    logging.info( page_type + ' summary page user' )
-
-    return page_template( 'mod_core/summary.html', form_type = 'summary', page_type = page_type )
+    return page_template( 'mod_core/summary', page_type = page_type )

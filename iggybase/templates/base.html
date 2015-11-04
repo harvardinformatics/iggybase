@@ -23,7 +23,7 @@
         {% block body -%}
             {% block banner %}
                 <div class="banner" id="banner">
-                    <a  href="{{ url_for('mod_auth.index') }}">
+                    <a  href="{{ url_for('index') }}">
                         <img src="{{ url_for('static', filename='iggybase.gif') }}">
                     </a>
                     {% if current_user.is_authenticated() %}
