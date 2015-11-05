@@ -1,1 +1,0 @@
-INFO:root:{'page_header': 'Login', 'page_title': 'Iggybase - Login', 'form': <iggybase.mod_auth.forms.LoginForm object at 0x7fb018471940>, 'buttons': ['input value="Login" id="login" name="login" type="submit" class="btn btn-default"', 'input value="Register" id="login_register" name="login_register" type="button" class="btn btn-default"']}

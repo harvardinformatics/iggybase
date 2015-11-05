@@ -3,7 +3,7 @@ from distutils.core import setup
 setup(
     name='iggybase',
     version='',
-    packages=['iggybase', 'iggybase.mod_auth', 'iggybase.mod_core', 'iggybase_env.lib.python3.4.site-packages.bn',
+    packages=['iggybase', 'iggybase.mod_auth', 'iggybase.mod_lab', 'iggybase_env.lib.python3.4.site-packages.bn',
               'iggybase_env.lib.python3.4.site-packages.pbr', 'iggybase_env.lib.python3.4.site-packages.pbr.cmd',
               'iggybase_env.lib.python3.4.site-packages.pbr.hooks',
               'iggybase_env.lib.python3.4.site-packages.pbr.tests',

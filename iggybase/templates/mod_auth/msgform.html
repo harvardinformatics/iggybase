@@ -19,6 +19,6 @@
 
     {% block scripts %}
         {{ super() }}
-        <script type="text/javascript" src="{{ url_for('static', filename='mod_auth/main.js') }}"></script>
+        {{ macros.render_scripts( scripts ) }}
     {%- endblock scripts %}
 {% endblock %}

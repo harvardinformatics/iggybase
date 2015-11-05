@@ -1,5 +1,5 @@
 from flask.ext.wtf import Form
-from wtforms import StringField, PasswordField, BooleanField, SubmitField, ValidationError
+from wtforms import StringField, PasswordField, BooleanField, SelectField, ValidationError
 from wtforms.validators import DataRequired, Length, email
 from .models import User
 from iggybase.mod_admin.models import NewUser
@@ -7,6 +7,8 @@ from iggybase.mod_admin.models import NewUser
 class LoginForm( Form ):
     name = StringField( 'Login name', validators = [ DataRequired( ), Length( 1, 16 ) ] )
     password = PasswordField( 'Password', validators = [ DataRequired( ) ] )
+    role = SelectField( 'Role', choices = [ ( '', '' ) ], validators = [ DataRequired( ) ] )
+    organization = SelectField( 'Organization', choices = [ ( '', '' ) ], validators = [ DataRequired( ) ] )
     remember_me = BooleanField( 'Remember me' )
 
 class RegisterForm( Form ):
@@ -16,7 +18,7 @@ class RegisterForm( Form ):
     password = PasswordField( 'Password', validators = [ DataRequired( ) ] )
     confpassword = PasswordField( 'Confirm Password', validators = [ DataRequired( ) ] )
     email = StringField( 'Email', validators = [ email( ), DataRequired( ) ] )
-    institution = StringField( 'Institution', validators = [ DataRequired( ) ] )
+    organization = StringField( 'Organization', validators = [ DataRequired( ) ] )
     address1 = StringField( 'Address 1', validators = [ DataRequired( ) ] )
     address2 = StringField( 'Address 2' )
     city = StringField( 'City', validators = [ DataRequired( ) ] )

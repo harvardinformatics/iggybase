@@ -24,8 +24,6 @@ class Role( StaticBase ):
     active = Column( Boolean )
     organization_id = Column( Integer )
     order = Column( Integer )
-    director = Column( Boolean )
-    manager = Column( Boolean )
     
 class FacilityRole( StaticBase ):
     __tablename__ = 'facility_role'

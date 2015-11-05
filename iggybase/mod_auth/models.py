@@ -24,7 +24,9 @@ class User( UserMixin, Base ):
     address_id = Column( Integer, ForeignKey( 'address.id' ) )
     home_page = Column( String( 50 ) )
     home_page_variable = Column( String( 50 ) )
-    role_id = Column( Integer, default = USER.READONLY )
+    current_user_role_id = Column( Integer, ForeignKey( 'user_role.id' ) )
+
+    user_user_role = relationship( "UserRole", foreign_keys = [ current_user_role_id ] )
 
     def get_id(self):
         return str( self.id )
@@ -49,21 +51,8 @@ class User( UserMixin, Base ):
     def __repr__( self ):
         return '<User %r>' % ( self.name )
 
-class UserType( Base ):
-    __tablename__ = 'user_type'
-    id = Column( Integer, primary_key = True )
-    name = Column( String( 50 ), unique = True )
-    description = Column( String( 255 ) )
-    date_created = Column( DateTime, default=datetime.datetime.utcnow )
-    last_modified = Column( DateTime, default=datetime.datetime.utcnow )
-    active = Column( Boolean )
-    organization_id = Column( Integer, ForeignKey( 'organization.id' ) )
-    order = Column( Integer )
-    director = Column( Boolean )
-    manager = Column( Boolean )
-
-class UserUserType( Base ):
-    __tablename__ = 'user_user_type'
+class UserRole( Base ):
+    __tablename__ = 'user_role'
     id = Column( Integer, primary_key = True )
     name = Column( String( 50 ), unique = True )
     description = Column( String( 255 ) )
@@ -73,10 +62,11 @@ class UserUserType( Base ):
     organization_id = Column( Integer, ForeignKey( 'organization.id' ) )
     order = Column( Integer )
     user_id = Column( Integer, ForeignKey( 'user.id' ) )
-    user_type_id = Column( Integer, ForeignKey( 'user_type.id' ) )
+    role_id = Column( Integer )
+    director = Column( Boolean )
+    manager = Column( Boolean )
 
     user_type_user = relationship( "User", foreign_keys = [ user_id ] )
-    user_type_user_type = relationship( "UserType", foreign_keys = [ user_type_id ] )
 
 @lm.user_loader
 def load_user( id ):
