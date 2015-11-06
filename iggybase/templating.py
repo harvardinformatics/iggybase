@@ -2,6 +2,7 @@ from flask import render_template, abort
 from iggybase.mod_auth.facility_role_access_control import FacilityRoleAccessControl
 from iggybase.mod_auth.facility_access_control import FacilityAccessControl
 from iggybase.mod_auth.organization_access_control import OrganizationAccessControl
+import os
 import logging
 
 def page_template( page_form_name, **context ):
@@ -80,16 +81,11 @@ def page_scripts( scripts ):
     return scpts
 
 def page_menus( menus, menu_items ):
-    btns = [ ]
+    mns = [ ]
 
-    for button in buttons:
-        btn_str = 'input value="' + button.button_value + '" id="' + button.button_id + \
-            '" name="' + button.button_id + '" type="' + button.button_type + \
-            '" class="' + button.button_class  + '"'
+    for menu in menus:
+        pass
 
-        if button.special_props is not None:
-            btn_str += button.special_props
+        mns.append(  )
 
-        btns.append( btn_str )
-
-    return btns
+    return mns
