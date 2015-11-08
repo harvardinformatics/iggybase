@@ -4,6 +4,7 @@ from flask.ext.login import login_required, login_user, logout_user, current_use
 from iggybase.mod_auth.models import User, UserRole, Organization
 from iggybase.mod_admin.models import NewUser, Role
 from . import mod_auth
+from iggybase.mod_auth.role_organization import get_roles, get_organizations, get_current_user_role, get_current_user_organization
 from iggybase.mod_auth.forms import LoginForm, RegisterForm
 from iggybase.database import admin_db_session
 import os
@@ -14,6 +15,13 @@ import logging
 @mod_auth.route( '/login', methods = [ 'GET', 'POST' ] )
 def login():
     form = LoginForm( )
+
+    user = User.query.filter_by( name=form.name.data ).first( )
+
+    if user is not None:
+        form.role.choices = get_roles( user.id )
+        form.organization.choices = get_organizations( user.id, form.role.data )
+
     if form.validate_on_submit( ):
         user = User.query.filter_by( name=form.name.data ).first( )
         if user is None or not user.is_active( ) or not user.verify_password( form.password.data ):
@@ -89,53 +97,43 @@ def failedlogin( ):
 
 @mod_auth.route( '/getrole', methods = [ 'POST' ] )
 def getrole( ):
-    username =  request.json[ 'user' ];
-    user = User.query.filter_by( name = username ).first( )
+    user_name =  request.json[ 'user' ];
+
+    user = User.query.filter_by( name = user_name ).first( )
+
     if user is None:
-        return json.dumps( { 'user': 'none', 'roles': { 'none': 'none' }, 'current': { 'role': 'none', 'org': 'none' } } )
+        return json.dumps( { 'user': 'none', 'roles': [ ( '0', '' ) ], 'current_role': 'none' } )
 
-    userroles = UserRole.query.filter_by( user_id = user.id ).all( )
+    roles = get_roles( user.id )
 
-    roles = { }
-    for userrole in userroles:
-        if userrole.role_id not in roles:
-            role = Role.query.filter_by( id = userrole.role_id ).first( )
-            roles[ userrole.role_id ] = role.name
+    current_user_role = get_current_user_role( user.current_user_role_id )
 
-    currentuserrole = UserRole.query.filter_by( id = user.current_user_role_id ).first( )
-
-    if currentuserrole is None:
-        return json.dumps( { 'user': username, 'roles': roles, 'current': { 'role': 'none', 'org': 'none' } } )
+    if current_user_role is None:
+        return json.dumps( { 'user': user_name, 'roles': roles, 'current_role': 'none' } )
     else:
-        return json.dumps( { 'user': username, 'roles': roles, 'current': { 'role': currentuserrole.role_id, \
-                                                            'org': currentuserrole.organization_id } } )
+        orgs = get_organizations( user.id, current_user_role )
+
+        current_user_org = get_current_user_organization( user.current_user_role_id )
+
+        return json.dumps( { 'user': user_name, 'roles': roles, 'orgs': orgs, 'current_role': current_user_role, \
+                             'current_organization': current_user_org} )
 
 
 @mod_auth.route( '/getorganization', methods = [ 'POST' ] )
 def getorganization( ):
-    username =  request.json[ 'user' ];
-    user = User.query.filter_by( name = username ).first( )
+    user_name =  request.json[ 'user' ];
+    role_id =  request.json[ 'role' ];
+
+    user = User.query.filter_by( name = user_name ).first( )
+
     if user is None:
-        return json.dumps( { 'user': 'none', 'current': { 'role': 'none', 'org': 'none' }, 'roles': { 'none': 'none' }, \
-                             'orgs': { 'none': 'none' } } )
+        return json.dumps( { 'user': 'none', 'orgs': [ ( '0', '' ) ], 'current_organization': 'none' } )
 
-    userroles = UserRole.query.filter_by( user_id = user.id ).all( )
+    orgs = get_organizations( user.id, role_id )
 
-    roles = { }
-    orgs = { }
-    for userrole in userroles:
-        if userrole.role_id not in roles:
-            role = Role.query.filter_by( id = userrole.role_id ).first( )
-            roles[ userrole.role_id ] = role.name
-        if userrole.organization_id not in orgs:
-            org = Organization.query.filter_by( id = userrole.organization_id ).first( )
-            orgs[ userrole.organization_id ] = org.name
+    current_user_org = get_current_user_organization( user.current_user_role_id )
 
-    currentuserrole = UserRole.query.filter_by( id = user.current_user_role_id ).first( )
-
-    if currentuserrole is None:
-        return json.dumps( { 'user': username, 'current': { 'role': 'none', 'org': 'none' }, 'roles': roles, 'orgs': orgs } )
+    if current_user_org is None:
+        return json.dumps( { 'user': user_name, 'orgs': orgs, 'current_organization': 'none' } )
     else:
-        return json.dumps( { 'user': username, 'current': { 'role': currentuserrole.role_id, \
-                                                            'org': currentuserrole.organization_id }, \
-                             'roles': roles, 'orgs': orgs } )
+        return json.dumps( { 'user': user_name, 'orgs': orgs, 'current_organization': current_user_org } )
