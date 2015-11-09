@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+{% import 'macros.html' as macros %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block page_content %}
+    <h1>{{ page_header }}</h1>
+
+        <div id="page_message">
+            <p>
+                {{ page_msg }}
+            </p>
+        </div>
+
+    {% if form is defined %}
+        <form action class="form" method="post" role="form">
+            <div class="col-md-4">
+                {{ form.hidden_tag() }}
+                {{ wtf.form_errors(form, hiddens='only') }}
+    {% endif %}
+
+    {% block topbuttonbar %}
+        {{ super() }}
+        {{ macros.render_buttons( top_buttons ) }}
+    {%- endblock topbuttonbar %}
+
+    {% if form is defined %}
+        {%- for field in form %}
+            {% if not bootstrap_is_hidden_field( field ) -%}
+                {{ wtf.form_field( field ) }}
+            {%- endif %}
+        {%- endfor %}
+    {% endif %}
+
+    {% block bottombuttonbar %}
+        {{ super() }}
+        {{ macros.render_buttons( bottom_buttons ) }}
+    {%- endblock bottombuttonbar %}
+
+    {% if form is defined %}
+            </div>
+        </form>
+    {% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+    {{ macros.render_scripts( scripts ) }}
+{%- endblock scripts %}

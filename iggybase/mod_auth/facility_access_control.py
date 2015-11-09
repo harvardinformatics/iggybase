@@ -53,7 +53,9 @@ class FacilityAccessControl:
         return fields
 
     def page_form_buttons( self, page_form_id, active = 1 ):
-        button_objects = [ ]
+        button_objects = { }
+        button_objects[ 'top' ] = [ ]
+        button_objects[ 'bottom' ] = [ ]
 
         res = admin_db_session.query( models.PageFormButton ).filter_by( page_form_id = page_form_id ).filter_by( active = active ).all( )
         for row in res:
@@ -62,8 +64,8 @@ class FacilityAccessControl:
                 # logging.info ( 'facility_role.id: ' + str( facility_role.id ) )
                 access = admin_db_session.query( models.PageFormButtonFacilityRole ).filter_by( page_form_button_id = row.id ) \
                     .filter_by( facility_role_id = facility_role.id ).filter_by( active = active ).first( )
-                if access is not None:
-                    button_objects.append( row )
+                if access is not None and row.button_location in [ 'top', 'bottom' ]:
+                    button_objects[ row.button_location ].append( row )
                     break
 
         return button_objects

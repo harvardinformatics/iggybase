@@ -25,7 +25,7 @@ def login():
     if form.validate_on_submit( ):
         user = User.query.filter_by( name=form.name.data ).first( )
         if user is None or not user.is_active( ) or not user.verify_password( form.password.data ):
-            return page_template( 'mod_auth/failedlogin', form=form, page_msg = 'Please verify your login credentials or register for an account.' )
+            return redirect( url_for( 'mod_auth.failedlogin' ) )
         login_user( user, form.remember_me.data )
 
         if user.home_page is not None:
@@ -54,7 +54,7 @@ def register():
         newuser.email = form.email.data
         newuser.first_name = form.first_name.data
         newuser.group = form.group.data
-        newuser.institution = form.institution.data
+        newuser.organization = form.organization.data
         newuser.last_name = form.last_name.data
         newuser.name = form.name.data
         newuser.phone = form.phone.data
@@ -69,7 +69,7 @@ def register():
 
         session.commit( )
 
-        return page_template( 'mod_auth/regcomplete' )
+        return redirect( url_for( 'mod_auth.regcomplete' ) )
 
     return page_template( 'mod_auth/register', form=form )
 
@@ -97,7 +97,7 @@ def failedlogin( ):
 
 @mod_auth.route( '/getrole', methods = [ 'POST' ] )
 def getrole( ):
-    user_name =  request.json[ 'user' ];
+    user_name =  request.json[ 'user' ]
 
     user = User.query.filter_by( name = user_name ).first( )
 
@@ -121,8 +121,8 @@ def getrole( ):
 
 @mod_auth.route( '/getorganization', methods = [ 'POST' ] )
 def getorganization( ):
-    user_name =  request.json[ 'user' ];
-    role_id =  request.json[ 'role' ];
+    user_name =  request.json[ 'user' ]
+    role_id =  request.json[ 'role' ]
 
     user = User.query.filter_by( name = user_name ).first( )
 

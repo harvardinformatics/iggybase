@@ -24,7 +24,8 @@ def page_template( page_form_name, **context ):
 
         buttons = facility_access_ctrl.page_form_buttons( page_form.id )
 
-        context[ 'buttons' ] = page_buttons( buttons )
+        context[ 'top_buttons' ] = page_buttons( buttons[ 'top' ] )
+        context[ 'bottom_buttons' ] = page_buttons( buttons[ 'bottom' ] )
 
         scripts = facility_access_ctrl.page_form_javascript( page_form.id )
 
@@ -42,7 +43,8 @@ def page_template( page_form_name, **context ):
 
         buttons = access_ctrl.page_form_buttons( page_form.id )
 
-        context[ 'buttons' ] = page_buttons( buttons )
+        context[ 'top_buttons' ] = page_buttons( buttons[ 'top' ] )
+        context[ 'bottom_buttons' ] = page_buttons( buttons[ 'bottom' ] )
 
         scripts = access_ctrl.page_form_javascript( page_form.id )
 
