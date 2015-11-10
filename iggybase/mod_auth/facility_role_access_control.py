@@ -81,13 +81,15 @@ class FacilityRoleAccessControl:
         return page_forms
 
     def page_form_buttons( self, page_form_id, active = 1 ):
-        page_form_buttons = [ ]
+        page_form_buttons = { }
+        page_form_buttons[ 'top' ] = [ ]
+        page_form_buttons[ 'bottom' ] = [ ]
 
         res = admin_db_session.query( models.PageFormButtonFacilityRole ).filter_by( facility_role_id = self.facilityrole.id ).filter_by( active = active ).all( )
         for row in res:
             page_form_button = admin_db_session.query( models.PageFormButton ).filter_by( id = row.page_form_button_id ). \
                 filter_by( page_form_id = page_form_id ).filter_by( active = active ).first( )
-            if page_form_button is not None:
+            if page_form_button is not None and page_form_button.button_location in [ 'top', 'bottom' ]:
                 page_form_buttons.append( page_form_button )
                 break
 

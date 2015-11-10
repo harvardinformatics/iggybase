@@ -3,12 +3,13 @@ from wtforms import StringField, PasswordField, BooleanField, SelectField, Valid
 from wtforms.validators import DataRequired, Length, email
 from .models import User
 from iggybase.mod_admin.models import NewUser
+from iggybase.mod_auth.role_organization import get_roles, get_organizations
 
 class LoginForm( Form ):
     name = StringField( 'Login name', validators = [ DataRequired( ), Length( 1, 16 ) ] )
     password = PasswordField( 'Password', validators = [ DataRequired( ) ] )
-    role = SelectField( 'Role', choices = [ ( '', '' ) ], validators = [ DataRequired( ) ] )
-    organization = SelectField( 'Organization', choices = [ ( '', '' ) ], validators = [ DataRequired( ) ] )
+    role = SelectField( 'Role', coerce = int, choices = [ ],validators = [ DataRequired( ) ] )
+    organization = SelectField( 'Organization', coerce = int, choices = [ ], validators = [ DataRequired( ) ] )
     remember_me = BooleanField( 'Remember me' )
 
 class RegisterForm( Form ):

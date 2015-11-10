@@ -68,6 +68,23 @@ class UserRole( Base ):
 
     user_type_user = relationship( "User", foreign_keys = [ user_id ] )
 
+class Organization( Base ):
+    __tablename__ = 'organization'
+    id = Column( Integer, primary_key = True )
+    name = Column( String( 50 ), unique = True )
+    description = Column( String( 255 ) )
+    date_created = Column( DateTime, default=datetime.datetime.utcnow )
+    last_modified = Column( DateTime, default=datetime.datetime.utcnow )
+    active = Column( Boolean )
+    organization_id = Column( Integer, ForeignKey( 'organization.id' ) )
+    order = Column( Integer )
+    address_id = Column( Integer, ForeignKey( 'user.id' ) )
+    billing_address_id = Column( Integer )
+    organization_type_id = Column( Integer )
+    parent = Column( Integer, ForeignKey( 'organization.id' ) )
+
+    organization_parent = relationship( "Organization", foreign_keys = [ parent ] )
+
 @lm.user_loader
 def load_user( id ):
     return User.query.get( int( id ) )
