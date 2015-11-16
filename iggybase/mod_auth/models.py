@@ -81,9 +81,9 @@ class Organization( Base ):
     address_id = Column( Integer, ForeignKey( 'user.id' ) )
     billing_address_id = Column( Integer )
     organization_type_id = Column( Integer )
-    parent = Column( Integer, ForeignKey( 'organization.id' ) )
+    parent_id = Column( Integer, ForeignKey( 'organization.id' ) )
 
-    organization_parent = relationship( "Organization", foreign_keys = [ parent ] )
+    organization_parent = relationship( "Organization", foreign_keys = [ parent_id ] )
 
 @lm.user_loader
 def load_user( id ):
