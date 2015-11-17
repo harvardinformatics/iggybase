@@ -23,7 +23,7 @@ class FacilityAccessControl:
         #logging.debug( 'module_table_objects' )
         #logging.info ( 'module: ' + module )
         #logging.info ( 'active: ' + str( active ) )
-        res = admin_db_session.query( models.TableObject ).filter_by( active = active ).all( )
+        res = admin_db_session.query( models.TableObject ).filter_by( active = active ).order_by( models.TableObject.order ).all( )
         for row in res:
             #logging.info ( 'table_object_id: ' + str( row.id ) + ' name: ' + row.name )
             for facility_role in self.facilityroles:

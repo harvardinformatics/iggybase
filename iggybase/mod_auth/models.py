@@ -9,6 +9,7 @@ import datetime
 
 class User( UserMixin, Base ):
     __tablename__ = 'user'
+    __table_args__ = {'mysql_engine':'InnoDB'}
     id = Column( Integer, primary_key = True )
     name = Column( String( 50 ), unique = True )
     description = Column( String( 255 ) )
@@ -53,6 +54,7 @@ class User( UserMixin, Base ):
 
 class UserRole( Base ):
     __tablename__ = 'user_role'
+    __table_args__ = {'mysql_engine':'InnoDB'}
     id = Column( Integer, primary_key = True )
     name = Column( String( 50 ), unique = True )
     description = Column( String( 255 ) )
@@ -70,6 +72,7 @@ class UserRole( Base ):
 
 class Organization( Base ):
     __tablename__ = 'organization'
+    __table_args__ = {'mysql_engine':'InnoDB'}
     id = Column( Integer, primary_key = True )
     name = Column( String( 50 ), unique = True )
     description = Column( String( 255 ) )
