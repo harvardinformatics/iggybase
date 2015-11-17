@@ -50,6 +50,7 @@ class RK_Development( Config ):
     WTF_CSRF_SECRET_KEY = "aEsu'a}-j\>rJ4'8MFz{<yn"
     FACILITY= 'RC'
     GROUP = 'RC'
+    DUMMY_PARAM = 'Ignore this'
     
 config = {
     'timbran.rc.fas.harvard.edu.iggybase': RC_Development,
