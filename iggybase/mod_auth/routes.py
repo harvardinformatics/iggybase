@@ -1,12 +1,13 @@
 from flask import redirect, url_for, request, abort
 from iggybase.templating import page_template
 from flask.ext.login import login_required, login_user, logout_user, current_user
-from iggybase.mod_auth.models import User, UserRole, Organization
+from iggybase.mod_auth.models import User, UserRole
 from iggybase.mod_admin.models import NewUser, Role
 from . import mod_auth
-from iggybase.mod_auth.role_organization import get_roles, get_organizations, get_current_user_role, get_current_user_organization
+from iggybase.mod_auth.role_organization import get_roles, get_organizations, get_current_user_role, \
+    get_current_user_organization
 from iggybase.mod_auth.forms import LoginForm, RegisterForm
-from iggybase.database import admin_db_session
+from iggybase.database import admin_db_session, db_session
 import os
 import socket
 import json
@@ -23,13 +24,21 @@ def login():
         form.organization.choices = get_organizations( user.id, form.role.data )
 
     if form.validate_on_submit( ):
-        user = User.query.filter_by( name=form.name.data ).first( )
+        user = User.query.filter_by( name = form.name.data ).first( )
         if user is None or not user.is_active( ) or not user.verify_password( form.password.data ):
             return redirect( url_for( 'mod_auth.failedlogin' ) )
+
+        user_role = UserRole.query.filter_by( role_id = form.role.data ). \
+            filter_by( organization_id = form.organization.data ).first( )
+        user.current_user_role_id = user_role.id
+
+        db_session( ).add( user )
+        db_session( ).commit( )
+
         login_user( user, form.remember_me.data )
 
         if user.home_page is not None:
-            return redirect( request.args.get( 'next' ) or url_for( user.home_page, page_type = user.home_page_variable ) )
+            return redirect( request.args.get( 'next' ) or url_for( user.home_page.split( '|', 1 )[ 0 ], user.home_page.split( '|', 2 )[ 0 ] ) )
         else:
             return redirect( request.args.get( 'next' ) ) or abort( 404 )
 

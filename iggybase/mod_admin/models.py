@@ -264,6 +264,7 @@ class FieldFacilityRole( StaticBase ):
     organization_id = Column( Integer )
     order = Column( Integer )
     facility_role_id = Column( Integer, ForeignKey( 'facility_role.id' ) )
+    module_id = Column( Integer, ForeignKey( 'module.id' ) )
     field_id = Column( Integer, ForeignKey( 'field.id' ) )
     display_name = Column( String( 100 ) )
     order = Column( Integer )
@@ -275,6 +276,7 @@ class FieldFacilityRole( StaticBase ):
     field_facility_role_field = relationship( "Field", foreign_keys = [ field_id ] )
     field_facility_role_permission = relationship( "Permission", foreign_keys = [ permission_id ] )
     field_facility_role_unq = UniqueConstraint( 'facility_role_id', 'field_id', 'page_id' )
+    field_facility_role_module = relationship( "Module", foreign_keys = [ module_id ] )
 
 class DataType( StaticBase ):
     __tablename__ = 'data_type'
@@ -415,3 +417,18 @@ class Module( StaticBase ):
     last_modified = Column( DateTime, default = datetime.datetime.utcnow )
     active = Column( Boolean )
     organization_id = Column( Integer )
+
+class ModuleFacilityRole( StaticBase ):
+    __tablename__ = 'module_facility_role'
+    id = Column( Integer, primary_key = True )
+    name = Column( String( 100 ), unique = True )
+    description = Column( String( 255 ) )
+    date_created = Column( DateTime, default = datetime.datetime.utcnow )
+    last_modified = Column( DateTime, default = datetime.datetime.utcnow )
+    active = Column( Boolean )
+    organization_id = Column( Integer )
+    facility_role_id = Column( Integer, ForeignKey( 'facility_role.id' ) )
+    module_id = Column( Integer, ForeignKey( 'module.id' ) )
+
+    module_role_facility = relationship( "FacilityRole", foreign_keys = [ facility_role_id ] )
+    module_facility_role_module = relationship( "Module", foreign_keys = [ module_id ] )
