@@ -12,12 +12,12 @@ class FacilityRoleAccessControl:
 
         self.facility = admin_db_session.query( models.Facility ).filter_by( name = config.FACILITY ).first( )
 
-        if current_user.is_authenticated( ):
-            self.user = load_user( current_user.id )
-            self.facilityrole = admin_db_session.query( models.FacilityRole ).filter_by( facility_id = self.facility.id, role_id = self.user.role_id ).first( )
-        else:
+        if current_user.is_anonymous( ):
             self.user = None
             self.facilityrole = None
+        else:
+            self.user = load_user( current_user.id )
+            self.facilityrole = admin_db_session.query( models.FacilityRole ).filter_by( facility_id = self.facility.id, role_id = self.user.role_id ).first( )
 
     def table_objects( self, active = 1 ):
         table_objects = [ ]
@@ -31,12 +31,12 @@ class FacilityRoleAccessControl:
 
         return table_objects
 
-    def fields( self, type_id, active = 1 ):
+    def fields( self, table_object_id, active = 1 ):
         fields = [ ]
 
         res = admin_db_session.query( models.FieldFacilityRole ).filter_by( facility_role_id = self.facilityrole.id ).filter_by( active = active ).all( )
         for row in res:
-            field = admin_db_session.query( models.Field ).filter_by( id = row.field_id ).filter_by( active = active ).first( )
+            field = admin_db_session.query( models.Field ).filter_by( table_oject_id = table_object_id ).filter_by( id = row.field_id ).filter_by( active = active ).first( )
             if field is not None:
                 fields.append( field )
                 break

@@ -4,13 +4,15 @@ from wtforms.validators import DataRequired, Length, email
 from iggybase.mod_admin.models import TableObject, TableObjectFacilityRole, Field, FieldFacilityRole
 from iggybase.mod_auth.facility_role_access_control import FacilityRoleAccessControl
 from iggybase.mod_auth.organization_access_control import OrganizationAccessControl
+from iggybase.database import admin_db_session
 
-class FormGenerator( Form ):
+class FormGenerator( ):
     def __init__( self, module, table_object, active = 1 ):
         self.facility_role_access_control = FacilityRoleAccessControl( )
         self.organization_access_control = OrganizationAccessControl( )
         self.active = active
         self.table_object = table_object
+        self.form = Form
 
     def textbox_input( self, field, value ):
         pass
@@ -28,9 +30,6 @@ class FormGenerator( Form ):
         pass
 
     def default_single_entry_form( self, instance_name  ):
-        pass
-
-    def default_summary_form( self ):
         pass
 
     def default_multiple_entry_form( self, instance_names ):
