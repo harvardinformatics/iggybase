@@ -3,7 +3,6 @@ from wtforms import StringField, PasswordField, BooleanField, SelectField, Valid
 from wtforms.validators import DataRequired, Length, email
 from .models import User
 from iggybase.mod_admin.models import NewUser
-from iggybase.mod_auth.role_organization import get_roles, get_organizations
 
 class LoginForm( Form ):
     name = StringField( 'Login name', validators = [ DataRequired( ), Length( 1, 16 ) ] )

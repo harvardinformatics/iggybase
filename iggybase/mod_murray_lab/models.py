@@ -14,7 +14,3 @@ for table_object in tables:
 
     globals()[ class_name ].__module__ = __name__
 
-
-def table_object_rows( self, module, table_object_name, active = 1, **fields ):
-    pass
-
