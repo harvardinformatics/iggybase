@@ -3,7 +3,6 @@ from wtforms import StringField, PasswordField, BooleanField, SelectField, Valid
 from wtforms.validators import DataRequired, Length, email
 from iggybase.mod_admin.models import TableObject, TableObjectFacilityRole, Field, FieldFacilityRole
 from iggybase.mod_auth.facility_role_access_control import FacilityRoleAccessControl
-from iggybase.database import admin_db_session
 
 class FormGenerator( Form ):
     def __init__( self, module, table_object, active = 1 ):
