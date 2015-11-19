@@ -8,3 +8,7 @@
 //        window.open( '/register', '_self' );
 //    }
 //} ) ( jQuery );
+//
+$(document).ready(function(){
+    $('#summary_table').DataTable();
+});

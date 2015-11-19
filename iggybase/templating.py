@@ -86,7 +86,7 @@ def page_scripts( scripts ):
 
     return scpts
 
-def page_menus( menus, menu_items ):
+'''def page_menus( menus, menu_items ):
     mns = [ ]
 
     """
@@ -99,3 +99,4 @@ def page_menus( menus, menu_items ):
     """
 
     return mns
+'''
