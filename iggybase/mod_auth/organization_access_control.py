@@ -1,6 +1,7 @@
 from flask.ext.login import current_user
 from iggybase.database import db_session
 from iggybase.mod_auth.models import load_user, UserRole, Organization
+from iggybase.mod_auth.facility_role_access_control import FacilityRoleAccessControl
 import logging
 
 # Controls access to the data db data based on organization

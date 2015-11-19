@@ -2,13 +2,11 @@ from flask.ext.wtf import Form
 from wtforms import StringField, PasswordField, BooleanField, SelectField, ValidationError
 from wtforms.validators import DataRequired, Length, email
 from iggybase.mod_admin.models import TableObject, TableObjectFacilityRole, Field, FieldFacilityRole
-from iggybase.mod_auth.facility_role_access_control import FacilityRoleAccessControl
 from iggybase.mod_auth.organization_access_control import OrganizationAccessControl
 from iggybase.database import admin_db_session
 
 class FormGenerator( ):
     def __init__( self, module, table_object, active = 1 ):
-        self.facility_role_access_control = FacilityRoleAccessControl( )
         self.organization_access_control = OrganizationAccessControl( )
         self.active = active
         self.table_object = table_object
