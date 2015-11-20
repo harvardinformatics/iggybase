@@ -23,7 +23,7 @@
         {% block body -%}
             {% block banner %}
                 <div class="banner" id="banner">
-                    <a  href="{{ url_for('mod_auth.index') }}">
+                    <a  href="{{ url_for('index') }}">
                         <img src="{{ url_for('static', filename='iggybase.gif') }}">
                     </a>
                     {% if current_user.is_authenticated() %}
@@ -42,14 +42,20 @@
 
             {% block content -%}
                 <div class="container">
-                    {% block page_content %}{% endblock page_content %}
+                    {% block page_content %}
+                        {% block topbuttonbar %}
+                        {%- endblock topbuttonbar %}
+
+                        {% block bottombuttonbar %}
+                        {%- endblock bottombuttonbar %}
+                    {% endblock page_content %}
                 </div>
             {%- endblock content %}
 
             {% block scripts %}
                 <script src="{{bootstrap_find_resource('jquery.js', cdn='jquery')}}"></script>
                 <script src="{{bootstrap_find_resource('js/bootstrap.js', cdn='bootstrap')}}"></script>
-                <script type="text/javascript" src="{{ url_for('static', filename='main.js') }}"></script>
+                <script type="text/javascript" src="{{ url_for( 'static', filename='main.js' ) }}"></script>
             {%- endblock scripts %}
         {%- endblock body %}
         </body>

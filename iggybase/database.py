@@ -20,5 +20,5 @@ def init_db( ):
     StaticBase.metadata.create_all( bind = adminengine )
 
     import iggybase.mod_auth.models
-    import iggybase.mod_core.models
+    import iggybase.mod_murray_lab.models
     Base.metadata.create_all( bind = engine )

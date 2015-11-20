@@ -1,5 +1,5 @@
 from flask.ext.wtf import Form
-from wtforms import StringField, PasswordField, BooleanField, SubmitField, ValidationError
+from wtforms import StringField, PasswordField, BooleanField, SelectField, ValidationError
 from wtforms.validators import DataRequired, Length, email
 from .models import User
 from iggybase.mod_admin.models import NewUser
@@ -7,8 +7,9 @@ from iggybase.mod_admin.models import NewUser
 class LoginForm( Form ):
     name = StringField( 'Login name', validators = [ DataRequired( ), Length( 1, 16 ) ] )
     password = PasswordField( 'Password', validators = [ DataRequired( ) ] )
+    role = SelectField( 'Role', coerce = int, choices = [ ],validators = [ DataRequired( ) ] )
+    organization = SelectField( 'Organization', coerce = int, choices = [ ], validators = [ DataRequired( ) ] )
     remember_me = BooleanField( 'Remember me' )
-    login = SubmitField( 'Login' )
 
 class RegisterForm( Form ):
     name = StringField( 'Login name', validators = [ DataRequired( ), Length( 1, 16 ) ] )
@@ -17,7 +18,7 @@ class RegisterForm( Form ):
     password = PasswordField( 'Password', validators = [ DataRequired( ) ] )
     confpassword = PasswordField( 'Confirm Password', validators = [ DataRequired( ) ] )
     email = StringField( 'Email', validators = [ email( ), DataRequired( ) ] )
-    institution = StringField( 'Institution', validators = [ DataRequired( ) ] )
+    organization = StringField( 'Organization', validators = [ DataRequired( ) ] )
     address1 = StringField( 'Address 1', validators = [ DataRequired( ) ] )
     address2 = StringField( 'Address 2' )
     city = StringField( 'City', validators = [ DataRequired( ) ] )
@@ -26,7 +27,6 @@ class RegisterForm( Form ):
     phone = StringField( 'Phone', validators = [ DataRequired( ) ] )
     group = StringField( 'Group', validators = [ DataRequired( ) ] )
     pi = StringField( 'PI', validators = [ DataRequired( ) ] )
-    register = SubmitField( 'Register' )
 
     def validate_email( self, field ):
         if User.query.filter_by( email = field.data ).first( ):

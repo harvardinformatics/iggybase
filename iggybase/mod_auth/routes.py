@@ -1,31 +1,50 @@
-from flask import render_template, redirect, url_for, request
+from flask import redirect, url_for, request, abort
+from iggybase.templating import page_template
 from flask.ext.login import login_required, login_user, logout_user, current_user
-from iggybase.mod_auth.models import User
-from iggybase.mod_admin.models import NewUser
+from iggybase.mod_auth.models import User, UserRole
+from iggybase.mod_admin.models import NewUser, Role
 from . import mod_auth
+from iggybase.mod_auth.role_organization import get_roles, get_organizations, get_current_user_role, \
+    get_current_user_organization
 from iggybase.mod_auth.forms import LoginForm, RegisterForm
-from iggybase.database import admin_db_session
+from iggybase.database import admin_db_session, db_session
 import os
 import socket
+import json
 import logging
 
 @mod_auth.route( '/login', methods = [ 'GET', 'POST' ] )
 def login():
     form = LoginForm( )
+
+    user = User.query.filter_by( name=form.name.data ).first( )
+
+    if user is not None:
+        form.role.choices = get_roles( user.id )
+        form.organization.choices = get_organizations( user.id, form.role.data )
+
     if form.validate_on_submit( ):
-        user = User.query.filter_by( name=form.name.data ).first( )
+        user = User.query.filter_by( name = form.name.data ).first( )
         if user is None or not user.is_active( ) or not user.verify_password( form.password.data ):
-            return render_template( 'mod_auth/failedlogin.html', form=form )
+            return redirect( url_for( 'mod_auth.failedlogin' ) )
+
+        user_role = UserRole.query.filter_by( role_id = form.role.data ). \
+            filter_by( organization_id = form.organization.data ).first( )
+        user.current_user_role_id = user_role.id
+
+        db_session( ).add( user )
+        db_session( ).commit( )
+
         login_user( user, form.remember_me.data )
 
         if user.home_page is not None:
-            return redirect( request.args.get( 'next' ) or url_for( user.home_page, page_type = user.home_page_variable ) )
+            logging.info( user.home_page )
+            return redirect( request.args.get( 'next' ) or redirect( user.home_page ) )
         else:
-            return redirect( request.args.get( 'next' ) or url_for( 'mod_auth.index' ) )
-    temp = render_template( 'mod_auth/login.html', form=form )
-    index = temp.find( '</form>' )
-    loginform = temp[ :index ] + '<input type="button" class="btn btn-default" id="login_register" value="Register" >' + temp[ index: ]
-    return loginform
+            logging.info( 'none' )
+            return redirect( request.args.get( 'next' ) ) or abort( 404 )
+
+    return page_template( 'mod_auth/login', form=form )
 
 
 @mod_auth.route( '/register', methods = [ 'GET', 'POST' ] )
@@ -46,7 +65,7 @@ def register():
         newuser.email = form.email.data
         newuser.first_name = form.first_name.data
         newuser.group = form.group.data
-        newuser.institution = form.institution.data
+        newuser.organization = form.organization.data
         newuser.last_name = form.last_name.data
         newuser.name = form.name.data
         newuser.phone = form.phone.data
@@ -63,7 +82,7 @@ def register():
 
         return redirect( url_for( 'mod_auth.regcomplete' ) )
 
-    return render_template( 'mod_auth/register.html', form=form )
+    return page_template( 'mod_auth/register', form=form )
 
 
 @mod_auth.route( '/logout' )
@@ -72,21 +91,60 @@ def logout():
     return redirect( url_for( 'mod_auth.login' ) )
 
 
-@mod_auth.route( '/' )
-def index( ):
-    return render_template( 'index.html' )
-
-
 @mod_auth.route( '/regcomplete' )
 def regcomplete( ):
-    return render_template( 'mod_auth/regcomplete.html' )
+    return page_template( 'mod_auth/regcomplete', page_msg = 'Thank you for registering. Your registration will be reviewed within 1 business day.'  )
 
 
 @mod_auth.route( '/registererror' )
 def registererror( ):
-    return render_template( 'mod_auth/registererror.html' )
+    return page_template( 'mod_auth/regerror', page_msg = 'Error encountered while registering.' )
 
 
 @mod_auth.route( '/failedlogin' )
 def failedlogin( ):
-    return render_template( 'mod_auth/failedlogin.html' )
+    return page_template( 'mod_auth/failedlogin', page_msg = 'Please verify your login credentials or register for an account.' )
+
+
+@mod_auth.route( '/getrole', methods = [ 'POST' ] )
+def getrole( ):
+    user_name =  request.json[ 'user' ]
+
+    user = User.query.filter_by( name = user_name ).first( )
+
+    if user is None:
+        return json.dumps( { 'user': 'none', 'roles': [ ( '0', '' ) ], 'current_role': 'none' } )
+
+    roles = get_roles( user.id )
+
+    current_user_role = get_current_user_role( user.current_user_role_id )
+
+    if current_user_role is None:
+        return json.dumps( { 'user': user_name, 'roles': roles, 'current_role': 'none' } )
+    else:
+        orgs = get_organizations( user.id, current_user_role )
+
+        current_user_org = get_current_user_organization( user.current_user_role_id )
+
+        return json.dumps( { 'user': user_name, 'roles': roles, 'orgs': orgs, 'current_role': current_user_role, \
+                             'current_organization': current_user_org} )
+
+
+@mod_auth.route( '/getorganization', methods = [ 'POST' ] )
+def getorganization( ):
+    user_name =  request.json[ 'user' ]
+    role_id =  request.json[ 'role' ]
+
+    user = User.query.filter_by( name = user_name ).first( )
+
+    if user is None:
+        return json.dumps( { 'user': 'none', 'orgs': [ ( '0', '' ) ], 'current_organization': 'none' } )
+
+    orgs = get_organizations( user.id, role_id )
+
+    current_user_org = get_current_user_organization( user.current_user_role_id )
+
+    if current_user_org is None:
+        return json.dumps( { 'user': user_name, 'orgs': orgs, 'current_organization': 'none' } )
+    else:
+        return json.dumps( { 'user': user_name, 'orgs': orgs, 'current_organization': current_user_org } )
