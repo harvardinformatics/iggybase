@@ -23,5 +23,5 @@ def summary( table_object = None ):
 @mod_murray_lab.route( '/data_entry/<table_object>/<row_name>' )
 def data_entry( table_object = None, row_name = None ):
     fg = FormGenerator( 'mod_murray_lab', table_object )
-    entry_form = fg.default_single_entry_form( row_name )
-    return page_template( 'single_data_entry', form = entry_form )
+    form = fg.default_single_entry_form( row_name )
+    return page_template( 'single_data_entry', form = form )
