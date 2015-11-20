@@ -1,4 +1,4 @@
-from flask import redirect, url_for, request, abort
+from flask import redirect, url_for, request, abort, g
 from iggybase.templating import page_template
 from flask.ext.login import login_required, login_user, logout_user, current_user
 from iggybase.mod_auth.models import User, UserRole
@@ -12,6 +12,10 @@ import os
 import socket
 import json
 import logging
+
+@mod_auth.before_request
+def before_request():
+    g.user = current_user
 
 @mod_auth.route( '/login', methods = [ 'GET', 'POST' ] )
 def login():

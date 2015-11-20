@@ -12,16 +12,16 @@ class OrganizationAccessControl:
         self.org_ids = [ ]
         self.module = module
 
-        if g.user is None:
-            self.user = None
-            self.user_role = None
-        else:
+        if g.user is not None and not g.user.is_anonymous( ):
             self.user = load_user( g.user.id )
             self.user_role = db_session.query( UserRole ).filter_by( id = self.user.current_user_role_id ).first( )
             self.facility_role_access_control = FacilityRoleAccessControl( )
             self.org_ids.append( self.user_role.organization_id )
 
             self.get_child_organization( self.user_role.organization_id )
+        else:
+            self.user = None
+            self.user_role = None
 
     def get_child_organization( self, parent_organization_id ):
         self.org_ids.append( parent_organization_id )

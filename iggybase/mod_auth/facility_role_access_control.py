@@ -13,14 +13,12 @@ class FacilityRoleAccessControl:
 
         self.facility = admin_db_session.query( models.Facility ).filter_by( name = config.FACILITY ).first( )
 
-        if g.user is None:
-            logging.info( 'user is none' )
+        if g.user is not None and not g.user.is_anonymous( ):
+            self.user = load_user( g.user.id )
+            self.facility_role = admin_db_session.query( models.FacilityRole ).filter_by( facility_id = self.facility.id, role_id = self.user.current_user_role_id ).first( )
+        else:
             self.user = None
             self.facility_role = None
-        else:
-            self.user = load_user( g.user.id )
-            logging.info( 'user is ' + self.user.name )
-            self.facility_role = admin_db_session.query( models.FacilityRole ).filter_by( facility_id = self.facility.id, role_id = self.user.current_user_role_id ).first( )
 
     def table_objects( self, active = 1 ):
         table_objects = [ ]
