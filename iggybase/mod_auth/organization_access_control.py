@@ -41,14 +41,14 @@ class OrganizationAccessControl:
         if table_data is not None:
             field_data = self.facility_role_access_control.fields( table_data.id )
 
-            select_clause = ''
+            if field_data is not None:
+                select_clause = ''
 
-            for row in  field_data:
-                select_clause += '`' + row.Field.field_name + '` as `' + row.FieldFacilityRole.display_name + '`, '
+                for row in  field_data:
+                    select_clause += '`' + row.Field.field_name + '` as `' + row.FieldFacilityRole.display_name + '`, '
 
-            logging.info( 'select_clause: ' + select_clause )
-            results = db_session.query( 'select ' + select_clause[ :-2 ] + ' from ' + table_data.name ).all( )
+                    results = db_session.query( 'select ' + select_clause[ :-2 ] + ' from ' + table_data.name ).all( )
 
-            return results
+                    return results
 
         return None
