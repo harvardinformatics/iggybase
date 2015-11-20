@@ -38,8 +38,10 @@ def login():
         login_user( user, form.remember_me.data )
 
         if user.home_page is not None:
-            return redirect( request.args.get( 'next' ) or url_for( user.home_page.split( '|', 1 )[ 0 ], user.home_page.split( '|', 2 )[ 0 ] ) )
+            logging.info( user.home_page )
+            return redirect( request.args.get( 'next' ) or redirect( user.home_page ) )
         else:
+            logging.info( 'none' )
             return redirect( request.args.get( 'next' ) ) or abort( 404 )
 
     return page_template( 'mod_auth/login', form=form )

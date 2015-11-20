@@ -1,8 +1,9 @@
-from flask.ext.login import current_user
+from flask import g
 from iggybase.database import admin_db_session
 from iggybase.mod_admin import models
 from iggybase.mod_auth.models import load_user
 from config import get_config
+import logging
 
 # Controls access to system based on Role (USER) and Facility (config)
 # Uses the permissions stored in the admin db
@@ -12,17 +13,19 @@ class FacilityRoleAccessControl:
 
         self.facility = admin_db_session.query( models.Facility ).filter_by( name = config.FACILITY ).first( )
 
-        if current_user.is_anonymous( ):
+        if g.user is None:
+            logging.info( 'user is none' )
             self.user = None
-            self.facilityrole = None
+            self.facility_role = None
         else:
-            self.user = load_user( current_user.id )
-            self.facilityrole = admin_db_session.query( models.FacilityRole ).filter_by( facility_id = self.facility.id, role_id = self.user.role_id ).first( )
+            self.user = load_user( g.user.id )
+            logging.info( 'user is ' + self.user.name )
+            self.facility_role = admin_db_session.query( models.FacilityRole ).filter_by( facility_id = self.facility.id, role_id = self.user.current_user_role_id ).first( )
 
     def table_objects( self, active = 1 ):
         table_objects = [ ]
 
-        res = admin_db_session.query( models.TableObjectFacilityRole ).filter_by( facility_role_id = self.facilityrole.id ).filter_by( active = active ).all( )
+        res = admin_db_session.query( models.TableObjectFacilityRole ).filter_by( facility_role_id = self.facility_role.id ).filter_by( active = active ).all( )
         for row in res:
             table_object = admin_db_session.query( models.TableObject ).filter_by( id = row.table_object_id ).filter_by( active = active ).first( )
             if table_object is not None:
@@ -32,21 +35,21 @@ class FacilityRoleAccessControl:
         return table_objects
 
     def fields( self, table_object_id, active = 1 ):
-        fields = [ ]
+        res = admin_db_session.query( models.Field, models.FieldFacilityRole ).join( models.FieldFacilityRole ).\
+            filter( models.FieldFacilityRole.facility_role_id == self.facility_role.id ).\
+            filter( models.Field.table_object_id == table_object_id ).\
+            filter( models.Field.active == active ).\
+            filter( models.FieldFacilityRole.active == active ).all( )
 
-        res = admin_db_session.query( models.FieldFacilityRole ).filter_by( facility_role_id = self.facilityrole.id ).filter_by( active = active ).all( )
-        for row in res:
-            field = admin_db_session.query( models.Field ).filter_by( table_oject_id = table_object_id ).filter_by( id = row.field_id ).filter_by( active = active ).first( )
-            if field is not None:
-                fields.append( field )
-                break
+        if res is None:
+            return [ ]
+        else:
+            return res
 
-        return fields
-
-    def menus( self, active = 1 ):
+    def page_form_menus( self, active = 1 ):
         menus = [ ]
 
-        res = admin_db_session.query( models.MenuFacilityRole ).filter_by( facility_role_id = self.facilityrole.id ).filter_by( active = active ).all( )
+        res = admin_db_session.query( models.MenuFacilityRole ).filter_by( facility_role_id = self.facility_role.id ).filter_by( active = active ).all( )
         for row in res:
             menu = admin_db_session.query( models.Menu ).filter_by( id = row.menu_id ).filter_by( active = active ).first( )
             if menu is not None:
@@ -55,10 +58,10 @@ class FacilityRoleAccessControl:
 
         return menus
 
-    def menu_items( self, menu_id, active = 1 ):
+    def page_form_menu_items( self, menu_id, active = 1 ):
         menu_items = [ ]
 
-        res = admin_db_session.query( models.MenuItemFacilityRole ).filter_by( facility_role_id = self.facilityrole.id ).filter_by( active = active ).all( )
+        res = admin_db_session.query( models.MenuItemFacilityRole ).filter_by( facility_role_id = self.facility_role.id ).filter_by( active = active ).all( )
         for row in res:
             menuitem = admin_db_session.query( models.MenuItem ).filter_by( id = row.menu_item_id ). \
                 filter_by( menu_id = menu_id ).filter_by( active = active ).first( )
@@ -71,7 +74,7 @@ class FacilityRoleAccessControl:
     def page_forms( self, active = 1 ):
         page_forms = [ ]
 
-        res = admin_db_session.query( models.PageFormFacilityRole ).filter_by( facility_role_id = self.facilityrole.id ).filter_by( active = active ).all( )
+        res = admin_db_session.query( models.PageFormFacilityRole ).filter_by( facility_role_id = self.facility_role.id ).filter_by( active = active ).all( )
         for row in res:
             page_form = admin_db_session.query( models.PageForm ).filter_by( id = row.page_form_id ).filter_by( active = active ).first( )
             if page_form is not None:
@@ -85,7 +88,7 @@ class FacilityRoleAccessControl:
         page_form_buttons[ 'top' ] = [ ]
         page_form_buttons[ 'bottom' ] = [ ]
 
-        res = admin_db_session.query( models.PageFormButtonFacilityRole ).filter_by( facility_role_id = self.facilityrole.id ).filter_by( active = active ).all( )
+        res = admin_db_session.query( models.PageFormButtonFacilityRole ).filter_by( facility_role_id = self.facility_role.id ).filter_by( active = active ).all( )
         for row in res:
             page_form_button = admin_db_session.query( models.PageFormButton ).filter_by( id = row.page_form_button_id ). \
                 filter_by( page_form_id = page_form_id ).filter_by( active = active ).first( )
@@ -107,8 +110,8 @@ class FacilityRoleAccessControl:
 
         rec = admin_db_session.query( table_object ).filter_by( name = name ).first( )
 
-        access = admin_db_session.query( table_object_role ).filter( getattr( table_object_role, table_col_id ) == rec.id ) \
-            .filter_by( facility_role_id = self.facility_role.id ).filter_by( active = active ).first( )
+        access = admin_db_session.query( table_object_role ).filter( getattr( table_object_role, table_col_id ) == rec.id ).\
+            filter_by( facility_role_id = self.facility_role.id ).filter_by( active = active ).first( )
 
         if access is not None:
             return rec
