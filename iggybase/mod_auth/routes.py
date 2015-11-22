@@ -41,11 +41,12 @@ def login():
 
         login_user( user, form.remember_me.data )
 
-        if user.home_page is not None:
-            logging.info( user.home_page )
-            return redirect( request.args.get( 'next' ) or redirect( user.home_page ) )
+        if request.args.get( 'next' ) is not None:
+            return redirect( request.args.get( 'next' ) )
+        elif user.home_page is not None:
+            args = { 'table_object': 'Address', 'row_name': 'new' }
+            return redirect( user.home_page )
         else:
-            logging.info( 'none' )
             return redirect( request.args.get( 'next' ) ) or abort( 404 )
 
     return page_template( 'mod_auth/login', form=form )

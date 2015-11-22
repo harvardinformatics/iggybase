@@ -17,8 +17,6 @@ class FormGenerator( ):
     def input_field( self, field_data, value = None ):
         if field_data.Field.data_type_id == 1:
             return IntegerField( field_data.FieldFacilityRole.display_name, validators = [ DataRequired ] )
-        elif field_data.Field.data_type_id == 2:
-            return StringField( field_data.FieldFacilityRole.display_name, validators = [ DataRequired ] )
         elif field_data.Field.data_type_id == 3:
             return BooleanField( field_data.FieldFacilityRole.display_name, validators = [ DataRequired ] )
         elif field_data.Field.data_type_id == 4:
@@ -27,12 +25,15 @@ class FormGenerator( ):
             return PasswordField( field_data.FieldFacilityRole.display_name, validators = [ DataRequired ] )
         elif field_data.Field.data_type_id == 6:
             return SelectField( field_data.FieldFacilityRole.display_name, validators = [ DataRequired ] )
+        else:
+            return StringField( field_data.FieldFacilityRole.display_name, validators = [ DataRequired ] )
 
     def default_single_entry_form( self, row_name = None ):
         if row_name is not None:
             data = self.organization_access_control.get_row( self.table_object, row_name )
 
         table_data = self.facility_role_access_control.has_access( 'TableObject', self.table_object )
+
         fields = self.facility_role_access_control.fields( table_data.id )
 
         classattr = { }
