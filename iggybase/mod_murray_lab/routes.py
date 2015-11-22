@@ -25,9 +25,12 @@ def summary( table_name = None ):
             table_rows )
 
 
-
 @mod_murray_lab.route( '/data_entry/<table_object>/<row_name>' )
 def data_entry( table_object = None, row_name = None ):
     fg = FormGenerator( 'mod_murray_lab', table_object )
     form = fg.default_single_entry_form( row_name )
+
+    if form.validate_on_submit( ):
+        pass
+
     return page_template( 'single_data_entry', form = form )
