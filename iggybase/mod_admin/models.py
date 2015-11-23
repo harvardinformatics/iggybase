@@ -55,8 +55,13 @@ class Menu( StaticBase ):
     order = Column( Integer )
     menu_type_id = Column( Integer, ForeignKey( 'menu_type.id' ) )
 
-    children = relationship('Menu', foreign_keys=['menu.id'])
+    children = relationship('Menu')
     menu_menu_type = relationship( "MenuType", foreign_keys = [ menu_type_id ] )
+
+    def __repr__(self):
+        return "<Menu(name=%s, description=%s, id=%d)" % \
+            (self.name, self.description, self.id)
+    
 
 
 
@@ -73,7 +78,8 @@ class MenuFacilityRole( StaticBase ):
     facility_role_id = Column( Integer, ForeignKey( 'facility_role.id' ) )
     menu_id = Column( Integer, ForeignKey( 'menu.id' ) )
 
-    menu_facility_role_facility = relationship( "FacilityRole", foreign_keys = [ facility_role_id ] )
+    menu_facility_role_facility = relationship(
+        "FacilityRole", foreign_keys = [ facility_role_id ] )
     menu_facility_role_menu = relationship( "Menu", foreign_keys = [ menu_id ] )
     menu_facility_role_unq = UniqueConstraint( 'facility_role_id', 'menu_id' )
 
@@ -86,6 +92,11 @@ class MenuType( StaticBase ):
     last_modified = Column( DateTime, default = datetime.datetime.utcnow )
     active = Column( Boolean )
 
+    def __repr__(self):
+        return "<MenuType(name=%s, description=%s, id=%d)" % \
+            (self.name, self.description, self.id)
+    
+    
 class MenuItem( StaticBase ):
     __tablename__ = 'menu_item'
     id = Column( Integer, primary_key = True )
