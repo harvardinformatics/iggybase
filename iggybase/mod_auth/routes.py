@@ -8,6 +8,8 @@ from iggybase.mod_auth.role_organization import get_roles, get_organizations, ge
     get_current_user_organization
 from iggybase.mod_auth.forms import LoginForm, RegisterForm
 from iggybase.database import admin_db_session, db_session
+from iggybase.form_generator import FormGenerator
+from iggybase.mod_auth.organization_access_control import OrganizationAccessControl
 import os
 import socket
 import json
@@ -153,3 +155,24 @@ def getorganization( ):
         return json.dumps( { 'user': user_name, 'orgs': orgs, 'current_organization': 'none' } )
     else:
         return json.dumps( { 'user': user_name, 'orgs': orgs, 'current_organization': current_user_org } )
+
+
+@mod_auth.route( '/data_entry/<table_object>/<row_name>' )
+def auth_data_entry( table_object = None, row_name = None ):
+    fg = FormGenerator( 'mod_auth', table_object )
+    form = fg.default_single_entry_form( row_name )
+
+    if form.validate_on_submit( ):
+        pass
+
+    return page_template( 'single_data_entry', form = form )
+
+
+@mod_auth.route( '/summary/<table_name>' )
+def summary( table_name = None ):
+    organization_access_control = OrganizationAccessControl( 'mod_auth' )
+    table_rows = [ u.__dict__ for u in organization_access_control.get_data( table_name ) ]
+
+    return page_template( 'summary', table_name = table_name, table_rows =
+            table_rows )
+

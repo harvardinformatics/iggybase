@@ -1,8 +1,8 @@
 from flask import g
-from iggybase.database import db_session, engine
+from iggybase.database import db_session
 from iggybase.mod_auth.models import load_user, UserRole, Organization
 from iggybase.mod_auth.facility_role_access_control import FacilityRoleAccessControl
-from iggybase.mod_admin import models
+from importlib import import_module
 import logging
 
 # Controls access to the data db data based on organization
@@ -38,16 +38,23 @@ class OrganizationAccessControl:
 
     def get_data( self, table_name, query_data = None ):
         table_data = self.facility_role_access_control.has_access( 'TableObject', table_name )
+
         if table_data is not None:
+            module_model = import_module( 'iggybase.' + self.module + '.models' )
+            table_object = getattr( module_model, table_name )
+
             field_data = self.facility_role_access_control.fields( table_data.id, self.module )
 
             if field_data is not None:
                 select_clause = ''
 
                 for row in  field_data:
-                    select_clause += '`' + row.Field.field_name + '` as `' + row.FieldFacilityRole.display_name + '`, '
+                    if row.FieldFacilityRole.visible == 1:
+                        select_clause += '`' + row.Field.field_name + '` as `' + row.FieldFacilityRole.display_name + '`, '
 
-                results = engine.execute( 'select ' + select_clause[ :-2 ] + ' from ' + table_data.name ).all( )
+                sql = 'select ' + select_clause[ :-2 ] + ' from ' + table_data.name
+
+                results = db_session.query( table_object ).from_statement( sql ).all( )
 
                 return results
 
