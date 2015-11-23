@@ -45,6 +45,7 @@ class FacilityRole( StaticBase ):
 class Menu( StaticBase ):
     __tablename__ = 'menu'
     id = Column( Integer, primary_key = True )
+    parent_id = Column(Integer, ForeignKey('menu.id'))
     name = Column( String( 100 ), unique = True )
     description = Column( String( 255 ) )
     date_created = Column( DateTime, default = datetime.datetime.utcnow )
@@ -54,7 +55,10 @@ class Menu( StaticBase ):
     order = Column( Integer )
     menu_type_id = Column( Integer, ForeignKey( 'menu_type.id' ) )
 
+    children = relationship('Menu', foreign_keys=['menu.id'])
     menu_menu_type = relationship( "MenuType", foreign_keys = [ menu_type_id ] )
+
+
 
 class MenuFacilityRole( StaticBase ):
     __tablename__ = 'menu_facility_role'
@@ -361,7 +365,7 @@ class TableQueryType( StaticBase ):
     table_query_type_table_query = relationship( "TableQuery", foreign_keys = [ table_query_id ] )
 
 class TableQueryField( StaticBase ):
-    __tablename__ = 'table_query_field'
+    __tablename__ = 'table_query_ufield'
     id = Column( Integer, primary_key = True )
     name = Column( String( 100 ), unique = True )
     description = Column( String( 255 ) )
@@ -432,3 +436,4 @@ class ModuleFacilityRole( StaticBase ):
 
     module_role_facility = relationship( "FacilityRole", foreign_keys = [ facility_role_id ] )
     module_facility_role_module = relationship( "Module", foreign_keys = [ module_id ] )
+
