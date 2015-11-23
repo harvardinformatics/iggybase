@@ -27,6 +27,6 @@ python3.4 -m venv iggybase_env
 
 install flask and packages
 --------------------------
-pip install -r pip_installs.txt
+pip install -r requirements.txt
 
 
