@@ -1,5 +1,5 @@
 from flask import g
-from iggybase.database import db_session
+from iggybase.database import db_session, engine
 from iggybase.mod_auth.models import load_user, UserRole, Organization
 from iggybase.mod_auth.facility_role_access_control import FacilityRoleAccessControl
 from iggybase.mod_admin import models
@@ -47,8 +47,11 @@ class OrganizationAccessControl:
                 for row in  field_data:
                     select_clause += '`' + row.Field.field_name + '` as `' + row.FieldFacilityRole.display_name + '`, '
 
-                    results = db_session.query( 'select ' + select_clause[ :-2 ] + ' from ' + table_data.name ).all( )
+                    results = engine.execute( 'select ' + select_clause[ :-2 ] + ' from ' + table_data.name ).all( )
 
                     return results
 
+        return None
+
+    def get_row( self, table_name, row_name ):
         return None

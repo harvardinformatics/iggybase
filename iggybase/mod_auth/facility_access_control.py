@@ -23,12 +23,15 @@ class FacilityAccessControl:
         #logging.debug( 'module_table_objects' )
         #logging.info ( 'module: ' + module )
         #logging.info ( 'active: ' + str( active ) )
-        res = admin_db_session.query( models.TableObject ).filter_by( active = active ).order_by( models.TableObject.order ).all( )
+        res = admin_db_session.query( models.TableObject ).filter_by( active = active ).\
+            order_by( models.TableObject.order ).all( )
         for row in res:
             #logging.info ( 'table_object_id: ' + str( row.id ) + ' name: ' + row.name )
             for facility_role in self.facilityroles:
                 #logging.info ( 'facility_role.id: ' + str( facility_role.id ) )
-                access = admin_db_session.query( models.TableObjectFacilityRole ).filter_by( table_object_id = row.id ).filter_by( module_id = module_rec.id ).filter_by( facility_role_id = facility_role.id ).filter_by( active = active ).first( )
+                access = admin_db_session.query( models.TableObjectFacilityRole ).filter_by( table_object_id = row.id ).\
+                    filter_by( module_id = module_rec.id ).filter_by( facility_role_id = facility_role.id ).\
+                    filter_by( active = active ).first( )
                 if access is not None:
                     table_objects.append( row )
                     break
@@ -41,11 +44,13 @@ class FacilityAccessControl:
         #logging.debug( 'module_fields' )
         #logging.info ( 'table_object_id: ' + str( table_object_id ) )
         #logging.info ( 'active: ' + str( active ) )
-        res = admin_db_session.query( models.Field ).filter_by( table_object_id = table_object_id, active = active ).all( )
+        res = admin_db_session.query( models.Field ).\
+            filter_by( table_object_id = table_object_id, active = active ).all( )
         for row in res:
             #logging.info ( 'field_id: ' + str( row.id ) )
             for facility_role in self.facilityroles:
-                access = admin_db_session.query( models.FieldFacilityRole ).filter_by( field_id = row.id, facility_role_id = facility_role.id, active = active ).first( )
+                access = admin_db_session.query( models.FieldFacilityRole ).\
+                    filter_by( field_id = row.id, facility_role_id = facility_role.id, active = active ).first( )
                 if access is not None:
                     fields.append( row )
                     break
@@ -57,12 +62,14 @@ class FacilityAccessControl:
         button_objects[ 'top' ] = [ ]
         button_objects[ 'bottom' ] = [ ]
 
-        res = admin_db_session.query( models.PageFormButton ).filter_by( page_form_id = page_form_id ).filter_by( active = active ).all( )
+        res = admin_db_session.query( models.PageFormButton ).\
+            filter_by( page_form_id = page_form_id ).filter_by( active = active ).all( )
         for row in res:
             # logging.info ( 'table_object_id: ' + str( row.id ) + ' name: ' + row.name )
             for facility_role in self.facilityroles:
                 # logging.info ( 'facility_role.id: ' + str( facility_role.id ) )
-                access = admin_db_session.query( models.PageFormButtonFacilityRole ).filter_by( page_form_button_id = row.id ) \
+                access = admin_db_session.query( models.PageFormButtonFacilityRole ).\
+                    filter_by( page_form_button_id = row.id ) \
                     .filter_by( facility_role_id = facility_role.id ).filter_by( active = active ).first( )
                 if access is not None and row.button_location in [ 'top', 'bottom' ]:
                     button_objects[ row.button_location ].append( row )
@@ -71,7 +78,8 @@ class FacilityAccessControl:
         return button_objects
 
     def page_form_javascript( self, page_form_id, active = 1 ):
-        res = admin_db_session.query( models.PageFormJavaScript ).filter_by( page_form_id = page_form_id ).filter_by( active = active ).all( )
+        res = admin_db_session.query( models.PageFormJavaScript ).filter_by( page_form_id = page_form_id ).\
+            filter_by( active = active ).all( )
 
         return res
 
@@ -85,8 +93,9 @@ class FacilityAccessControl:
         for facility_role in self.facilityroles:
             # logging.info ( 'facility_role.id: ' + str( facility_role.id ) )
 
-            access = admin_db_session.query( table_object_role ).filter( getattr( table_object_role, table_col_id ) == rec.id ) \
-                .filter_by( facility_role_id = facility_role.id ).filter_by( active = active ).first( )
+            access = admin_db_session.query( table_object_role ).\
+                filter( getattr( table_object_role, table_col_id ) == rec.id ).\
+                filter_by( facility_role_id = facility_role.id ).filter_by( active = active ).first( )
             if access is not None:
                 return rec
 
