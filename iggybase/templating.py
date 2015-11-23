@@ -50,10 +50,14 @@ def page_template( page_form_name, **context ):
 
         context[ 'scripts' ] = page_scripts( scripts )
 
+        """
+        Commented out until menus are in db-internal
+
         menus = access_ctrl.page_form_menus( page_form.id )
-        menu_items = access_ctrl.page_form_menus( page_form.id )
+        menu_items = access_ctrl.page_form_menu_items( page_form.id )
 
         context[ 'menus' ] = page_menus( menus, menu_items )
+        """
 
     # logging.info( context )
 
@@ -82,12 +86,17 @@ def page_scripts( scripts ):
 
     return scpts
 
-def page_menus( menus, menu_items ):
+'''def page_menus( menus, menu_items ):
     mns = [ ]
+
+    """
+    Comment patch until menus actually work. Soon!!
 
     for menu in menus:
         pass
 
         mns.append(  )
+    """
 
     return mns
+'''

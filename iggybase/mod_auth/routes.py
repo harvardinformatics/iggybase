@@ -1,4 +1,4 @@
-from flask import redirect, url_for, request, abort
+from flask import redirect, url_for, request, abort, g
 from iggybase.templating import page_template
 from flask.ext.login import login_required, login_user, logout_user, current_user
 from iggybase.mod_auth.models import User, UserRole
@@ -12,6 +12,10 @@ import os
 import socket
 import json
 import logging
+
+@mod_auth.before_request
+def before_request():
+    g.user = current_user
 
 @mod_auth.route( '/login', methods = [ 'GET', 'POST' ] )
 def login():
@@ -37,8 +41,11 @@ def login():
 
         login_user( user, form.remember_me.data )
 
-        if user.home_page is not None:
-            return redirect( request.args.get( 'next' ) or url_for( user.home_page.split( '|', 1 )[ 0 ], user.home_page.split( '|', 2 )[ 0 ] ) )
+        if request.args.get( 'next' ) is not None:
+            return redirect( request.args.get( 'next' ) )
+        elif user.home_page is not None:
+            args = { 'table_object': 'Address', 'row_name': 'new' }
+            return redirect( user.home_page )
         else:
             return redirect( request.args.get( 'next' ) ) or abort( 404 )
 

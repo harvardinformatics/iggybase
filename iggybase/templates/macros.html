@@ -34,23 +34,25 @@
     </div>
 {%- endmacro %}
 
-{% macro render_table( rows, headers, page_type ) -%}
-    <table class="sortable", id="{{ page_type ~ '_table' }}">
-        <tr>
-            {% for header in headers %}
-                <th>{{ header }}</th>
-            {% endfor %}
-        </tr>
-        <tbody>
-            {% for row in rows %}
-                <tr>
-                {% for value in row %}
-                    <td>{{ value }}</td>
+{% macro render_table( table_rows ) -%}
+    {% if table_rows %}
+        <table id="summary_table">
+            <thead><tr>
+                {% for key in table_rows[0].keys() %}
+                    <th>{{ key }}</th>
                 {% endfor %}
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+            </tr></thead>
+            <tbody>
+                {% for row in table_rows %}
+                    <tr>
+                    {% for value in row.values() %}
+                        <td>{{ value }}</td>
+                    {% endfor %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
 {%- endmacro %}
 
 {% macro render_buttons( buttons ) -%}

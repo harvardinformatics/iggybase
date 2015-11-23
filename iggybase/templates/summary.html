@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+{% import 'macros.html' as macros %}
+{% block styles %}
+    <link href="{{ url_for('static', filename='DataTables/media/css/jquery.dataTables.min.css') }}" rel="stylesheet">
+{%- endblock styles %}
+{% block title %}Iggybase - {{ table_name.replace( '_',' ' ) }}{% endblock %}
+
+{% block page_content %}
+<h1>{{ table_name.replace( '_', ' ' ) }} Summary</h1>
+    <div class={{ table_name ~ "_table" }}>
+        {{ macros.render_table( table_rows ) }}
+    </div>
+    {% block scripts %}
+        {{ super() }}
+        <script type="text/javascript"
+            src="{{ url_for('static', filename='DataTables/media/js/jquery.dataTables.min.js')}}"></script>
+        <script type="text/javascript"
+            src="{{ url_for('static', filename='main.js')}}"></script>
+
+    {%- endblock scripts %}
+{% endblock %}
