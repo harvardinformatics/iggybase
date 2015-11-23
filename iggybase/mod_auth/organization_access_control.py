@@ -39,7 +39,7 @@ class OrganizationAccessControl:
     def get_data( self, table_name, query_data = None ):
         table_data = self.facility_role_access_control.has_access( 'TableObject', table_name )
         if table_data is not None:
-            field_data = self.facility_role_access_control.fields( table_data.id )
+            field_data = self.facility_role_access_control.fields( table_data.id, self.module )
 
             if field_data is not None:
                 select_clause = ''
@@ -47,11 +47,14 @@ class OrganizationAccessControl:
                 for row in  field_data:
                     select_clause += '`' + row.Field.field_name + '` as `' + row.FieldFacilityRole.display_name + '`, '
 
-                    results = engine.execute( 'select ' + select_clause[ :-2 ] + ' from ' + table_data.name ).all( )
+                results = engine.execute( 'select ' + select_clause[ :-2 ] + ' from ' + table_data.name ).all( )
 
-                    return results
+                return results
 
         return None
 
     def get_row( self, table_name, row_name ):
+        table_data = self.facility_role_access_control.has_access( 'TableObject', table_name )
+        if table_data is not None:
+            pass
         return None

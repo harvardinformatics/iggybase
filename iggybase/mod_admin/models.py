@@ -59,7 +59,6 @@ class Menu( StaticBase ):
     menu_menu_type = relationship( "MenuType", foreign_keys = [ menu_type_id ] )
 
 
-
 class MenuFacilityRole( StaticBase ):
     __tablename__ = 'menu_facility_role'
     id = Column( Integer, primary_key = True )
