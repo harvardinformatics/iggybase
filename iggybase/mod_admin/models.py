@@ -267,7 +267,6 @@ class FieldFacilityRole( StaticBase ):
     module_id = Column( Integer, ForeignKey( 'module.id' ) )
     field_id = Column( Integer, ForeignKey( 'field.id' ) )
     display_name = Column( String( 100 ) )
-    order = Column( Integer )
     visible = Column( Boolean )
     required = Column( Boolean )
     permission_id = Column( Integer, ForeignKey( 'permission.id' ) )
@@ -417,6 +416,7 @@ class Module( StaticBase ):
     last_modified = Column( DateTime, default = datetime.datetime.utcnow )
     active = Column( Boolean )
     organization_id = Column( Integer )
+    order = Column( Integer )
 
 class ModuleFacilityRole( StaticBase ):
     __tablename__ = 'module_facility_role'
@@ -427,6 +427,7 @@ class ModuleFacilityRole( StaticBase ):
     last_modified = Column( DateTime, default = datetime.datetime.utcnow )
     active = Column( Boolean )
     organization_id = Column( Integer )
+    order = Column( Integer )
     facility_role_id = Column( Integer, ForeignKey( 'facility_role.id' ) )
     module_id = Column( Integer, ForeignKey( 'module.id' ) )
 
