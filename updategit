@@ -1,6 +1,6 @@
 cd /n/informatics/iggybase/
 
-git pull origin master
+git pull origin master "$1"
 
 git add -A
 git rm -r --cached iggybase_env/

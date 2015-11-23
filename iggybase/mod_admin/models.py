@@ -55,7 +55,7 @@ class Menu( StaticBase ):
     order = Column( Integer )
     menu_type_id = Column( Integer, ForeignKey( 'menu_type.id' ) )
 
-    children = relationship('Menu', foreign_keys=['menu.id'])
+    children = relationship('Menu' )
     menu_menu_type = relationship( "MenuType", foreign_keys = [ menu_type_id ] )
 
 
