@@ -45,8 +45,12 @@
             <tbody>
                 {% for row in table_rows %}
                     <tr>
-                    {% for value in row %}
-                        <td>{{ value }}</td>
+                    {% for value in row.values() %}
+                        {% if value['link'] %}
+                            <td><a href="{{ value['link'] }}">{{ value['text'] }}</a></td>
+                        {% else %}
+                            <td>{{ value['text'] }}</td>
+                        {% endif %}
                     {% endfor %}
                     </tr>
                 {% endfor %}
