@@ -44,21 +44,7 @@ class OrganizationAccessControl:
             table_object = getattr( module_model, table_name )
 
             field_data = self.facility_role_access_control.fields( table_data.id, self.module )
-
-            '''
-            if field_data is not None:
-                select_clause = ''
-
-                for row in  field_data:
-                    if row.FieldFacilityRole.visible == 1:
-                        select_clause += '`' + row.Field.field_name + '` as `' + row.FieldFacilityRole.display_name + '`, '
-
-                sql = 'select ' + select_clause[ :-2 ] + ' from ' + table_data.name
-
-                results = db_session.query( table_object ).from_statement( sql ).all( )
-
-                return results
-            '''
+            
             if field_data is not None:
                 columns = [ ]
                 for row in  field_data:
