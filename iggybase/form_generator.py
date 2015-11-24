@@ -54,7 +54,8 @@ class FormGenerator( ):
             if field_data.FieldFacilityRole.permission_id == 2:
                 if field_data.Field.foreign_key_table_object_id is not None:
                     wtf_class = SelectField
-                    choices = [ ]
+
+                    choices = self.populate_select( field_data.Field.foreign_key_table_object_id )
                     if value is not None:
                         wtf_field = wtf_class( field_data.FieldFacilityRole.display_name, validators, coerce = int, \
                                                choices = [ ], default = value )
@@ -119,7 +120,7 @@ class FormGenerator( ):
             if row_name != 'new':
                 value = getattr( data, field.Field.field_name )
 
-            classattr[ field.Field.field_name + '_01' ] = self.input_field( field, value )
+            classattr[ field.Field.field_name ] = self.input_field( field, value )
 
         newclass = new_class( 'DynamicForm', ( Form, ), { }, lambda ns: ns.update( classattr ) )
 
@@ -130,3 +131,6 @@ class FormGenerator( ):
 
     def default_parent_child_entry_form( self, parent_row_name = None ):
         pass
+
+    def populate_select ( table_object_id ):
+        return [ ]

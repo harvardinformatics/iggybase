@@ -26,5 +26,6 @@
         <script type="text/javascript"
             src="{{ url_for('static', filename='summary.js')}}"></script>
 
+        {{ macros.render_scripts( scripts ) }}
     {%- endblock scripts %}
 {% endblock %}
