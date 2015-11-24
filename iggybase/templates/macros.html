@@ -59,6 +59,21 @@
     {% endif %}
 {%- endmacro %}
 
+{% macro render_detail(table_row) -%}
+    <div class="detail">
+    {% if table_row %}
+        <table id="detail_table">
+        {% for name, value in table_row.items() %}
+            <tr>
+                <td>{{ name }}</td>
+                <td>{{ value['text'] }}</td>
+            </tr>
+        {% endfor %}
+        </table>
+    {% endif %}
+    </div>
+{%- endmacro %}
+
 {% macro render_buttons( buttons ) -%}
     {% for button in buttons %}
         <input {{ button|safe }} >

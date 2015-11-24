@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+{% import 'macros.html' as macros %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block page_content %}
+    <h1>{{ page_header }}</h1>
+
+    {% block topbuttonbar %}
+        {{ super() }}
+        {{ macros.render_buttons( top_buttons ) }}
+    {%- endblock topbuttonbar %}
+
+    {% if table_rows[0] %}
+        {{ macros.render_detail( table_rows[0] ) }}
+    {% endif %}
+
+    {% block bottombuttonbar %}
+        {{ super() }}
+        {{ macros.render_buttons( bottom_buttons ) }}
+    {%- endblock bottombuttonbar %}
+
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+    {{ macros.render_scripts( scripts ) }}
+{%- endblock scripts %}

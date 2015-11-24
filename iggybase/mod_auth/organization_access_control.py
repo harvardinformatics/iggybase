@@ -58,6 +58,8 @@ class OrganizationAccessControl:
 
         return results
 
+    # TODO: consider renaming this function to get_data and deleteing the other
+    # because I have added filtering to use this function for detail view also
     def get_summary_data( self, table_name, query_data = None ):
         field_data = self.get_field_data( table_name )
 
@@ -97,8 +99,12 @@ class OrganizationAccessControl:
             if not columns:
                 results = db_session.query( table_object ).add_columns( *columns ).all( )
             else:
-                results = db_session.query( table_object, *fk_table_objects ).outerjoin( *fk_table_objects ).\
-                    add_columns( *columns ).all( )
+                if query_data: # add a filter
+                    results = db_session.query( table_object, *fk_table_objects ).outerjoin( *fk_table_objects ).\
+                        add_columns( *columns ).filter(table_object.name==query_data).all( )
+                else:
+                    results = db_session.query( table_object, *fk_table_objects ).outerjoin( *fk_table_objects ).\
+                        add_columns( *columns ).all( )
 
         return results
 
