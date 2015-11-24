@@ -139,3 +139,19 @@ class FacilityRoleAccessControl:
             return rec
 
         return None
+
+    def has_access_by_id( self, auth_type, id, active = 1 ):
+        table_object = getattr( models, auth_type )
+        table_col_id = table_object( ).__tablename__ + "_id"
+        table_object_role = getattr( models, auth_type + "FacilityRole" )
+
+        rec = admin_db_session.query( table_object ).filter_by( id = id ).first( )
+
+        access = admin_db_session.query( table_object_role ).\
+            filter( getattr( table_object_role, table_col_id ) == rec.id ).\
+            filter_by( facility_role_id = self.facility_role.id ).filter_by( active = active ).first( )
+
+        if access is not None:
+            return rec
+
+        return None

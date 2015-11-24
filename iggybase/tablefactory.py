@@ -29,7 +29,7 @@ class TableFactory:
 
                 if foreign_table is not None and foreign_column is not None:
                     classattr[ col.field_name + "_" + foreign_column.field_name ] = \
-                        self.create_foreign_key( self.to_camel_case( foreign_table.name ), classattr[ col.field_name ] )
+                        self.create_foreign_key( TableFactory.to_camel_case( foreign_table.name ), classattr[ col.field_name ] )
             else:
                 classattr[ col.field_name ] = self.create_column( col )
 
@@ -39,7 +39,8 @@ class TableFactory:
 
         return newclass
 
-    def to_camel_case( self, snake_str ):
+    @staticmethod
+    def to_camel_case( snake_str ):
         components = snake_str.split('_')
 
         return "".join( x.title( ) for x in components )

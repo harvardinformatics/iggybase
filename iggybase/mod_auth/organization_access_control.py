@@ -3,6 +3,9 @@ from iggybase.database import db_session
 from iggybase.mod_auth.models import load_user, UserRole, Organization
 from iggybase.mod_auth.facility_role_access_control import FacilityRoleAccessControl
 from importlib import import_module
+from iggybase.database import admin_db_session
+from iggybase.mod_admin import models
+from iggybase.tablefactory import TableFactory
 import logging
 
 # Controls access to the data db data based on organization
@@ -37,53 +40,94 @@ class OrganizationAccessControl:
         return
 
     def get_data( self, table_name, query_data = None ):
-        table_data = self.facility_role_access_control.has_access( 'TableObject', table_name )
+        field_data = self.get_field_data( table_name )
 
-        if table_data is not None:
+        results = None
+
+        if field_data is not None:
             module_model = import_module( 'iggybase.' + self.module + '.models' )
             table_object = getattr( module_model, table_name )
 
-            field_data = self.facility_role_access_control.fields( table_data.id, self.module )
+            columns = [ ]
+            for row in  field_data:
+                if row.FieldFacilityRole.visible == 1:
+                    columns.append( getattr( table_object, row.Field.field_name ).\
+                                label( row.FieldFacilityRole.display_name ) )
 
-            if field_data is not None:
-                columns = [ ]
-                for row in  field_data:
-                    if row.FieldFacilityRole.visible == 1:
-                        columns.append( getattr( table_object, row.Field.field_name ).\
-                                    label( row.FieldFacilityRole.display_name ) )
+            results = db_session.query( *columns ).all( )
 
-                results = db_session.query( *columns ).all( )
-
-                return results
-
-        return None
+        return results
 
     def get_summary_data( self, table_name, query_data = None ):
-        table_data = self.facility_role_access_control.has_access( 'TableObject', table_name )
+        field_data = self.get_field_data( table_name )
 
-        if table_data is not None:
+        results = None
+        fk_table_objects = [ ]
+
+        if field_data is not None:
             module_model = import_module( 'iggybase.' + self.module + '.models' )
             table_object = getattr( module_model, table_name )
 
-            field_data = self.facility_role_access_control.fields( table_data.id, self.module )
-
-            if field_data is not None:
-                columns = [ ]
-                for row in  field_data:
+            columns = [ ]
+            for row in  field_data:
+                if row.FieldFacilityRole.visible == 1:
                     if row.Field.foreign_key_table_object_id is not None:
-                        pass
-                    elif row.FieldFacilityRole.visible == 1:
+                        fk_table_data = admin_db_session.query( models.TableObject ).\
+                            filter_by( id = row.Field.foreign_key_table_object_id ).first( )
+
+                        fk_table_name = TableFactory.to_camel_case( fk_table_data.name )
+
+                        foreign_key_data = self.foreign_key( row.Field.foreign_key_table_object_id )
+
+                        module_model = import_module( 'iggybase.' + foreign_key_data[ 'module' ] + '.models' )
+                        fk_table_object = getattr( module_model, fk_table_name )
+
+                        fk_table_objects.append( fk_table_object )
+
                         columns.append( getattr( table_object, row.Field.field_name ).\
-                                    label( row.FieldFacilityRole.display_name ) )
+                                        label( 'fk|' + fk_table_name + '|id' ) )
 
-                results = db_session.query( *columns ).all( )
+                        columns.append( getattr( fk_table_object, foreign_key_data[ 'foreign_key' ] ).\
+                                        label( 'fk|' + fk_table_name + '|' + foreign_key_data[ 'foreign_key_alias' ] ) )
+                    else:
+                        columns.append( getattr( table_object, row.Field.field_name ).\
+                                        label( row.FieldFacilityRole.display_name ) )
 
-                return results
+            if not columns:
+                results = db_session.query( table_object ).add_columns( *columns ).all( )
+            else:
+                results = db_session.query( table_object, *fk_table_objects ).outerjoin( *fk_table_objects ).\
+                    add_columns( *columns ).all( )
 
-        return None
+        return results
 
     def get_row( self, table_name, row_name ):
         table_data = self.facility_role_access_control.has_access( 'TableObject', table_name )
         if table_data is not None:
             pass
         return None
+
+    def foreign_key( self, table_object_id ):
+        res = admin_db_session.query( models.Field, models.FieldFacilityRole, models.Module ).\
+            join( models.FieldFacilityRole ).\
+            join( models.Module ).\
+            filter( models.Field.table_object_id == table_object_id ).\
+            filter( models.Field.field_name == 'name' ).\
+            order_by( models.FieldFacilityRole.order, models.FieldFacilityRole.id ).first( )
+
+        ret_data = { }
+        ret_data[ 'foreign_key' ] = res.Field.field_name
+        ret_data[ 'foreign_key_alias' ] = res.FieldFacilityRole.display_name
+        ret_data[ 'module' ] = res.Module.name
+
+        return ret_data
+
+    def get_field_data( self, table_name ):
+        table_data = self.facility_role_access_control.has_access( 'TableObject', table_name )
+
+        field_data = None
+
+        if table_data is not None:
+            field_data = self.facility_role_access_control.fields( table_data.id, self.module )
+
+        return field_data

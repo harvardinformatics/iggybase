@@ -8,7 +8,7 @@ facility_access_control = FacilityAccessControl( )
 tables = facility_access_control.module_table_objects( "mod_murray_lab" )
 
 for table_object in tables:
-    class_name = table_factory.to_camel_case( table_object.name )
+    class_name = TableFactory.to_camel_case( table_object.name )
 
     globals()[ class_name ] = table_factory.table_object_factory ( class_name, table_object )
 
