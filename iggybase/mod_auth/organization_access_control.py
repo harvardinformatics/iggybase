@@ -44,11 +44,35 @@ class OrganizationAccessControl:
             table_object = getattr( module_model, table_name )
 
             field_data = self.facility_role_access_control.fields( table_data.id, self.module )
-            
+
             if field_data is not None:
                 columns = [ ]
                 for row in  field_data:
                     if row.FieldFacilityRole.visible == 1:
+                        columns.append( getattr( table_object, row.Field.field_name ).\
+                                    label( row.FieldFacilityRole.display_name ) )
+
+                results = db_session.query( *columns ).all( )
+
+                return results
+
+        return None
+
+    def get_summary_data( self, table_name, query_data = None ):
+        table_data = self.facility_role_access_control.has_access( 'TableObject', table_name )
+
+        if table_data is not None:
+            module_model = import_module( 'iggybase.' + self.module + '.models' )
+            table_object = getattr( module_model, table_name )
+
+            field_data = self.facility_role_access_control.fields( table_data.id, self.module )
+
+            if field_data is not None:
+                columns = [ ]
+                for row in  field_data:
+                    if row.Field.foreign_key_table_object_id is not None:
+                        pass
+                    elif row.FieldFacilityRole.visible == 1:
                         columns.append( getattr( table_object, row.Field.field_name ).\
                                     label( row.FieldFacilityRole.display_name ) )
 
