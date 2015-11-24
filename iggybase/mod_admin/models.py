@@ -437,6 +437,7 @@ class Module( StaticBase ):
     active = Column( Boolean )
     organization_id = Column( Integer )
     order = Column( Integer )
+    url_prefix = Column( String( 50 ) )
 
 class ModuleFacilityRole( StaticBase ):
     __tablename__ = 'module_facility_role'

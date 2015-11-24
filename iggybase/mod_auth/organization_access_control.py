@@ -88,7 +88,9 @@ class OrganizationAccessControl:
                                         label( 'fk|' + fk_table_name + '|id' ) )
 
                         columns.append( getattr( fk_table_object, foreign_key_data[ 'foreign_key' ] ).\
-                                        label( 'fk|' + fk_table_name + '|' + foreign_key_data[ 'foreign_key_alias' ] ) )
+                                        label( 'fk|' + foreign_key_data[ 'url_prefix' ] + '|' + fk_table_name + '|' +\
+                                               foreign_key_data[ 'foreign_key' ] + '|' +\
+                                               foreign_key_data[ 'foreign_key_alias' ] ) )
                     else:
                         columns.append( getattr( table_object, row.Field.field_name ).\
                                         label( row.FieldFacilityRole.display_name ) )
@@ -119,6 +121,7 @@ class OrganizationAccessControl:
         ret_data[ 'foreign_key' ] = res.Field.field_name
         ret_data[ 'foreign_key_alias' ] = res.FieldFacilityRole.display_name
         ret_data[ 'module' ] = res.Module.name
+        ret_data[ 'url_prefix' ] = res.Module.url_prefix
 
         return ret_data
 
