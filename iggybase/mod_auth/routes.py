@@ -31,7 +31,7 @@ def login():
 
     if form.validate_on_submit( ):
         user = User.query.filter_by( name = form.name.data ).first( )
-        if user is None or not user.is_active( ) or not user.verify_password( form.password.data ):
+        if user is None or not user.is_active or not user.verify_password( form.password.data ):
             return redirect( url_for( 'mod_auth.failedlogin' ) )
 
         user_role = UserRole.query.filter_by( role_id = form.role.data ). \

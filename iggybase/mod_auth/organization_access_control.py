@@ -12,7 +12,7 @@ class OrganizationAccessControl:
         self.org_ids = [ ]
         self.module = module
 
-        if g.user is not None and not g.user.is_anonymous( ):
+        if g.user is not None and not g.user.is_anonymous:
             self.user = load_user( g.user.id )
             self.user_role = db_session.query( UserRole ).filter_by( id = self.user.current_user_role_id ).first( )
             self.facility_role_access_control = FacilityRoleAccessControl( )
@@ -45,6 +45,7 @@ class OrganizationAccessControl:
 
             field_data = self.facility_role_access_control.fields( table_data.id, self.module )
 
+            '''
             if field_data is not None:
                 select_clause = ''
 
@@ -55,6 +56,17 @@ class OrganizationAccessControl:
                 sql = 'select ' + select_clause[ :-2 ] + ' from ' + table_data.name
 
                 results = db_session.query( table_object ).from_statement( sql ).all( )
+
+                return results
+            '''
+            if field_data is not None:
+                columns = [ ]
+                for row in  field_data:
+                    if row.FieldFacilityRole.visible == 1:
+                        columns.append( getattr( table_object, row.Field.field_name ).\
+                                    label( row.FieldFacilityRole.display_name ) )
+
+                results = db_session.query( *columns ).all( )
 
                 return results
 

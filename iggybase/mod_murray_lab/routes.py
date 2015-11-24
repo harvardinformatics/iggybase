@@ -2,6 +2,8 @@ from flask import g
 from flask.ext.login import login_required, current_user
 from iggybase.templating import page_template
 from iggybase.mod_murray_lab import mod_murray_lab
+from iggybase.database import db_session
+from iggybase.mod_murray_lab import models
 from iggybase.form_generator import FormGenerator
 from iggybase.mod_auth.organization_access_control import OrganizationAccessControl
 
@@ -20,7 +22,7 @@ def default():
 @mod_murray_lab.route( '/summary/<table_name>' )
 def summary( table_name = None ):
     organization_access_control = OrganizationAccessControl( 'mod_murray_lab' )
-    table_rows = [ u.__dict__ for u in organization_access_control.get_data( table_name ) ]
+    table_rows = organization_access_control.get_data( table_name )
 
     return page_template( 'summary', table_name = table_name, table_rows =
             table_rows )
@@ -32,6 +34,9 @@ def murray_lab_data_entry( table_object = None, row_name = None ):
     form = fg.default_single_entry_form( row_name )
 
     if form.validate_on_submit( ):
+        session = db_session( )
+        table_object = getattr( models, form.table_object.data )
+
         pass
 
     return page_template( 'single_data_entry', form = form )
