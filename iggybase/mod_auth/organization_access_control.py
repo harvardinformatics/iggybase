@@ -89,7 +89,6 @@ class OrganizationAccessControl:
 
                         columns.append( getattr( fk_table_object, foreign_key_data[ 'foreign_key' ] ).\
                                         label( 'fk|' + foreign_key_data[ 'url_prefix' ] + '|' + fk_table_name + '|' +\
-                                               foreign_key_data[ 'foreign_key' ] + '|' +\
                                                foreign_key_data[ 'foreign_key_alias' ] ) )
                     else:
                         columns.append( getattr( table_object, row.Field.field_name ).\
