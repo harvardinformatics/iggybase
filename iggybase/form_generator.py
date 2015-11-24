@@ -32,6 +32,7 @@ class FormGenerator( ):
         self.facility_role_access_control = FacilityRoleAccessControl( )
         self.organization_access_control = OrganizationAccessControl( module )
         self.table_object = table_object
+        self.module = module
 
     def input_field( self, field_data, value = None ):
         validators = [ ]
@@ -44,43 +45,58 @@ class FormGenerator( ):
         if "email" in field_data.Field.field_name:
             validators.append( email( ) )
 
-        if field_data.FieldFacilityRole.permission_id == 2:
-            if field_data.Field.data_type_id == 1:
-                wtf_class = IntegerField
-            elif field_data.Field.data_type_id == 3:
-                wtf_class = BooleanField
-            elif field_data.Field.data_type_id == 4:
-                wtf_class = DateField
-            elif field_data.Field.data_type_id == 5:
-                wtf_class = PasswordField
-            elif field_data.Field.data_type_id == 6:
-                wtf_class = SelectField
-            elif field_data.Field.data_type_id == 7:
-                wtf_class = FileField
-            elif field_data.Field.data_type_id == 8:
-                wtf_class = TextAreaField
-            else:
-                wtf_class = StringField
-        else:
-            if field_data.Field.data_type_id == 1:
-                wtf_class = ReadonlyIntegerField
-            elif field_data.Field.data_type_id == 3:
-                wtf_class = ReadonlyBooleanField
-            elif field_data.Field.data_type_id == 4:
-                wtf_class = ReadonlyTextAreaField
-            else:
-                wtf_class = ReadonlyStringField
-
         if field_data.FieldFacilityRole.visible != 1:
             if value is not None:
                 wtf_field = HiddenField( field_data.FieldFacilityRole.display_name, default = value )
             else:
                 wtf_field = HiddenField( field_data.FieldFacilityRole.display_name )
         else:
-            if value is not None:
-                wtf_field = wtf_class( field_data.FieldFacilityRole.display_name, validators, default = value )
+            if field_data.FieldFacilityRole.permission_id == 2:
+                if field_data.Field.foreign_key_table_object_id is not None:
+                    wtf_class = SelectField
+                    choices = [ ]
+                    if value is not None:
+                        wtf_field = wtf_class( field_data.FieldFacilityRole.display_name, validators, coerce = int, \
+                                               choices = [ ], default = value )
+                    else:
+                        wtf_field = wtf_class( field_data.FieldFacilityRole.display_name, validators, coerce = int, \
+                                               choices = [ ] )
+                else:
+                    if field_data.Field.data_type_id == 1:
+                        wtf_class = IntegerField
+                    elif field_data.Field.data_type_id == 3:
+                        wtf_class = BooleanField
+                    elif field_data.Field.data_type_id == 4:
+                        wtf_class = DateField
+                    elif field_data.Field.data_type_id == 5:
+                        wtf_class = PasswordField
+                    elif field_data.Field.data_type_id == 6:
+                        wtf_class = FileField
+                    elif field_data.Field.data_type_id == 7:
+                        wtf_class = TextAreaField
+                    else:
+                        wtf_class = StringField
+
+                    if value is not None:
+                        wtf_field = wtf_class( field_data.FieldFacilityRole.display_name, validators, default = value )
+                    else:
+                        wtf_field = wtf_class( field_data.FieldFacilityRole.display_name, validators )
             else:
-                wtf_field = wtf_class( field_data.FieldFacilityRole.display_name, validators )
+                if field_data.Field.foreign_key_table_object_id is not None:
+                    wtf_class = ReadonlyStringField
+                elif field_data.Field.data_type_id == 1:
+                    wtf_class = ReadonlyIntegerField
+                elif field_data.Field.data_type_id == 3:
+                    wtf_class = ReadonlyBooleanField
+                elif field_data.Field.data_type_id == 7:
+                    wtf_class = ReadonlyTextAreaField
+                else:
+                    wtf_class = ReadonlyStringField
+
+                if value is not None:
+                    wtf_field = wtf_class( field_data.FieldFacilityRole.display_name, validators, default = value )
+                else:
+                    wtf_field = wtf_class( field_data.FieldFacilityRole.display_name, validators )
 
         return wtf_field
 
@@ -90,7 +106,7 @@ class FormGenerator( ):
 
         table_data = self.facility_role_access_control.has_access( 'TableObject', self.table_object )
 
-        fields = self.facility_role_access_control.fields( table_data.id )
+        fields = self.facility_role_access_control.fields( table_data.id, self.module )
 
         table_field = HiddenField( 'table_object_01', default = self.table_object )
         row_field = HiddenField( 'row_name_01', default = row_name )

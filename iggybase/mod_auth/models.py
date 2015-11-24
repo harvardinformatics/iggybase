@@ -24,7 +24,6 @@ class User( UserMixin, Base ):
     email = Column( String( 120 ), unique = True )
     address_id = Column( Integer, ForeignKey( 'address.id' ) )
     home_page = Column( String( 50 ) )
-    home_page_variable = Column( String( 50 ) )
     current_user_role_id = Column( Integer, ForeignKey( 'user_role.id' ) )
 
     user_user_role = relationship( "UserRole", foreign_keys = [ current_user_role_id ] )

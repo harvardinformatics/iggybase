@@ -36,12 +36,20 @@ class FacilityRoleAccessControl:
 
         return table_objects
 
-    def fields( self, table_object_id, active = 1 ):
+    def fields( self, table_object_id, module, active = 1 ):
+        module = admin_db_session.query( models.Module, models.ModuleFacilityRole ).join( models.ModuleFacilityRole ).\
+            filter( models.ModuleFacilityRole.facility_role_id == self.facility_role.id ).\
+            filter( models.Module.name == module ).first( )
+
+        if module is None:
+            return [ ]
+
         res = admin_db_session.query( models.Field, models.FieldFacilityRole ).join( models.FieldFacilityRole ).\
             filter( models.FieldFacilityRole.facility_role_id == self.facility_role.id ).\
             filter( models.Field.table_object_id == table_object_id ).\
             filter( models.Field.active == active ).\
             filter( models.FieldFacilityRole.active == active ).\
+            filter( models.FieldFacilityRole.module_id == module.Module.id ).\
             order_by( models.FieldFacilityRole.order, models.FieldFacilityRole.id ).all( )
 
         if res is None:
