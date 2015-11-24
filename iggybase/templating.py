@@ -86,17 +86,13 @@ def page_scripts( scripts ):
 
     return scpts
 
-'''def page_menus( menus, menu_items ):
+def page_menus( menus, menu_items ):
     mns = [ ]
-
-    """
-    Comment patch until menus actually work. Soon!!
 
     for menu in menus:
         pass
 
         mns.append(  )
-    """
 
     return mns
-'''
+

@@ -60,11 +60,14 @@ class FacilityRoleAccessControl:
     def page_form_menus( self, active = 1 ):
         menus = [ ]
 
-        res = admin_db_session.query( models.MenuFacilityRole ).filter_by( facility_role_id = self.facility_role.id ).\
-            filter_by( active = active ).order_by( models.MenuFacilityRole.order, models.MenuFacilityRole.id ).all( )
+        res = admin_db_session.query( models.MenuFacilityRole ). \
+              filter_by( facility_role_id = self.facility_role.id ).\
+              filter_by( active = active ). \
+              order_by( models.MenuFacilityRole. order, models.MenuFacilityRole.id ).all( )
         for row in res:
-            menu = admin_db_session.query( models.Menu ).filter_by( id = row.menu_id ).\
-                filter_by( active = active ).first( )
+            menu = admin_db_session.query( models.Menu ). \
+                   filter_by( id = row.menu_id ).\
+                   filter_by( active = active ).first( )
             if menu is not None:
                 menus.append( menu )
                 break
