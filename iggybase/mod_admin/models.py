@@ -42,6 +42,11 @@ class FacilityRole( StaticBase ):
     facility_role_role = relationship( "Role", foreign_keys = [ role_id ] )
     facility_role_unq = UniqueConstraint( 'facility_id', 'role_id' )
 
+    def __repr__(self):
+        return "<FacilityRolee=%s, description=%s, id=%d, role=%s)" % \
+            (self.name, self.description, self.id, self.facility_role_role.name)
+    
+
 class Menu( StaticBase ):
     __tablename__ = 'menu'
     id = Column( Integer, primary_key = True )
@@ -55,8 +60,9 @@ class Menu( StaticBase ):
     order = Column( Integer )
     menu_type_id = Column( Integer, ForeignKey( 'menu_type.id' ) )
 
+    parent = relationship('Menu', remote_side=[id])
     children = relationship('Menu')
-    menu_menu_type = relationship( "MenuType", foreign_keys = [ menu_type_id ] )
+    menu_type = relationship( "MenuType", foreign_keys = [ menu_type_id ] )
 
     def __repr__(self):
         return "<Menu(name=%s, description=%s, id=%d)" % \

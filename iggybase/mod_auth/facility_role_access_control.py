@@ -13,7 +13,7 @@ class FacilityRoleAccessControl:
 
         self.facility = admin_db_session.query( models.Facility ).filter_by( name = config.FACILITY ).first( )
 
-        if g.user is not None and not g.user.is_anonymous( ):
+        if g.user is not None and not g.user.is_anonymous:
             self.user = load_user( g.user.id )
             self.facility_role = admin_db_session.query( models.FacilityRole ).\
                 filter_by( facility_id = self.facility.id, role_id = self.user.current_user_role_id ).first( )
@@ -60,11 +60,14 @@ class FacilityRoleAccessControl:
     def page_form_menus( self, active = 1 ):
         menus = [ ]
 
-        res = admin_db_session.query( models.MenuFacilityRole ).filter_by( facility_role_id = self.facility_role.id ).\
-            filter_by( active = active ).order_by( models.MenuFacilityRole.order, models.MenuFacilityRole.id ).all( )
+        res = admin_db_session.query( models.MenuFacilityRole ). \
+              filter_by( facility_role_id = self.facility_role.id ).\
+              filter_by( active = active ). \
+              order_by( models.MenuFacilityRole. order, models.MenuFacilityRole.id ).all( )
         for row in res:
-            menu = admin_db_session.query( models.Menu ).filter_by( id = row.menu_id ).\
-                filter_by( active = active ).first( )
+            menu = admin_db_session.query( models.Menu ). \
+                   filter_by( id = row.menu_id ).\
+                   filter_by( active = active ).first( )
             if menu is not None:
                 menus.append( menu )
                 break
