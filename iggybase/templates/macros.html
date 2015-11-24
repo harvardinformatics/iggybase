@@ -36,7 +36,7 @@
 
 {% macro render_table( table_rows ) -%}
     {% if table_rows %}
-        <table id="summary_table">
+        <table id="summary_table" class="display">
             <thead><tr>
                 {% for key in table_rows[0].keys() %}
                     <th>{{ key }}</th>
@@ -46,17 +46,36 @@
                 {% for row in table_rows %}
                     <tr>
                     {% for value in row.values() %}
-                        {% if value['link'] %}
-                            <td><a href="{{ value['link'] }}">{{ value['text'] }}</a></td>
-                        {% else %}
-                            <td>{{ value['text'] }}</td>
+                        <td>
+                        {% if value['text'] %}
+                            {% if value['link'] %}
+                                <a href="{{ value['link'] }}">{{ value['text'] }}</a>
+                            {% else %}
+                                {{ value['text'] }}
+                            {% endif %}
                         {% endif %}
+                        </td>
                     {% endfor %}
                     </tr>
                 {% endfor %}
             </tbody>
         </table>
     {% endif %}
+{%- endmacro %}
+
+{% macro render_detail(table_row) -%}
+    <div class="detail">
+    {% if table_row %}
+        <table id="detail_table">
+        {% for name, value in table_row.items() %}
+            <tr>
+                <td>{{ name }}</td>
+                <td>{{ value['text'] }}</td>
+            </tr>
+        {% endfor %}
+        </table>
+    {% endif %}
+    </div>
 {%- endmacro %}
 
 {% macro render_buttons( buttons ) -%}
