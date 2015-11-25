@@ -98,8 +98,7 @@ class OrganizationAccessControl:
                     else:
                         columns.append( getattr( table_object, row.Field.field_name ).\
                                         label( row.FieldFacilityRole.display_name ) )
-            criteria = []
-            if query_data:
+
                 criteria = [ getattr( table_object, 'organization_id' ).in_( self.org_ids ) ]
                 if 'criteria' in query_data:
                     for col, value in query_data[ 'criteria' ].items( ):
@@ -126,47 +125,23 @@ class OrganizationAccessControl:
             keys = results[0].keys()
             # filter out any objects
             keys_to_skip = [table_object.__name__]
-            # keep fk data seperate
-            fk_data = []
             for fk in fk_table_objects:
                 keys_to_skip.append(fk.__name__)
             # create dictionary for each row and for fk data
             for row in results:
                 row_dict = {}
-                fk_row = {}
                 for i, col in enumerate(row):
                     if keys[i] not in keys_to_skip:
-                        if 'fk|' in keys[i]: # pull fk data out
+                        if 'fk|' in keys[i] and '|name' in keys[i]:
                             fk_metadata = keys[i].split('|')
-                            if '|name' in keys[i]: # name and mod data
-                                if fk_metadata[2]:
-                                    table = fk_metadata[2]
-                                    if table in fk_row:
-                                        fk_row[table].update({
-                                                'name':col,
-                                                'mod':fk_metadata[1]
-                                        })
-                                    else:
-                                        fk_row[table] = {
-                                                'name':col,
-                                                'mod':fk_metadata[1]
-                                        }
-                                    row_dict[table] = {
-                                            'text': col,
-                                            # add link foreign key table summary
-                                            'link': '/' + fk_row[table]['mod'] \
-                                                + '/summary/' + table
-                                    }
-                            else: # id data
-                                if fk_metadata[1]:
-                                    table = fk_metadata[1]
-                                    if table in fk_row:
-                                        fk_row[table]['id'] = col
-                                    else:
-                                        fk_row[table] = {
-                                            'id':col
-                                        }
-
+                            if fk_metadata[2]:
+                                table = fk_metadata[2]
+                                row_dict[table] = {
+                                        'text': col,
+                                        # add link foreign key table summary
+                                        'link': '/' + fk_metadata[1] \
+                                            + '/summary/' + table
+                                }
                         else: # add all other colums to table_rows
                             row_dict[keys[i]] = {'text': col}
                             # name column values will link to detail
@@ -174,7 +149,6 @@ class OrganizationAccessControl:
                                 row_dict[keys[i]]['link'] = '/murray/detail/' \
                                     + table_object.__name__ + '/' + str(col)
                 table_rows.append(row_dict)
-                fk_data.append(fk_row)
         return table_rows
 
     def get_template_data( self, table_name, name ):
