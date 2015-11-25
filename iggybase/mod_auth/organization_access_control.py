@@ -39,7 +39,7 @@ class OrganizationAccessControl:
 
         return
 
-    def get_data( self, table_name, query_data = None ):
+    def get_data( self, table_name, name = None, query_data = None ):
         field_data = self.get_field_data( table_name )
 
         results = None
@@ -54,7 +54,10 @@ class OrganizationAccessControl:
                     columns.append( getattr( table_object, row.Field.field_name ).\
                                 label( row.FieldFacilityRole.display_name ) )
 
-            results = db_session.query( *columns ).all( )
+            if name is None:
+                results = db_session.query( *columns ).all( )
+            else:
+                results = db_session.query( *columns ).filter_by( name = name ).all( )
 
         return results
 
@@ -101,12 +104,6 @@ class OrganizationAccessControl:
                     add_columns( *columns ).all( )
 
         return results
-
-    def get_row( self, table_name, row_name ):
-        table_data = self.facility_role_access_control.has_access( 'TableObject', table_name )
-        if table_data is not None:
-            pass
-        return None
 
     def foreign_key( self, table_object_id ):
         res = admin_db_session.query( models.Field, models.FieldFacilityRole, models.Module ).\
