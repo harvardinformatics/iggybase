@@ -78,9 +78,9 @@
     </div>
 {%- endmacro %}
 
-{% macro render_buttons( buttons ) -%}
+{% macro render_buttons( buttons, context ) -%}
     {% for button in buttons %}
-        <input {{ button|safe }} >
+        <input {{ button|safe }}>
     {% endfor %}
 {%- endmacro %}
 

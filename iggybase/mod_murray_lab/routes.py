@@ -1,4 +1,4 @@
-from flask import g
+from flask import g, request
 from flask.ext.login import login_required, current_user
 from iggybase.templating import page_template
 from iggybase.mod_murray_lab import mod_murray_lab
@@ -30,7 +30,10 @@ def summary( table_name = None ):
 def detail( table_name = None, row_name= None ):
     organization_access_control = OrganizationAccessControl( 'mod_murray_lab' )
     table_rows = organization_access_control.get_summary_data( table_name, row_name )
-    return page_template( 'detail', table_name = table_name, row_name = row_name, table_rows = table_rows)
+    # pass some context for the button to create urls
+    mod = request.path.split('/')[1]
+    button_context = {'mod': mod, 'table': table_name, 'row_name': row_name}
+    return page_template( 'detail', table_name = table_name, row_name = row_name, table_rows = table_rows, button_context=button_context)
 
 @mod_murray_lab.route( '/data_entry/<table_object>/<row_name>' )
 def murray_lab_data_entry( table_object = None, row_name = None ):
