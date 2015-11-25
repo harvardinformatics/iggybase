@@ -4,7 +4,7 @@ from iggybase.extensions import lm
 from iggybase.database import Base
 from iggybase.mod_auth import constants as USER
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, DateTime
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, relation
 import datetime
 
 class User( UserMixin, Base ):
@@ -80,14 +80,14 @@ class Organization( Base ):
     date_created = Column( DateTime, default=datetime.datetime.utcnow )
     last_modified = Column( DateTime, default=datetime.datetime.utcnow )
     active = Column( Boolean )
-    organization_id = Column( Integer, ForeignKey( 'organization.id' ) )
+    organization_id = Column( Integer )
     order = Column( Integer )
-    address_id = Column( Integer, ForeignKey( 'user.id' ) )
+    address_id = Column( Integer, ForeignKey( 'address.id' ) )
     billing_address_id = Column( Integer )
     organization_type_id = Column( Integer )
     parent_id = Column( Integer, ForeignKey( 'organization.id' ) )
 
-    organization_parent = relationship( "Organization", foreign_keys = [ parent_id ] )
+    parent = relation( 'Organization', remote_side = [ id ] )
 
 @lm.user_loader
 def load_user( id ):
