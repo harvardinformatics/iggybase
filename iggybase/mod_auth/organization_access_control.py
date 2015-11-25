@@ -99,7 +99,7 @@ class OrganizationAccessControl:
 
             criteria = [ ]
             if 'criteria' in query_data:
-                for col, value in query_data[ 'criteria' ]:
+                for col, value in query_data[ 'criteria' ].items( ):
                     criteria.append( getattr( table_object, col ) == value )
 
             if not columns and not criteria:
@@ -117,7 +117,7 @@ class OrganizationAccessControl:
 
     def get_template_data( self, table_name, name ):
         query_data = { 'criteria': { 'name': name } }
-        return self.get_summary_data( self, table_name, query_data )
+        return self.get_summary_data( table_name, query_data )
 
     def foreign_key( self, table_object_id ):
         res = admin_db_session.query( models.Field, models.FieldFacilityRole, models.Module ).\

@@ -118,7 +118,8 @@ class FormGenerator( ):
         for field in fields:
             value = None
             if row_name != 'new' and data is not None:
-                value = data[ data.keys( ).index( field.FieldFacilityRole.display_name ) ]
+                if field.FieldFacilityRole.display_name in data.keys( ):
+                    value = data[ data.keys( ).index( field.FieldFacilityRole.display_name ) ]
 
             classattr[ field.Field.field_name ] = self.input_field( field, value )
 
