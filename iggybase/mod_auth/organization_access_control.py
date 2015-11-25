@@ -19,7 +19,6 @@ class OrganizationAccessControl:
             self.user = load_user( g.user.id )
             self.user_role = db_session.query( UserRole ).filter_by( id = self.user.current_user_role_id ).first( )
             self.facility_role_access_control = FacilityRoleAccessControl( )
-            self.org_ids.append( self.user_role.organization_id )
 
             self.get_child_organization( self.user_role.organization_id )
         else:
@@ -55,9 +54,12 @@ class OrganizationAccessControl:
                                 label( row.FieldFacilityRole.display_name ) )
 
             if name is None:
-                results = db_session.query( *columns ).all( )
+                results = db_session.query( *columns ).\
+                    filter( getattr( table_object, 'organization_id' ).in_( self.org_ids ) ).all( )
             else:
-                results = db_session.query( *columns ).filter_by( name = name ).all( )
+                results = db_session.query( *columns ).\
+                    filter_by( name = name ).\
+                    filter( getattr( table_object, 'organization_id' ).in_( self.org_ids ) ).all( )
 
         return results
 
@@ -97,18 +99,13 @@ class OrganizationAccessControl:
                         columns.append( getattr( table_object, row.Field.field_name ).\
                                         label( row.FieldFacilityRole.display_name ) )
 
-            criteria = [ ]
+            criteria = [ getattr( table_object, 'organization_id' ).in_( self.org_ids ) ]
             if 'criteria' in query_data:
                 for col, value in query_data[ 'criteria' ].items( ):
                     criteria.append( getattr( table_object, col ) == value )
 
-            if not columns and not criteria:
-                results = db_session.query( table_object ).add_columns( *columns ).all( )
-            elif not columns:
+            if not columns:
                 results = db_session.query( table_object ).add_columns( *columns ).filter( *criteria ).all( )
-            elif not criteria:
-                results = db_session.query( table_object, *fk_table_objects ).outerjoin( *fk_table_objects ).\
-                    add_columns( *columns ).all( )
             else:
                 results = db_session.query( table_object, *fk_table_objects ).outerjoin( *fk_table_objects ).\
                     filter( *criteria ).add_columns( *columns ).all( )
