@@ -98,7 +98,7 @@ class OrganizationAccessControl:
                                         label( row.FieldFacilityRole.display_name ) )
 
             criteria = [ ]
-            if query_data[ 'criteria' ]:
+            if 'criteria' in query_data:
                 for col, value in query_data[ 'criteria' ]:
                     criteria.append( getattr( table_object, col ) == value )
 
