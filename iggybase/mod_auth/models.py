@@ -27,6 +27,7 @@ class User( UserMixin, Base ):
     current_user_role_id = Column( Integer, ForeignKey( 'user_role.id' ) )
 
     user_user_role = relationship( "UserRole", foreign_keys = [ current_user_role_id ] )
+    user_organization = relationship( "Organization", foreign_keys = [ organization_id ] )
 
     def get_id(self):
         return str( self.id )
