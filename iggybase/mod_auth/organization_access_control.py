@@ -39,7 +39,7 @@ class OrganizationAccessControl:
 
         return
 
-    def get_data( self, table_name, name = None, query_data = None ):
+    def get_entry_data( self, table_name, name = None, query_data = None ):
         field_data = self.get_field_data( table_name )
 
         results = None
@@ -61,7 +61,7 @@ class OrganizationAccessControl:
 
         return results
 
-    def get_summary_data( self, table_name, query_data = None ):
+    def get_summary_data( self, table_name, query_data = { } ):
         field_data = self.get_field_data( table_name )
 
         results = None
@@ -97,13 +97,27 @@ class OrganizationAccessControl:
                         columns.append( getattr( table_object, row.Field.field_name ).\
                                         label( row.FieldFacilityRole.display_name ) )
 
-            if not columns:
+            criteria = [ ]
+            if query_data[ 'criteria' ]:
+                for col, value in query_data[ 'criteria' ]:
+                    criteria.append( getattr( table_object, col ) == value )
+
+            if not columns and not criteria:
                 results = db_session.query( table_object ).add_columns( *columns ).all( )
-            else:
+            elif not columns:
+                results = db_session.query( table_object ).add_columns( *columns ).filter( *criteria ).all( )
+            elif not criteria:
                 results = db_session.query( table_object, *fk_table_objects ).outerjoin( *fk_table_objects ).\
                     add_columns( *columns ).all( )
+            else:
+                results = db_session.query( table_object, *fk_table_objects ).outerjoin( *fk_table_objects ).\
+                    filter( *criteria ).add_columns( *columns ).all( )
 
         return results
+
+    def get_template_data( self, table_name, name ):
+        query_data = { 'criteria': { 'name': name } }
+        return self.get_summary_data( self, table_name, query_data )
 
     def foreign_key( self, table_object_id ):
         res = admin_db_session.query( models.Field, models.FieldFacilityRole, models.Module ).\

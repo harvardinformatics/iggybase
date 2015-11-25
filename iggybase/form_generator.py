@@ -103,7 +103,7 @@ class FormGenerator( ):
 
     def default_single_entry_form( self, row_name = 'new' ):
         if row_name != 'new':
-            data = self.organization_access_control.get_data( self.table_object, row_name )[ 0 ]
+            data = self.organization_access_control.get_entry_data( self.table_object, row_name )[ 0 ]
 
         table_data = self.facility_role_access_control.has_access( 'TableObject', self.table_object )
 
