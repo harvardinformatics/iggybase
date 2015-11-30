@@ -68,6 +68,7 @@ class OrganizationAccessControl:
 
         results = None
         fk_table_objects = [ ]
+        fk_joins = [ ]
 
         if field_data is not None:
             module_model = import_module( 'iggybase.' + self.module + '.models' )
@@ -89,6 +90,13 @@ class OrganizationAccessControl:
 
                         fk_table_objects.append( fk_table_object )
 
+                        # add joins to a list to specify them incase more than
+                        # one join is possible between tables
+                        fk_name = row.Field.field_name
+                        fk_col = getattr(fk_table_object, fk_name)
+                        tb_col = getattr(table_object, fk_name)
+                        fk_joins.append(tb_col == fk_col)
+
                         columns.append( getattr( table_object, row.Field.field_name ).\
                                         label( 'fk|' + fk_table_name + '|id' ) )
 
@@ -107,7 +115,8 @@ class OrganizationAccessControl:
             if not columns:
                 results = db_session.query( table_object ).add_columns( *columns ).filter( *criteria ).all( )
             else:
-                results = db_session.query( table_object, *fk_table_objects ).outerjoin( *fk_table_objects ).\
+                # TODO: find out if this works for more than one FK table
+                results = db_session.query( table_object, *fk_table_objects ).outerjoin( *fk_table_objects, *fk_joins ).\
                     filter( *criteria ).add_columns( *columns ).all( )
 
         return self.format_data(results, table_object, fk_table_objects)
