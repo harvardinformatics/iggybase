@@ -29,11 +29,11 @@ def summary( table_name = None ):
 @mod_murray.route( '/detail/<table_name>/<row_name>' )
 def detail( table_name = None, row_name= None ):
     organization_access_control = OrganizationAccessControl( 'mod_murray' )
-    table_rows = organization_access_control.get_summary_data( table_name, row_name )
-    # pass some context for the button to create urls
+    results = organization_access_control.get_summary_data( table_name, row_name )
+    table_rows = organization_access_control.format_data(results)
     mod = request.path.split('/')[1]
-    button_context = {'mod': mod, 'table': table_name, 'row_name': row_name}
-    return page_template( 'detail', table_name = table_name, row_name = row_name, table_rows = table_rows, button_context=button_context)
+    hidden_fields = {'mod': mod, 'table': table_name, 'row_name': row_name}
+    return page_template( 'detail', table_name = table_name, row_name = row_name, table_rows = table_rows, hidden_fields = hidden_fields)
 
 @mod_murray.route( '/data_entry/<table_object>/<row_name>' )
 def murray_lab_data_entry( table_object = None, row_name = None ):

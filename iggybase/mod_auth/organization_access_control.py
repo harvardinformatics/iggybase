@@ -92,8 +92,8 @@ class OrganizationAccessControl:
         if field_data is not None:
             module_model = import_module( 'iggybase.' + self.module + '.models' )
             table_object = getattr( module_model, table_name )
+            self.table_object = table_object
             self.tables.append( table_object )
-
             qry = db_session.query( table_object )
             columns = [ ]
             options = [ ]
@@ -150,8 +150,8 @@ class OrganizationAccessControl:
         if results:
             keys = results[0].keys()
             # filter out any objects
-            keys_to_skip = [table_object.__name__]
-            for fk in fk_table_objects:
+            keys_to_skip = []
+            for fk in self.tables:
                 keys_to_skip.append(fk.__name__)
             # create dictionary for each row and for fk data
             for row in results:
@@ -175,8 +175,8 @@ class OrganizationAccessControl:
                             # name column values will link to detail
                             if keys[i] == 'name':
                                 row_dict[keys[i]]['link'] = '/' \
-                                    + self.module_url + '/detail/' \
-                                    + table_object.__name__ + '/' + str(col)
+                                    + self.module.replace('mod_', '') + '/detail/' \
+                                    + self.table_object.__name__ + '/' + str(col)
                 table_rows.append(row_dict)
         return table_rows
 
