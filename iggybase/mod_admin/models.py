@@ -43,7 +43,7 @@ class FacilityRole( StaticBase ):
     facility_role_unq = UniqueConstraint( 'facility_id', 'role_id' )
 
     def __repr__(self):
-        return "<FacilityRolee=%s, description=%s, id=%d, role=%s)" % \
+        return "<FacilityRole=%s, description=%s, id=%d, role=%s)" % \
             (self.name, self.description, self.id, self.facility_role_role.name)
     
 
