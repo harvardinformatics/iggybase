@@ -89,6 +89,7 @@ class OrganizationAccessControl:
                         fk_table_object = getattr( module_model, fk_table_name )
 
                         fk_table_objects.append( fk_table_object )
+                        fk_joins.append( fk_table_object )
 
                         # add joins to a list to specify them incase more than
                         # one join is possible between tables
@@ -116,7 +117,7 @@ class OrganizationAccessControl:
                 results = db_session.query( table_object ).add_columns( *columns ).filter( *criteria ).all( )
             else:
                 # TODO: find out if this works for more than one FK table
-                results = db_session.query( table_object, *fk_table_objects ).outerjoin( *fk_table_objects, *fk_joins ).\
+                results = db_session.query( table_object, *fk_table_objects ).outerjoin( *fk_joins ).\
                     filter( *criteria ).add_columns( *columns ).all( )
 
         return self.format_data(results, table_object, fk_table_objects)
