@@ -363,8 +363,8 @@ class TableQuery( StaticBase ):
     last_modified = Column( DateTime, default = datetime.datetime.utcnow )
     active = Column( Boolean )
 
-class TableQueryType( StaticBase ):
-    __tablename__ = 'table_query_type'
+class TableQueryTableObject( StaticBase ):
+    __tablename__ = 'table_query_table_object'
     id = Column( Integer, primary_key = True )
     name = Column( String( 100 ), unique = True )
     description = Column( String( 255 ) )
