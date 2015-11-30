@@ -362,6 +362,19 @@ class TableQuery( StaticBase ):
     date_created = Column( DateTime, default = datetime.datetime.utcnow )
     last_modified = Column( DateTime, default = datetime.datetime.utcnow )
     active = Column( Boolean )
+    organization_id = Column( Integer )
+    order = Column( Integer )
+
+class TableQueryPageForm( StaticBase ):
+    __tablename__ = 'table_query_page_form'
+    id = Column( Integer, primary_key = True )
+    name = Column( String( 100 ), unique = True )
+    description = Column( String( 255 ) )
+    date_created = Column( DateTime, default = datetime.datetime.utcnow )
+    last_modified = Column( DateTime, default = datetime.datetime.utcnow )
+    active = Column( Boolean )
+    organization_id = Column( Integer )
+    order = Column( Integer )
 
 class TableQueryTableObject( StaticBase ):
     __tablename__ = 'table_query_table_object'
@@ -380,7 +393,7 @@ class TableQueryTableObject( StaticBase ):
     table_query_type_table_query = relationship( "TableQuery", foreign_keys = [ table_query_id ] )
 
 class TableQueryField( StaticBase ):
-    __tablename__ = 'table_query_ufield'
+    __tablename__ = 'table_query_field'
     id = Column( Integer, primary_key = True )
     name = Column( String( 100 ), unique = True )
     description = Column( String( 255 ) )
