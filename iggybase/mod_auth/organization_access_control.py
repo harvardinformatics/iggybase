@@ -14,6 +14,7 @@ class OrganizationAccessControl:
     def __init__ ( self, module ):
         self.org_ids = [ ]
         self.module = module
+        self.module_url = module.replace('mod_', '')
 
         if g.user is not None and not g.user.is_anonymous:
             self.user = load_user( g.user.id )
@@ -94,7 +95,7 @@ class OrganizationAccessControl:
                         # add joins to a list to specify them incase more than
                         # one join is possible between tables
                         fk_name = row.Field.field_name
-                        fk_col = getattr(fk_table_object, fk_name)
+                        fk_col = getattr(fk_table_object, 'id')
                         tb_col = getattr(table_object, fk_name)
                         fk_joins.append(tb_col == fk_col)
 
@@ -107,7 +108,6 @@ class OrganizationAccessControl:
                     else:
                         columns.append( getattr( table_object, row.Field.field_name ).\
                                         label( row.FieldFacilityRole.display_name ) )
-
                 criteria = [ getattr( table_object, 'organization_id' ).in_( self.org_ids ) ]
                 if 'criteria' in query_data:
                     for col, value in query_data[ 'criteria' ].items( ):
@@ -117,7 +117,7 @@ class OrganizationAccessControl:
                 results = db_session.query( table_object ).add_columns( *columns ).filter( *criteria ).all( )
             else:
                 # TODO: find out if this works for more than one FK table
-                results = db_session.query( table_object, *fk_table_objects ).outerjoin( *fk_joins ).\
+                results = db_session.query( table_object, *fk_table_objects ).outerjoin(*fk_joins ).\
                     filter( *criteria ).add_columns( *columns ).all( )
 
         return self.format_data(results, table_object, fk_table_objects)
@@ -142,21 +142,24 @@ class OrganizationAccessControl:
                 row_dict = {}
                 for i, col in enumerate(row):
                     if keys[i] not in keys_to_skip:
-                        if 'fk|' in keys[i] and '|name' in keys[i]:
-                            fk_metadata = keys[i].split('|')
-                            if fk_metadata[2]:
-                                table = fk_metadata[2]
-                                row_dict[table] = {
-                                        'text': col,
-                                        # add link foreign key table summary
-                                        'link': '/' + fk_metadata[1] \
-                                            + '/summary/' + table
-                                }
+                        if 'fk|' in keys[i]:
+                            if '|name' in keys[i]:
+                                fk_metadata = keys[i].split('|')
+                                if fk_metadata[2]:
+                                    table = fk_metadata[2]
+                                    row_dict[table] = {
+                                            'text': col,
+                                            # add link foreign key table summary
+                                            'link': '/' + fk_metadata[1] \
+                                                + '/detail/' + table + '/' \
+                                                + str(col)
+                                    }
                         else: # add all other colums to table_rows
                             row_dict[keys[i]] = {'text': col}
                             # name column values will link to detail
                             if keys[i] == 'name':
-                                row_dict[keys[i]]['link'] = '/murray/detail/' \
+                                row_dict[keys[i]]['link'] = '/' \
+                                    + self.module_url + '/detail/' \
                                     + table_object.__name__ + '/' + str(col)
                 table_rows.append(row_dict)
         return table_rows
