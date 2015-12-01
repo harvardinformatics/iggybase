@@ -43,6 +43,16 @@
             {% block content -%}
                 <div class="container">
                     {% block page_content %}
+                        {% block hidden_fields -%}
+                            <div id="hidden_fields">
+                            {% if hidden_fields %}
+                                {% for name, value in hidden_fields.items() %}
+                                    <input type="hidden" name="{{name}}"
+                                    value="{{value}}" class="hidden_field">
+                                {% endfor %}
+                            {% endif %}
+                            </div>
+                        {% endblock hidden_fields %}
                         {% block topbuttonbar %}
                         {%- endblock topbuttonbar %}
 
