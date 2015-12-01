@@ -22,7 +22,8 @@ def default():
 @mod_murray.route( '/summary/<table_name>' )
 def summary( table_name = None ):
     organization_access_control = OrganizationAccessControl( 'mod_murray' )
-    table_rows = organization_access_control.get_summary_data( table_name )
+    results = organization_access_control.get_summary_data( table_name )
+    table_rows = organization_access_control.format_data(results)
     return page_template( 'summary', table_name = table_name, table_rows =
             table_rows )
 
