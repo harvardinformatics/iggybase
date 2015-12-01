@@ -92,8 +92,8 @@ class OrganizationAccessControl:
         if field_data is not None:
             module_model = import_module( 'iggybase.' + self.module + '.models' )
             table_object = getattr( module_model, table_name )
+            self.table_object = table_object
             self.tables.append( table_object )
-
             qry = db_session.query( table_object )
             columns = [ ]
             options = [ ]
@@ -138,6 +138,51 @@ class OrganizationAccessControl:
 
         return results
 
+<<<<<<< HEAD
+=======
+    def format_data(self, results ):
+        """Formats data for summary or detail
+        - transforms into dictionary
+        - removes model objects sqlalchemy puts in
+        - formats FK data and link
+        - formats name link which goes to detail template
+        """
+        table_rows = []
+        # format results as dictionary
+        if results:
+            keys = results[0].keys()
+            # filter out any objects
+            keys_to_skip = []
+            for fk in self.tables:
+                keys_to_skip.append(fk.__name__)
+            # create dictionary for each row and for fk data
+            for row in results:
+                row_dict = {}
+                for i, col in enumerate(row):
+                    if keys[i] not in keys_to_skip:
+                        if 'fk|' in keys[i]:
+                            if '|name' in keys[i]:
+                                fk_metadata = keys[i].split('|')
+                                if fk_metadata[2]:
+                                    table = fk_metadata[2]
+                                    row_dict[table] = {
+                                            'text': col,
+                                            # add link foreign key table summary
+                                            'link': '/' + fk_metadata[1] \
+                                                + '/detail/' + table + '/' \
+                                                + str(col)
+                                    }
+                        else: # add all other colums to table_rows
+                            row_dict[keys[i]] = {'text': col}
+                            # name column values will link to detail
+                            if keys[i] == 'name':
+                                row_dict[keys[i]]['link'] = '/' \
+                                    + self.module.replace('mod_', '') + '/detail/' \
+                                    + self.table_object.__name__ + '/' + str(col)
+                table_rows.append(row_dict)
+        return table_rows
+
+>>>>>>> 58d65df9c6a502eac173ddcce4ddd492529ad150
     def get_template_data( self, table_name, name ):
         query_data = { 'criteria': { 'name': name } }
         return self.get_summary_data( table_name, query_data )
