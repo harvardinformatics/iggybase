@@ -1,5 +1,6 @@
 cd /n/informatics/iggybase/
 
+git pull origin master
 
 git add -A
 git rm -r --cached iggybase_env/
@@ -8,4 +9,4 @@ git rm -r --cached config.py
 git rm -r --cached *.pyc
 
 git commit -m "$1"
-git merge origin master
+git push origin master
