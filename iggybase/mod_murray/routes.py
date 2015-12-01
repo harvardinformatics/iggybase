@@ -1,5 +1,6 @@
 from flask import g, request
 from flask.ext.login import login_required, current_user
+from flask.ext import excel
 from iggybase.templating import page_template
 from iggybase.mod_murray import mod_murray
 from iggybase.database import db_session
@@ -26,6 +27,15 @@ def summary( table_name = None ):
     table_rows = organization_access_control.format_data(results)
     return page_template( 'summary', table_name = table_name, table_rows =
             table_rows )
+
+@mod_murray.route( '/summary/<table_name>/download' )
+def summary_download( table_name = None ):
+    # TODO: consider reducing repeated code between summary and summary_download
+    organization_access_control = OrganizationAccessControl( 'mod_murray' )
+    results = organization_access_control.get_summary_data( table_name )
+    table_rows = organization_access_control.format_download_data(results)
+    csv = excel.make_response_from_array(table_rows, 'csv')
+    return csv
 
 @mod_murray.route( '/detail/<table_name>/<row_name>' )
 def detail( table_name = None, row_name= None ):

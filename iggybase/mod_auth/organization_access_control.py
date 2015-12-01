@@ -180,6 +180,41 @@ class OrganizationAccessControl:
                 table_rows.append(row_dict)
         return table_rows
 
+    def format_download_data(self, results ):
+        """
+        TODO: merge what is common in these functions
+
+        Formats data for download
+        - transforms into dictionary
+        - removes model objects sqlalchemy puts in
+        - formats FK data and link
+        - formats name link which goes to detail template
+        """
+        cells = []
+        # format results as dictionary
+        if results:
+            keys = results[0].keys()
+            # filter out any objects
+            keys_to_skip = []
+            for fk in self.tables:
+                keys_to_skip.append(fk.__name__)
+            # create dictionary for each row and for fk data
+            for row in results:
+                val_list = []
+                for i, col in enumerate(row):
+                    if keys[i] not in keys_to_skip:
+                        if 'fk|' in keys[i]:
+                            if '|name' in keys[i]:
+                                fk_metadata = keys[i].split('|')
+                                if fk_metadata[2]:
+                                    keys[i] = fk_metadata[2]
+                                    val_list.append(col)
+                        else: # add all other colums to table_rows
+                            val_list.append(col)
+                cells.append(val_list)
+            cells.insert(0, keys)
+        return cells
+
     def get_template_data( self, table_name, name ):
         query_data = { 'criteria': { 'name': name } }
         return self.get_summary_data( table_name, query_data )
