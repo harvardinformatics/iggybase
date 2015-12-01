@@ -40,7 +40,7 @@ class OrganizationAccessControl:
 
         return
 
-    def get_entry_data( self, table_name, name = None, query_data = None ):
+    def get_entry_data( self, table_name, name = None ):
         field_data = self.get_field_data( table_name )
 
         results = None
@@ -55,13 +55,31 @@ class OrganizationAccessControl:
                     columns.append( getattr( table_object, row.Field.field_name ).\
                                 label( row.FieldFacilityRole.display_name ) )
 
-            if name is None:
-                results = db_session.query( *columns ).\
-                    filter( getattr( table_object, 'organization_id' ).in_( self.org_ids ) ).all( )
-            else:
-                results = db_session.query( *columns ).\
-                    filter_by( name = name ).\
-                    filter( getattr( table_object, 'organization_id' ).in_( self.org_ids ) ).all( )
+            criteria = [ getattr( table_object, 'organization_id' ).in_( self.org_ids ) ]
+
+            if name is not None:
+                criteria.append( getattr( table_object, 'name' ) == name )
+
+            results = db_session.query( *columns ).\
+                filter( *criteria ).all( )
+
+        return results
+
+    def get_lookup_data( self, fk_table_id ):
+        fk_table_data = admin_db_session.query( models.TableObject ).filter_by( id = fk_table_id ).first( )
+        fk_table_name = TableFactory.to_camel_case( fk_table_data.name )
+        fk_field_data = self.foreign_key( fk_table_id )
+
+        results = [ ( -99, '' ) ]
+
+        if fk_field_data is not None:
+            fk_module_model = import_module( 'iggybase.' + fk_field_data[ 'module' ] + '.models' )
+            fk_table_object = getattr( fk_module_model, fk_table_name )
+
+            rows = db_session.query( getattr( fk_table_object, 'id' ), getattr( fk_table_object, 'name' ) ).all( )
+
+            for row in rows:
+                results.append( ( row.id, row.name ) )
 
         return results
 
@@ -70,7 +88,6 @@ class OrganizationAccessControl:
         field_data = self.get_field_data( table_name )
 
         results = None
-        fk_table_objects = [ ]
 
         if field_data is not None:
             module_model = import_module( 'iggybase.' + self.module + '.models' )
@@ -78,6 +95,8 @@ class OrganizationAccessControl:
             self.tables.append( table_object )
 
             qry = db_session.query( table_object )
+            columns = [ ]
+            options = [ ]
 
             for row in  field_data:
                 if row.FieldFacilityRole.visible == 1:
@@ -93,17 +112,17 @@ class OrganizationAccessControl:
                         fk_table_object = getattr( module_model, fk_table_name )
                         self.tables.append( fk_table_object )
 
-                        qry.options( joinedload( getattr( table_object,\
+                        options.append( joinedload( getattr( table_object,\
                                                           table_object.__tablename__ + '_' + fk_table_data.name ) ) )
 
-                        qry.add_columns( getattr( table_object, row.Field.field_name ).\
+                        columns.append( getattr( table_object, row.Field.field_name ).\
                                         label( 'fk|' + fk_table_name + '|id' ) )
 
-                        qry.add_columns( getattr( fk_table_object, foreign_key_data[ 'foreign_key' ] ).\
+                        columns.append( getattr( fk_table_object, foreign_key_data[ 'foreign_key' ] ).\
                                         label( 'fk|' + foreign_key_data[ 'url_prefix' ] + '|' + fk_table_name + '|' +\
                                                foreign_key_data[ 'foreign_key_alias' ] ) )
                     else:
-                        qry.add_columns( getattr( table_object, row.Field.field_name ).\
+                        columns.append( getattr( table_object, row.Field.field_name ).\
                                         label( row.FieldFacilityRole.display_name ) )
 
             criteria = [ getattr( table_object, 'organization_id' ).in_( self.org_ids ) ]
@@ -111,11 +130,15 @@ class OrganizationAccessControl:
                 for col, value in query_data[ 'criteria' ].items( ):
                     criteria.append( getattr( table_object, col ) == value )
 
-            results = qry.filter( *criteria ).all( )
+            if not options:
+                results = db_session.query( self.tables[ 0 ] ).add_columns( *columns ).filter( *criteria ).all( )
+            else:
+                results = db_session.query( self.tables[ 0 ] ).add_columns( *columns ).options( *options ).\
+                    filter( *criteria ).all( )
 
         return results
 
-    def format_data(self, results, table_object, fk_table_objects):
+    def format_data(self, results ):
         """Formats data for summary or detail
         - transforms into dictionary
         - removes model objects sqlalchemy puts in

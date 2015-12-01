@@ -53,15 +53,22 @@ class FormGenerator( ):
         else:
             if field_data.FieldFacilityRole.permission_id == 2:
                 if field_data.Field.foreign_key_table_object_id is not None:
-                    wtf_class = SelectField
+                    choices = self.organization_access_control.\
+                        get_lookup_data( field_data.Field.foreign_key_table_object_id )
 
-                    choices = self.populate_select( field_data.Field.foreign_key_table_object_id )
-                    if value is not None:
-                        wtf_field = wtf_class( field_data.FieldFacilityRole.display_name, validators, coerce = int, \
-                                               choices = [ ], default = value )
+                    if len( choices ) > 25:
+                        if value is not None:
+                            wtf_field = StringField( field_data.FieldFacilityRole.display_name, validators,\
+                                                     default = [ item[ 1 ] for item in choices if item[ 0 ] == value ] )
+                        else:
+                            wtf_field = StringField( field_data.FieldFacilityRole.display_name, validators )
                     else:
-                        wtf_field = wtf_class( field_data.FieldFacilityRole.display_name, validators, coerce = int, \
-                                               choices = [ ] )
+                        if value is not None:
+                            wtf_field = SelectField( field_data.FieldFacilityRole.display_name, validators, coerce = int, \
+                                                   choices = choices, default = value )
+                        else:
+                            wtf_field = SelectField( field_data.FieldFacilityRole.display_name, validators, coerce = int, \
+                                                   choices = choices )
                 else:
                     if field_data.Field.data_type_id == 1:
                         wtf_class = IntegerField
