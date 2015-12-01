@@ -1,85 +1,92 @@
 from flask.ext.wtf import Form
 from types import new_class
-from wtforms import StringField, IntegerField, PasswordField, BooleanField, SelectField, ValidationError, DateField,\
+from wtforms import StringField, IntegerField, PasswordField, BooleanField, SelectField, ValidationError, DateField, \
     HiddenField, FileField, TextAreaField
 from wtforms.validators import DataRequired, Length, email
 from iggybase.mod_auth.organization_access_control import OrganizationAccessControl
 from iggybase.mod_auth.facility_role_access_control import FacilityRoleAccessControl
 import logging
 
-class ReadonlyStringField( StringField ):
-    def __call__(self, *args, **kwargs):
-        kwargs.setdefault( 'readonly', True )
-        return super( ReadonlyStringField, self ).__call__( *args, **kwargs )
 
-class ReadonlyTextAreaField( TextAreaField ):
+class ReadonlyStringField(StringField):
     def __call__(self, *args, **kwargs):
-        kwargs.setdefault( 'readonly', True )
-        return super( ReadonlyTextAreaField, self ).__call__( *args, **kwargs )
+        kwargs.setdefault('readonly', True)
+        return super(ReadonlyStringField, self).__call__(*args, **kwargs)
 
-class ReadonlyIntegerField( IntegerField ):
+
+class ReadonlyTextAreaField(TextAreaField):
     def __call__(self, *args, **kwargs):
-        kwargs.setdefault( 'readonly', True )
-        return super( ReadonlyIntegerField, self ).__call__( *args, **kwargs )
+        kwargs.setdefault('readonly', True)
+        return super(ReadonlyTextAreaField, self).__call__(*args, **kwargs)
 
-class ReadonlyBooleanField( BooleanField ):
+
+class ReadonlyIntegerField(IntegerField):
     def __call__(self, *args, **kwargs):
-        kwargs.setdefault( 'readonly', True )
-        return super( ReadonlyBooleanField, self ).__call__( *args, **kwargs )
+        kwargs.setdefault('readonly', True)
+        return super(ReadonlyIntegerField, self).__call__(*args, **kwargs)
 
-class ReadonlyDateField( DateField ):
+
+class ReadonlyBooleanField(BooleanField):
     def __call__(self, *args, **kwargs):
-        kwargs.setdefault( 'readonly', True )
-        return super( ReadonlyDateField, self ).__call__( *args, **kwargs )
+        kwargs.setdefault('readonly', True)
+        return super(ReadonlyBooleanField, self).__call__(*args, **kwargs)
 
-class LookUpField( StringField ):
+
+class ReadonlyDateField(DateField):
     def __call__(self, *args, **kwargs):
-        kwargs.setdefault( 'readonly', True )
-        kwargs[ 'class' ] = 'form-control lookupfield'
-        return super( LookUpField, self ).__call__( *args, **kwargs )
+        kwargs.setdefault('readonly', True)
+        return super(ReadonlyDateField, self).__call__(*args, **kwargs)
 
-class FormGenerator( ):
-    def __init__( self, module, table_object ):
-        self.facility_role_access_control = FacilityRoleAccessControl( )
-        self.organization_access_control = OrganizationAccessControl( module )
+
+class LookUpField(StringField):
+    def __call__(self, *args, **kwargs):
+        kwargs.setdefault('readonly', True)
+        kwargs['class'] = 'form-control lookupfield'
+        return super(LookUpField, self).__call__(*args, **kwargs)
+
+
+class FormGenerator():
+    def __init__(self, module, table_object):
+        self.facility_role_access_control = FacilityRoleAccessControl()
+        self.organization_access_control = OrganizationAccessControl(module)
         self.table_object = table_object
         self.module = module
 
-    def input_field( self, field_data, value = None ):
-        validators = [ ]
+    def input_field(self, field_data, value=None):
+        validators = []
         if field_data.FieldFacilityRole.required == 1:
-            validators.append( DataRequired( ) )
+            validators.append(DataRequired())
 
         if field_data.Field.length is not None and field_data.Field.data_type_id == 2:
-            validators.append( Length( 0, field_data.Field.length ) )
+            validators.append(Length(0, field_data.Field.length))
 
         if "email" in field_data.Field.field_name:
-            validators.append( email( ) )
+            validators.append(email())
 
         if field_data.FieldFacilityRole.visible != 1:
             if value is not None:
-                wtf_field = HiddenField( field_data.FieldFacilityRole.display_name, default = value )
+                wtf_field = HiddenField(field_data.FieldFacilityRole.display_name, default=value)
             else:
-                wtf_field = HiddenField( field_data.FieldFacilityRole.display_name )
+                wtf_field = HiddenField(field_data.FieldFacilityRole.display_name)
         else:
             if field_data.FieldFacilityRole.permission_id == 2:
                 if field_data.Field.foreign_key_table_object_id is not None:
-                    choices = self.organization_access_control.\
-                        get_lookup_data( field_data.Field.foreign_key_table_object_id )
+                    choices = self.organization_access_control. \
+                        get_lookup_data(field_data.Field.foreign_key_table_object_id)
 
-                    #if len( choices ) > 25:
-                    if value is not None:
-                        wtf_field = LookUpField( field_data.FieldFacilityRole.display_name, validators,\
-                                                 default = [ item[ 1 ] for item in choices if item[ 0 ] == value ] )
+                    if len(choices) > 25:
+                        if value is not None:
+                            wtf_field = LookUpField(field_data.FieldFacilityRole.display_name, validators, \
+                                                    default=[item[1] for item in choices if item[0] == value][0])
+                        else:
+                            wtf_field = LookUpField(field_data.FieldFacilityRole.display_name, validators)
                     else:
-                        wtf_field = LookUpField( field_data.FieldFacilityRole.display_name, validators )
-                    #else:
-                        #if value is not None:
-                            #wtf_field = SelectField( field_data.FieldFacilityRole.display_name, validators, coerce = int, \
-                            #                       choices = choices, default = value )
-                        #else:
-                            #wtf_field = SelectField( field_data.FieldFacilityRole.display_name, validators, coerce = int, \
-                            #                       choices = choices )
+                        if value is not None:
+                            wtf_field = SelectField(field_data.FieldFacilityRole.display_name, validators, coerce=int, \
+                                                    choices=choices, default=value)
+                        else:
+                            wtf_field = SelectField(field_data.FieldFacilityRole.display_name, validators, coerce=int, \
+                                                    choices=choices)
                 else:
                     if field_data.Field.data_type_id == 1:
                         wtf_class = IntegerField
@@ -97,15 +104,15 @@ class FormGenerator( ):
                         wtf_class = StringField
 
                     if value is not None:
-                        wtf_field = wtf_class( field_data.FieldFacilityRole.display_name, validators, default = value )
+                        wtf_field = wtf_class(field_data.FieldFacilityRole.display_name, validators, default=value)
                     else:
-                        wtf_field = wtf_class( field_data.FieldFacilityRole.display_name, validators )
+                        wtf_field = wtf_class(field_data.FieldFacilityRole.display_name, validators)
             else:
                 if field_data.Field.foreign_key_table_object_id is not None:
                     if value is not None:
-                        choices = self.organization_access_control.\
-                            get_lookup_data( field_data.Field.foreign_key_table_object_id )
-                        value = [ item[ 1 ] for item in choices if item[ 0 ] == value ]
+                        choices = self.organization_access_control. \
+                            get_lookup_data(field_data.Field.foreign_key_table_object_id)
+                        value = [item[1] for item in choices if item[0] == value]
 
                     wtf_class = ReadonlyStringField
                 elif field_data.Field.data_type_id == 1:
@@ -120,45 +127,45 @@ class FormGenerator( ):
                     wtf_class = ReadonlyStringField
 
                 if value is not None:
-                    wtf_field = wtf_class( field_data.FieldFacilityRole.display_name, validators, default = value )
+                    wtf_field = wtf_class(field_data.FieldFacilityRole.display_name, validators, default=value)
                 else:
-                    wtf_field = wtf_class( field_data.FieldFacilityRole.display_name, validators )
+                    wtf_field = wtf_class(field_data.FieldFacilityRole.display_name, validators)
 
         return wtf_field
 
-    def default_single_entry_form( self, row_name = 'new' ):
+    def default_single_entry_form(self, row_name='new'):
         if row_name != 'new':
-            data = self.organization_access_control.get_entry_data( self.table_object, row_name )
+            data = self.organization_access_control.get_entry_data(self.table_object, row_name)
             if data:
-                data = data[ 0 ]
+                data = data[0]
 
-        table_data = self.facility_role_access_control.has_access( 'TableObject', self.table_object )
+        table_data = self.facility_role_access_control.has_access('TableObject', self.table_object)
 
-        fields = self.facility_role_access_control.fields( table_data.id, self.module )
+        fields = self.facility_role_access_control.fields(table_data.id, self.module)
 
-        table_field = HiddenField( 'table_object_01', default = self.table_object )
-        row_field = HiddenField( 'row_name_01', default = row_name )
-        entry_field = HiddenField( 'entry_01', default = 'single' )
+        table_field = HiddenField('table_object_01', default=self.table_object)
+        row_field = HiddenField('row_name_01', default=row_name)
+        entry_field = HiddenField('entry_01', default='single')
 
-        classattr = { 'table_object': table_field, 'row_name': row_field, 'entry': entry_field }
+        classattr = {'table_object': table_field, 'row_name': row_field, 'entry': entry_field}
 
         for field in fields:
             value = None
             if row_name != 'new' and data is not None:
-                if field.FieldFacilityRole.display_name in data.keys( ):
-                    value = data[ data.keys( ).index( field.FieldFacilityRole.display_name ) ]
+                if field.FieldFacilityRole.display_name in data.keys():
+                    value = data[data.keys().index(field.FieldFacilityRole.display_name)]
 
-            classattr[ field.Field.field_name ] = self.input_field( field, value )
+            classattr[field.Field.field_name] = self.input_field(field, value)
 
-        newclass = new_class( 'DynamicForm', ( Form, ), { }, lambda ns: ns.update( classattr ) )
+        newclass = new_class('DynamicForm', (Form,), {}, lambda ns: ns.update(classattr))
 
-        return newclass( )
+        return newclass()
 
-    def default_multiple_entry_form( self, row_names = None ):
+    def default_multiple_entry_form(self, row_names=None):
         pass
 
-    def default_parent_child_entry_form( self, parent_row_name = None ):
+    def default_parent_child_entry_form(self, parent_row_name=None):
         pass
 
-    def populate_select ( self, table_object_id ):
-        return [ ]
+    def populate_select(self, table_object_id):
+        return []
