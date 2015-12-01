@@ -16,7 +16,6 @@ class OrganizationAccessControl:
         self.org_ids = [ ]
         self.tables = [ ]
         self.module = module
-        self.module_url = module.replace('mod_', '')
 
         if g.user is not None and not g.user.is_anonymous:
             self.user = load_user( g.user.id )
@@ -94,20 +93,8 @@ class OrganizationAccessControl:
                         fk_table_object = getattr( module_model, fk_table_name )
                         self.tables.append( fk_table_object )
 
-<<<<<<< HEAD
                         qry.options( joinedload( getattr( table_object,\
                                                           table_object.__tablename__ + '_' + fk_table_data.name ) ) )
-=======
-                        fk_table_objects.append( fk_table_object )
-                        fk_joins.append( fk_table_object )
-
-                        # add joins to a list to specify them incase more than
-                        # one join is possible between tables
-                        fk_name = row.Field.field_name
-                        fk_col = getattr(fk_table_object, 'id')
-                        tb_col = getattr(table_object, fk_name)
-                        fk_joins.append(tb_col == fk_col)
->>>>>>> 4e21bb86bdbceb37bb463bf26102e56a120cf384
 
                         qry.add_columns( getattr( table_object, row.Field.field_name ).\
                                         label( 'fk|' + fk_table_name + '|id' ) )
@@ -118,7 +105,6 @@ class OrganizationAccessControl:
                     else:
                         qry.add_columns( getattr( table_object, row.Field.field_name ).\
                                         label( row.FieldFacilityRole.display_name ) )
-<<<<<<< HEAD
 
             criteria = [ getattr( table_object, 'organization_id' ).in_( self.org_ids ) ]
             if 'criteria' in query_data:
@@ -126,19 +112,6 @@ class OrganizationAccessControl:
                     criteria.append( getattr( table_object, col ) == value )
 
             results = qry.filter( *criteria ).all( )
-=======
-                criteria = [ getattr( table_object, 'organization_id' ).in_( self.org_ids ) ]
-                if 'criteria' in query_data:
-                    for col, value in query_data[ 'criteria' ].items( ):
-                        criteria.append( getattr( table_object, col ) == value )
-
-            if not columns:
-                results = db_session.query( table_object ).add_columns( *columns ).filter( *criteria ).all( )
-            else:
-                # TODO: find out if this works for more than one FK table
-                results = db_session.query( table_object, *fk_table_objects ).outerjoin(*fk_joins ).\
-                    filter( *criteria ).add_columns( *columns ).all( )
->>>>>>> 4e21bb86bdbceb37bb463bf26102e56a120cf384
 
         return results
 
