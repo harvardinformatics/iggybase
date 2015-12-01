@@ -113,7 +113,7 @@ class OrganizationAccessControl:
                         self.tables.append( fk_table_object )
 
                         options.append( joinedload( getattr( table_object,\
-                                                          table_object.__tablename__ + '_' + fk_table_data.name ) ) )
+                                                             table_object.__tablename__ + '_' + fk_table_data.name ) ) )
 
                         columns.append( getattr( table_object, row.Field.field_name ).\
                                         label( 'fk|' + fk_table_name + '|id' ) )

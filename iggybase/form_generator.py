@@ -27,6 +27,17 @@ class ReadonlyBooleanField( BooleanField ):
         kwargs.setdefault( 'readonly', True )
         return super( ReadonlyBooleanField, self ).__call__( *args, **kwargs )
 
+class ReadonlyDateField( DateField ):
+    def __call__(self, *args, **kwargs):
+        kwargs.setdefault( 'readonly', True )
+        return super( ReadonlyDateField, self ).__call__( *args, **kwargs )
+
+class LookUpField( StringField ):
+    def __call__(self, *args, **kwargs):
+        kwargs.setdefault( 'readonly', True )
+        kwargs[ 'class' ] = 'form-control lookupfield'
+        return super( LookUpField, self ).__call__( *args, **kwargs )
+
 class FormGenerator( ):
     def __init__( self, module, table_object ):
         self.facility_role_access_control = FacilityRoleAccessControl( )
@@ -56,19 +67,19 @@ class FormGenerator( ):
                     choices = self.organization_access_control.\
                         get_lookup_data( field_data.Field.foreign_key_table_object_id )
 
-                    if len( choices ) > 25:
-                        if value is not None:
-                            wtf_field = StringField( field_data.FieldFacilityRole.display_name, validators,\
-                                                     default = [ item[ 1 ] for item in choices if item[ 0 ] == value ] )
-                        else:
-                            wtf_field = StringField( field_data.FieldFacilityRole.display_name, validators )
+                    #if len( choices ) > 25:
+                    if value is not None:
+                        wtf_field = LookUpField( field_data.FieldFacilityRole.display_name, validators,\
+                                                 default = [ item[ 1 ] for item in choices if item[ 0 ] == value ] )
                     else:
-                        if value is not None:
-                            wtf_field = SelectField( field_data.FieldFacilityRole.display_name, validators, coerce = int, \
-                                                   choices = choices, default = value )
-                        else:
-                            wtf_field = SelectField( field_data.FieldFacilityRole.display_name, validators, coerce = int, \
-                                                   choices = choices )
+                        wtf_field = LookUpField( field_data.FieldFacilityRole.display_name, validators )
+                    #else:
+                        #if value is not None:
+                            #wtf_field = SelectField( field_data.FieldFacilityRole.display_name, validators, coerce = int, \
+                            #                       choices = choices, default = value )
+                        #else:
+                            #wtf_field = SelectField( field_data.FieldFacilityRole.display_name, validators, coerce = int, \
+                            #                       choices = choices )
                 else:
                     if field_data.Field.data_type_id == 1:
                         wtf_class = IntegerField
@@ -91,11 +102,18 @@ class FormGenerator( ):
                         wtf_field = wtf_class( field_data.FieldFacilityRole.display_name, validators )
             else:
                 if field_data.Field.foreign_key_table_object_id is not None:
+                    if value is not None:
+                        choices = self.organization_access_control.\
+                            get_lookup_data( field_data.Field.foreign_key_table_object_id )
+                        value = [ item[ 1 ] for item in choices if item[ 0 ] == value ]
+
                     wtf_class = ReadonlyStringField
                 elif field_data.Field.data_type_id == 1:
                     wtf_class = ReadonlyIntegerField
                 elif field_data.Field.data_type_id == 3:
                     wtf_class = ReadonlyBooleanField
+                elif field_data.Field.data_type_id == 4:
+                    wtf_class = ReadonlyDateField
                 elif field_data.Field.data_type_id == 7:
                     wtf_class = ReadonlyTextAreaField
                 else:
