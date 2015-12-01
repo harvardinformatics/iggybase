@@ -6,6 +6,7 @@ from importlib import import_module
 from iggybase.database import admin_db_session
 from iggybase.mod_admin import models
 from iggybase.tablefactory import TableFactory
+from sqlalchemy.orm import joinedload
 import logging
 
 # Controls access to the data db data based on organization
@@ -13,6 +14,7 @@ import logging
 class OrganizationAccessControl:
     def __init__ ( self, module ):
         self.org_ids = [ ]
+        self.tables = [ ]
         self.module = module
 
         if g.user is not None and not g.user.is_anonymous:
@@ -64,17 +66,19 @@ class OrganizationAccessControl:
         return results
 
     def get_summary_data( self, table_name, query_data = { } ):
+        self.tables = [ ]
         field_data = self.get_field_data( table_name )
 
         results = None
         fk_table_objects = [ ]
-        fk_joins = [ ]
 
         if field_data is not None:
             module_model = import_module( 'iggybase.' + self.module + '.models' )
             table_object = getattr( module_model, table_name )
+            self.tables.append( table_object )
 
-            columns = [ ]
+            qry = db_session.query( table_object )
+
             for row in  field_data:
                 if row.FieldFacilityRole.visible == 1:
                     if row.Field.foreign_key_table_object_id is not None:
@@ -87,40 +91,29 @@ class OrganizationAccessControl:
 
                         module_model = import_module( 'iggybase.' + foreign_key_data[ 'module' ] + '.models' )
                         fk_table_object = getattr( module_model, fk_table_name )
+                        self.tables.append( fk_table_object )
 
-                        fk_table_objects.append( fk_table_object )
-                        fk_joins.append( fk_table_object )
+                        qry.options( joinedload( getattr( table_object,\
+                                                          table_object.__tablename__ + '_' + fk_table_data.name ) ) )
 
-                        # add joins to a list to specify them incase more than
-                        # one join is possible between tables
-                        fk_name = row.Field.field_name
-                        fk_col = getattr(fk_table_object, fk_name)
-                        tb_col = getattr(table_object, fk_name)
-                        fk_joins.append(tb_col == fk_col)
-
-                        columns.append( getattr( table_object, row.Field.field_name ).\
+                        qry.add_columns( getattr( table_object, row.Field.field_name ).\
                                         label( 'fk|' + fk_table_name + '|id' ) )
 
-                        columns.append( getattr( fk_table_object, foreign_key_data[ 'foreign_key' ] ).\
+                        qry.add_columns( getattr( fk_table_object, foreign_key_data[ 'foreign_key' ] ).\
                                         label( 'fk|' + foreign_key_data[ 'url_prefix' ] + '|' + fk_table_name + '|' +\
                                                foreign_key_data[ 'foreign_key_alias' ] ) )
                     else:
-                        columns.append( getattr( table_object, row.Field.field_name ).\
+                        qry.add_columns( getattr( table_object, row.Field.field_name ).\
                                         label( row.FieldFacilityRole.display_name ) )
 
-                criteria = [ getattr( table_object, 'organization_id' ).in_( self.org_ids ) ]
-                if 'criteria' in query_data:
-                    for col, value in query_data[ 'criteria' ].items( ):
-                        criteria.append( getattr( table_object, col ) == value )
+            criteria = [ getattr( table_object, 'organization_id' ).in_( self.org_ids ) ]
+            if 'criteria' in query_data:
+                for col, value in query_data[ 'criteria' ].items( ):
+                    criteria.append( getattr( table_object, col ) == value )
 
-            if not columns:
-                results = db_session.query( table_object ).add_columns( *columns ).filter( *criteria ).all( )
-            else:
-                # TODO: find out if this works for more than one FK table
-                results = db_session.query( table_object, *fk_table_objects ).outerjoin( *fk_joins ).\
-                    filter( *criteria ).add_columns( *columns ).all( )
+            results = qry.filter( *criteria ).all( )
 
-        return self.format_data(results, table_object, fk_table_objects)
+        return results
 
     def format_data(self, results, table_object, fk_table_objects):
         """Formats data for summary or detail
