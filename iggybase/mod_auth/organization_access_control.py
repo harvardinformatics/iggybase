@@ -286,3 +286,27 @@ class OrganizationAccessControl:
 
         session.add(new_instance)
         session.commit()
+        
+def get_additional_tables( self, table_name, page_form = 'detail'):
+        """Get additional tables that need to be displayed on the page
+        """
+        to_page = aliased(models.TableObject)
+        to_additional = aliased(models.TableObject)
+        # fetch the names of tables we need to display for this page and obejct
+        # TODO: include joins to tables with table_query_id, like fields, order
+        table_queries = admin_db_session.query(models.TableQuery.id, to_additional.name).\
+                join(models.TableQueryTableObject).\
+                join(to_page, to_page.id ==
+                        models.TableQueryTableObject.table_object_id).\
+                join(to_additional, to_additional.id ==
+                        models.TableQuery.table_object_id).\
+                join(models.TableQueryPageForm).\
+                join(models.PageForm).\
+                filter(models.PageForm.name == page_form, to_page.name == table_name.lower()).all()
+        # get the summary data for these tables
+        additional_tables = []
+        for row in table_queries:
+            results = self.get_summary_data(TableFactory.to_camel_case(row.name))
+            additional_tables.append(results)
+
+        return additional_tables
