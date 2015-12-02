@@ -4,7 +4,6 @@ from iggybase.mod_auth.facility_access_control import FacilityAccessControl
 from iggybase.mod_auth.organization_access_control import OrganizationAccessControl
 import os
 import logging
-import json
 
 def page_template( page_form_name, **context ):
     access_ctrl = FacilityRoleAccessControl( )
@@ -45,44 +44,31 @@ def page_template( page_form_name, **context ):
         buttons = access_ctrl.page_form_buttons( page_form.id )
 
         context[ 'top_buttons' ] = page_buttons(
-                buttons[ 'top' ],
-                context.get('button_context')
+                buttons[ 'top' ]
         )
         context[ 'bottom_buttons' ] = page_buttons(
-                buttons[ 'bottom' ],
-                context.get('button_context')
+                buttons[ 'bottom' ]
         )
 
         scripts = access_ctrl.page_form_javascript( page_form.id )
-
         context[ 'scripts' ] = page_scripts( scripts )
 
-        """
-        Commented out until menus are in db-internal
 
-        menus = access_ctrl.page_form_menus( page_form.id )
-        menu_items = access_ctrl.page_form_menu_items( page_form.id )
-
-        context[ 'menus' ] = page_menus( menus, menu_items )
-        """
+        ## Menus
+        navbar, sidebar, facility_role = access_ctrl.page_form_menus( page_form.id )
+        context.update({'navbar': navbar, 'sidebar': sidebar,
+                        'facility_role': facility_role})
 
     # logging.info( context )
 
     return render_template( page_form.page_template, **context )
 
-def page_buttons( buttons, context = None ):
+def page_buttons( buttons ):
     btns = [ ]
     for button in buttons:
         btn_str = ' value="' + button.button_value + '" id="' + button.button_id + \
             '" name="' + button.button_id + '" type="' + button.button_type + \
             '" class="' + button.button_class  + '"'
-        # add any button_context
-        try:
-            json_context = json.dumps(context)
-        except(ValueError, e):
-            logging.warning('json encode of button context failed' + e)
-        if json_context:
-            btn_str += " data-context='" + json_context + "'"
 
         if button.special_props is not None:
             btn_str += button.special_props

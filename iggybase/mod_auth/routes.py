@@ -172,19 +172,17 @@ def auth_data_entry( table_object = None, row_name = None ):
 @mod_auth.route( '/summary/<table_name>' )
 def summary( table_name = None ):
     organization_access_control = OrganizationAccessControl( 'mod_auth' )
-    res = organization_access_control.get_summary_data( table_name )
-    # move this code to a function somewhere ... templating.py?
-    # format the data to include necessary links
-    keys = res[0].keys()
-    table_rows = []
-    for row in res:
-        row_dict = {}
-        for i, col in enumerate(row):
-            row_dict[keys[i]] = {'text': col}
-            # link the name field to the detail template
-            if keys[i] == 'name':
-                row_dict[keys[i]]['link'] =  'link'
-        table_rows.append(row_dict)
+    results = organization_access_control.get_summary_data( table_name )
+    table_rows = organization_access_control.format_data(results)
     return page_template( 'summary', table_name = table_name, table_rows =
             table_rows )
 
+@mod_auth.route( '/detail/<table_name>/<row_name>' )
+def detail( table_name = None, row_name= None ):
+    organization_access_control = OrganizationAccessControl( 'mod_auth' )
+    results = organization_access_control.get_summary_data( table_name, row_name )
+    table_rows = organization_access_control.format_data(results)
+    # pass some context for the button to create urls
+    mod = request.path.split('/')[1]
+    button_context = {'mod': mod, 'table': table_name, 'row_name': row_name}
+    return page_template( 'detail', table_name = table_name, row_name = row_name, table_rows = table_rows, button_context=button_context)

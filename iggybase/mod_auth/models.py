@@ -68,7 +68,7 @@ class UserRole( Base ):
     director = Column( Boolean )
     manager = Column( Boolean )
 
-    user_type_user = relationship( "User", foreign_keys = [ user_id ] )
+    user_role_user = relationship( "User", foreign_keys = [ user_id ] )
     user_role_organization = relationship( "Organization", foreign_keys = [ organization_id ] )
 
 class Organization( Base ):

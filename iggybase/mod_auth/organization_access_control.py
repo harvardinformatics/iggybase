@@ -6,6 +6,7 @@ from importlib import import_module
 from iggybase.database import admin_db_session
 from iggybase.mod_admin import models
 from iggybase.tablefactory import TableFactory
+from sqlalchemy.orm import joinedload
 import logging
 
 # Controls access to the data db data based on organization
@@ -13,6 +14,7 @@ import logging
 class OrganizationAccessControl:
     def __init__ ( self, module ):
         self.org_ids = [ ]
+        self.tables = [ ]
         self.module = module
 
         if g.user is not None and not g.user.is_anonymous:
@@ -38,7 +40,7 @@ class OrganizationAccessControl:
 
         return
 
-    def get_entry_data( self, table_name, name = None, query_data = None ):
+    def get_entry_data( self, table_name, name = None ):
         field_data = self.get_field_data( table_name )
 
         results = None
@@ -53,31 +55,49 @@ class OrganizationAccessControl:
                     columns.append( getattr( table_object, row.Field.field_name ).\
                                 label( row.FieldFacilityRole.display_name ) )
 
-            if name is None:
-                results = db_session.query( *columns ).\
-                    filter( getattr( table_object, 'organization_id' ).in_( self.org_ids ) ).all( )
-            else:
-                results = db_session.query( *columns ).\
-                    filter_by( name = name ).\
-                    filter( getattr( table_object, 'organization_id' ).in_( self.org_ids ) ).all( )
+            criteria = [ getattr( table_object, 'organization_id' ).in_( self.org_ids ) ]
+
+            if name is not None:
+                criteria.append( getattr( table_object, 'name' ) == name )
+
+            results = db_session.query( *columns ).\
+                filter( *criteria ).all( )
 
         return results
 
+    def get_lookup_data( self, fk_table_id ):
+        fk_table_data = admin_db_session.query( models.TableObject ).filter_by( id = fk_table_id ).first( )
+        fk_table_name = TableFactory.to_camel_case( fk_table_data.name )
+        fk_field_data = self.foreign_key( fk_table_id )
 
-    # TODO: consider renaming this function to get_data and deleteing the other
-    # because I have added filtering to use this function for detail view also
-    def get_summary_data( self, table_name, query_data = None ):
+        results = [ ( -99, '' ) ]
 
+        if fk_field_data is not None:
+            fk_module_model = import_module( 'iggybase.' + fk_field_data[ 'module' ] + '.models' )
+            fk_table_object = getattr( fk_module_model, fk_table_name )
+
+            rows = db_session.query( getattr( fk_table_object, 'id' ), getattr( fk_table_object, 'name' ) ).all( )
+
+            for row in rows:
+                results.append( ( row.id, row.name ) )
+
+        return results
+
+    def get_summary_data( self, table_name, query_data = { } ):
+        self.tables = [ ]
         field_data = self.get_field_data( table_name )
 
         results = None
-        fk_table_objects = [ ]
 
         if field_data is not None:
             module_model = import_module( 'iggybase.' + self.module + '.models' )
             table_object = getattr( module_model, table_name )
-
+            self.table_object = table_object
+            self.tables.append( table_object )
+            qry = db_session.query( table_object )
             columns = [ ]
+            options = [ ]
+
             for row in  field_data:
                 if row.FieldFacilityRole.visible == 1:
                     if row.Field.foreign_key_table_object_id is not None:
@@ -90,8 +110,10 @@ class OrganizationAccessControl:
 
                         module_model = import_module( 'iggybase.' + foreign_key_data[ 'module' ] + '.models' )
                         fk_table_object = getattr( module_model, fk_table_name )
+                        self.tables.append( fk_table_object )
 
-                        fk_table_objects.append( fk_table_object )
+                        options.append( joinedload( getattr( table_object,\
+                                                             table_object.__tablename__ + '_' + fk_table_data.name ) ) )
 
                         columns.append( getattr( table_object, row.Field.field_name ).\
                                         label( 'fk|' + fk_table_name + '|id' ) )
@@ -103,29 +125,99 @@ class OrganizationAccessControl:
                         columns.append( getattr( table_object, row.Field.field_name ).\
                                         label( row.FieldFacilityRole.display_name ) )
 
-                criteria = [ getattr( table_object, 'organization_id' ).in_( self.org_ids ) ]
-                if 'criteria' in query_data:
-                    for col, value in query_data[ 'criteria' ].items( ):
-                        criteria.append( getattr( table_object, col ) == value )
+            criteria = [ getattr( table_object, 'organization_id' ).in_( self.org_ids ) ]
+            if 'criteria' in query_data:
+                for col, value in query_data[ 'criteria' ].items( ):
+                    criteria.append( getattr( table_object, col ) == value )
 
-            if not columns:
-                results = db_session.query( table_object ).add_columns( *columns ).filter( *criteria ).all( )
+            if not options:
+                results = db_session.query( self.tables[ 0 ] ).add_columns( *columns ).filter( *criteria ).all( )
             else:
-
-                if query_data: # add a filter
-                    results = db_session.query( table_object, *fk_table_objects ).outerjoin( *fk_table_objects ).\
-                        add_columns( *columns ).filter(table_object.name==query_data).all( )
-                else:
-                    results = db_session.query( table_object, *fk_table_objects ).outerjoin( *fk_table_objects ).\
-                        add_columns( *columns ).all( )
+                results = db_session.query( self.tables[ 0 ] ).add_columns( *columns ).options( *options ).\
+                    filter( *criteria ).all( )
 
         return results
 
-    def get_row( self, table_name, row_name ):
-        table_data = self.facility_role_access_control.has_access( 'TableObject', table_name )
-        if table_data is not None:
-            pass
-        return None
+    def format_data(self, results ):
+        """Formats data for summary or detail
+        - transforms into dictionary
+        - removes model objects sqlalchemy puts in
+        - formats FK data and link
+        - formats name link which goes to detail template
+        """
+        table_rows = []
+        # format results as dictionary
+        if results:
+            keys = results[0].keys()
+            # filter out any objects
+            keys_to_skip = []
+            for fk in self.tables:
+                keys_to_skip.append(fk.__name__)
+            # create dictionary for each row and for fk data
+            for row in results:
+                row_dict = {}
+                for i, col in enumerate(row):
+                    if keys[i] not in keys_to_skip:
+                        if 'fk|' in keys[i]:
+                            if '|name' in keys[i]:
+                                fk_metadata = keys[i].split('|')
+                                if fk_metadata[2]:
+                                    table = fk_metadata[2]
+                                    row_dict[table] = {
+                                            'text': col,
+                                            # add link foreign key table summary
+                                            'link': '/' + fk_metadata[1] \
+                                                + '/detail/' + table + '/' \
+                                                + str(col)
+                                    }
+                        else: # add all other colums to table_rows
+                            row_dict[keys[i]] = {'text': col}
+                            # name column values will link to detail
+                            if keys[i] == 'name':
+                                row_dict[keys[i]]['link'] = '/' \
+                                    + self.module.replace('mod_', '') + '/detail/' \
+                                    + self.table_object.__name__ + '/' + str(col)
+                table_rows.append(row_dict)
+        return table_rows
+
+    def format_download_data(self, results ):
+        """
+        TODO: merge what is common in these functions
+
+        Formats data for download
+        - transforms into dictionary
+        - removes model objects sqlalchemy puts in
+        - formats FK data and link
+        - formats name link which goes to detail template
+        """
+        cells = []
+        # format results as dictionary
+        if results:
+            keys = results[0].keys()
+            # filter out any objects
+            keys_to_skip = []
+            for fk in self.tables:
+                keys_to_skip.append(fk.__name__)
+            # create dictionary for each row and for fk data
+            for row in results:
+                val_list = []
+                for i, col in enumerate(row):
+                    if keys[i] not in keys_to_skip:
+                        if 'fk|' in keys[i]:
+                            if '|name' in keys[i]:
+                                fk_metadata = keys[i].split('|')
+                                if fk_metadata[2]:
+                                    keys[i] = fk_metadata[2]
+                                    val_list.append(col)
+                        else: # add all other colums to table_rows
+                            val_list.append(col)
+                cells.append(val_list)
+            cells.insert(0, keys)
+        return cells
+
+    def get_template_data( self, table_name, name ):
+        query_data = { 'criteria': { 'name': name } }
+        return self.get_summary_data( table_name, query_data )
 
     def foreign_key( self, table_object_id ):
         res = admin_db_session.query( models.Field, models.FieldFacilityRole, models.Module ).\

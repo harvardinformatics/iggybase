@@ -43,8 +43,9 @@ class FacilityRole( StaticBase ):
     facility_role_unq = UniqueConstraint( 'facility_id', 'role_id' )
 
     def __repr__(self):
-        return "<FacilityRolee=%s, description=%s, id=%d, role=%s)" % \
-            (self.name, self.description, self.id, self.facility_role_role.name)
+        return "<FacilityRole=%s, description=%s, id=%d, role=%s, facility=%s)" % \
+            (self.name, self.description, self.id,
+             self.facility_role_role.name, self.facility_role_facility.name)
     
 
 class Menu( StaticBase ):
@@ -63,7 +64,8 @@ class Menu( StaticBase ):
     parent = relationship('Menu', remote_side=[id])
     children = relationship('Menu')
     menu_type = relationship( "MenuType", foreign_keys = [ menu_type_id ] )
-
+    facility_role = relationship('MenuFacilityRole', backref='menu')
+    
     def __repr__(self):
         return "<Menu(name=%s, description=%s, id=%d)" % \
             (self.name, self.description, self.id)
@@ -87,6 +89,8 @@ class MenuFacilityRole( StaticBase ):
         "FacilityRole", foreign_keys = [ facility_role_id ] )
     menu_facility_role_menu = relationship( "Menu", foreign_keys = [ menu_id ] )
     menu_facility_role_unq = UniqueConstraint( 'facility_role_id', 'menu_id' )
+
+
 
 class MenuType( StaticBase ):
     __tablename__ = 'menu_type'
@@ -362,9 +366,22 @@ class TableQuery( StaticBase ):
     date_created = Column( DateTime, default = datetime.datetime.utcnow )
     last_modified = Column( DateTime, default = datetime.datetime.utcnow )
     active = Column( Boolean )
+    organization_id = Column( Integer )
+    order = Column( Integer )
 
-class TableQueryType( StaticBase ):
-    __tablename__ = 'table_query_type'
+class TableQueryPageForm( StaticBase ):
+    __tablename__ = 'table_query_page_form'
+    id = Column( Integer, primary_key = True )
+    name = Column( String( 100 ), unique = True )
+    description = Column( String( 255 ) )
+    date_created = Column( DateTime, default = datetime.datetime.utcnow )
+    last_modified = Column( DateTime, default = datetime.datetime.utcnow )
+    active = Column( Boolean )
+    organization_id = Column( Integer )
+    order = Column( Integer )
+
+class TableQueryTableObject( StaticBase ):
+    __tablename__ = 'table_query_table_object'
     id = Column( Integer, primary_key = True )
     name = Column( String( 100 ), unique = True )
     description = Column( String( 255 ) )
@@ -380,7 +397,7 @@ class TableQueryType( StaticBase ):
     table_query_type_table_query = relationship( "TableQuery", foreign_keys = [ table_query_id ] )
 
 class TableQueryField( StaticBase ):
-    __tablename__ = 'table_query_ufield'
+    __tablename__ = 'table_query_field'
     id = Column( Integer, primary_key = True )
     name = Column( String( 100 ), unique = True )
     description = Column( String( 255 ) )
