@@ -1,5 +1,7 @@
 cd /n/informatics/iggybase/
 
+git merge master
+
 git pull origin master
 
 git add -A

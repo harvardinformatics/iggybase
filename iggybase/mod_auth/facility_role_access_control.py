@@ -1,6 +1,7 @@
 from flask import g
 from iggybase.database import admin_db_session
 from iggybase.mod_admin import models
+from iggybase.mod_admin import constants as admin_consts
 from iggybase.mod_auth.models import load_user
 from config import get_config
 import logging
@@ -57,37 +58,23 @@ class FacilityRoleAccessControl:
         else:
             return res
 
-    def page_form_menus( self, active = 1 ):
-        menus = [ ]
+        
+    def page_form_menus( self, page_form_id, active = True ):
+        """Setup NavBar and Side bar menus for templating context.
+        Starts with the root navbar and sidebar records. 
+        Menus are recursive.
+        """
+        navbar_root = admin_db_session.query(models.Menu). \
+                      filter_by(name=admin_consts.MENU_NAVBAR_ROOT).first()
+        navbar_menus = get_child_menus(navbar_root.id, self.facility_role.id, active)
+        
+        sidebar_root = admin_db_session.query(models.Menu). \
+                       filter_by(name=admin_consts.MENU_SIDEBAR_ROOT).first()
+        sidebar_menus = get_child_menus(sidebar_root.id, self.facility_role.id, active)
+                                 
+        return navbar_menus, sidebar_menus, self.facility_role
 
-        res = admin_db_session.query( models.MenuFacilityRole ). \
-              filter_by( facility_role_id = self.facility_role.id ).\
-              filter_by( active = active ). \
-              order_by( models.MenuFacilityRole. order, models.MenuFacilityRole.id ).all( )
-        for row in res:
-            menu = admin_db_session.query( models.Menu ). \
-                   filter_by( id = row.menu_id ).\
-                   filter_by( active = active ).first( )
-            if menu is not None:
-                menus.append( menu )
-                break
 
-        return menus
-
-    def page_form_menu_items( self, menu_id, active = 1 ):
-        menu_items = [ ]
-
-        res = admin_db_session.query( models.MenuItemFacilityRole ).\
-            filter_by( facility_role_id = self.facility_role.id ).filter_by( active = active ).\
-            order_by( models.MenuItemFacilityRole.order, models.MenuItemFacilityRole.id ).all( )
-        for row in res:
-            menuitem = admin_db_session.query( models.MenuItem ).filter_by( id = row.menu_item_id ). \
-                filter_by( menu_id = menu_id ).filter_by( active = active ).first( )
-            if menuitem is not None:
-                menu_items.append( menuitem )
-                break
-
-        return menu_items
 
     def page_forms( self, active = 1 ):
         page_forms = [ ]
@@ -158,3 +145,19 @@ class FacilityRoleAccessControl:
             return rec
 
         return None
+
+
+def get_child_menus(parent_id, facility_role_id, active=True):
+    """Get child menus for this facility role.
+    return [] if none available.
+    
+    This function is called by the jinja template to get children menus.
+    """
+    return admin_db_session.query(models.Menu). \
+        filter(models.MenuFacilityRole.facility_role_id==facility_role_id,
+               models.MenuFacilityRole.menu_id==models.Menu.id). \
+        filter(models.Menu.parent_id==parent_id,
+               models.Menu.active==active). \
+        order_by(models.Menu.order).all()
+
+

@@ -53,14 +53,11 @@ def page_template( page_form_name, **context ):
         scripts = access_ctrl.page_form_javascript( page_form.id )
         context[ 'scripts' ] = page_scripts( scripts )
 
-        """
-        Commented out until menus are in db-internal
 
-        menus = access_ctrl.page_form_menus( page_form.id )
-        menu_items = access_ctrl.page_form_menu_items( page_form.id )
-
-        context[ 'menus' ] = page_menus( menus, menu_items )
-        """
+        ## Menus
+        navbar, sidebar, facility_role = access_ctrl.page_form_menus( page_form.id )
+        context.update({'navbar': navbar, 'sidebar': sidebar,
+                        'facility_role': facility_role})
 
     # logging.info( context )
 
