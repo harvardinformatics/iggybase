@@ -273,4 +273,3 @@ class OrganizationAccessControl:
             additional_tables.append(results)
 
         return additional_tables
->>>>>>> 5e32164... allow additional_tables to be displayed on detail pages
