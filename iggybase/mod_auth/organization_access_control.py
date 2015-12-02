@@ -216,11 +216,6 @@ class OrganizationAccessControl:
             cells.insert(0, keys)
         return cells
 
-    def get_template_data( self, table_name, name ):
-        query_data = { 'criteria': { 'name': name } }
-        return self.get_summary_data( table_name, query_data )
->>>>>>> 64f7b801663c98dc3383de23e4c36fa680e605d8
-
     def foreign_key(self, table_object_id):
         res = admin_db_session.query(models.Field, models.FieldFacilityRole, models.Module). \
             join(models.FieldFacilityRole). \
