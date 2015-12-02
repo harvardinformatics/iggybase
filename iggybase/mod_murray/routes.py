@@ -42,9 +42,7 @@ def murray_lab_data_entry( table_object = None, row_name = None ):
     form = fg.default_single_entry_form( row_name )
 
     if form.validate_on_submit( ):
-        session = db_session( )
-        table_object = getattr( models, form.table_object.data )
-
-        pass
+        organization_access_control = OrganizationAccessControl( 'mod_murray' )
+        organization_access_control.save_form( form )
 
     return page_template( 'single_data_entry', form = form )

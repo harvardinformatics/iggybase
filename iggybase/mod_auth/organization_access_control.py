@@ -12,133 +12,134 @@ import logging
 # Controls access to the data db data based on organization
 # all data db access should run through this class
 class OrganizationAccessControl:
-    def __init__ ( self, module ):
-        self.org_ids = [ ]
-        self.tables = [ ]
+    def __init__(self, module):
+        self.org_ids = []
+        self.tables = []
         self.module = module
 
         if g.user is not None and not g.user.is_anonymous:
-            self.user = load_user( g.user.id )
-            self.user_role = db_session.query( UserRole ).filter_by( id = self.user.current_user_role_id ).first( )
-            self.facility_role_access_control = FacilityRoleAccessControl( )
+            self.user = load_user(g.user.id)
+            self.user_role = db_session.query(UserRole).filter_by(id=self.user.current_user_role_id).first()
+            self.facility_role_access_control = FacilityRoleAccessControl()
+            self.current_org_id = self.user_role.organization_id
 
-            self.get_child_organization( self.user_role.organization_id )
+            self.get_child_organization(self.user_role.organization_id)
         else:
             self.user = None
             self.user_role = None
+            self.current_org_id = None
 
-    def get_child_organization( self, parent_organization_id ):
-        self.org_ids.append( parent_organization_id )
+    def get_child_organization(self, parent_organization_id):
+        self.org_ids.append(parent_organization_id)
 
-        child_orgs = db_session.query( Organization ).filter_by( parent_id = parent_organization_id ).all( )
+        child_orgs = db_session.query(Organization).filter_by(parent_id=parent_organization_id).all()
 
         if child_orgs is None:
             return
 
         for child_org in child_orgs:
-            self.get_child_organization( child_org.id )
+            self.get_child_organization(child_org.id)
 
         return
 
-    def get_entry_data( self, table_name, name = None ):
-        field_data = self.get_field_data( table_name )
+    def get_entry_data(self, table_name, name=None):
+        field_data = self.get_field_data(table_name)
 
         results = None
 
         if field_data is not None:
-            module_model = import_module( 'iggybase.' + self.module + '.models' )
-            table_object = getattr( module_model, table_name )
+            module_model = import_module('iggybase.' + self.module + '.models')
+            table_object = getattr(module_model, table_name)
 
-            columns = [ ]
-            for row in  field_data:
+            columns = []
+            for row in field_data:
                 if row.FieldFacilityRole.visible == 1:
-                    columns.append( getattr( table_object, row.Field.field_name ).\
-                                label( row.FieldFacilityRole.display_name ) )
+                    columns.append(getattr(table_object, row.Field.field_name). \
+                                   label(row.FieldFacilityRole.display_name))
 
-            criteria = [ getattr( table_object, 'organization_id' ).in_( self.org_ids ) ]
+            criteria = [getattr(table_object, 'organization_id').in_(self.org_ids)]
 
             if name is not None:
-                criteria.append( getattr( table_object, 'name' ) == name )
+                criteria.append(getattr(table_object, 'name') == name)
 
-            results = db_session.query( *columns ).\
-                filter( *criteria ).all( )
+            results = db_session.query(*columns). \
+                filter(*criteria).all()
 
         return results
 
-    def get_lookup_data( self, fk_table_id ):
-        fk_table_data = admin_db_session.query( models.TableObject ).filter_by( id = fk_table_id ).first( )
-        fk_table_name = TableFactory.to_camel_case( fk_table_data.name )
-        fk_field_data = self.foreign_key( fk_table_id )
+    def get_lookup_data(self, fk_table_id):
+        fk_table_data = admin_db_session.query(models.TableObject).filter_by(id=fk_table_id).first()
+        fk_table_name = TableFactory.to_camel_case(fk_table_data.name)
+        fk_field_data = self.foreign_key(fk_table_id)
 
-        results = [ ( -99, '' ) ]
+        results = [(-99, '')]
 
         if fk_field_data is not None:
-            fk_module_model = import_module( 'iggybase.' + fk_field_data[ 'module' ] + '.models' )
-            fk_table_object = getattr( fk_module_model, fk_table_name )
+            fk_module_model = import_module('iggybase.' + fk_field_data['module'] + '.models')
+            fk_table_object = getattr(fk_module_model, fk_table_name)
 
-            rows = db_session.query( getattr( fk_table_object, 'id' ), getattr( fk_table_object, 'name' ) ).all( )
+            rows = db_session.query(getattr(fk_table_object, 'id'), getattr(fk_table_object, 'name')).all()
 
             for row in rows:
-                results.append( ( row.id, row.name ) )
+                results.append((row.id, row.name))
 
         return results
 
-    def get_summary_data( self, table_name, query_data = { } ):
-        self.tables = [ ]
-        field_data = self.get_field_data( table_name )
+    def get_summary_data(self, table_name, query_data={}):
+        self.tables = []
+        field_data = self.get_field_data(table_name)
 
         results = None
 
         if field_data is not None:
-            module_model = import_module( 'iggybase.' + self.module + '.models' )
-            table_object = getattr( module_model, table_name )
+            module_model = import_module('iggybase.' + self.module + '.models')
+            table_object = getattr(module_model, table_name)
             self.table_object = table_object
-            self.tables.append( table_object )
-            qry = db_session.query( table_object )
-            columns = [ ]
-            options = [ ]
+            self.tables.append(table_object)
+            qry = db_session.query(table_object)
+            columns = []
+            joins = []
 
-            for row in  field_data:
+            for row in field_data:
                 if row.FieldFacilityRole.visible == 1:
                     if row.Field.foreign_key_table_object_id is not None:
-                        fk_table_data = admin_db_session.query( models.TableObject ).\
-                            filter_by( id = row.Field.foreign_key_table_object_id ).first( )
+                        fk_table_data = admin_db_session.query(models.TableObject). \
+                            filter_by(id=row.Field.foreign_key_table_object_id).first()
 
-                        fk_table_name = TableFactory.to_camel_case( fk_table_data.name )
+                        fk_table_name = TableFactory.to_camel_case(fk_table_data.name)
 
-                        foreign_key_data = self.foreign_key( row.Field.foreign_key_table_object_id )
+                        foreign_key_data = self.foreign_key(row.Field.foreign_key_table_object_id)
 
-                        module_model = import_module( 'iggybase.' + foreign_key_data[ 'module' ] + '.models' )
-                        fk_table_object = getattr( module_model, fk_table_name )
-                        self.tables.append( fk_table_object )
+                        module_model = import_module('iggybase.' + foreign_key_data['module'] + '.models')
+                        fk_table_object = getattr(module_model, fk_table_name)
+                        self.tables.append(fk_table_object)
 
-                        options.append( joinedload( getattr( table_object,\
-                                                             table_object.__tablename__ + '_' + fk_table_data.name ) ) )
+                        joins.append(getattr(table_object, table_object.__tablename__ + '_' + fk_table_data.name))
 
-                        columns.append( getattr( table_object, row.Field.field_name ).\
-                                        label( 'fk|' + fk_table_name + '|id' ) )
+                        columns.append(getattr(table_object, row.Field.field_name).
+                                       label('fk|' + fk_table_name + '|id'))
 
-                        columns.append( getattr( fk_table_object, foreign_key_data[ 'foreign_key' ] ).\
-                                        label( 'fk|' + foreign_key_data[ 'url_prefix' ] + '|' + fk_table_name + '|' +\
-                                               foreign_key_data[ 'foreign_key_alias' ] ) )
+                        columns.append(getattr(fk_table_object, foreign_key_data['foreign_key']).
+                                       label('fk|' + foreign_key_data['url_prefix'] + '|' + fk_table_name + '|' +
+                                             foreign_key_data['foreign_key_alias']))
                     else:
-                        columns.append( getattr( table_object, row.Field.field_name ).\
-                                        label( row.FieldFacilityRole.display_name ) )
+                        columns.append(getattr(table_object, row.Field.field_name).
+                                       label(row.FieldFacilityRole.display_name))
 
-            criteria = [ getattr( table_object, 'organization_id' ).in_( self.org_ids ) ]
+            criteria = [getattr(table_object, 'organization_id').in_(self.org_ids)]
             if 'criteria' in query_data:
-                for col, value in query_data[ 'criteria' ].items( ):
-                    criteria.append( getattr( table_object, col ) == value )
+                for col, value in query_data['criteria'].items():
+                    criteria.append(getattr(table_object, col) == value)
 
-            if not options:
-                results = db_session.query( self.tables[ 0 ] ).add_columns( *columns ).filter( *criteria ).all( )
+            if not joins:
+                results = db_session.query(self.tables[0]).add_columns(*columns).filter(*criteria).all()
             else:
-                results = db_session.query( self.tables[ 0 ] ).add_columns( *columns ).options( *options ).\
-                    filter( *criteria ).all( )
+                results = db_session.query(self.tables[0]).add_columns(*columns).options(joinedload(*joins)). \
+                    filter(*criteria).all()
 
         return results
 
-    def format_data(self, results ):
+    def format_data(self, results):
         """Formats data for summary or detail
         - transforms into dictionary
         - removes model objects sqlalchemy puts in
@@ -164,48 +165,55 @@ class OrganizationAccessControl:
                                 if fk_metadata[2]:
                                     table = fk_metadata[2]
                                     row_dict[table] = {
-                                            'text': col,
-                                            # add link foreign key table summary
-                                            'link': '/' + fk_metadata[1] \
+                                        'text': col,
+                                        # add link foreign key table summary
+                                        'link': '/' + fk_metadata[1] \
                                                 + '/detail/' + table + '/' \
                                                 + str(col)
                                     }
-                        else: # add all other colums to table_rows
+                        else:  # add all other colums to table_rows
                             row_dict[keys[i]] = {'text': col}
                             # name column values will link to detail
                             if keys[i] == 'name':
                                 row_dict[keys[i]]['link'] = '/' \
-                                    + self.module.replace('mod_', '') + '/detail/' \
-                                    + self.table_object.__name__ + '/' + str(col)
+                                                            + self.module.replace('mod_', '') + '/detail/' \
+                                                            + self.table_object.__name__ + '/' + str(col)
                 table_rows.append(row_dict)
         return table_rows
 
-    def get_template_data( self, table_name, name ):
-        query_data = { 'criteria': { 'name': name } }
-        return self.get_summary_data( table_name, query_data )
+    def get_template_data(self, table_name, name):
+        query_data = {'criteria': {'name': name}}
+        return self.get_summary_data(table_name, query_data)
 
-    def foreign_key( self, table_object_id ):
-        res = admin_db_session.query( models.Field, models.FieldFacilityRole, models.Module ).\
-            join( models.FieldFacilityRole ).\
-            join( models.Module ).\
-            filter( models.Field.table_object_id == table_object_id ).\
-            filter( models.Field.field_name == 'name' ).\
-            order_by( models.FieldFacilityRole.order, models.FieldFacilityRole.id ).first( )
+    def foreign_key(self, table_object_id):
+        res = admin_db_session.query(models.Field, models.FieldFacilityRole, models.Module). \
+            join(models.FieldFacilityRole). \
+            join(models.Module). \
+            filter(models.Field.table_object_id == table_object_id). \
+            filter(models.Field.field_name == 'name'). \
+            order_by(models.FieldFacilityRole.order, models.FieldFacilityRole.id).first()
 
-        ret_data = { }
-        ret_data[ 'foreign_key' ] = res.Field.field_name
-        ret_data[ 'foreign_key_alias' ] = res.FieldFacilityRole.display_name
-        ret_data[ 'module' ] = res.Module.name
-        ret_data[ 'url_prefix' ] = res.Module.url_prefix
+        ret_data = {}
+        ret_data['foreign_key'] = res.Field.field_name
+        ret_data['foreign_key_alias'] = res.FieldFacilityRole.display_name
+        ret_data['module'] = res.Module.name
+        ret_data['url_prefix'] = res.Module.url_prefix
 
         return ret_data
 
-    def get_field_data( self, table_name ):
-        table_data = self.facility_role_access_control.has_access( 'TableObject', table_name )
+    def get_field_data(self, table_name):
+        table_data = self.facility_role_access_control.has_access('TableObject', table_name)
 
         field_data = None
 
         if table_data is not None:
-            field_data = self.facility_role_access_control.fields( table_data.id, self.module )
+            field_data = self.facility_role_access_control.fields(table_data.id, self.module)
 
         return field_data
+
+    def save_form(self, form ):
+        module_model = import_module('iggybase.' + self.module + '.models')
+        table_object = getattr(module_model, table_name)
+        session = db_session( )
+        module = form.model_0.data
+        table_object = getattr( models, form.table_object_0.data )

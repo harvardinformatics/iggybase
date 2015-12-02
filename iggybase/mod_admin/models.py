@@ -288,6 +288,7 @@ class FieldFacilityRole( StaticBase ):
     field_id = Column( Integer, ForeignKey( 'field.id' ) )
     display_name = Column( String( 100 ) )
     visible = Column( Boolean )
+    look_up_field = Column( Boolean )
     required = Column( Boolean )
     permission_id = Column( Integer, ForeignKey( 'permission.id' ) )
 

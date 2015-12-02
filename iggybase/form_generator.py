@@ -41,7 +41,7 @@ class ReadonlyDateField(DateField):
 class LookUpField(StringField):
     def __call__(self, *args, **kwargs):
         kwargs.setdefault('readonly', True)
-        kwargs['class'] = 'form-control lookupfield'
+        kwargs['class'] = 'form-control lookupfield form-control-lookup'
         return super(LookUpField, self).__call__(*args, **kwargs)
 
 
@@ -51,6 +51,7 @@ class FormGenerator():
         self.organization_access_control = OrganizationAccessControl(module)
         self.table_object = table_object
         self.module = module
+        self.classattr = {}
 
     def input_field(self, field_data, value=None):
         validators = []
@@ -74,19 +75,19 @@ class FormGenerator():
                     choices = self.organization_access_control. \
                         get_lookup_data(field_data.Field.foreign_key_table_object_id)
 
-                    if len(choices) > 25:
-                        if value is not None:
-                            wtf_field = LookUpField(field_data.FieldFacilityRole.display_name, validators, \
-                                                    default=[item[1] for item in choices if item[0] == value][0])
-                        else:
-                            wtf_field = LookUpField(field_data.FieldFacilityRole.display_name, validators)
+                    #if len(choices) > 25:
+                    if value is not None:
+                        wtf_field = LookUpField(field_data.FieldFacilityRole.display_name, validators, \
+                                                default=[item[1] for item in choices if item[0] == value][0])
                     else:
-                        if value is not None:
-                            wtf_field = SelectField(field_data.FieldFacilityRole.display_name, validators, coerce=int, \
-                                                    choices=choices, default=value)
-                        else:
-                            wtf_field = SelectField(field_data.FieldFacilityRole.display_name, validators, coerce=int, \
-                                                    choices=choices)
+                        wtf_field = LookUpField(field_data.FieldFacilityRole.display_name, validators)
+                    #else:
+                        #if value is not None:
+                            #wtf_field = SelectField(field_data.FieldFacilityRole.display_name, validators, coerce=int, \
+                            #                        choices=choices, default=value)
+                        #else:
+                            #wtf_field = SelectField(field_data.FieldFacilityRole.display_name, validators, coerce=int, \
+                            #                        choices=choices)
                 else:
                     if field_data.Field.data_type_id == 1:
                         wtf_class = IntegerField
@@ -134,20 +135,52 @@ class FormGenerator():
         return wtf_field
 
     def default_single_entry_form(self, row_name='new'):
-        if row_name != 'new':
-            data = self.organization_access_control.get_entry_data(self.table_object, row_name)
-            if data:
-                data = data[0]
-
         table_data = self.facility_role_access_control.has_access('TableObject', self.table_object)
 
         fields = self.facility_role_access_control.fields(table_data.id, self.module)
 
-        table_field = HiddenField('table_object_01', default=self.table_object)
-        row_field = HiddenField('row_name_01', default=row_name)
-        entry_field = HiddenField('entry_01', default='single')
+        self.classattr = self.hidden_fields('single', row_name)
+        self.get_row(fields, row_name, 1)
 
-        classattr = {'table_object': table_field, 'row_name': row_field, 'entry': entry_field}
+        newclass = new_class('DynamicForm', (Form,), {}, lambda ns: ns.update(self.classattr))
+
+        return newclass()
+
+    def default_multiple_entry_form(self, row_names=[]):
+        table_data = self.facility_role_access_control.has_access('TableObject', self.table_object)
+
+        fields = self.facility_role_access_control.fields(table_data.id, self.module)
+
+        self.classattr = self.hidden_fields('multiple')
+
+        row_counter = 1
+        for row_name in row_names:
+            self.get_row(fields, row_name, row_counter)
+            row_counter += 1
+
+        newclass = new_class('DynamicForm', (Form,), {}, lambda ns: ns.update(self.classattr))
+
+        return newclass()
+
+    def default_parent_child_entry_form(self, parent_row_name=None):
+        pass
+
+    def hidden_fields(self, form_type, row_name=None):
+        module_field = HiddenField('module_0', default=self.module)
+        table_field = HiddenField('table_object_0', default=self.table_object)
+        entry_field = HiddenField('entry_0', default='single')
+        if row_name is not None:
+            row_field = HiddenField('row_name_0', default=row_name)
+            return {'module_field': module_field, 'table_object': table_field, 'row_name': row_field,
+                    'entry': entry_field}
+        else:
+            return {'module_field': module_field, 'table_object': table_field, 'entry': entry_field}
+
+    def get_row(self, fields, row_name, row_counter):
+        if row_name != 'new':
+            data = self.organization_access_control.get_entry_data(self.table_object, row_name)
+            if data:
+                data = data[0]
 
         for field in fields:
             value = None
@@ -155,17 +188,4 @@ class FormGenerator():
                 if field.FieldFacilityRole.display_name in data.keys():
                     value = data[data.keys().index(field.FieldFacilityRole.display_name)]
 
-            classattr[field.Field.field_name] = self.input_field(field, value)
-
-        newclass = new_class('DynamicForm', (Form,), {}, lambda ns: ns.update(classattr))
-
-        return newclass()
-
-    def default_multiple_entry_form(self, row_names=None):
-        pass
-
-    def default_parent_child_entry_form(self, parent_row_name=None):
-        pass
-
-    def populate_select(self, table_object_id):
-        return []
+            self.classattr[field.Field.field_name+"_"+str(row_counter)] = self.input_field(field, value)
