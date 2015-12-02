@@ -7,12 +7,8 @@ from iggybase.database import admin_db_session
 from iggybase.mod_admin import models
 #from iggybase.mod_core.models import History
 from iggybase.tablefactory import TableFactory
-<<<<<<< HEAD
-from sqlalchemy.orm import joinedload
-import datetime
-=======
 from sqlalchemy.orm import joinedload, aliased
->>>>>>> 6f75504dbf71f7a4a135fd5875355194ea6647b8
+import datetime
 import logging
 
 # Controls access to the data db data based on organization
