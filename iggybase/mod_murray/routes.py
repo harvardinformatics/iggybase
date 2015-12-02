@@ -44,7 +44,20 @@ def detail( table_name = None, row_name= None ):
     table_rows = organization_access_control.format_data(results)
     mod = request.path.split('/')[1]
     hidden_fields = {'mod': mod, 'table': table_name, 'row_name': row_name}
-    return page_template( 'detail', table_name = table_name, row_name = row_name, table_rows = table_rows, hidden_fields = hidden_fields)
+    # get any addional_tables
+    additional_table_rows = {}
+    additional_tables = organization_access_control.get_additional_tables(table_name)
+    for table in additional_tables:
+        table_name = table[0][0].__tablename__
+        additional_table_rows[table_name] = organization_access_control.format_data(table)
+    return page_template(
+            'detail',
+            table_name = table_name,
+            row_name = row_name,
+            table_rows = table_rows,
+            hidden_fields = hidden_fields,
+            additional_tables = additional_table_rows
+    )
 
 @mod_murray.route( '/data_entry/<table_object>/<row_name>' )
 def murray_lab_data_entry( table_object = None, row_name = None ):

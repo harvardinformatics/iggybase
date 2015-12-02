@@ -1,5 +1,5 @@
 $(document).ready(function(){
-    $('#summary_table').DataTable();
+    $('.summary_table').DataTable();
     $("#download").click(function(){$.fn.openDownload();});
 } );
 
