@@ -103,7 +103,9 @@ class FormGenerator( ):
 
     def default_single_entry_form( self, row_name = 'new' ):
         if row_name != 'new':
-            data = self.organization_access_control.get_row( self.table_object, row_name )
+            data = self.organization_access_control.get_entry_data( self.table_object, row_name )
+            if data:
+                data = data[ 0 ]
 
         table_data = self.facility_role_access_control.has_access( 'TableObject', self.table_object )
 
@@ -117,8 +119,9 @@ class FormGenerator( ):
 
         for field in fields:
             value = None
-            if row_name != 'new':
-                value = getattr( data, field.Field.field_name )
+            if row_name != 'new' and data is not None:
+                if field.FieldFacilityRole.display_name in data.keys( ):
+                    value = data[ data.keys( ).index( field.FieldFacilityRole.display_name ) ]
 
             classattr[ field.Field.field_name ] = self.input_field( field, value )
 
@@ -132,5 +135,5 @@ class FormGenerator( ):
     def default_parent_child_entry_form( self, parent_row_name = None ):
         pass
 
-    def populate_select ( table_object_id ):
+    def populate_select ( self, table_object_id ):
         return [ ]

@@ -19,7 +19,6 @@ class OrganizationAccessControl:
             self.user = load_user( g.user.id )
             self.user_role = db_session.query( UserRole ).filter_by( id = self.user.current_user_role_id ).first( )
             self.facility_role_access_control = FacilityRoleAccessControl( )
-            self.org_ids.append( self.user_role.organization_id )
 
             self.get_child_organization( self.user_role.organization_id )
         else:
@@ -39,7 +38,7 @@ class OrganizationAccessControl:
 
         return
 
-    def get_data( self, table_name, query_data = None ):
+    def get_entry_data( self, table_name, name = None, query_data = None ):
         field_data = self.get_field_data( table_name )
 
         results = None
@@ -54,13 +53,21 @@ class OrganizationAccessControl:
                     columns.append( getattr( table_object, row.Field.field_name ).\
                                 label( row.FieldFacilityRole.display_name ) )
 
-            results = db_session.query( *columns ).all( )
+            if name is None:
+                results = db_session.query( *columns ).\
+                    filter( getattr( table_object, 'organization_id' ).in_( self.org_ids ) ).all( )
+            else:
+                results = db_session.query( *columns ).\
+                    filter_by( name = name ).\
+                    filter( getattr( table_object, 'organization_id' ).in_( self.org_ids ) ).all( )
 
         return results
+
 
     # TODO: consider renaming this function to get_data and deleteing the other
     # because I have added filtering to use this function for detail view also
     def get_summary_data( self, table_name, query_data = None ):
+
         field_data = self.get_field_data( table_name )
 
         results = None
@@ -96,9 +103,15 @@ class OrganizationAccessControl:
                         columns.append( getattr( table_object, row.Field.field_name ).\
                                         label( row.FieldFacilityRole.display_name ) )
 
+                criteria = [ getattr( table_object, 'organization_id' ).in_( self.org_ids ) ]
+                if 'criteria' in query_data:
+                    for col, value in query_data[ 'criteria' ].items( ):
+                        criteria.append( getattr( table_object, col ) == value )
+
             if not columns:
-                results = db_session.query( table_object ).add_columns( *columns ).all( )
+                results = db_session.query( table_object ).add_columns( *columns ).filter( *criteria ).all( )
             else:
+
                 if query_data: # add a filter
                     results = db_session.query( table_object, *fk_table_objects ).outerjoin( *fk_table_objects ).\
                         add_columns( *columns ).filter(table_object.name==query_data).all( )
