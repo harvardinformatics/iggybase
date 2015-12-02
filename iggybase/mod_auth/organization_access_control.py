@@ -217,7 +217,6 @@ class OrganizationAccessControl:
 
         return field_data
 
-<<<<<<< HEAD
     def save_form(self, form):
         session = db_session()
         module_model = import_module('iggybase.' + form.model_0.data + '.models')
@@ -265,18 +264,8 @@ class OrganizationAccessControl:
 
         session.add(new_instance)
         session.commit()
-        
-def get_additional_tables( self, table_name, page_form = 'detail'):
-=======
-    def save_form(self, form ):
-        module_model = import_module('iggybase.' + self.module + '.models')
-        table_object = getattr(module_model, table_name)
-        session = db_session( )
-        module = form.model_0.data
-        table_object = getattr( models, form.table_object_0.data )
 
     def get_additional_tables( self, table_name, page_form = 'detail'):
->>>>>>> 6f75504dbf71f7a4a135fd5875355194ea6647b8
         """Get additional tables that need to be displayed on the page
         """
         to_page = aliased(models.TableObject)
@@ -298,8 +287,4 @@ def get_additional_tables( self, table_name, page_form = 'detail'):
             results = self.get_summary_data(TableFactory.to_camel_case(row.name))
             additional_tables.append(results)
 
-<<<<<<< HEAD
         return additional_tables
-=======
-        return additional_tables
->>>>>>> 6f75504dbf71f7a4a135fd5875355194ea6647b8
