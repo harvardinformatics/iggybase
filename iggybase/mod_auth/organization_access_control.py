@@ -181,11 +181,6 @@ class OrganizationAccessControl:
                 table_rows.append(row_dict)
         return table_rows
 
-<<<<<<< HEAD
-    def get_template_data(self, table_name, name):
-        query_data = {'criteria': {'name': name}}
-        return self.get_summary_data(table_name, query_data)
-=======
     def format_download_data(self, results ):
         """
         TODO: merge what is common in these functions

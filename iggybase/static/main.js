@@ -22,30 +22,5 @@ $( document ).ready( function () {
 
         if ($("#message_div").length > 0)
             $("#message_div").text("");
-
-        var formurl = rootdir + "/html/" + searchtype + ".php?propid=" + propertyid + "&objtype=" + objtype + "&proptype="+proptype+"&renderer="+renderer+"&decorate=half";
-
-        var formstr = $.fn.get_url(formurl);
-
-        var tmpform = "<div>"+formstr+"</div>";
-
-        $(tmpform).appendTo("#searchpage");
-
-        $("#searchpage").dialog({
-          autoOpen: false,
-          modal:    true,
-          width:    800,
-
-          buttons: [
-              {
-                text:  "Cancel",
-                click: function() { $(this).dialog("close"); }
-              },
-              {
-                text: btnlabel,
-                click: function() { $.fn.searchResults( searchtype, propertyid, proptype, objtype, pid, renderer, '' ); }
-              }
-          ]
-        } );
     }
 } ) ( jQuery );
