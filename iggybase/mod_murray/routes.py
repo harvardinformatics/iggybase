@@ -30,11 +30,11 @@ def summary( table_name = None ):
 
 @mod_murray.route( '/summary/<table_name>/download' )
 def summary_download( table_name = None ):
-    # TODO: consider reducing repeated code between summary and summary_download
     organization_access_control = OrganizationAccessControl( 'mod_murray' )
-    results = organization_access_control.get_summary_data( table_name )
-    table_rows = organization_access_control.format_download_data(results)
-    csv = excel.make_response_from_array(table_rows, 'csv')
+    for_download = True;
+    results = organization_access_control.get_summary_data(table_name)
+    table_rows = organization_access_control.format_data(results, for_download)
+    csv = excel.make_response_from_records(table_rows, 'csv')
     return csv
 
 @mod_murray.route( '/detail/<table_name>/<row_name>' )

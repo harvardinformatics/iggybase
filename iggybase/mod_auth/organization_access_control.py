@@ -140,7 +140,7 @@ class OrganizationAccessControl:
 
         return results
 
-    def format_data(self, results):
+    def format_data(self, results, for_download = False):
         """Formats data for summary or detail
         - transforms into dictionary
         - removes model objects sqlalchemy puts in
@@ -165,57 +165,30 @@ class OrganizationAccessControl:
                                 fk_metadata = keys[i].split('|')
                                 if fk_metadata[2]:
                                     table = fk_metadata[2]
-                                    row_dict[table] = {
-                                        'text': col,
-                                        # add link foreign key table summary
-                                        'link': '/' + fk_metadata[1] \
-                                                + '/detail/' + table + '/' \
-                                                + str(col)
-                                    }
+                                    if for_download:
+                                        item_value = col
+                                    else:
+                                        item_value = {
+                                            'text': col,
+                                            # add link foreign key table summary
+                                            'link': '/' + fk_metadata[1] \
+                                                    + '/detail/' + table + '/' \
+                                                    + str(col)
+                                        }
+                                    row_dict[table] = item_value
                         else:  # add all other colums to table_rows
-                            row_dict[keys[i]] = {'text': col}
+                            if for_download:
+                                item_value = col
+                            else:
+                                item_value = {'text': col}
+                            row_dict[keys[i]] = item_value
                             # name column values will link to detail
-                            if keys[i] == 'name':
+                            if keys[i] == 'name' and not for_download:
                                 row_dict[keys[i]]['link'] = '/' \
                                                             + self.module.replace('mod_', '') + '/detail/' \
                                                             + self.table_object.__name__ + '/' + str(col)
                 table_rows.append(row_dict)
         return table_rows
-
-    def format_download_data(self, results ):
-        """
-        TODO: merge what is common in these functions
-
-        Formats data for download
-        - transforms into dictionary
-        - removes model objects sqlalchemy puts in
-        - formats FK data and link
-        - formats name link which goes to detail template
-        """
-        cells = []
-        # format results as dictionary
-        if results:
-            keys = results[0].keys()
-            # filter out any objects
-            keys_to_skip = []
-            for fk in self.tables:
-                keys_to_skip.append(fk.__name__)
-            # create dictionary for each row and for fk data
-            for row in results:
-                val_list = []
-                for i, col in enumerate(row):
-                    if keys[i] not in keys_to_skip:
-                        if 'fk|' in keys[i]:
-                            if '|name' in keys[i]:
-                                fk_metadata = keys[i].split('|')
-                                if fk_metadata[2]:
-                                    keys[i] = fk_metadata[2]
-                                    val_list.append(col)
-                        else: # add all other colums to table_rows
-                            val_list.append(col)
-                cells.append(val_list)
-            cells.insert(0, keys)
-        return cells
 
     def foreign_key(self, table_object_id):
         res = admin_db_session.query(models.Field, models.FieldFacilityRole, models.Module). \
