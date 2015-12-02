@@ -5,8 +5,10 @@ from iggybase.mod_auth.facility_role_access_control import FacilityRoleAccessCon
 from importlib import import_module
 from iggybase.database import admin_db_session
 from iggybase.mod_admin import models
+#from iggybase.mod_core.models import History
 from iggybase.tablefactory import TableFactory
 from sqlalchemy.orm import joinedload
+import datetime
 import logging
 
 # Controls access to the data db data based on organization
@@ -224,13 +226,8 @@ class OrganizationAccessControl:
             filter(models.Field.field_name == 'name'). \
             order_by(models.FieldFacilityRole.order, models.FieldFacilityRole.id).first()
 
-        ret_data = {}
-        ret_data['foreign_key'] = res.Field.field_name
-        ret_data['foreign_key_alias'] = res.FieldFacilityRole.display_name
-        ret_data['module'] = res.Module.name
-        ret_data['url_prefix'] = res.Module.url_prefix
-
-        return ret_data
+        return {'foreign_key':res.Field.field_name, 'foreign_key_alias':res.FieldFacilityRole.display_name,
+                'module':res.Module.name, 'url_prefix':res.Module.url_prefix}
 
     def get_field_data(self, table_name):
         table_data = self.facility_role_access_control.has_access('TableObject', table_name)
@@ -242,9 +239,50 @@ class OrganizationAccessControl:
 
         return field_data
 
-    def save_form(self, form ):
-        module_model = import_module('iggybase.' + self.module + '.models')
-        table_object = getattr(module_model, table_name)
-        session = db_session( )
-        module = form.model_0.data
-        table_object = getattr( models, form.table_object_0.data )
+    def save_form(self, form):
+        session = db_session()
+        module_model = import_module('iggybase.' + form.model_0.data + '.models')
+        table_object = getattr( module_model, form.table_object_0.data )
+        if form.entry_0.data == 'parent_child':
+            child_table_object = getattr( module_model, form.chile_table_object_0.data )
+
+        hidden_fields={}
+        last_row_id=1
+        new_instance=table_object()
+        for field in form:
+            if field.name.endswith('_0'):
+                continue
+            elif field.name.startswith('hidden_'):
+                field_id = field.name[field.name.index('_'):]
+                hidden_fields[field_id]=field.data
+                continue
+            elif field.name.beginswith('child_'):
+                field_id = field.name[field.name.index('_'):]
+                current_table_object = child_table_object
+            else:
+                field_id = field.name
+                current_table_object = table_object
+
+            row_id = int(field_id[field_id.index('_'):])
+            column_name = int(field_id[:field_id.index('_')])
+
+            if last_row_id != row_id:
+                session.add(new_instance)
+                session.commit()
+
+                new_instance = current_table_object()
+                new_instance.last_modified=datetime.datetime.utcnow()
+
+                if hidden_fields['name_'+str(row_id)] == 'new':
+                    new_instance.date_created=datetime.datetime.utcnow()
+                    new_instance.organization_id=self.current_org_id
+
+            #if hidden_fields[field_id]!=field.data:
+            #    history_instance=History()
+
+            column_to_update=getattr(new_instance, column_name)
+
+            column_to_update=field.data
+
+        session.add(new_instance)
+        session.commit()

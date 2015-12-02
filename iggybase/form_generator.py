@@ -168,13 +168,14 @@ class FormGenerator():
     def hidden_fields(self, form_type, row_name=None):
         module_field = HiddenField('module_0', default=self.module)
         table_field = HiddenField('table_object_0', default=self.table_object)
-        entry_field = HiddenField('entry_0', default='single')
+        entry_field = HiddenField('entry_0', default=form_type)
+
         if row_name is not None:
             row_field = HiddenField('row_name_0', default=row_name)
-            return {'module_field': module_field, 'table_object': table_field, 'row_name': row_field,
-                    'entry': entry_field}
+            return {'module_0': module_field, 'table_object_0': table_field, 'row_name_0': row_field,
+                    'entry_0': entry_field}
         else:
-            return {'module_field': module_field, 'table_object': table_field, 'entry': entry_field}
+            return {'module_0': module_field, 'table_object_0': table_field, 'entry_0': entry_field}
 
     def get_row(self, fields, row_name, row_counter):
         if row_name != 'new':
@@ -189,3 +190,9 @@ class FormGenerator():
                     value = data[data.keys().index(field.FieldFacilityRole.display_name)]
 
             self.classattr[field.Field.field_name+"_"+str(row_counter)] = self.input_field(field, value)
+            if value is None:
+                self.classattr['hidden_'+field.Field.field_name+"_"+str(row_counter)]=\
+                    HiddenField('hidden_'+field.Field.field_name+"_"+str(row_counter))
+            else:
+                self.classattr['hidden_'+field.Field.field_name+"_"+str(row_counter)]=\
+                    HiddenField('hidden_'+field.Field.field_name+"_"+str(row_counter), default=value)

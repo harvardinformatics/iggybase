@@ -1,6 +1,6 @@
 from iggybase.tablefactory import TableFactory
 from iggybase.mod_auth.facility_access_control import FacilityAccessControl
-from iggybase.mod_auth.organization_access_control import OrganizationAccessControl
+import logging
 
 table_factory = TableFactory( "mod_core" )
 facility_access_control = FacilityAccessControl( )

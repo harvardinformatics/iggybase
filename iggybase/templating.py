@@ -1,8 +1,6 @@
 from flask import render_template, abort
 from iggybase.mod_auth.facility_role_access_control import FacilityRoleAccessControl
 from iggybase.mod_auth.facility_access_control import FacilityAccessControl
-from iggybase.mod_auth.organization_access_control import OrganizationAccessControl
-import os
 import logging
 
 def page_template( page_form_name, **context ):
