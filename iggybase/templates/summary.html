@@ -13,7 +13,7 @@
         {{ macros.render_buttons(top_buttons)}}
     {%- endblock topbuttonbar %}
     <div class={{ table_name ~ "_table" }}>
-        {{ macros.render_table( table_rows ) }}
+        {{ macros.render_table( table_name, table_rows ) }}
     </div>
     {% block bottombuttonbar %}
         {{ super() }}
