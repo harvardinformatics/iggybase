@@ -15,6 +15,7 @@
             {%- block styles %}
                 <!-- Bootstrap -->
                 <link href="{{bootstrap_find_resource('css/bootstrap.css', cdn='bootstrap')}}" rel="stylesheet">
+                <link href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.3/jquery-ui.min.css" rel="stylesheet">
                 <link href="{{ url_for('static', filename='main.css') }}" rel="stylesheet">
             {%- endblock styles %}
         {%- endblock head %}
@@ -62,7 +63,6 @@
 	      {% endfor %}
 	    </ul>
 	  </div>
-
 	</nav>
       </div>  <!-- end container fluid -->
       {%- endblock navbar %}

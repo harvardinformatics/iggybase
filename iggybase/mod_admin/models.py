@@ -24,7 +24,7 @@ class Role( StaticBase ):
     active = Column( Boolean )
     organization_id = Column( Integer )
     order = Column( Integer )
-    
+
 class FacilityRole( StaticBase ):
     __tablename__ = 'facility_role'
     id = Column( Integer, primary_key = True )
@@ -46,7 +46,7 @@ class FacilityRole( StaticBase ):
         return "<FacilityRole=%s, description=%s, id=%d, role=%s, facility=%s)" % \
             (self.name, self.description, self.id,
              self.facility_role_role.name, self.facility_role_facility.name)
-    
+
 
 class Menu( StaticBase ):
     __tablename__ = 'menu'
@@ -65,11 +65,11 @@ class Menu( StaticBase ):
     children = relationship('Menu')
     menu_type = relationship( "MenuType", foreign_keys = [ menu_type_id ] )
     facility_role = relationship('MenuFacilityRole', backref='menu')
-    
+
     def __repr__(self):
         return "<Menu(name=%s, description=%s, id=%d)" % \
             (self.name, self.description, self.id)
-    
+
 
 
 class MenuFacilityRole( StaticBase ):
@@ -104,8 +104,8 @@ class MenuType( StaticBase ):
     def __repr__(self):
         return "<MenuType(name=%s, description=%s, id=%d)" % \
             (self.name, self.description, self.id)
-    
-    
+
+
 class MenuItem( StaticBase ):
     __tablename__ = 'menu_item'
     id = Column( Integer, primary_key = True )
@@ -292,6 +292,7 @@ class FieldFacilityRole( StaticBase ):
     field_id = Column( Integer, ForeignKey( 'field.id' ) )
     display_name = Column( String( 100 ) )
     visible = Column( Boolean )
+    look_up_field = Column( Boolean )
     required = Column( Boolean )
     permission_id = Column( Integer, ForeignKey( 'permission.id' ) )
 
@@ -368,6 +369,9 @@ class TableQuery( StaticBase ):
     active = Column( Boolean )
     organization_id = Column( Integer )
     order = Column( Integer )
+    table_object_id = Column( Integer, ForeignKey( 'table_object.id' ) )
+
+    table_query_table_table_object = relationship( "TableObject", foreign_keys = [ table_object_id ] )
 
 class TableQueryPageForm( StaticBase ):
     __tablename__ = 'table_query_page_form'
@@ -379,6 +383,11 @@ class TableQueryPageForm( StaticBase ):
     active = Column( Boolean )
     organization_id = Column( Integer )
     order = Column( Integer )
+    table_query_id = Column( Integer, ForeignKey( 'table_query.id' ) )
+    page_form_id = Column( Integer, ForeignKey( 'page_form.id' ) )
+
+    table_query_page_page_form = relationship( "PageForm", foreign_keys = [ page_form_id ] )
+    table_query_page_table_query = relationship( "TableQuery", foreign_keys = [ table_query_id ] )
 
 class TableQueryTableObject( StaticBase ):
     __tablename__ = 'table_query_table_object'
@@ -471,4 +480,3 @@ class ModuleFacilityRole( StaticBase ):
 
     module_role_facility = relationship( "FacilityRole", foreign_keys = [ facility_role_id ] )
     module_facility_role_module = relationship( "Module", foreign_keys = [ module_id ] )
-

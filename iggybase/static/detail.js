@@ -1,5 +1,6 @@
 $( document ).ready( function () {
     $("#data_entry").click(function(){$.fn.openDataEntry();});
+    $('.summary_table').DataTable();
 } );
 
 

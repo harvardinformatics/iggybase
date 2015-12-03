@@ -34,9 +34,9 @@
     </div>
 {%- endmacro %}
 
-{% macro render_table( table_rows ) -%}
+{% macro render_table( table_name, table_rows ) -%}
     {% if table_rows %}
-        <table id="summary_table" class="display">
+        <table id="{{ table_name }}_summary_table" class="summary_table display">
             <thead><tr>
                 {% for key in table_rows[0].keys() %}
                     <th>{{ key }}</th>

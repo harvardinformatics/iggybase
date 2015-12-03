@@ -6,6 +6,7 @@ from iggybase.mod_auth import mod_auth as mod_auth_blueprint
 from iggybase.mod_murray import mod_murray as mod_murray_lab_blueprint
 from iggybase.mod_admin import mod_admin as mod_admin_blueprint
 from iggybase.mod_api import mod_api as mod_api_blueprint
+from iggybase.mod_core import mod_core as mod_core_blueprint
 
 __all__ = [ 'create_app' ]
 
@@ -13,7 +14,8 @@ DEFAULT_BLUEPRINTS = (
     mod_admin_blueprint,
     mod_auth_blueprint,
     mod_api_blueprint,
-    mod_murray_lab_blueprint
+    mod_murray_lab_blueprint,
+    mod_core_blueprint
 )
 
 
