@@ -72,7 +72,7 @@ class FacilityRoleAccessControl:
                        filter_by(name=admin_consts.MENU_SIDEBAR_ROOT).first()
         sidebar_menus = get_child_menus(sidebar_root.id, self.facility_role.id, active)
                                  
-        return navbar_menus, sidebar_menus, self.facility_role
+        return navbar_menus, sidebar_menus, self.facility_role, get_child_menus
 
 
 
