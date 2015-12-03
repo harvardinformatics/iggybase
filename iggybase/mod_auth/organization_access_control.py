@@ -95,7 +95,7 @@ class OrganizationAccessControl:
 
         if field_data is not None:
             module_model = import_module('iggybase.' + self.module + '.models')
-            table_object = getattr(module_model, table_name)
+            table_object = getattr(module_model, TableFactory.to_camel_case(table_name))
 
             self.table_object = table_object
             self.tables.append(table_object)
@@ -108,16 +108,13 @@ class OrganizationAccessControl:
                     if row.Field.foreign_key_table_object_id is not None:
                         fk_table_data = admin_db_session.query(models.TableObject). \
                             filter_by(id=row.Field.foreign_key_table_object_id).first()
-
                         fk_table_name = TableFactory.to_camel_case(fk_table_data.name)
-
                         foreign_key_data = self.foreign_key(row.Field.foreign_key_table_object_id)
 
                         module_model = import_module('iggybase.' + foreign_key_data['module'] + '.models')
                         fk_table_object = getattr(module_model, fk_table_name)
                         self.tables.append(fk_table_object)
-
-                        joins.append(getattr(table_object, table_object.__tablename__ + '_' + fk_table_data.name))
+                        joins.append(joinedload(getattr(table_object, table_object.__tablename__ + '_' + fk_table_data.name)))
 
                         columns.append(getattr(table_object, row.Field.field_name).
                                        label('fk|' + fk_table_name + '|id'))
@@ -137,7 +134,8 @@ class OrganizationAccessControl:
             if not joins:
                 results = db_session.query(self.tables[0]).add_columns(*columns).filter(*criteria).all()
             else:
-                results = db_session.query(self.tables[0]).add_columns(*columns).options(joinedload(*joins)). \
+
+                results = db_session.query(self.tables[0]).add_columns(*columns).options(*joins). \
                     filter(*criteria).all()
 
         return results
@@ -280,7 +278,7 @@ class OrganizationAccessControl:
         # get the summary data for these tables
         additional_tables = []
         for row in table_queries:
-            results = self.get_summary_data(TableFactory.to_camel_case(row.name))
+            results = self.get_summary_data(row.name)
             additional_tables.append(results)
 
         return additional_tables

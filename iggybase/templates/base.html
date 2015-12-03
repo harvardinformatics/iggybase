@@ -28,14 +28,13 @@
           <img src="{{ url_for('static', filename='iggybase.gif') }}">
         </a>
         {% if current_user.is_authenticated %}
-        <div id="logout">
-          <a class="pull-right" href="{{ url_for('mod_auth.logout') }}">Logout</a>
+            <div id="logout" class="text-align-right">
+                <a class="inline-block" href="{{ url_for('mod_auth.logout') }}">Logout</a>
 	  <br /><br />
         </div>
         {% endif %}
       </div>
       {% endblock banner %}
-
 
       {% block navbar %}
       <div class="container-fluid">
@@ -47,11 +46,11 @@
 	      {% for menu in navbar recursive %}
 	      {% if get_child_menu(menu.id, facility_role.id) %}
 	      <li class="dropdown">
-		<a class="dropdown-toggle" data-toggle="dropdown" 
+		<a class="dropdown-toggle" data-toggle="dropdown"
 		   href="#">{{ menu.description }}
 		  <span class="caret"></span></a>
 		<ul class="dropdown-menu">
-		  {% for submenu in 
+		  {% for submenu in
 		  get_child_menu(menu.id, facility_role.id) %}
 		  <li><a href="#">{{ submenu.description }}</a></li>
 		  {% endfor %}
