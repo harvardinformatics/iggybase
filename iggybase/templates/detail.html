@@ -1,6 +1,5 @@
 {% extends "base.html" %}
 {% import "bootstrap/wtf.html" as wtf %}
-{% import 'macros.html' as macros %}
 {% block styles %}
     {{ super() }}
     <link href="{{ url_for('static', filename='DataTables/media/css/jquery.dataTables.min.css') }}" rel="stylesheet">
@@ -35,9 +34,6 @@
 
 {% block scripts %}
     {{ super() }}
-    {{ macros.render_scripts( scripts ) }}
     <script type="text/javascript"
         src="{{ url_for('static', filename='DataTables/media/js/jquery.dataTables.min.js')}}"></script>
-    <script type="text/javascript"
-        src="{{ url_for('static', filename='detail.js')}}"></script>
 {%- endblock scripts %}

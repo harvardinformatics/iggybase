@@ -1,4 +1,5 @@
 {% import "bootstrap/wtf.html" as wtf %}
+{% import 'macros.html' as macros %}
 
 {% block doc -%}
 <!DOCTYPE html>
@@ -113,6 +114,7 @@
       <script src="{{bootstrap_find_resource('jquery.js', cdn='jquery')}}"></script>
       <script src="{{bootstrap_find_resource('js/bootstrap.js', cdn='bootstrap')}}"></script>
       <script type="text/javascript" src="{{ url_for( 'static', filename='main.js' ) }}"></script>
+        {{ macros.render_scripts( scripts ) }}
       {%- endblock scripts %}
       {%- endblock body %}
     </body>
