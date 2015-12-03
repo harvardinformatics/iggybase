@@ -3,6 +3,7 @@
 {% block styles %}
     {{ super() }}
     <link href="{{ url_for('static', filename='jquery/DataTables/media/css/jquery.dataTables.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='detail.css') }}" rel="stylesheet">
 {%- endblock styles %}
 {% block title %}{{ page_title }}{% endblock %}
 
