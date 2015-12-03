@@ -2,7 +2,7 @@
 {% import "bootstrap/wtf.html" as wtf %}
 {% block styles %}
     {{ super() }}
-    <link href="{{ url_for('static', filename='DataTables/media/css/jquery.dataTables.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='jquery/DataTables/media/css/jquery.dataTables.min.css') }}" rel="stylesheet">
 {%- endblock styles %}
 {% block title %}Iggybase - {{ table_name.replace( '_',' ' ) }}{% endblock %}
 
@@ -23,5 +23,5 @@
 {% block scripts %}
     {{ super() }}
     <script type="text/javascript"
-        src="{{ url_for('static', filename='DataTables/media/js/jquery.dataTables.min.js')}}"></script>
+        src="{{ url_for('static', filename='jquery/DataTables/media/js/jquery.dataTables.min.js')}}"></script>
 {%- endblock scripts %}

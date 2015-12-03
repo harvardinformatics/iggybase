@@ -34,11 +34,11 @@
     </div>
 {%- endmacro %}
 
-{% macro render_table( table_name, table_rows, is_action = False ) -%}
+{% macro render_table( table_name, table_rows, page_form_name = None ) -%}
     {% if table_rows %}
         <table id="{{ table_name }}_summary_table" class="summary_table display">
             <thead><tr>
-                {% if is_action %}
+                {% if page_form_name == 'action_summary' %}
                     <th>
                         <input type="button" id="select_all" value="Select All/ None">
                     </th>
@@ -50,7 +50,7 @@
             <tbody>
                 {% for row in table_rows %}
                     <tr>
-                    {% if is_action %}
+                    {% if page_form_name == 'action_summary' %}
                         <td><input type="checkbox" class="action_checkbox"></td>
                     {% endif %}
                     {% for value in row.values() %}

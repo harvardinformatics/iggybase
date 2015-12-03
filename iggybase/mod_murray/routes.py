@@ -42,9 +42,8 @@ def action_summary( table_name = None ):
     organization_access_control = OrganizationAccessControl( 'mod_murray' )
     results = organization_access_control.get_summary_data( table_name )
     table_rows = organization_access_control.format_data(results)
-    is_action = True
     return page_template( 'action_summary', table_name = table_name, table_rows =
-            table_rows, is_action = is_action )
+            table_rows )
 
 @mod_murray.route( '/detail/<table_name>/<row_name>' )
 def detail( table_name = None, row_name= None ):
