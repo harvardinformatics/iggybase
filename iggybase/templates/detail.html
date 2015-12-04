@@ -8,8 +8,7 @@
 {% block title %}{{ page_title }}{% endblock %}
 
 {% block page_content %}
-    <h1>{{ page_header }}</h1>
-
+    <h1>{{table_name.replace( '_', ' ' )}} {{ page_header }}</h1>
     {% block hidden_fields %}
         {{ super() }}
     {%- endblock hidden_fields %}
@@ -28,7 +27,10 @@
     {%- endblock bottombuttonbar %}
     {% if additional_tables %}
         {% for table_name, table_data in additional_tables.items(): %}
-            {{ macros.render_table( table_name, table_data ) }}
+            <div class={{ table_name ~ "_table" }}>
+                <h1>{{table_name.replace( '_', ' ' )|title}}</h1>
+                {{ macros.render_table( table_name, table_data ) }}
+            </div>
         {% endfor %}
     {% endif %}
 {% endblock %}

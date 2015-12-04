@@ -58,20 +58,45 @@ class FacilityRoleAccessControl:
         else:
             return res
 
-        
+    def fields2( self, table_query_id, module, active = 1 ):
+        """TODO: once data entry is using table queries we can rename this fields
+        and delete the original
+        """
+        module = admin_db_session.query( models.Module, models.ModuleFacilityRole ).join( models.ModuleFacilityRole ).\
+            filter( models.ModuleFacilityRole.facility_role_id == self.facility_role.id ).\
+            filter( models.Module.name == module ).first( )
+
+        if module is None:
+            return [ ]
+
+        res = admin_db_session.query( models.Field, models.FieldFacilityRole ).join( models.FieldFacilityRole ).\
+                join(models.TableQueryField).\
+                join(models.TableQuery).\
+            filter( models.TableQuery.id == table_query_id ).\
+            filter( models.FieldFacilityRole.facility_role_id == self.facility_role.id ).\
+            filter( models.Field.table_object_id == models.TableQuery.table_object_id ).\
+            filter( models.Field.active == active ).\
+            filter( models.FieldFacilityRole.active == active ).\
+            filter( models.FieldFacilityRole.module_id == module.Module.id ).\
+            order_by( models.FieldFacilityRole.order, models.FieldFacilityRole.id ).all( )
+        if res is None:
+            return [ ]
+        else:
+            return res
+
     def page_form_menus( self, page_form_id, active = True ):
         """Setup NavBar and Side bar menus for templating context.
-        Starts with the root navbar and sidebar records. 
+        Starts with the root navbar and sidebar records.
         Menus are recursive.
         """
         navbar_root = admin_db_session.query(models.Menu). \
                       filter_by(name=admin_consts.MENU_NAVBAR_ROOT).first()
         navbar_menus = get_child_menus(navbar_root.id, self.facility_role.id, active)
-        
+
         sidebar_root = admin_db_session.query(models.Menu). \
                        filter_by(name=admin_consts.MENU_SIDEBAR_ROOT).first()
         sidebar_menus = get_child_menus(sidebar_root.id, self.facility_role.id, active)
-                                 
+
         return navbar_menus, sidebar_menus, self.facility_role, get_child_menus
 
 
@@ -150,7 +175,7 @@ class FacilityRoleAccessControl:
 def get_child_menus(parent_id, facility_role_id, active=True):
     """Get child menus for this facility role.
     return [] if none available.
-    
+
     This function is called by the jinja template to get children menus.
     """
     return admin_db_session.query(models.Menu). \

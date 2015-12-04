@@ -23,22 +23,24 @@ def default():
 @mod_murray.route( '/summary/<table_name>' )
 def summary( table_name = None ):
     organization_access_control = OrganizationAccessControl( 'mod_murray' )
-    results = organization_access_control.get_summary_data( table_name )
+    results = organization_access_control.get_summary_data2( table_name )
     table_rows = organization_access_control.format_data(results)
     return page_template( 'summary', table_name = table_name, table_rows =
             table_rows )
 
 @mod_murray.route( '/summary/<table_name>/download' )
 def summary_download( table_name = None ):
+    # TODO: the page_form for this now doesn't equal summary - fix somehow
     organization_access_control = OrganizationAccessControl( 'mod_murray' )
     for_download = True;
-    results = organization_access_control.get_summary_data(table_name)
+    results = organization_access_control.get_summary_data2(table_name)
     table_rows = organization_access_control.format_data(results, for_download)
     csv = excel.make_response_from_records(table_rows, 'csv')
     return csv
 
 @mod_murray.route( '/action_summary/<table_name>' )
 def action_summary( table_name = None ):
+    # TODO: convert to using fields
     organization_access_control = OrganizationAccessControl( 'mod_murray' )
     results = organization_access_control.get_summary_data( table_name )
     table_rows = organization_access_control.format_data(results)
@@ -48,7 +50,7 @@ def action_summary( table_name = None ):
 @mod_murray.route( '/detail/<table_name>/<row_name>' )
 def detail( table_name = None, row_name= None ):
     organization_access_control = OrganizationAccessControl( 'mod_murray' )
-    results = organization_access_control.get_summary_data( table_name, row_name )
+    results = organization_access_control.get_summary_data2( table_name, row_name )
     table_rows = organization_access_control.format_data(results)
     mod = request.path.split('/')[1]
     hidden_fields = {'mod': mod, 'table': table_name, 'row_name': row_name}
@@ -56,8 +58,8 @@ def detail( table_name = None, row_name= None ):
     additional_table_rows = {}
     additional_tables = organization_access_control.get_additional_tables(table_name)
     for table in additional_tables:
-        table_name = table[0][0].__tablename__
-        additional_table_rows[table_name] = organization_access_control.format_data(table)
+        additional_table_name = table[0][0].__tablename__
+        additional_table_rows[additional_table_name] = organization_access_control.format_data(table)
     return page_template(
             'detail',
             table_name = table_name,

@@ -1,4 +1,4 @@
-from flask import g
+from flask import g, request
 from iggybase.database import db_session
 from iggybase.mod_auth.models import load_user, UserRole, Organization
 from iggybase.mod_auth.facility_role_access_control import FacilityRoleAccessControl
@@ -17,7 +17,8 @@ class OrganizationAccessControl:
     def __init__(self, module):
         self.org_ids = []
         self.tables = []
-        self.module = module
+        #TODO: remove module from calls to init
+        self.module, self.page_form = request.endpoint.split('.')
 
         if g.user is not None and not g.user.is_anonymous:
             self.user = load_user(g.user.id)
@@ -102,6 +103,7 @@ class OrganizationAccessControl:
             qry = db_session.query(table_object)
             columns = []
             joins = []
+            criteria = []
 
             for row in field_data:
                 if row.FieldFacilityRole.visible == 1:
@@ -115,6 +117,7 @@ class OrganizationAccessControl:
                         fk_table_object = getattr(module_model, fk_table_name)
                         self.tables.append(fk_table_object)
                         joins.append(joinedload(getattr(table_object, table_object.__tablename__ + '_' + fk_table_data.name)))
+                        criteria.append(getattr(fk_table_object, 'organization_id').in_(self.org_ids))
 
                         columns.append(getattr(table_object, row.Field.field_name).
                                        label('fk|' + fk_table_name + '|id'))
@@ -126,7 +129,7 @@ class OrganizationAccessControl:
                         columns.append(getattr(table_object, row.Field.field_name).
                                        label(row.FieldFacilityRole.display_name))
 
-            criteria = [getattr(table_object, 'organization_id').in_(self.org_ids)]
+            criteria.append(getattr(table_object, 'organization_id').in_(self.org_ids))
             if 'criteria' in query_data:
                 for col, value in query_data['criteria'].items():
                     criteria.append(getattr(table_object, col) == value)
@@ -134,12 +137,67 @@ class OrganizationAccessControl:
             if not joins:
                 results = db_session.query(self.tables[0]).add_columns(*columns).filter(*criteria).all()
             else:
-
                 results = db_session.query(self.tables[0]).add_columns(*columns).options(*joins). \
                     filter(*criteria).all()
 
         return results
 
+    def get_summary_data2(self, table_name, query_data={}):
+        """TODO: replace original once every endpoint is using table_query, only
+        change is to call get_field_data2
+        """
+        self.tables = []
+        field_data = self.get_field_data2(table_name)
+        table_name = table_name
+        results = None
+        if field_data is not None:
+            module_model = import_module('iggybase.' + self.module + '.models')
+            table_object = getattr(module_model, TableFactory.to_camel_case(table_name))
+
+            self.table_object = table_object
+            self.tables.append(table_object)
+            qry = db_session.query(table_object)
+            columns = []
+            joins = []
+            criteria = []
+
+            for row in field_data:
+                if row.FieldFacilityRole.visible == 1:
+                    if row.Field.foreign_key_table_object_id is not None:
+                        fk_table_data = admin_db_session.query(models.TableObject). \
+                            filter_by(id=row.Field.foreign_key_table_object_id).first()
+                        fk_table_name = TableFactory.to_camel_case(fk_table_data.name)
+                        foreign_key_data = self.foreign_key(row.Field.foreign_key_table_object_id)
+
+                        module_model = import_module('iggybase.' + foreign_key_data['module'] + '.models')
+                        fk_table_object = getattr(module_model, fk_table_name)
+                        self.tables.append(fk_table_object)
+                        joins.append(joinedload(getattr(table_object, table_object.__tablename__ + '_' + fk_table_data.name)))
+                        criteria.append(getattr(fk_table_object, 'organization_id').in_(self.org_ids))
+
+                        columns.append(getattr(table_object, row.Field.field_name).
+                                       label('fk|' + fk_table_name + '|id'))
+
+                        columns.append(getattr(fk_table_object, foreign_key_data['foreign_key']).
+                                       label('fk|' + foreign_key_data['url_prefix'] + '|' + fk_table_name + '|' +
+                                             foreign_key_data['foreign_key_alias']))
+                    else:
+                        columns.append(getattr(table_object, row.Field.field_name).
+                                       label(row.FieldFacilityRole.display_name))
+
+            criteria.append(getattr(table_object, 'organization_id').in_(self.org_ids))
+            if 'criteria' in query_data:
+                for col, value in query_data['criteria'].items():
+                    criteria.append(getattr(table_object, col) == value)
+
+            # TODO: order the results by order in the table_query_field table
+            if not joins:
+                results = db_session.query(self.tables[0]).add_columns(*columns).filter(*criteria).all()
+            else:
+                results = db_session.query(self.tables[0]).add_columns(*columns).options(*joins). \
+                    filter(*criteria).all()
+
+        return results
     def format_data(self, results, for_download = False):
         """Formats data for summary or detail
         - transforms into dictionary
@@ -211,6 +269,18 @@ class OrganizationAccessControl:
 
         return field_data
 
+    def get_field_data2(self, table_name):
+        """TODO: replace original once every endpoint is using table_query
+        """
+        table_data = self.facility_role_access_control.has_access('TableObject', table_name)
+
+        field_data = None
+
+        if table_data is not None:
+            table_queries = self.get_table_queries(table_name)
+            field_data = self.facility_role_access_control.fields2(table_queries[0].id, self.module)
+        return field_data
+
     def save_form(self, form):
         session = db_session()
         module_model = import_module('iggybase.' + form.model_0.data + '.models')
@@ -265,7 +335,6 @@ class OrganizationAccessControl:
         to_page = aliased(models.TableObject)
         to_additional = aliased(models.TableObject)
         # fetch the names of tables we need to display for this page and obejct
-        # TODO: include joins to tables with table_query_id, like fields, order
         table_queries = admin_db_session.query(models.TableQuery.id, to_additional.name).\
                 join(models.TableQueryTableObject).\
                 join(to_page, to_page.id ==
@@ -274,11 +343,26 @@ class OrganizationAccessControl:
                         models.TableQuery.table_object_id).\
                 join(models.TableQueryPageForm).\
                 join(models.PageForm).\
-                filter(models.PageForm.name == page_form, to_page.name == table_name.lower()).all()
+                filter(models.PageForm.name == page_form, to_page.name == table_name.lower()).\
+                filter(to_page.name != to_additional.name).all()
         # get the summary data for these tables
         additional_tables = []
         for row in table_queries:
-            results = self.get_summary_data(row.name)
+            #TODO: should routes call this to be consistant?
+            results = self.get_summary_data2(row.name)
             additional_tables.append(results)
 
         return additional_tables
+
+    def get_table_queries( self, table_name):
+        """Get the table query to use
+        """
+        table_queries = admin_db_session.query(models.TableQuery.id,
+                models.TableObject.name).\
+                join(models.TableQueryTableObject).\
+                join(models.TableObject, models.TableObject.id ==
+                        models.TableQuery.table_object_id).\
+                join(models.TableQueryPageForm).\
+                join(models.PageForm).\
+                filter(models.PageForm.name == self.page_form, models.TableObject.name == table_name.lower()).all()
+        return table_queries
