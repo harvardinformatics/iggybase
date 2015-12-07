@@ -60,10 +60,12 @@ class Menu( StaticBase ):
     organization_id = Column( Integer )
     order = Column( Integer )
     menu_type_id = Column( Integer, ForeignKey( 'menu_type.id' ) )
+    menu_url_id = Column(Integer, ForeignKey('menu_url.id'))
 
     parent = relationship('Menu', remote_side=[id])
     children = relationship('Menu')
     menu_type = relationship( "MenuType", foreign_keys = [ menu_type_id ] )
+    menu_url = relationship("MenuUrl", backref='menu')
     facility_role = relationship('MenuFacilityRole', backref='menu')
 
     def __repr__(self):
@@ -90,6 +92,11 @@ class MenuFacilityRole( StaticBase ):
     menu_facility_role_menu = relationship( "Menu", foreign_keys = [ menu_id ] )
     menu_facility_role_unq = UniqueConstraint( 'facility_role_id', 'menu_id' )
 
+    def __repr__(self):
+        return "<MenuFacilityRole(name=%s, description=%s, id=%d, menu_id=%d, order=%d)" % \
+            (self.name, self.description, self.id, self.menu_id, self.order)
+
+
 
 
 class MenuType( StaticBase ):
@@ -104,6 +111,26 @@ class MenuType( StaticBase ):
     def __repr__(self):
         return "<MenuType(name=%s, description=%s, id=%d)" % \
             (self.name, self.description, self.id)
+
+
+class MenuUrl( StaticBase ):
+    """Matches a url to a menu. One to many relationship with Menu.
+    """
+    __tablename__ = 'menu_url'
+    id = Column(Integer, primary_key=True)
+
+    name = Column( String( 100 ), unique = True )
+    description = Column( String( 255 ) )
+    date_created = Column( DateTime, default = datetime.datetime.utcnow )
+    last_modified = Column( DateTime, default = datetime.datetime.utcnow )
+    active = Column( Boolean )
+
+    url_path = Column(String(512), unique=True)
+    url_params = Column(String(1024)) ## Stored as JSON
+
+    def __repr__(self):
+        return "<MenuType(name=%s, description=%s, id=%d, url_path=%s)" % \
+            (self.name, self.description, self.id, self.url_path)
 
 
 class MenuItem( StaticBase ):

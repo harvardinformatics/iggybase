@@ -76,7 +76,10 @@
 	      {% for menu in sidebar %}
 	      <li class="text-uppercase">{{ menu.description }}</li>
 	      {% for submenu in get_child_menu(menu.id, facility_role.id) %}
-	      <li><a href="#" class="small">{{ submenu.description }}</a></li>
+	      <li><a href=
+		     {% if submenu.menu_url %}"{{ submenu.menu_url.url_path }}"
+                     {% else %}"#"
+		     {% endif %} class="small">{{ submenu.description }}</a></li>
 	      {% endfor %}
 	      {% endfor %}
 	    </ul>
