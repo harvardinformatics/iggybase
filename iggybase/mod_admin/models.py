@@ -43,7 +43,7 @@ class FacilityRole( StaticBase ):
     facility_role_unq = UniqueConstraint( 'facility_id', 'role_id' )
 
     def __repr__(self):
-        return "<FacilityRole=%s, description=%s, id=%d, role=%s, facility=%s)" % \
+        return "<FacilityRole=%s, description=%s, id=%d, role=%s, facility=%s>)" % \
             (self.name, self.description, self.id,
              self.facility_role_role.name, self.facility_role_facility.name)
 
@@ -69,7 +69,7 @@ class Menu( StaticBase ):
     facility_role = relationship('MenuFacilityRole', backref='menu')
 
     def __repr__(self):
-        return "<Menu(name=%s, description=%s, id=%d)" % \
+        return "<Menu(name=%s, description=%s, id=%d)>" % \
             (self.name, self.description, self.id)
 
 
@@ -93,7 +93,7 @@ class MenuFacilityRole( StaticBase ):
     menu_facility_role_unq = UniqueConstraint( 'facility_role_id', 'menu_id' )
 
     def __repr__(self):
-        return "<MenuFacilityRole(name=%s, description=%s, id=%d, menu_id=%d, order=%d)" % \
+        return "<MenuFacilityRole(name=%s, description=%s, id=%d, menu_id=%d, order=%d>)" % \
             (self.name, self.description, self.id, self.menu_id, self.order)
 
 
@@ -109,7 +109,7 @@ class MenuType( StaticBase ):
     active = Column( Boolean )
 
     def __repr__(self):
-        return "<MenuType(name=%s, description=%s, id=%d)" % \
+        return "<MenuType(name=%s, description=%s, id=%d>)" % \
             (self.name, self.description, self.id)
 
 
@@ -129,7 +129,7 @@ class MenuUrl( StaticBase ):
     url_params = Column(String(1024)) ## Stored as JSON
 
     def __repr__(self):
-        return "<MenuType(name=%s, description=%s, id=%d, url_path=%s)" % \
+        return "<MenuType(name=%s, description=%s, id=%d, url_path=%s>)" % \
             (self.name, self.description, self.id, self.url_path)
 
 

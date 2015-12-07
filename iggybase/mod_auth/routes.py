@@ -54,6 +54,18 @@ def login():
     return page_template( 'mod_auth/login', form=form )
 
 
+
+@mod_auth.route('/home', methods=['GET'])
+@login_required
+def home():
+    """redirects to user home page.
+    """
+    if not g.user:
+        abort( 404 )
+    return redirect( g.user.home_page )
+    
+    
+
 @mod_auth.route( '/register', methods = [ 'GET', 'POST' ] )
 def register():
     form = RegisterForm( )
