@@ -14,11 +14,13 @@ import logging
 # Controls access to the data db data based on organization
 # all data db access should run through this class
 class OrganizationAccessControl:
+    #TODO: remove module from calls to init
     def __init__(self, module):
         self.org_ids = []
         self.tables = []
-        #TODO: remove module from calls to init
-        self.module, self.page_form = request.endpoint.split('.')
+        # Assume that path will always take the form module/page_form/params
+        self.module, self.page_form = request.path.split('/')[1:3]
+        self.module = 'mod_' + self.module
 
         if g.user is not None and not g.user.is_anonymous:
             self.user = load_user(g.user.id)
@@ -91,63 +93,6 @@ class OrganizationAccessControl:
     def get_summary_data(self, table_name, query_data={}):
         self.tables = []
         field_data = self.get_field_data(table_name)
-
-        results = None
-
-        if field_data is not None:
-            module_model = import_module('iggybase.' + self.module + '.models')
-            table_object = getattr(module_model, TableFactory.to_camel_case(table_name))
-
-            self.table_object = table_object
-            self.tables.append(table_object)
-            qry = db_session.query(table_object)
-            columns = []
-            joins = []
-            criteria = []
-
-            for row in field_data:
-                if row.FieldFacilityRole.visible == 1:
-                    if row.Field.foreign_key_table_object_id is not None:
-                        fk_table_data = admin_db_session.query(models.TableObject). \
-                            filter_by(id=row.Field.foreign_key_table_object_id).first()
-                        fk_table_name = TableFactory.to_camel_case(fk_table_data.name)
-                        foreign_key_data = self.foreign_key(row.Field.foreign_key_table_object_id)
-
-                        module_model = import_module('iggybase.' + foreign_key_data['module'] + '.models')
-                        fk_table_object = getattr(module_model, fk_table_name)
-                        self.tables.append(fk_table_object)
-                        joins.append(joinedload(getattr(table_object, table_object.__tablename__ + '_' + fk_table_data.name)))
-                        criteria.append(getattr(fk_table_object, 'organization_id').in_(self.org_ids))
-
-                        columns.append(getattr(table_object, row.Field.field_name).
-                                       label('fk|' + fk_table_name + '|id'))
-
-                        columns.append(getattr(fk_table_object, foreign_key_data['foreign_key']).
-                                       label('fk|' + foreign_key_data['url_prefix'] + '|' + fk_table_name + '|' +
-                                             foreign_key_data['foreign_key_alias']))
-                    else:
-                        columns.append(getattr(table_object, row.Field.field_name).
-                                       label(row.FieldFacilityRole.display_name))
-
-            criteria.append(getattr(table_object, 'organization_id').in_(self.org_ids))
-            if 'criteria' in query_data:
-                for col, value in query_data['criteria'].items():
-                    criteria.append(getattr(table_object, col) == value)
-
-            if not joins:
-                results = db_session.query(self.tables[0]).add_columns(*columns).filter(*criteria).all()
-            else:
-                results = db_session.query(self.tables[0]).add_columns(*columns).options(*joins). \
-                    filter(*criteria).all()
-
-        return results
-
-    def get_summary_data2(self, table_name, query_data={}):
-        """TODO: replace original once every endpoint is using table_query, only
-        change is to call get_field_data2
-        """
-        self.tables = []
-        field_data = self.get_field_data2(table_name)
         table_name = table_name
         results = None
         if field_data is not None:
@@ -265,20 +210,12 @@ class OrganizationAccessControl:
         field_data = None
 
         if table_data is not None:
-            field_data = self.facility_role_access_control.fields(table_data.id, self.module)
-
-        return field_data
-
-    def get_field_data2(self, table_name):
-        """TODO: replace original once every endpoint is using table_query
-        """
-        table_data = self.facility_role_access_control.has_access('TableObject', table_name)
-
-        field_data = None
-
-        if table_data is not None:
             table_queries = self.get_table_queries(table_name)
-            field_data = self.facility_role_access_control.fields2(table_queries[0].id, self.module)
+            if table_queries:
+                field_data = self.facility_role_access_control.table_query_fields(table_queries[0].id, self.module)
+            else:
+                field_data = self.facility_role_access_control.fields(table_data.id, self.module)
+
         return field_data
 
     def save_form(self, form):
@@ -349,7 +286,7 @@ class OrganizationAccessControl:
         additional_tables = []
         for row in table_queries:
             #TODO: should routes call this to be consistant?
-            results = self.get_summary_data2(row.name)
+            results = self.get_summary_data(row.name)
             additional_tables.append(results)
 
         return additional_tables

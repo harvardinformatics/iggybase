@@ -58,10 +58,7 @@ class FacilityRoleAccessControl:
         else:
             return res
 
-    def fields2( self, table_query_id, module, active = 1 ):
-        """TODO: once data entry is using table queries we can rename this fields
-        and delete the original
-        """
+    def table_query_fields( self, table_query_id, module, active = 1 ):
         module = admin_db_session.query( models.Module, models.ModuleFacilityRole ).join( models.ModuleFacilityRole ).\
             filter( models.ModuleFacilityRole.facility_role_id == self.facility_role.id ).\
             filter( models.Module.name == module ).first( )
