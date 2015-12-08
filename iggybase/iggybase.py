@@ -1,21 +1,23 @@
-from flask import Flask
+from flask import Flask, g
 from config import config, get_config
 from flask import render_template
+from flask.ext.login import login_required, current_user
 from iggybase.extensions import mail, lm, bootstrap
 from iggybase.mod_auth import mod_auth as mod_auth_blueprint
 from iggybase.mod_murray import mod_murray as mod_murray_lab_blueprint
 from iggybase.mod_admin import mod_admin as mod_admin_blueprint
 from iggybase.mod_api import mod_api as mod_api_blueprint
 from iggybase.mod_core import mod_core as mod_core_blueprint
+from iggybase import base_routes
 
 __all__ = [ 'create_app' ]
 
 DEFAULT_BLUEPRINTS = (
     mod_admin_blueprint,
+    mod_core_blueprint,
     mod_auth_blueprint,
     mod_api_blueprint,
-    mod_murray_lab_blueprint,
-    mod_core_blueprint
+    mod_murray_lab_blueprint
 )
 
 
@@ -45,6 +47,8 @@ def create_app( config_name = None, app_name = None ):
     configure_hook( iggybase )
     configure_error_handlers( iggybase )
 
+    add_base_routes( iggybase )
+
     return iggybase
 
 
@@ -52,6 +56,38 @@ def configure_extensions( app ):
     bootstrap.init_app( app )
     lm.init_app( app )
     mail.init_app( app )
+
+
+def add_base_routes( app ):
+    @app.route( '/<module_name>/' )
+    @login_required
+    def default(module_name):
+        return base_routes.default()
+
+    @app.route( '/<module_name>/summary/<table_name>' )
+    @login_required
+    def summary( module_name, table_name ):
+        return base_routes.summary( module_name, table_name )
+
+    @app.route( '/<module_name>/summary/<table_name>/download' )
+    @login_required
+    def summary_download( module_name, table_name ):
+        return base_routes.summary_download( module_name, table_name )
+
+    @app.route( '/<module_name>/action_summary/<table_name>' )
+    @login_required
+    def action_summary( module_name, table_name ):
+        return base_routes.action_summary( module_name, table_name )
+
+    @app.route( '/<module_name>/detail/<table_name>/<row_name>' )
+    @login_required
+    def detail( module_name, table_name, row_name ):
+        return base_routes.detail( module_name, table_name, row_name )
+
+    @app.route( '/<module_name>/data_entry/<table_name>/<row_name>' )
+    @login_required
+    def data_entry( module_name, table_name, row_name ):
+        return base_routes.data_entry( module_name, table_name, row_name )
 
 
 def configure_blueprints( app, blueprints ):
@@ -63,7 +99,7 @@ def configure_blueprints( app, blueprints ):
 def configure_hook( app ):
     @app.before_request
     def before_request():
-        pass
+        g.user = current_user
 
 
 def configure_error_handlers( app ):

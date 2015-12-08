@@ -5,7 +5,7 @@ from iggybase.mod_auth.facility_role_access_control import FacilityRoleAccessCon
 from importlib import import_module
 from iggybase.database import admin_db_session
 from iggybase.mod_admin import models
-#from iggybase.mod_core.models import History
+from iggybase.mod_core import models as core_models
 from iggybase.tablefactory import TableFactory
 from sqlalchemy.orm import joinedload, aliased
 import datetime
@@ -256,8 +256,8 @@ class OrganizationAccessControl:
                     new_instance.date_created=datetime.datetime.utcnow()
                     new_instance.organization_id=self.current_org_id
 
-            #if hidden_fields[field_id]!=field.data:
-            #    history_instance=History()
+            if hidden_fields[field_id]!=field.data:
+                history_instance=core_models.History()
 
             column_to_update=getattr(new_instance, column_name)
 
