@@ -3,132 +3,133 @@
 
 {% block doc -%}
 <!DOCTYPE html>
-    <html{% block html_attribs %}{% endblock html_attribs %}>
-    {%- block html %}
-        <head>
-        {%- block head %}
-            <title>{% block title %}{% endblock title %}</title>
+<html{% block html_attribs %}{% endblock html_attribs %}>
+  {%- block html %}
+  <head>
+    {%- block head %}
+    <title>{% block title %}{% endblock title %}</title>
 
-            {%- block metas %}
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            {%- endblock metas %}
+    {%- block metas %}
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {%- endblock metas %}
 
-            {%- block styles %}
-                <!-- Bootstrap -->
-                <link href="{{bootstrap_find_resource('css/bootstrap.css', cdn='bootstrap')}}" rel="stylesheet">
-                <link href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.3/jquery-ui.min.css" rel="stylesheet">
-                <link href="{{ url_for('static', filename='main.css') }}" rel="stylesheet">
-            {%- endblock styles %}
-        {%- endblock head %}
-        </head>
-    <body{% block body_attribs %}{% endblock body_attribs %}>
-      {% block body -%}
-      {% block banner %}
-      <div class="banner" id="banner">
-        <a  href="{{ url_for('index') }}">
-          <img src="{{ url_for('static', filename='iggybase.gif') }}">
-        </a>
-        {% if current_user.is_authenticated %}
-            <div id="logout" class="text-align-right">
-                <a class="inline-block" href="{{ url_for('mod_auth.logout') }}">Logout</a>
-	  <br /><br />
-        </div>
-        {% endif %}
+    {%- block styles %}
+    <!-- Bootstrap -->
+    <link href="{{bootstrap_find_resource('css/bootstrap.css', cdn='bootstrap')}}" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.3/jquery-ui.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='main.css') }}" rel="stylesheet">
+    {%- endblock styles %}
+    {%- endblock head %}
+  </head>
+  <body{% block body_attribs %}{% endblock body_attribs %}>
+    {% block body -%}
+    {% block banner %}
+    <div class="banner" id="banner">
+      <a  href="{{ url_for('index') }}">
+        <img src="{{ url_for('static', filename='iggybase.gif') }}">
+      </a>
+      {% if current_user.is_authenticated %}
+      <div id="logout" class="text-align-right">
+        <a class="inline-block" href="{{ url_for('mod_auth.logout') }}">Logout</a>
+	<br /><br />
       </div>
-      {% endblock banner %}
+      {% endif %}
+    </div>
+    {% endblock banner %}
+
+
+    {% block sidebar %}
+
+    <div class="container-fluid">
+      <div class="col-sm-2 sidebar">
+	<ul class="nav nav-sidebar navbar-default">
+	  {% for menu in sidebar %}
+	  <li class="text-uppercase">{{ menu.description }}</li>
+	  {% for submenu in get_child_menu(menu.id, facility_role.id) %}
+	  <li><a href=
+		 {% if submenu.menu_url %}"{{ submenu.menu_url.url_path }}"
+                 {% else %}"#"
+		 {% endif %} class="small">{{ submenu.description }}</a></li>
+	  {% endfor %}
+	  {% endfor %}
+	</ul>
+      </div>
+
+      {% endblock sidebar %}
 
       {% block navbar %}
-      <div class="container-fluid">
-	<nav class="navbar navbar-default">
-
-	  <div class="navbar-header"></div>
-	  <div>
-	    <ul class="nav navbar-nav">
-	      {% for menu in navbar recursive %}
-	      {% if get_child_menu(menu.id, facility_role.id) %}
-	      <li class="dropdown">
-		<a class="dropdown-toggle" data-toggle="dropdown"
-		   href= {% if menu.menu_url %}"{{ menu.menu_url.url_path }}"
-		   {% else %}"#"
-		   {% endif %} class="small">{{ menu.description }}
-		  <span class="caret"></span></a>
-		<ul class="dropdown-menu">
-		  {% for submenu in
-		  get_child_menu(menu.id, facility_role.id) %}
-		  <li><a href=
-			 {% if submenu.menu_url %}"{{ submenu.menu_url.url_path }}"
-			 {% else %}"#"
-			 {% endif %} class="small">{{ submenu.description }}</a></li>
-		  {% endfor %}
-		</ul>
-	      </li>
-	      {% else %}
-	      <li><a href= {% if menu.menu_url %}"{{ menu.menu_url.url_path }}"
+      <div class="col-sm-10">
+	<div class="row">
+	  <nav class="navbar navbar-default">
+	    <div class="navbar-header"></div>
+	    <div>
+	      <ul class="nav navbar-nav">
+		{% for menu in navbar recursive %}
+		{% if get_child_menu(menu.id, facility_role.id) %}
+		<li class="dropdown">
+		  <a class="dropdown-toggle" data-toggle="dropdown"
+		     href= {% if menu.menu_url %}"{{ menu.menu_url.url_path }}"
 		     {% else %}"#"
-		     {% endif %} class="small">{{ menu.description }}</a></li>
+		     {% endif %} class="small">{{ menu.description }}
+		    <span class="caret"></span></a>
+		  <ul class="dropdown-menu">
+		    {% for submenu in
+		    get_child_menu(menu.id, facility_role.id) %}
+		    <li><a href=
+			   {% if submenu.menu_url %}"{{ submenu.menu_url.url_path }}"
+			   {% else %}"#"
+			   {% endif %} class="small">{{ submenu.description }}</a></li>
+		    {% endfor %}
+		  </ul>
+		</li>
+		{% else %}
+		<li><a href= {% if menu.menu_url %}"{{ menu.menu_url.url_path }}"
+		       {% else %}"#"
+		       {% endif %} class="small">{{ menu.description }}</a></li>
 
-	      {% endif %}
-	      {% endfor %}
-	    </ul>
-	  </div>
-	</nav>
-      </div>  <!-- end container fluid -->
-      {%- endblock navbar %}
-
-
-      {% block sidebar %}
-      <div class="row">
-	<div class="container-fluid">
-	  <div class="col-sm-2 sidebar">
-	    <ul class="nav nav-sidebar navbar-default">
-	      {% for menu in sidebar %}
-	      <li class="text-uppercase">{{ menu.description }}</li>
-	      {% for submenu in get_child_menu(menu.id, facility_role.id) %}
-	      <li><a href=
-		     {% if submenu.menu_url %}"{{ submenu.menu_url.url_path }}"
-                     {% else %}"#"
-		     {% endif %} class="small">{{ submenu.description }}</a></li>
-	      {% endfor %}
-	      {% endfor %}
-	    </ul>
-	  </div>
-          {% endblock sidebar %}
-
-
-          {% block content -%}
-
-	  <div class="col-sm-10">
-            {% block page_content %}
-            {% block hidden_fields -%}
-            <div id="hidden_fields">
-	      {% if hidden_fields %}
-	      {% for name, value in hidden_fields.items() %}
-	      <input type="hidden" name="{{name}}"
-                     value="{{value}}" class="hidden_field">
-	      {% endfor %}
-	      {% endif %}
-            </div>
-            {% endblock hidden_fields %}
-            {% block topbuttonbar %}
-            {%- endblock topbuttonbar %}
-
-            {% block bottombuttonbar %}
-            {%- endblock bottombuttonbar %}
-            {% endblock page_content %}
+		{% endif %}
+		{% endfor %}
+	      </ul>
+	    </div>
+	  </nav>
+	</div>  <!-- end row -->
+	{%- endblock navbar %}
+	
+	{% block content -%}
+	
+	<div class="row">
+          {% block page_content %}
+          {% block hidden_fields -%}
+          <div id="hidden_fields">
+	    {% if hidden_fields %}
+	    {% for name, value in hidden_fields.items() %}
+	    <input type="hidden" name="{{name}}"
+                   value="{{value}}" class="hidden_field">
+	    {% endfor %}
+	    {% endif %}
           </div>
+          {% endblock hidden_fields %}
+          {% block topbuttonbar %}
+          {%- endblock topbuttonbar %}
+
+          {% block bottombuttonbar %}
+          {%- endblock bottombuttonbar %}
+          {% endblock page_content %}
 	</div>
-      </div>
 
-      {%- endblock content %}
+      </div>  <!-- end container fluid -->
 
-      {% block scripts %}
-      <script src="{{bootstrap_find_resource('jquery.js', cdn='jquery')}}"></script>
-      <script src="{{bootstrap_find_resource('js/bootstrap.js', cdn='bootstrap')}}"></script>
-      <script type="text/javascript" src="{{ url_for( 'static', filename='main.js' ) }}"></script>
-        {{ macros.render_scripts( scripts ) }}
-      {%- endblock scripts %}
-      {%- endblock body %}
-    </body>
-    {%- endblock html %}
-    </html>
+
+    {%- endblock content %}
+
+    {% block scripts %}
+    <script src="{{bootstrap_find_resource('jquery.js', cdn='jquery')}}"></script>
+    <script src="{{bootstrap_find_resource('js/bootstrap.js', cdn='bootstrap')}}"></script>
+    <script type="text/javascript" src="{{ url_for( 'static', filename='main.js' ) }}"></script>
+    {{ macros.render_scripts( scripts ) }}
+    {%- endblock scripts %}
+    {%- endblock body %}
+  </body>
+  {%- endblock html %}
+</html>
 {% endblock doc -%}
