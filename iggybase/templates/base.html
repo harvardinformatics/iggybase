@@ -39,22 +39,35 @@
 
 
     {% block sidebar %}
+      <div class="container-fluid">
+	<div class="col-sm-2 sidebar">
 
-    <div class="container-fluid">
-      <div class="col-sm-2 sidebar">
-	<ul class="nav nav-sidebar navbar-default">
-	  {% for menu in sidebar %}
-	  <li class="text-uppercase">{{ menu.description }}</li>
-	  {% for submenu in get_child_menu(menu.id, facility_role.id) %}
-	  <li><a href=
-		 {% if submenu.menu_url %}"{{ submenu.menu_url.url_path }}"
-                 {% else %}"#"
-		 {% endif %} class="small">{{ submenu.description }}</a></li>
-	  {% endfor %}
-	  {% endfor %}
-	</ul>
-      </div>
+	  <div class="panel-group" id="accordion">
+	    <div class="panel panel-default">
+	      {% for menu in sidebar %}
+	      <div class="panel-heading">
+		<h4 class="panel-title">
+		  <a data-toggle="collapse" data-parent="#accordion"
+		     href="#{{ menu.name }}collapse">{{ menu.description }}</a>
+		</h4>
+	      </div>
 
+	      <div class="panel-body">
+		<div id="{{ menu.name }}collapse" class="panel-collapse collapse in">
+
+		  {% for submenu in get_child_menu(menu.id, facility_role.id) %}
+		  <a href=
+		     {% if submenu.menu_url %}"{{ submenu.menu_url.url_path }}"
+		     {% else %}"#"
+		     {% endif %} class="small">{{ submenu.description }}</a><br />
+		  {% endfor %}
+		</div>
+	      </div>
+	      {% endfor %}
+	    </div>  <!-- end panel -->
+	  </div> <!-- end panel-group -->
+
+	</div>
       {% endblock sidebar %}
 
       {% block navbar %}
