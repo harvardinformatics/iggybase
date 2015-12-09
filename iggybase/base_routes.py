@@ -72,3 +72,15 @@ def data_entry(module_name, table_name, row_name):
         organization_access_control.save_form(form)
 
     return templating.page_template('single_data_entry', form=form)
+
+
+def multiple_data_entry(module_name, table_name, row_names):
+    row_names =  request.json[ 'row_names' ]
+    fg = form_generator.FormGenerator('mod_' + module_name, table_name)
+    form = fg.default_multiple_entry_form(row_names)
+
+    if form.validate_on_submit():
+        organization_access_control = oac.OrganizationAccessControl('mod_' + module_name)
+        organization_access_control.save_form(form)
+
+    return templating.page_template('single_data_entry', form=form)

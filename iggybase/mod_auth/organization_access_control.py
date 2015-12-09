@@ -72,7 +72,7 @@ class OrganizationAccessControl:
 
         return results
 
-    def get_lookup_data(self, fk_table_id):
+    def get_lookup_data(self, fk_table_id, column_value=None):
         fk_table_data = admin_db_session.query(models.TableObject).filter_by(id=fk_table_id).first()
         fk_table_name = TableFactory.to_camel_case(fk_table_data.name)
         fk_field_data = self.foreign_key(fk_table_id)
@@ -83,9 +83,14 @@ class OrganizationAccessControl:
             fk_module_model = import_module('iggybase.' + fk_field_data['module'] + '.models')
             fk_table_object = getattr(fk_module_model, fk_table_name)
 
-            rows = db_session.query(getattr(fk_table_object, 'id'), getattr(fk_table_object, 'name')).all()
+            if column_value is None:
+                rows = db_session.query(getattr(fk_table_object, 'id'), getattr(fk_table_object, 'name')).all()
+            else:
+                rows = db_session.query(getattr(fk_table_object, 'id'), getattr(fk_table_object, 'name')).\
+                    filter(getattr(fk_table_object, 'name')==column_value).all()
 
             for row in rows:
+                logging.info('row.name ' +row.name)
                 results.append((row.id, row.name))
 
         return results
@@ -254,13 +259,13 @@ class OrganizationAccessControl:
             if last_row_id != row_id and row_id not in instances:
                 if hidden_fields['row_name_'+str(row_id)] == 'new':
                     instances[row_id] = current_table_object()
-                    instances[row_id].date_created=datetime.datetime.utcnow()
-                    instances[row_id].organization_id=self.current_org_id
+                    setattr(instances[row_id], 'date_created', datetime.datetime.utcnow())
+                    setattr(instances[row_id], 'organization_id', self.current_org_id)
                 else:
-                    instances[row_id] = current_table_object.query.\
+                    instances[row_id] = db_session.query(current_table_object).\
                         filter_by( name=hidden_fields['row_name_'+str(row_id)] ).first( )
 
-                instances[row_id].last_modified=datetime.datetime.utcnow()
+                setattr(instances[row_id], 'last_modified', datetime.datetime.utcnow())
 
             if not (hidden_fields[field_id]==field.data or hidden_fields[field_id]==str(field.data)):
                 history_instance=core_models.History()
@@ -272,14 +277,15 @@ class OrganizationAccessControl:
                 history_instance.old_value=hidden_fields[field_id]
                 history_instance.new_value=field.data
                 db_session().add(history_instance)
-                db_session().commit()
 
-            if field_data.Field.foreign_key_table_object_id is not None:
-                pass
+            if field_data.Field.foreign_key_table_object_id is not None and not isinstance(field.data, int):
+                fk_id=self.get_lookup_data(field_data.Field.foreign_key_table_object_id, field.data)
+                setattr(instances[row_id], column_name, fk_id[1][0])
             else:
                 setattr(instances[row_id], column_name, field.data)
 
-        db_session().add_all(instances)
+        for row_id, instance in instances.items():
+            db_session().add(instance)
         db_session().commit()
 
     def get_additional_tables( self, table_name, page_form = 'detail'):

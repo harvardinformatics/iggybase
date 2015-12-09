@@ -179,16 +179,12 @@ class FacilityRoleAccessControl:
         table_col_id = table_object( ).__tablename__ + "_id"
         table_object_role = getattr( models, auth_type + "FacilityRole" )
 
-        rec = admin_db_session.query( table_object ).filter_by( id = id ).first( )
+        rec = admin_db_session.query( table_object, table_object_role ).\
+            join( table_object_role ).\
+            filter( getattr( table_object, id ) == id ).\
+            filter( getattr( table_object_role, table_col_id ) == id ).first( )
 
-        access = admin_db_session.query( table_object_role ).\
-            filter( getattr( table_object_role, table_col_id ) == rec.id ).\
-            filter_by( facility_role_id = self.facility_role.id ).filter_by( active = active ).first( )
-
-        if access is not None:
-            return rec
-
-        return None
+        return rec
 
 
 def get_child_menus(parent_id, facility_role_id, active=True):
