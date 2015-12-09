@@ -84,7 +84,7 @@ def add_base_routes( app ):
     def detail( module_name, table_name, row_name ):
         return base_routes.detail( module_name, table_name, row_name )
 
-    @app.route( '/<module_name>/data_entry/<table_name>/<row_name>' )
+    @app.route( '/<module_name>/data_entry/<table_name>/<row_name>', methods=['GET', 'POST'] )
     @login_required
     def data_entry( module_name, table_name, row_name ):
         return base_routes.data_entry( module_name, table_name, row_name )

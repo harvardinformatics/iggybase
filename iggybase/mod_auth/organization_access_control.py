@@ -219,52 +219,72 @@ class OrganizationAccessControl:
         return field_data
 
     def save_form(self, form):
-        session = db_session()
-        module_model = import_module('iggybase.' + form.model_0.data + '.models')
+        module_model = import_module('iggybase.' + form.module_0.data + '.models')
         table_object = getattr( module_model, form.table_object_0.data )
         if form.entry_0.data == 'parent_child':
             child_table_object = getattr( module_model, form.chile_table_object_0.data )
 
         hidden_fields={}
-        last_row_id=1
-        new_instance=table_object()
+        form_fields={}
+        last_row_id=0
+        instances={}
         for field in form:
-            if field.name.endswith('_0'):
+            if field.name.endswith('_token'):
+                continue
+            elif field.name.endswith('_0'):
+                form_fields[ field.name[:field.name.index('_')] ] = field.data
                 continue
             elif field.name.startswith('hidden_'):
-                field_id = field.name[field.name.index('_'):]
+                field_id = field.name[field.name.index('_')+1:]
                 hidden_fields[field_id]=field.data
                 continue
-            elif field.name.beginswith('child_'):
-                field_id = field.name[field.name.index('_'):]
+            elif field.name.startswith('child_'):
+                field_id = field.name[field.name.index('_')+1:]
                 current_table_object = child_table_object
             else:
                 field_id = field.name
                 current_table_object = table_object
 
-            row_id = int(field_id[field_id.index('_'):])
-            column_name = int(field_id[:field_id.index('_')])
+            row_id = int(field_id[field_id.rindex('_')+1:])
+            column_name = field_id[:field_id.rindex('_')]
 
-            if last_row_id != row_id:
-                session.add(new_instance)
-                session.commit()
+            logging.info(str(row_id)+": "+hidden_fields['table_id_'+str(row_id)])
+            logging.info(str(row_id)+": "+form.module_0.data)
+            logging.info(str(row_id)+": "+column_name)
 
-                new_instance = current_table_object()
-                new_instance.last_modified=datetime.datetime.utcnow()
+            field_data = self.facility_role_access_control.field(int(hidden_fields['table_id_'+str(row_id)]),
+                                                                 form.module_0.data, column_name)
 
-                if hidden_fields['name_'+str(row_id)] == 'new':
-                    new_instance.date_created=datetime.datetime.utcnow()
-                    new_instance.organization_id=self.current_org_id
+            if last_row_id != row_id and row_id not in instances:
+                if hidden_fields['row_name_'+str(row_id)] == 'new':
+                    instances[row_id] = current_table_object()
+                    instances[row_id].date_created=datetime.datetime.utcnow()
+                    instances[row_id].organization_id=self.current_org_id
+                else:
+                    instances[row_id] = current_table_object.query.\
+                        filter_by( name=hidden_fields['row_name_'+str(row_id)] ).first( )
 
-            if hidden_fields[field_id]!=field.data:
+                instances[row_id].last_modified=datetime.datetime.utcnow()
+
+            if not (hidden_fields[field_id]==field.data or hidden_fields[field_id]==str(field.data)):
                 history_instance=core_models.History()
+                history_instance.table_id=hidden_fields['table_id_'+str(row_id)]
+                history_instance.field_id=field_data.Field.id
+                history_instance.organization_id=self.current_org_id
+                history_instance.user_id=g.user.id
+                history_instance.instance_name=hidden_fields['row_name_'+str(row_id)]
+                history_instance.old_value=hidden_fields[field_id]
+                history_instance.new_value=field.data
+                db_session().add(history_instance)
+                db_session().commit()
 
-            column_to_update=getattr(new_instance, column_name)
+            if field_data.Field.foreign_key_table_object_id is not None:
+                pass
+            else:
+                setattr(instances[row_id], column_name, field.data)
 
-            column_to_update=field.data
-
-        session.add(new_instance)
-        session.commit()
+        db_session().add_all(instances)
+        db_session().commit()
 
     def get_additional_tables( self, table_name, page_form = 'detail'):
         """Get additional tables that need to be displayed on the page
