@@ -1,4 +1,5 @@
 from flask import g
+from sqlalchemy.orm import aliased
 from iggybase.database import admin_db_session
 from iggybase.mod_admin import models
 from iggybase.mod_admin import constants as admin_consts
@@ -37,6 +38,18 @@ class FacilityRoleAccessControl:
 
         return table_objects
 
+    def modules( self, active = 1 ):
+        # TODO: we don't need this or possibly other functions here
+        # if has_access returns multiple rows
+        return admin_db_session.query(
+                models.Module,
+                models.ModuleFacilityRole
+                ).join( models.ModuleFacilityRole ).\
+            filter(
+                models.ModuleFacilityRole.facility_role_id == self.facility_role.id,
+                models.Module.active == active
+            ).first( )
+
     def fields( self, table_object_id, module, active = 1 ):
         module = admin_db_session.query( models.Module, models.ModuleFacilityRole ).join( models.ModuleFacilityRole ).\
             filter( models.ModuleFacilityRole.facility_role_id == self.facility_role.id ).\
@@ -59,6 +72,8 @@ class FacilityRoleAccessControl:
             return res
 
     def field( self, table_object_id, module, field_name, active = 1 ):
+        # TODO: I think field and fields need to be one function, suggest that
+        # all requestors deal with a list
         module = admin_db_session.query( models.Module, models.ModuleFacilityRole ).join( models.ModuleFacilityRole ).\
             filter( models.ModuleFacilityRole.facility_role_id == self.facility_role.id ).\
             filter( models.Module.name == module ).first( )
@@ -80,28 +95,53 @@ class FacilityRoleAccessControl:
         else:
             return res
 
-    def table_query_fields( self, table_query_id, module, active = 1 ):
-        module = admin_db_session.query( models.Module, models.ModuleFacilityRole ).join( models.ModuleFacilityRole ).\
-            filter( models.ModuleFacilityRole.facility_role_id == self.facility_role.id ).\
-            filter( models.Module.name == module ).first( )
+    def table_queries(self, table_name, page_form, active = 1):
+        """Get the table query to use
+        """
+        fr_id = self.facility_role.id
+        table_object_page = aliased(models.TableObject)
 
-        if module is None:
-            return [ ]
+        table_queries = admin_db_session.query(
+                models.TableQueryRender,
+                models.TableObject
+            ).\
+            join(models.PageFormFacilityRole).\
+            join(models.PageForm).\
+            join(models.TableQuery).\
+            join(models.TableQueryTableObject).\
+            join(models.TableObject).\
+            join(table_object_page, table_object_page.id  == models.TableQueryRender.table_object_id).\
+            join(models.TableObjectFacilityRole).\
+            filter(
+                models.PageForm.name == page_form,
+                table_object_page.name == table_name,
+                models.PageFormFacilityRole.facility_role_id == fr_id,
+                models.TableObjectFacilityRole.facility_role_id == fr_id,
+                table_object_page.active == active,
+                models.TableQuery.active == active,
+                models.TableObject.active == active
+            ).all()
+        return table_queries
 
-        res = admin_db_session.query( models.Field, models.FieldFacilityRole ).join( models.FieldFacilityRole ).\
+    def table_query_fields( self, table_query_id, table_object_id, active = 1, visible = 1 ):
+        res = admin_db_session.query(
+                models.Field,
+                models.TableQueryField
+            ).\
+                join(models.FieldFacilityRole ).\
                 join(models.TableQueryField).\
-                join(models.TableQuery).\
-            filter( models.TableQuery.id == table_query_id ).\
-            filter( models.FieldFacilityRole.facility_role_id == self.facility_role.id ).\
-            filter( models.Field.table_object_id == models.TableQuery.table_object_id ).\
-            filter( models.Field.active == active ).\
-            filter( models.FieldFacilityRole.active == active ).\
-            filter( models.FieldFacilityRole.module_id == module.Module.id ).\
+            filter(
+                models.TableQueryField.table_query_id == table_query_id,
+                models.Field.table_object_id == table_object_id,
+                models.FieldFacilityRole.facility_role_id == self.facility_role.id,
+                models.FieldFacilityRole.visible == visible,
+                models.Field.active == active,
+                models.FieldFacilityRole.active == active,
+                models.TableQueryField.active == active
+            ).\
             order_by( models.FieldFacilityRole.order, models.FieldFacilityRole.id ).all( )
-        if res is None:
-            return [ ]
-        else:
-            return res
+
+        return res
 
     def page_form_menus( self, page_form_id, active = True ):
         """Setup NavBar and Side bar menus for templating context.
@@ -159,20 +199,22 @@ class FacilityRoleAccessControl:
         return res
 
     def has_access( self, auth_type, name, active = 1 ):
+        # TODO: consider using param criteria instead of name or id, and allow
+        # this to return multiple rows for greatest flexability
         table_object = getattr( models, auth_type )
         table_col_id = table_object( ).__tablename__ + "_id"
         table_object_role = getattr( models, auth_type + "FacilityRole" )
 
-        rec = admin_db_session.query( table_object ).filter_by( name = name ).first( )
+        filters = [
+            getattr(table_object, 'name') == name,
+            getattr(table_object_role, 'facility_role_id') == self.facility_role.id,
+            getattr(table_object, 'active') == active
+        ]
+        rec = admin_db_session.query(table_object).\
+                join(table_object_role).\
+                filter(*filters).first()
 
-        access = admin_db_session.query( table_object_role ).\
-            filter( getattr( table_object_role, table_col_id ) == rec.id ).\
-            filter_by( facility_role_id = self.facility_role.id ).filter_by( active = active ).first( )
-
-        if access is not None:
-            return rec
-
-        return None
+        return rec
 
     def has_access_by_id( self, auth_type, id, active = 1 ):
         table_object = getattr( models, auth_type )

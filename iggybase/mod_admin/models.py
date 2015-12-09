@@ -400,8 +400,8 @@ class TableQuery( StaticBase ):
 
     table_query_table_table_object = relationship( "TableObject", foreign_keys = [ table_object_id ] )
 
-class TableQueryPageForm( StaticBase ):
-    __tablename__ = 'table_query_page_form'
+class TableQueryRender( StaticBase ):
+    __tablename__ = 'table_query_render'
     id = Column( Integer, primary_key = True )
     name = Column( String( 100 ), unique = True )
     description = Column( String( 255 ) )
@@ -411,10 +411,13 @@ class TableQueryPageForm( StaticBase ):
     organization_id = Column( Integer )
     order = Column( Integer )
     table_query_id = Column( Integer, ForeignKey( 'table_query.id' ) )
-    page_form_id = Column( Integer, ForeignKey( 'page_form.id' ) )
+    table_object_id = Column( Integer, ForeignKey( 'table_object.id' ) )
+    page_form_facility_role_id = Column( Integer, ForeignKey(
+        'page_form_facility_role.id' ) )
 
-    table_query_page_page_form = relationship( "PageForm", foreign_keys = [ page_form_id ] )
-    table_query_page_table_query = relationship( "TableQuery", foreign_keys = [ table_query_id ] )
+    table_query_render_page_form_facility_role = relationship( "PageFormFacilityRole", foreign_keys = [ page_form_facility_role_id ] )
+    table_query_render_table_query = relationship( "TableQuery", foreign_keys = [ table_query_id ] )
+    table_query_render_table_object = relationship( "TableObject", foreign_keys = [ table_object_id ] )
 
 class TableQueryTableObject( StaticBase ):
     __tablename__ = 'table_query_table_object'
@@ -444,6 +447,7 @@ class TableQueryField( StaticBase ):
     order = Column( Integer )
     table_query_id = Column( Integer, ForeignKey( 'table_query.id' ) )
     field_id = Column( Integer, ForeignKey( 'field.id' ) )
+    display_name = Column( String( 100 ) )
 
     table_query_field_field = relationship( "Field", foreign_keys = [ field_id ] )
     table_query_field_table_query = relationship( "TableQuery", foreign_keys = [ table_query_id ] )
