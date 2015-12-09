@@ -248,10 +248,6 @@ class OrganizationAccessControl:
             row_id = int(field_id[field_id.rindex('_')+1:])
             column_name = field_id[:field_id.rindex('_')]
 
-            logging.info(str(row_id)+": "+hidden_fields['table_id_'+str(row_id)])
-            logging.info(str(row_id)+": "+form.module_0.data)
-            logging.info(str(row_id)+": "+column_name)
-
             field_data = self.facility_role_access_control.field(int(hidden_fields['table_id_'+str(row_id)]),
                                                                  form.module_0.data, column_name)
 
