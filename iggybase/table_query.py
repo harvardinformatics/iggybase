@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from flask import request
 from iggybase.database import admin_db_session
 from iggybase.mod_admin import models
@@ -25,6 +26,7 @@ class TableQuery:
         if self.facility_role_access_control.has_access('Module', self.module):
             self.table_queries = self.facility_role_access_control.table_queries(self.table_name, self.page_form)
             self.table_fields = self.get_table_query_fields(self.table_queries)
+            self.ordered_fields = self.order_fields(self.table_fields)
             organization_access_control = oac.OrganizationAccessControl(self.module)
             results = organization_access_control.get_table_query_data(
                     self.table_fields
@@ -52,8 +54,19 @@ class TableQuery:
         criteria = None
         return criteria
 
-    def order_results():
-        return None_
+    def order_fields(self, table_fields):
+        field_order = {}
+        for table in table_fields:
+            for row in table['fields']:
+                field_order[row.TableQueryField.display_name] = row.TableQueryField.order
+        return sorted(field_order, key=field_order.get)
+
+    def order_results(self, results):
+        ordered_results = []
+        for row in results:
+            sorted_row = OrderedDict(sorted(row.items(), key=lambda i:self.ordered_fields.index(i[0])))
+            ordered_results.append(sorted_row)
+        return ordered_results
 
     def format_data(self, results, for_download = False):
         """Formats data for summary or detail
@@ -103,4 +116,5 @@ class TableQuery:
                                     + self.module_name + '/detail/' \
                                     + self.table_name + '/' + str(col)
                 table_rows.append(row_dict)
+        table_rows = self.order_results(table_rows)
         return table_rows
