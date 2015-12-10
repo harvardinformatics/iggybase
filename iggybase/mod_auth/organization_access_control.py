@@ -17,7 +17,6 @@ class OrganizationAccessControl:
     #TODO: remove module from calls to init
     def __init__(self, module):
         self.org_ids = []
-        self.tables = []
         # Assume that path will always take the form module/page_form/params
         self.module, self.page_form = request.path.split('/')[1:3]
         self.module = 'mod_' + self.module
@@ -94,24 +93,19 @@ class OrganizationAccessControl:
 
         return results
 
-    def get_summary_data(self, table_name, query_data={}):
-        self.tables = []
-        field_data = self.get_field_data(table_name)
-        table_name = table_name
-        results = None
-        if field_data is not None:
-            module_model = import_module('iggybase.' + self.module + '.models')
-            table_object = getattr(module_model, TableFactory.to_camel_case(table_name))
+    def get_table_query_data(self, table_fields, query_data={}):
+        results = []
+        select_tables = []
+        columns = []
+        joins = []
+        criteria = []
+        for table in table_fields:
+            if table['fields']:
+                module_model = import_module('iggybase.' + self.module + '.models')
+                table_model = getattr(module_model, TableFactory.to_camel_case(table['table_object'].name))
+                select_tables.append(table_model)
 
-            self.table_object = table_object
-            self.tables.append(table_object)
-            qry = db_session.query(table_object)
-            columns = []
-            joins = []
-            criteria = []
-
-            for row in field_data:
-                if row.FieldFacilityRole.visible == 1:
+                for row in table['fields']:
                     if row.Field.foreign_key_table_object_id is not None:
                         fk_table_data = admin_db_session.query(models.TableObject). \
                             filter_by(id=row.Field.foreign_key_table_object_id).first()
@@ -120,82 +114,32 @@ class OrganizationAccessControl:
 
                         module_model = import_module('iggybase.' + foreign_key_data['module'] + '.models')
                         fk_table_object = getattr(module_model, fk_table_name)
-                        self.tables.append(fk_table_object)
-                        joins.append(joinedload(getattr(table_object, table_object.__tablename__ + '_' + fk_table_data.name)))
+                        select_tables.append(fk_table_object)
+                        joins.append(joinedload(getattr(table_model, table_model.__tablename__ + '_' + fk_table_data.name)))
                         criteria.append(getattr(fk_table_object, 'organization_id').in_(self.org_ids))
 
-                        columns.append(getattr(table_object, row.Field.field_name).
-                                       label('fk|' + fk_table_name + '|id'))
+                        columns.append(getattr(table_model, row.Field.field_name).
+                                    label('fk|' + fk_table_name + '|id'))
 
                         columns.append(getattr(fk_table_object, foreign_key_data['foreign_key']).
-                                       label('fk|' + foreign_key_data['url_prefix'] + '|' + fk_table_name + '|' +
-                                             foreign_key_data['foreign_key_alias']))
+                                    label('fk|' + foreign_key_data['url_prefix'] + '|' + fk_table_name + '|' +
+                                            foreign_key_data['foreign_key_alias']))
                     else:
-                        columns.append(getattr(table_object, row.Field.field_name).
-                                       label(row.FieldFacilityRole.display_name))
+                        columns.append(getattr(table_model, row.Field.field_name).
+                                    label(row.TableQueryField.display_name))
 
-            criteria.append(getattr(table_object, 'organization_id').in_(self.org_ids))
-            if 'criteria' in query_data:
-                for col, value in query_data['criteria'].items():
-                    criteria.append(getattr(table_object, col) == value)
+                criteria.append(getattr(table_model, 'organization_id').in_(self.org_ids))
+                # TODO: citeria might need to be passed per table
+                if 'criteria' in query_data:
+                    for col, value in query_data['criteria'].items():
+                        criteria.append(getattr(table_object, col) == value)
 
-            # TODO: order the results by order in the table_query_field table
-            if not joins:
-                results = db_session.query(self.tables[0]).add_columns(*columns).filter(*criteria).all()
-            else:
-                results = db_session.query(self.tables[0]).add_columns(*columns).options(*joins). \
-                    filter(*criteria).all()
-
+        if not joins:
+            results = db_session.query(*select_tables).add_columns(*columns).filter(*criteria).all()
+        else:
+            results = db_session.query(*select_tables).add_columns(*columns).options(*joins). \
+                filter(*criteria).all()
         return results
-    def format_data(self, results, for_download = False):
-        """Formats data for summary or detail
-        - transforms into dictionary
-        - removes model objects sqlalchemy puts in
-        - formats FK data and link
-        - formats name link which goes to detail template
-        """
-        table_rows = []
-        # format results as dictionary
-        if results:
-            keys = results[0].keys()
-            # filter out any objects
-            keys_to_skip = []
-            for fk in self.tables:
-                keys_to_skip.append(fk.__name__)
-            # create dictionary for each row and for fk data
-            for row in results:
-                row_dict = {}
-                for i, col in enumerate(row):
-                    if keys[i] not in keys_to_skip:
-                        if 'fk|' in keys[i]:
-                            if '|name' in keys[i]:
-                                fk_metadata = keys[i].split('|')
-                                if fk_metadata[2]:
-                                    table = fk_metadata[2]
-                                    if for_download:
-                                        item_value = col
-                                    else:
-                                        item_value = {
-                                            'text': col,
-                                            # add link foreign key table summary
-                                            'link': '/' + fk_metadata[1] \
-                                                    + '/detail/' + table + '/' \
-                                                    + str(col)
-                                        }
-                                    row_dict[table] = item_value
-                        else:  # add all other colums to table_rows
-                            if for_download:
-                                item_value = col
-                            else:
-                                item_value = {'text': col}
-                            row_dict[keys[i]] = item_value
-                            # name column values will link to detail
-                            if keys[i] == 'name' and not for_download:
-                                row_dict[keys[i]]['link'] = '/' \
-                                                            + self.module.replace('mod_', '') + '/detail/' \
-                                                            + self.table_object.__name__ + '/' + str(col)
-                table_rows.append(row_dict)
-        return table_rows
 
     def foreign_key(self, table_object_id):
         res = admin_db_session.query(models.Field, models.FieldFacilityRole, models.Module). \
