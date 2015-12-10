@@ -90,7 +90,6 @@ class OrganizationAccessControl:
                     filter(getattr(fk_table_object, 'name')==column_value).all()
 
             for row in rows:
-                logging.info('row.name ' +row.name)
                 results.append((row.id, row.name))
 
         return results
