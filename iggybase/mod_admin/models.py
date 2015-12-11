@@ -396,9 +396,7 @@ class TableQuery( StaticBase ):
     active = Column( Boolean )
     organization_id = Column( Integer )
     order = Column( Integer )
-    table_object_id = Column( Integer, ForeignKey( 'table_object.id' ) )
-
-    table_query_table_table_object = relationship( "TableObject", foreign_keys = [ table_object_id ] )
+    display_name = Column( String(100) )
 
 class TableQueryRender( StaticBase ):
     __tablename__ = 'table_query_render'

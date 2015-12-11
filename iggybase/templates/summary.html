@@ -7,7 +7,7 @@
 {%- endblock styles %}
 {% block title %}Iggybase - {{ table_name.replace( '_',' ' ) }}{% endblock %}
 {% block page_content %}
-<h1>{{ table_name.replace( '_', ' ' ) }} {{page_header}}</h1>
+<h1>{{ table_query.display_name.replace( '_', ' ' )|title }} {{page_header}}</h1>
     {% block topbuttonbar %}
         {{ super() }}
         {{ macros.render_buttons(top_buttons)}}
@@ -17,7 +17,7 @@
         <p>Max Date:<input type="text" class="datepicker" id="max_date"></p>
     </div>
     <div class={{ table_name ~ "_table" }}>
-        {{ macros.render_table( table_name, table_rows ) }}
+        {{ macros.render_table( table_query ) }}
     </div>
     {% block bottombuttonbar %}
         {{ super() }}

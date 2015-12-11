@@ -7,13 +7,13 @@
 {% block title %}Iggybase - {{ table_name.replace( '_',' ' ) }}{% endblock %}
 
 {% block page_content %}
-<h1>{{ table_name.replace( '_', ' ' ) }} Action Summary</h1>
+<h1>{{ table_name.replace( '_', ' ' )|title }} Action Summary</h1>
     {% block topbuttonbar %}
         {{ super() }}
         {{ macros.render_buttons(top_buttons)}}
     {%- endblock topbuttonbar %}
     <div class={{ table_name ~ "_table" }}>
-        {{ macros.render_table( table_name, table_rows, page_form_name ) }}
+        {{ macros.render_table( table_query ) }}
     </div>
     {% block bottombuttonbar %}
         {{ super() }}
