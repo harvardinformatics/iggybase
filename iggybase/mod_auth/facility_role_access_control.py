@@ -109,27 +109,6 @@ class FacilityRoleAccessControl:
         )
         return table_queries
 
-    def table_query_tables(self, table_query_id, active = 1):
-        # TODO: consider a function similar to has_access that can take care of
-        # any queries without custom joins if you pass in which tables to select
-        # and which one has a facilityRole to check
-        res = (
-            admin_db_session.query(
-                models.TableQueryTableObject,
-                models.TableObject
-            ).
-                join(models.TableObject).
-                join(models.TableObjectFacilityRole).\
-            filter(
-                models.TableQueryTableObject.table_query_id == table_query_id,
-                models.TableObjectFacilityRole.facility_role_id == self.facility_role.id,
-                models.TableObjectFacilityRole.active == active,
-                models.TableQueryTableObject.active == active,
-                models.TableObject.active == active
-            ).all()
-        )
-        return res
-
     def table_query_fields( self, table_query_id, active = 1, visible = 1 ):
         res = (
             admin_db_session.query(

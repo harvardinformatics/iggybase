@@ -7,7 +7,8 @@ import logging
 
 class TableQueryCollection:
     def __init__ (self, module_name, table_name, page_form):
-        # TODO: make table_name or id optional
+        # TODO: make table_name or id optional based on what is in
+        # table_query_render
         self.module_name = module_name
         self.module = 'mod_' + self.module_name
         self.table_name = table_name

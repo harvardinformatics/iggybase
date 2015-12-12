@@ -14,17 +14,13 @@ class TableQuery:
         self.display_name = display_name
         self.module_name = module_name
         self.module = 'mod_' + module_name
-        self.tables = []
         self.table_rows = []
         self._facility_role_access_control = frac.FacilityRoleAccessControl()
 
     def get_results(self):
         """ calls several class functions and returns results
-            TODO: is it good practice to group these or should the code which
-            instantiats the object call them all?
         """
         results = []
-        self.tables = self._get_tables()
         self.table_fields = self._get_table_query_fields()
         self._ordered_fields = self._get_field_order(self.table_fields)
         organization_access_control = oac.OrganizationAccessControl(self.module)
@@ -33,23 +29,11 @@ class TableQuery:
         )
         return self.results
 
-    def _get_tables(self):
-        tables = self._facility_role_access_control.table_query_tables(
-            self.id
-        )
-        return tables
-
     def _get_table_query_fields(self):
         table_query_fields = self._facility_role_access_control.table_query_fields(
             self.id
         )
         return table_query_fields
-
-    def get_criteria(self):
-        """Get the table query to use
-        """
-        criteria = None
-        return criteria
 
     def _get_field_order(self, table_fields):
         self.field_dict = {}
