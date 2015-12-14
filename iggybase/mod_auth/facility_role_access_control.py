@@ -146,6 +146,26 @@ class FacilityRoleAccessControl:
         )
         return res
 
+    def table_query_criteria(self, table_query_id):
+        criteria = (
+            admin_db_session.query(
+                models.TableQueryCriteria,
+                models.Field,
+                models.TableObject,
+                models.Module
+            ).join(
+                models.Field
+            ).join(
+                (models.TableObject, models.Field.table_object_id ==
+                models.TableObject.id)
+            ).join(
+                models.TableObjectFacilityRole,
+                models.Module
+            ).
+            filter(models.TableQueryCriteria.table_query_id == table_query_id).all()
+        )
+        return criteria
+
     def page_form_menus( self, page_form_id, active = True ):
         """Setup NavBar and Side bar menus for templating context.
         Starts with the root navbar and sidebar records.
