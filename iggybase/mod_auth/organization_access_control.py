@@ -107,8 +107,8 @@ class OrganizationAccessControl:
         columns = []
         joins = []
         criteria = []
-        module_model = import_module('iggybase.' + self.module + '.models')
         for row in table_fields:
+            module_model = import_module('iggybase.' + row.Module.name + '.models')
             table_model = getattr(module_model, TableFactory.to_camel_case(row.TableObject.name))
             select_tables.add(table_model)
             if row.Field.foreign_key_table_object_id is not None:
@@ -140,12 +140,12 @@ class OrganizationAccessControl:
         return results
 
     def foreign_key(self, table_object_id):
-        res = (admin_db_session.query(models.Field, models.Module, models.TableObject).
-            join(models.FieldFacilityRole).
-            join(models.Module).
+        res = (admin_db_session.query(models.Field, models.TableObject, models.Module) .
             join(models.TableObject,
                 models.TableObject.id == models.Field.table_object_id
             ).
+            join(models.TableObjectFacilityRole).
+            join(models.Module).
             filter(models.Field.table_object_id == table_object_id).
             filter(models.Field.field_name == 'name').first())
 

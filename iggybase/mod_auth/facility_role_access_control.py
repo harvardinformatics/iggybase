@@ -114,7 +114,8 @@ class FacilityRoleAccessControl:
             admin_db_session.query(
                 models.Field,
                 models.TableQueryField,
-                models.TableObject
+                models.TableObject,
+                models.Module
             ).
                 join(models.TableQueryField).
                 # TODO: consider having only one foreign key to table object
@@ -125,6 +126,7 @@ class FacilityRoleAccessControl:
                 ).
                 join(models.FieldFacilityRole).
                 join(models.TableObjectFacilityRole).
+                join(models.Module).
             filter(
                 models.TableQueryField.table_query_id == table_query_id,
                 models.FieldFacilityRole.facility_role_id == self.facility_role.id,
