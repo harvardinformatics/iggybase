@@ -106,34 +106,54 @@ class OrganizationAccessControl:
 
     def get_table_query_data(self, table_fields, criteria = []):
         results = []
-        select_tables = set([])
+        tables = set([])
+        joins = set([])
+        outer_joins = []
         columns = []
-        joins = []
+        fk_columns = []
+        aliases = {}
+        first_table_named = None # set to first table name, dont add to joins
         for row in table_fields:
             table_model = util.get_table(row.Module.name, row.TableObject.name)
-            select_tables.add(table_model)
-            if row.Field.foreign_key_table_object_id is not None:
+            tables.add(table_model)
+            if row.Field.foreign_key_table_object_id is not None: # fk field
+                # get fk data so we can include name and form url link
                 fk_data = self.foreign_key(row.Field.foreign_key_table_object_id)
-                fk_table_model = util.get_table(fk_data['module'], fk_data['name'])
-                # include fk objects in the query
-                select_tables.add(fk_table_model)
-                joins.append((fk_table_model, getattr(table_model, table_model.__tablename__ + '_' + fk_data['name'])))
-                columns.append(getattr(fk_table_model, fk_data['foreign_key']).
-                            label('fk|' + fk_data['url_prefix'] + '|' + fk_data['name']))
-            else:
-                tqf_name = row.TableQueryField.display_name
+                # create alias to the fk table
+                # solves the case of more than one join to same table
+                alias_name = row.TableObject.name + '_' + row.Field.field_name + '_' + fk_data['name']
+                aliases[alias_name] = aliased(util.get_table(fk_data['module'], fk_data['name']))
+                outer_joins.append((
+                    aliases[alias_name],
+                    getattr(table_model, row.Field.field_name) == aliases[alias_name].id
+                ))
+                fk_columns.append(getattr(aliases[alias_name], fk_data['foreign_key']).
+                            label('fk|' + fk_data['url_prefix'] + '|' + fk_data['name'] + '|' + row.Field.field_name))
+            else: # non-fk field
+                if row.TableQueryField and row.TableQueryField.display_name:
+                    tqf_name = row.TableQueryField.display_name
+                else:
+                    tqf_name = row.Field.field_name
                 columns.append(getattr(table_model, row.Field.field_name).
                             label((tqf_name if tqf_name else row.Field.field_name)))
+                # add to joins if not first table, avoid joining to self
+                if (not first_table_named
+                    or (first_table_named == row.TableObject.name)):
+                    first_table_named = row.TableObject.name
+                else:
+                    joins.add(table_model)
+        # fk_columns must be last to avoid joining on themselves
+        columns.extend(fk_columns)
+        # add organization id checks on all tables, does not include fk tables
+        for table_model in tables:
+            criteria.append(getattr(table_model, 'organization_id').in_(self.org_ids))
 
-        # add organization id checks on all tables
-        for select_table_model in select_tables:
-            criteria.append(getattr(select_table_model, 'organization_id').in_(self.org_ids))
-
-        if not joins:
-            results = db_session.query(*columns).filter(*criteria).all()
-        else:
-            results = (db_session.query(*columns).join(*joins).
-                    filter(*criteria).all())
+        results = (
+                db_session.query(*columns).
+                join(*joins).
+                outerjoin(*outer_joins).
+                filter(*criteria).all()
+        )
         return results
 
     def foreign_key(self, table_object_id):

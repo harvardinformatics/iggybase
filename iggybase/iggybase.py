@@ -50,32 +50,32 @@ def add_base_routes( app ):
     def default(module_name):
         return base_routes.default()
 
-    @app.route( '/<module_name>/summary/<table_name>' )
+    @app.route( '/<module_name>/summary/<table_name>/' )
     @login_required
     def summary( module_name, table_name ):
         return base_routes.summary( module_name, table_name )
 
-    @app.route( '/<module_name>/summary/<table_name>/download' )
+    @app.route( '/<module_name>/summary/<table_name>/download/' )
     @login_required
     def summary_download( module_name, table_name ):
         return base_routes.summary_download( module_name, table_name )
 
-    @app.route( '/<module_name>/action_summary/<table_name>' )
+    @app.route( '/<module_name>/action_summary/<table_name>/' )
     @login_required
     def action_summary( module_name, table_name ):
         return base_routes.action_summary( module_name, table_name )
 
-    @app.route( '/<module_name>/detail/<table_name>/<row_name>' )
+    @app.route( '/<module_name>/detail/<table_name>/<row_name>/' )
     @login_required
     def detail( module_name, table_name, row_name ):
         return base_routes.detail( module_name, table_name, row_name )
 
-    @app.route( '/<module_name>/data_entry/<table_name>/<row_name>', methods=['GET', 'POST'] )
+    @app.route( '/<module_name>/data_entry/<table_name>/<row_name>/', methods=['GET', 'POST'] )
     @login_required
     def data_entry( module_name, table_name, row_name ):
         return base_routes.data_entry( module_name, table_name, row_name )
 
-    @app.route( '/<module_name>/multiple_entry/<table_name>', methods=['GET', 'POST'] )
+    @app.route( '/<module_name>/multiple_entry/<table_name>/', methods=['GET', 'POST'] )
     @login_required
     def multiple_entry( module_name, table_name ):
         return base_routes.multiple_data_entry( module_name, table_name )

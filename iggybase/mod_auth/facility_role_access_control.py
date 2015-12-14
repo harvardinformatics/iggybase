@@ -115,35 +115,41 @@ class FacilityRoleAccessControl:
         )
         return table_queries
 
-    def table_query_fields(self, table_query_id, active=1, visible=1):
+    def table_query_fields( self, table_query_id, table_name = None, active = 1, visible = 1 ):
+
+        filters = [
+
+                (models.FieldFacilityRole.facility_role_id == self.facility_role.id),
+                (models.TableObjectFacilityRole.facility_role_id == self.facility_role.id),
+                (models.FieldFacilityRole.visible == visible),
+                (models.Field.active == active),
+                (models.FieldFacilityRole.active == active),
+                (models.TableObject.active == active)
+        ]
+        if table_query_id:
+            filters.append((models.TableQueryField.table_query_id == table_query_id))
+            filters.append((models.TableQueryField.active == active))
+        elif table_name:
+            filters.append((models.TableObject.name == table_name))
+
         res = (
             admin_db_session.query(
                 models.Field,
-                models.TableQueryField,
                 models.TableObject,
+                models.TableQueryField,
                 models.Module
             ).
-                join(models.TableQueryField).
-                # TODO: consider having only one foreign key to table object
-                # from field so we don't have to specify condition here
-                join(
+            join(
                 models.TableObject,
                 models.TableObject.id == models.Field.table_object_id
             ).
-                join(models.FieldFacilityRole).
-                join(models.TableObjectFacilityRole).
-                join(models.Module).
-                filter(
-                models.TableQueryField.table_query_id == table_query_id,
-                models.FieldFacilityRole.facility_role_id == self.facility_role.id,
-                models.TableObjectFacilityRole.facility_role_id == self.facility_role.id,
-                models.FieldFacilityRole.visible == visible,
-                models.Field.active == active,
-                models.FieldFacilityRole.active == active,
-                models.TableQueryField.active == active,
-                models.TableObject.active == active
-            ).
-                order_by(models.FieldFacilityRole.order, models.FieldFacilityRole.id).all()
+            join(models.FieldFacilityRole).
+            join(models.TableObjectFacilityRole).
+            join(models.Module).
+            outerjoin(models.TableQueryField).
+            filter(*filters).all()
+                # TODO: consider having only one foreign key to table object
+                # from field so we don't have to specify condition here
         )
         return res
 

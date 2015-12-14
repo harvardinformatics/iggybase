@@ -9,12 +9,13 @@ import logging
 
 # Retreives and formats data based on table_query
 class TableQuery:
-    def __init__ (self, id, order, display_name, module_name):
+    def __init__ (self, id, order, display_name, module_name, table_name = None):
         self.id = id
         self.order = order
         self.display_name = display_name
         self.module_name = module_name
         self.module = 'mod_' + module_name
+        self.table_name = table_name
         self.table_rows = []
         self._facility_role_access_control = frac.FacilityRoleAccessControl()
 
@@ -24,7 +25,7 @@ class TableQuery:
         results = []
         self.table_fields = self._get_table_query_fields()
         self.criteria = self._get_table_query_criteria()
-        self._ordered_fields = self._get_field_order(self.table_fields)
+        #self._ordered_fields = self._get_field_order(self.table_fields)
         organization_access_control = oac.OrganizationAccessControl(self.module)
         self.results = organization_access_control.get_table_query_data(
                 self.table_fields,
@@ -34,7 +35,8 @@ class TableQuery:
 
     def _get_table_query_fields(self):
         table_query_fields = self._facility_role_access_control.table_query_fields(
-            self.id
+            self.id,
+            self.table_name
         )
         return table_query_fields
 
@@ -63,9 +65,8 @@ class TableQuery:
         return sorted(self.field_dict, key=lambda i:self.field_dict[i].TableQueryField.order)
 
     def _get_field_display_name(self, row):
-        tq_name = row.TableQueryField.display_name
-        if tq_name:
-            display_name = tq_name
+        if row.TableQueryField:
+            display_name = row.TableQueryField.display_name
         else:
             display_name = row.Field.field_name
         return display_name
@@ -92,6 +93,7 @@ class TableQuery:
                     fk_metadata = keys[i].split('|')
                     if fk_metadata[2]:
                         table = fk_metadata[2]
+                        field = fk_metadata[3].replace('_id', '')
                         if for_download:
                             item_value = col
                         else:
@@ -105,7 +107,7 @@ class TableQuery:
                                     table
                                 )
                             }
-                        row_dict[table] = item_value
+                        row_dict[field] = item_value
                 else:  # add all other colums to table_rows
                     if for_download:
                         item_value = col
@@ -114,14 +116,16 @@ class TableQuery:
                     row_dict[keys[i]] = item_value
                     # name column values will link to detail
                     if keys[i] == 'name' and not for_download:
-                        table_name = self.field_dict[keys[i]].TableObject.name
+                        #table_name = self.field_dict[keys[i]].TableObject.name
+                        table_name = 'oligo'
                         row_dict[keys[i]]['link'] = self.get_link(
                             col,
                             self.module_name,
                             'detail',
                             table_name
                         )
-            self.table_rows.append(self._order_fields(row_dict))
+            #self.table_rows.append(self._order_fields(row_dict))
+            self.table_rows.append(row_dict)
 
     def get_link(self, value, module, page = None, table = None):
         link = '/' + module
