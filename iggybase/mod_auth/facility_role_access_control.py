@@ -38,18 +38,6 @@ class FacilityRoleAccessControl:
 
         return table_objects
 
-    def modules( self, active = 1 ):
-        # TODO: we don't need this or possibly other functions here
-        # if has_access returns multiple rows
-        return admin_db_session.query(
-                models.Module,
-                models.ModuleFacilityRole
-                ).join( models.ModuleFacilityRole ).\
-            filter(
-                models.ModuleFacilityRole.facility_role_id == self.facility_role.id,
-                models.Module.active == active
-            ).first( )
-
     def fields( self, table_object_id, module, active = 1 ):
         module = admin_db_session.query( models.Module, models.ModuleFacilityRole ).join( models.ModuleFacilityRole ).\
             filter( models.ModuleFacilityRole.facility_role_id == self.facility_role.id ).\
@@ -96,51 +84,59 @@ class FacilityRoleAccessControl:
             return res
 
     def table_queries(self, table_name, page_form, active = 1):
-        """Get the table query to use
+        """Get the table queries
         """
-        fr_id = self.facility_role.id
-        table_object_page = aliased(models.TableObject)
-
-        table_queries = admin_db_session.query(
+        table_queries = (
+            admin_db_session.query(
                 models.TableQueryRender,
-                models.TableObject
-            ).\
-            join(models.PageFormFacilityRole).\
-            join(models.PageForm).\
-            join(models.TableQuery).\
-            join(models.TableQueryTableObject).\
-            join(models.TableObject).\
-            join(table_object_page, table_object_page.id  == models.TableQueryRender.table_object_id).\
-            join(models.TableObjectFacilityRole).\
+                models.TableQuery
+            ).
+            join(models.PageFormFacilityRole).
+            join(models.PageForm).
+            join(models.TableQuery).
+            join(models.TableQueryTableObject).
+            join(
+                    models.TableObject,
+                    models.TableQueryRender.table_object_id == models.TableObject.id
+            ).
             filter(
                 models.PageForm.name == page_form,
-                table_object_page.name == table_name,
-                models.PageFormFacilityRole.facility_role_id == fr_id,
-                models.TableObjectFacilityRole.facility_role_id == fr_id,
-                table_object_page.active == active,
+                models.TableObject.name == table_name,
+                (models.PageFormFacilityRole.facility_role_id ==
+                    self.facility_role.id),
                 models.TableQuery.active == active,
-                models.TableObject.active == active
             ).all()
+        )
         return table_queries
 
-    def table_query_fields( self, table_query_id, table_object_id, active = 1, visible = 1 ):
-        res = admin_db_session.query(
+    def table_query_fields( self, table_query_id, active = 1, visible = 1 ):
+        res = (
+            admin_db_session.query(
                 models.Field,
-                models.TableQueryField
-            ).\
-                join(models.FieldFacilityRole ).\
-                join(models.TableQueryField).\
+                models.TableQueryField,
+                models.TableObject
+            ).
+                join(models.TableQueryField).
+                # TODO: consider having only one foreign key to table object
+                # from field so we don't have to specify condition here
+                join(
+                    models.TableObject,
+                    models.TableObject.id == models.Field.table_object_id
+                ).
+                join(models.FieldFacilityRole).
+                join(models.TableObjectFacilityRole).
             filter(
                 models.TableQueryField.table_query_id == table_query_id,
-                models.Field.table_object_id == table_object_id,
                 models.FieldFacilityRole.facility_role_id == self.facility_role.id,
+                models.TableObjectFacilityRole.facility_role_id == self.facility_role.id,
                 models.FieldFacilityRole.visible == visible,
                 models.Field.active == active,
                 models.FieldFacilityRole.active == active,
-                models.TableQueryField.active == active
-            ).\
-            order_by( models.FieldFacilityRole.order, models.FieldFacilityRole.id ).all( )
-
+                models.TableQueryField.active == active,
+                models.TableObject.active == active
+            ).
+            order_by(models.FieldFacilityRole.order, models.FieldFacilityRole.id).all()
+        )
         return res
 
     def page_form_menus( self, page_form_id, active = True ):

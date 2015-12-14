@@ -33,6 +33,13 @@ class OrganizationAccessControl:
             self.user_role = None
             self.current_org_id = None
 
+    def get_object(self, obj_type, filters = []):
+        """ get objects of one type with any filters
+        """
+        obj = getattr( models, obj_type )
+        res = admin_db_session.query(obj).filter(*filters).all()
+        return res
+
     def get_child_organization(self, parent_organization_id):
         self.org_ids.append(parent_organization_id)
 
@@ -95,62 +102,57 @@ class OrganizationAccessControl:
 
     def get_table_query_data(self, table_fields, query_data={}):
         results = []
-        select_tables = []
+        select_tables = set([])
         columns = []
         joins = []
         criteria = []
-        for table in table_fields:
-            if table['fields']:
-                module_model = import_module('iggybase.' + self.module + '.models')
-                table_model = getattr(module_model, TableFactory.to_camel_case(table['table_object'].name))
-                select_tables.append(table_model)
+        module_model = import_module('iggybase.' + self.module + '.models')
+        for row in table_fields:
+            table_model = getattr(module_model, TableFactory.to_camel_case(row.TableObject.name))
+            select_tables.add(table_model)
+            if row.Field.foreign_key_table_object_id is not None:
+                fk_data = self.foreign_key(row.Field.foreign_key_table_object_id)
+                fk_module_model = import_module('iggybase.' + fk_data['module'] + '.models')
+                fk_table_model = getattr(fk_module_model, TableFactory.to_camel_case(fk_data['name']))
+                # include fk objects in the query
+                select_tables.add(fk_table_model)
+                joins.append((fk_table_model, getattr(table_model, table_model.__tablename__ + '_' + fk_data['name'])))
+                columns.append(getattr(fk_table_model, fk_data['foreign_key']).
+                            label('fk|' + fk_data['url_prefix'] + '|' + fk_data['name']))
+            else:
+                tqf_name = row.TableQueryField.display_name
+                columns.append(getattr(table_model, row.Field.field_name).
+                            label((tqf_name if tqf_name else row.Field.field_name)))
 
-                for row in table['fields']:
-                    if row.Field.foreign_key_table_object_id is not None:
-                        fk_table_data = admin_db_session.query(models.TableObject). \
-                            filter_by(id=row.Field.foreign_key_table_object_id).first()
-                        fk_table_name = TableFactory.to_camel_case(fk_table_data.name)
-                        foreign_key_data = self.foreign_key(row.Field.foreign_key_table_object_id)
+        # add organization id checks on all tables
+        for select_table_model in select_tables:
+            criteria.append(getattr(select_table_model, 'organization_id').in_(self.org_ids))
 
-                        module_model = import_module('iggybase.' + foreign_key_data['module'] + '.models')
-                        fk_table_object = getattr(module_model, fk_table_name)
-                        select_tables.append(fk_table_object)
-                        joins.append(joinedload(getattr(table_model, table_model.__tablename__ + '_' + fk_table_data.name)))
-                        criteria.append(getattr(fk_table_object, 'organization_id').in_(self.org_ids))
-
-                        columns.append(getattr(table_model, row.Field.field_name).
-                                    label('fk|' + fk_table_name + '|id'))
-
-                        columns.append(getattr(fk_table_object, foreign_key_data['foreign_key']).
-                                    label('fk|' + foreign_key_data['url_prefix'] + '|' + fk_table_name + '|' +
-                                            foreign_key_data['foreign_key_alias']))
-                    else:
-                        columns.append(getattr(table_model, row.Field.field_name).
-                                    label(row.TableQueryField.display_name))
-
-                criteria.append(getattr(table_model, 'organization_id').in_(self.org_ids))
-                # TODO: citeria might need to be passed per table
-                if 'criteria' in query_data:
-                    for col, value in query_data['criteria'].items():
-                        criteria.append(getattr(table_object, col) == value)
-
+        if 'criteria' in query_data:
+            for col, value in query_data['criteria'].items():
+                criteria.append(getattr(table_object, col) == value)
         if not joins:
-            results = db_session.query(*select_tables).add_columns(*columns).filter(*criteria).all()
+            results = db_session.query(*columns).filter(*criteria).all()
         else:
-            results = db_session.query(*select_tables).add_columns(*columns).options(*joins). \
-                filter(*criteria).all()
+            results = (db_session.query(*columns).join(*joins).
+                    filter(*criteria).all())
         return results
 
     def foreign_key(self, table_object_id):
-        res = admin_db_session.query(models.Field, models.FieldFacilityRole, models.Module). \
-            join(models.FieldFacilityRole). \
-            join(models.Module). \
-            filter(models.Field.table_object_id == table_object_id). \
-            filter(models.Field.field_name == 'name'). \
-            order_by(models.FieldFacilityRole.order, models.FieldFacilityRole.id).first()
+        res = (admin_db_session.query(models.Field, models.Module, models.TableObject).
+            join(models.FieldFacilityRole).
+            join(models.Module).
+            join(models.TableObject,
+                models.TableObject.id == models.Field.table_object_id
+            ).
+            filter(models.Field.table_object_id == table_object_id).
+            filter(models.Field.field_name == 'name').first())
 
-        return {'foreign_key':res.Field.field_name, 'foreign_key_alias':res.FieldFacilityRole.display_name,
-                'module':res.Module.name, 'url_prefix':res.Module.url_prefix}
+        return {'foreign_key':res.Field.field_name,
+                'module':res.Module.name,
+                'url_prefix':res.Module.url_prefix,
+                'name': res.TableObject.name
+        }
 
     def get_field_data(self, table_name):
         table_data = self.facility_role_access_control.has_access('TableObject', table_name)
