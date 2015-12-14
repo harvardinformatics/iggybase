@@ -83,9 +83,20 @@ class FacilityRoleAccessControl:
         else:
             return res
 
-    def table_queries(self, table_name, page_form, active = 1):
+    def table_queries(self, page_form, table_name = None, active = 1):
         """Get the table queries
         """
+        filters =[
+            (models.PageForm.name == page_form),
+            (models.PageFormFacilityRole.facility_role_id ==
+                self.facility_role.id),
+            (models.TableQuery.active == active)
+        ]
+        if table_name:
+            filters.append(
+                (models.TableObject.name == table_name)
+            )
+
         table_queries = (
             admin_db_session.query(
                 models.TableQueryRender,
@@ -99,13 +110,7 @@ class FacilityRoleAccessControl:
                     models.TableObject,
                     models.TableQueryRender.table_object_id == models.TableObject.id
             ).
-            filter(
-                models.PageForm.name == page_form,
-                models.TableObject.name == table_name,
-                (models.PageFormFacilityRole.facility_role_id ==
-                    self.facility_role.id),
-                models.TableQuery.active == active,
-            ).all()
+            filter(*filters).all()
         )
         return table_queries
 
