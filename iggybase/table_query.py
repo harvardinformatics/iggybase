@@ -22,10 +22,12 @@ class TableQuery:
         """
         results = []
         self.table_fields = self._get_table_query_fields()
+        self.criteria = self._get_table_query_criteria()
         self._ordered_fields = self._get_field_order(self.table_fields)
         organization_access_control = oac.OrganizationAccessControl(self.module)
         self.results = organization_access_control.get_table_query_data(
-                self.table_fields
+                self.table_fields,
+                {'criteria': self.criteria}
         )
         return self.results
 
@@ -34,6 +36,18 @@ class TableQuery:
             self.id
         )
         return table_query_fields
+
+    def _get_table_query_criteria(self):
+        criteria = (
+            admin_db_session.query(
+                models.TableQueryCriteria,
+            ).
+            filter(models.TableQueryCriteria.table_query_id == self.id).all()
+        )
+        # TODO: consider columns in table_query_criteria for table_object_id,
+        # module_id, column and value
+        criteria = {}
+        return criteria
 
     def _get_field_order(self, table_fields):
         self.field_dict = {}

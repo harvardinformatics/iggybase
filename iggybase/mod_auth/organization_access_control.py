@@ -131,7 +131,7 @@ class OrganizationAccessControl:
 
         if 'criteria' in query_data:
             for col, value in query_data['criteria'].items():
-                criteria.append(getattr(table_object, col) == value)
+                criteria.append(getattr(table_model, col) == value)
         if not joins:
             results = db_session.query(*columns).filter(*criteria).all()
         else:
