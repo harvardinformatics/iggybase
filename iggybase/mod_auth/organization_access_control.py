@@ -1,4 +1,4 @@
-from flask import g, request
+from flask import g, request, abort
 from iggybase.database import db_session
 from iggybase.mod_auth.models import load_user, UserRole, Organization
 from iggybase.mod_auth.facility_role_access_control import FacilityRoleAccessControl
@@ -61,7 +61,10 @@ class OrganizationAccessControl:
 
         if field_data is not None:
             module_model = import_module('iggybase.' + self.module + '.models')
-            table_object = getattr(module_model, table_name)
+            try:
+                table_object = getattr(module_model, table_name)
+            except AttributeError:
+                abort(404)
 
             columns = []
             for row in field_data:
