@@ -2,7 +2,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 from config import get_config
-
+import logging
 conf = get_config( )
 
 adminengine = create_engine( conf.SQLALCHEMY_DATABASE_URI + conf.ADMIN_DB_NAME, pool_recycle = 28800 )
@@ -15,10 +15,9 @@ db_session = scoped_session( sessionmaker( autocommit = False, autoflush = False
 Base = declarative_base()
 Base.query = db_session.query_property()
 
-def init_db( ):
-    import iggybase.mod_admin.models
-    StaticBase.metadata.create_all( bind = adminengine )
+def init_db(  ):
 
-    import iggybase.mod_auth.models
-    import iggybase.mod_murray.models
+    for i,(module, blueprint) in enumerate(conf.BLUEPRINTS):
+        getattr(__import__('iggybase.'+module, fromlist=['models']),'models')
     Base.metadata.create_all( bind = engine )
+    StaticBase.metadata.create_all( bind = adminengine )

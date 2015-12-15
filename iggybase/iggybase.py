@@ -3,31 +3,15 @@ from config import config, get_config
 from flask import render_template
 from flask.ext.login import login_required, current_user
 from iggybase.extensions import mail, lm, bootstrap
-from iggybase.mod_auth import mod_auth as mod_auth_blueprint
-from iggybase.mod_murray import mod_murray as mod_murray_lab_blueprint
-from iggybase.mod_admin import mod_admin as mod_admin_blueprint
-from iggybase.mod_api import mod_api as mod_api_blueprint
-from iggybase.mod_core import mod_core as mod_core_blueprint
-from iggybase import base_routes
+import logging
 
 __all__ = [ 'create_app' ]
-
-DEFAULT_BLUEPRINTS = (
-    mod_admin_blueprint,
-    mod_core_blueprint,
-    mod_auth_blueprint,
-    mod_api_blueprint,
-    mod_murray_lab_blueprint
-)
-
 
 def create_app( config_name = None, app_name = None ):
     if config_name is None:
         conf = get_config( )
     else:
         conf = config[ config_name ]( )
-
-    blueprints = DEFAULT_BLUEPRINTS
 
     iggybase = Flask( __name__ )
     iggybase.config.from_object( conf )
@@ -42,7 +26,7 @@ def create_app( config_name = None, app_name = None ):
     from iggybase.database import init_db
     init_db( )
 
-    configure_blueprints( iggybase, blueprints )
+    configure_blueprints( iggybase, conf.BLUEPRINTS )
     configure_extensions( iggybase )
     configure_hook( iggybase )
     configure_error_handlers( iggybase )
@@ -59,6 +43,8 @@ def configure_extensions( app ):
 
 
 def add_base_routes( app ):
+    from iggybase import base_routes
+
     @app.route( '/<module_name>/' )
     @login_required
     def default(module_name):
@@ -96,9 +82,9 @@ def add_base_routes( app ):
 
 
 def configure_blueprints( app, blueprints ):
-
-    for blueprint in blueprints:
-        app.register_blueprint( blueprint )
+    for i,(module, blueprint) in enumerate(blueprints):
+        bp = getattr(__import__('iggybase.'+module, fromlist=[module]),module)
+        app.register_blueprint( bp )
 
 
 def configure_hook( app ):

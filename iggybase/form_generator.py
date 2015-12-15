@@ -187,9 +187,9 @@ class FormGenerator():
             if data:
                 data = data[0]
 
-        if type(data) is list:
-            data = None
-            row_name = 'new'
+                if type(data) is list:
+                    data = None
+                    row_name = 'new'
 
         for field in fields:
             value = None

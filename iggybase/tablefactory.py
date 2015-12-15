@@ -28,7 +28,7 @@ class TableFactory:
                 classattr[ col.field_name ] = self.create_column( col, foreign_table.name, foreign_column.field_name )
 
                 if foreign_table is not None and foreign_column is not None:
-                    classattr[ table_object.name + "_" + foreign_table.name ] = \
+                    classattr[ table_object.name + "_" + col.field_name + "_" + foreign_table.name ] = \
                         self.create_foreign_key( TableFactory.to_camel_case( foreign_table.name ),\
                                                  classattr[ col.field_name ] )
             else:
