@@ -154,11 +154,7 @@ class OrganizationAccessControl:
         field_data = None
 
         if table_data is not None:
-            table_queries = self.get_table_queries(table_name)
-            if table_queries:
-                field_data = self.facility_role_access_control.table_query_fields(table_queries[0].id, self.module)
-            else:
-                field_data = self.facility_role_access_control.fields(table_data.id, self.module)
+            field_data = self.facility_role_access_control.fields(table_data.id, self.module)
 
         return field_data
 

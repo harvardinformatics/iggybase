@@ -187,10 +187,14 @@ class FormGenerator():
             if data:
                 data = data[0]
 
+        if type(data) is list:
+            data = None
+            row_name = 'new'
+
         for field in fields:
             value = None
             if row_name != 'new' and data is not None:
-                if field.FieldFacilityRole.display_name in data.keys():
+                if  field.FieldFacilityRole.display_name in data.keys():
                     value = data[data.keys().index(field.FieldFacilityRole.display_name)]
 
             if value is None:
