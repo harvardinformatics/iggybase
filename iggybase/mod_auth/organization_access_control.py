@@ -8,7 +8,6 @@ from iggybase.mod_admin import models
 from iggybase.mod_core import models as core_models
 from iggybase.mod_core import utilities as util
 from iggybase.tablefactory import TableFactory
-import iggybase.table_query_collection as tqc
 from sqlalchemy.orm import joinedload, aliased
 import datetime
 import logging
