@@ -15,7 +15,7 @@ def message(page_temp, page_msg):
 
 def summary(module_name, table_name):
     page_form = 'summary'
-    table_queries = tqc.TableQueryCollection(module_name, table_name, page_form)
+    table_queries = tqc.TableQueryCollection(module_name, page_form, table_name)
     table_queries.get_results()
     table_queries.format_results()
     return templating.page_template('summary', table_name = table_name,
@@ -24,7 +24,7 @@ def summary(module_name, table_name):
 def summary_download(module_name, table_name):
     page_form = 'summary'
     for_download = True
-    table_queries = tqc.TableQueryCollection(module_name, table_name, page_form)
+    table_queries = tqc.TableQueryCollection(module_name, page_form, table_name)
     table_queries.get_results()
     table_queries.format_results(for_download)
     table_rows = table_queries.get_first().table_rows
@@ -33,7 +33,7 @@ def summary_download(module_name, table_name):
 
 def action_summary(module_name, table_name = None):
     page_form = 'summary'
-    table_queries = tqc.TableQueryCollection(module_name, table_name, page_form)
+    table_queries = tqc.TableQueryCollection(module_name, page_form, table_name)
     table_queries.get_results()
     table_queries.format_results()
     return templating.page_template('action_summary', table_name = table_name, table_query =
@@ -41,7 +41,7 @@ def action_summary(module_name, table_name = None):
 
 def detail(module_name, table_name, row_name):
     page_form = 'detail'
-    table_queries = tqc.TableQueryCollection(module_name, table_name, page_form)
+    table_queries = tqc.TableQueryCollection(module_name, page_form, table_name)
     table_queries.get_results()
     table_queries.format_results()
     mod = request.path.split('/')[1]

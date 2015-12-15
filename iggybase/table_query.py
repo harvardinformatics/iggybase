@@ -4,6 +4,7 @@ from iggybase.database import admin_db_session
 from iggybase.mod_admin import models
 from iggybase.mod_auth import organization_access_control as oac
 from iggybase.mod_auth import facility_role_access_control as frac
+from iggybase.mod_core import utilities as util
 import logging
 
 # Retreives and formats data based on table_query
@@ -22,10 +23,12 @@ class TableQuery:
         """
         results = []
         self.table_fields = self._get_table_query_fields()
+        self.criteria = self._get_table_query_criteria()
         self._ordered_fields = self._get_field_order(self.table_fields)
         organization_access_control = oac.OrganizationAccessControl(self.module)
         self.results = organization_access_control.get_table_query_data(
-                self.table_fields
+                self.table_fields,
+                self.criteria
         )
         return self.results
 
@@ -34,6 +37,22 @@ class TableQuery:
             self.id
         )
         return table_query_fields
+
+    def _get_table_query_criteria(self):
+        criteria = []
+        res = self._facility_role_access_control.table_query_criteria(
+            self.id
+        )
+        for row in res:
+            col = util.get_column(
+                row.Module.name,
+                row.TableObject.name,
+                row.Field.field_name
+            )
+            criteria.append(
+                col == row.TableQueryCriteria.value
+            )
+        return criteria
 
     def _get_field_order(self, table_fields):
         self.field_dict = {}

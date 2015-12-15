@@ -6,7 +6,9 @@ from importlib import import_module
 from iggybase.database import admin_db_session
 from iggybase.mod_admin import models
 from iggybase.mod_core import models as core_models
+from iggybase.mod_core import utilities as util
 from iggybase.tablefactory import TableFactory
+import iggybase.table_query_collection as tqc
 from sqlalchemy.orm import joinedload, aliased
 import datetime
 import logging
@@ -18,8 +20,8 @@ class OrganizationAccessControl:
     def __init__(self, module):
         self.org_ids = []
         # Assume that path will always take the form module/page_form/params
-        self.module, self.page_form = request.path.split('/')[1:3]
-        self.module = 'mod_' + self.module
+        self.module_name, self.page_form = request.path.split('/')[1:3]
+        self.module = 'mod_' + self.module_name
 
         if g.user is not None and not g.user.is_anonymous:
             self.user = load_user(g.user.id)
@@ -86,8 +88,8 @@ class OrganizationAccessControl:
         results = [(-99, '')]
 
         if fk_field_data is not None:
-            fk_module_model = import_module('iggybase.' + fk_field_data['module'] + '.models')
-            fk_table_object = getattr(fk_module_model, fk_table_name)
+            fk_table_object = util.get_table(fk_field_data['module'],
+                    fk_table_data.name)
 
             if column_value is None:
                 rows = db_session.query(getattr(fk_table_object, 'id'), getattr(fk_table_object, 'name')).all()
@@ -100,20 +102,17 @@ class OrganizationAccessControl:
 
         return results
 
-    def get_table_query_data(self, table_fields, query_data={}):
+    def get_table_query_data(self, table_fields, criteria = []):
         results = []
         select_tables = set([])
         columns = []
         joins = []
-        criteria = []
-        module_model = import_module('iggybase.' + self.module + '.models')
         for row in table_fields:
-            table_model = getattr(module_model, TableFactory.to_camel_case(row.TableObject.name))
+            table_model = util.get_table(row.Module.name, row.TableObject.name)
             select_tables.add(table_model)
             if row.Field.foreign_key_table_object_id is not None:
                 fk_data = self.foreign_key(row.Field.foreign_key_table_object_id)
-                fk_module_model = import_module('iggybase.' + fk_data['module'] + '.models')
-                fk_table_model = getattr(fk_module_model, TableFactory.to_camel_case(fk_data['name']))
+                fk_table_model = util.get_table(fk_data['module'], fk_data['name'])
                 # include fk objects in the query
                 select_tables.add(fk_table_model)
                 joins.append((fk_table_model, getattr(table_model, table_model.__tablename__ + '_' + fk_data['name'])))
@@ -128,9 +127,6 @@ class OrganizationAccessControl:
         for select_table_model in select_tables:
             criteria.append(getattr(select_table_model, 'organization_id').in_(self.org_ids))
 
-        if 'criteria' in query_data:
-            for col, value in query_data['criteria'].items():
-                criteria.append(getattr(table_object, col) == value)
         if not joins:
             results = db_session.query(*columns).filter(*criteria).all()
         else:
@@ -139,12 +135,12 @@ class OrganizationAccessControl:
         return results
 
     def foreign_key(self, table_object_id):
-        res = (admin_db_session.query(models.Field, models.Module, models.TableObject).
-            join(models.FieldFacilityRole).
-            join(models.Module).
+        res = (admin_db_session.query(models.Field, models.TableObject, models.Module) .
             join(models.TableObject,
                 models.TableObject.id == models.Field.table_object_id
             ).
+            join(models.TableObjectFacilityRole).
+            join(models.Module).
             filter(models.Field.table_object_id == table_object_id).
             filter(models.Field.field_name == 'name').first())
 
@@ -156,7 +152,6 @@ class OrganizationAccessControl:
 
     def get_field_data(self, table_name):
         table_data = self.facility_role_access_control.has_access('TableObject', table_name)
-
         field_data = None
 
         if table_data is not None:
@@ -233,33 +228,8 @@ class OrganizationAccessControl:
             db_session().add(instance)
         db_session().commit()
 
-    def get_additional_tables( self, table_name, page_form = 'detail'):
-        """Get additional tables that need to be displayed on the page
-        """
-        to_page = aliased(models.TableObject)
-        to_additional = aliased(models.TableObject)
-        # fetch the names of tables we need to display for this page and obejct
-        table_queries = admin_db_session.query(models.TableQuery.id, to_additional.name).\
-                join(models.TableQueryTableObject).\
-                join(to_page, to_page.id ==
-                        models.TableQueryTableObject.table_object_id).\
-                join(to_additional, to_additional.id ==
-                        models.TableQuery.table_object_id).\
-                join(models.TableQueryPageForm).\
-                join(models.PageForm).\
-                filter(models.PageForm.name == page_form, to_page.name == table_name.lower()).\
-                filter(to_page.name != to_additional.name).all()
-        # get the summary data for these tables
-        additional_tables = []
-        for row in table_queries:
-            #TODO: should routes call this to be consistant?
-            results = self.get_summary_data(row.name)
-            additional_tables.append(results)
-
-        return additional_tables
-
     def get_table_queries( self, table_name):
-        """Get the table query to use
+        """TODO: remove this function use table_query_collection instead
         """
         table_queries = admin_db_session.query(models.TableQuery.id,
                 models.TableObject.name).\

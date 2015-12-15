@@ -6,7 +6,7 @@ import iggybase.table_query as tq
 import logging
 
 class TableQueryCollection:
-    def __init__ (self, module_name, table_name, page_form):
+    def __init__ (self, module_name, page_form, table_name = None):
         # TODO: make table_name or id optional based on what is in
         # table_query_render
         self.module_name = module_name
@@ -20,7 +20,7 @@ class TableQueryCollection:
         """ calls several class functions and returns results
         """
         if self.facility_role_access_control.has_access('Module', self.module):
-            table_queries_info = self.facility_role_access_control.table_queries(self.table_name, self.page_form)
+            table_queries_info = self.facility_role_access_control.table_queries(self.page_form, self.table_name)
             for query in table_queries_info:
                 order = query.TableQuery.order
                 table_query = tq.TableQuery(

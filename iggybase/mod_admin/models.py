@@ -461,9 +461,12 @@ class TableQueryCriteria( StaticBase ):
     organization_id = Column( Integer )
     order = Column( Integer )
     table_query_id = Column( Integer, ForeignKey( 'table_query.id' ) )
-    criteria = Column( String( 255 ) )
+    field_id = Column( Integer, ForeignKey( 'field.id' ) )
+    value = Column( String( 255 ) )
+    comparator = Column( String( 10 ) )
 
     table_query_criteria_table_query = relationship( "TableQuery", foreign_keys = [ table_query_id ] )
+    table_query_criteria_field = relationship( "Field", foreign_keys = [ field_id ] )
 
 class TableQueryOrder( StaticBase ):
     __tablename__ = 'table_query_order'

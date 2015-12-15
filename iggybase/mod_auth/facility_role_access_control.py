@@ -83,9 +83,20 @@ class FacilityRoleAccessControl:
         else:
             return res
 
-    def table_queries(self, table_name, page_form, active = 1):
+    def table_queries(self, page_form, table_name = None, active = 1):
         """Get the table queries
         """
+        filters =[
+            (models.PageForm.name == page_form),
+            (models.PageFormFacilityRole.facility_role_id ==
+                self.facility_role.id),
+            (models.TableQuery.active == active)
+        ]
+        if table_name:
+            filters.append(
+                (models.TableObject.name == table_name)
+            )
+
         table_queries = (
             admin_db_session.query(
                 models.TableQueryRender,
@@ -99,13 +110,7 @@ class FacilityRoleAccessControl:
                     models.TableObject,
                     models.TableQueryRender.table_object_id == models.TableObject.id
             ).
-            filter(
-                models.PageForm.name == page_form,
-                models.TableObject.name == table_name,
-                (models.PageFormFacilityRole.facility_role_id ==
-                    self.facility_role.id),
-                models.TableQuery.active == active,
-            ).all()
+            filter(*filters).all()
         )
         return table_queries
 
@@ -114,7 +119,8 @@ class FacilityRoleAccessControl:
             admin_db_session.query(
                 models.Field,
                 models.TableQueryField,
-                models.TableObject
+                models.TableObject,
+                models.Module
             ).
                 join(models.TableQueryField).
                 # TODO: consider having only one foreign key to table object
@@ -125,6 +131,7 @@ class FacilityRoleAccessControl:
                 ).
                 join(models.FieldFacilityRole).
                 join(models.TableObjectFacilityRole).
+                join(models.Module).
             filter(
                 models.TableQueryField.table_query_id == table_query_id,
                 models.FieldFacilityRole.facility_role_id == self.facility_role.id,
@@ -138,6 +145,26 @@ class FacilityRoleAccessControl:
             order_by(models.FieldFacilityRole.order, models.FieldFacilityRole.id).all()
         )
         return res
+
+    def table_query_criteria(self, table_query_id):
+        criteria = (
+            admin_db_session.query(
+                models.TableQueryCriteria,
+                models.Field,
+                models.TableObject,
+                models.Module
+            ).join(
+                models.Field
+            ).join(
+                (models.TableObject, models.Field.table_object_id ==
+                models.TableObject.id)
+            ).join(
+                models.TableObjectFacilityRole,
+                models.Module
+            ).
+            filter(models.TableQueryCriteria.table_query_id == table_query_id).all()
+        )
+        return criteria
 
     def page_form_menus( self, page_form_id, active = True ):
         """Setup NavBar and Side bar menus for templating context.
