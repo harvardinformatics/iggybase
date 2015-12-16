@@ -59,17 +59,18 @@ class TableQuery:
     def _get_field_order(self, table_fields):
         self.field_dict = {}
         for row in table_fields:
-            display_name = self._get_field_attr(row, 'display_name')
+            display_name = util.get_field_attr(row.TableQueryField, row.Field, 'display_name')
             self.field_dict[display_name] = row
         # return a sorted list of field names
-        return sorted(self.field_dict, key=lambda i:self._get_field_attr(self.field_dict[i], 'order'))
-
-    def _get_field_attr(self, row, attr):
-        if row.TableQueryField and row.TableQueryField.attr:
-            value = row.TableQueryField.attr
-        else:
-            value = row.Field.field_name
-        return value
+        return sorted(
+                self.field_dict,
+                key=lambda i:
+                    util.get_field_attr(
+                        self.field_dict[i].TableQueryField,
+                        self.field_dict[i].Field,
+                        'order'
+                    )
+        )
 
     def _order_fields(self, row):
         return OrderedDict(sorted(row.items(), key=lambda i:self._ordered_fields.index(i[0])))
@@ -117,7 +118,6 @@ class TableQuery:
                     # name column values will link to detail
                     if keys[i] == 'name' and not for_download:
                         table_name = self.field_dict[keys[i]].TableObject.name
-                        table_name = 'oligo'
                         row_dict[keys[i]]['link'] = self.get_link(
                             col,
                             self.module_name,

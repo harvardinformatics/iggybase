@@ -116,6 +116,7 @@ class OrganizationAccessControl:
         for row in table_fields:
             table_model = util.get_table(row.Module.name, row.TableObject.name)
             tables.add(table_model)
+            field_display_name = util.get_field_attr(row.TableQueryField, row.Field, 'display_name')
             if row.Field.foreign_key_table_object_id is not None: # fk field
                 # get fk data so we can include name and form url link
                 fk_data = self.foreign_key(row.Field.foreign_key_table_object_id)
@@ -131,15 +132,11 @@ class OrganizationAccessControl:
                             label(
                                 'fk|' + fk_data['url_prefix']
                                 + '|' + fk_data['name']
-                                + '|' + row.Field.field_name)
+                                + '|' + field_display_name)
                             )
             else: # non-fk field
-                if row.TableQueryField and row.TableQueryField.display_name:
-                    tqf_name = row.TableQueryField.display_name
-                else:
-                    tqf_name = row.Field.field_name
                 columns.append(getattr(table_model, row.Field.field_name).
-                            label((tqf_name if tqf_name else row.Field.field_name)))
+                            label(field_display_name))
                 # add to joins if not first table, avoid joining to self
                 if (not first_table_named
                     or (first_table_named == row.TableObject.name)):
