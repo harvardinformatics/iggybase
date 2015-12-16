@@ -25,7 +25,7 @@ class TableQuery:
         results = []
         self.table_fields = self._get_table_query_fields()
         self.criteria = self._get_table_query_criteria()
-        #self._ordered_fields = self._get_field_order(self.table_fields)
+        self._ordered_fields = self._get_field_order(self.table_fields)
         organization_access_control = oac.OrganizationAccessControl(self.module)
         self.results = organization_access_control.get_table_query_data(
                 self.table_fields,
@@ -59,17 +59,17 @@ class TableQuery:
     def _get_field_order(self, table_fields):
         self.field_dict = {}
         for row in table_fields:
-            display_name = self._get_field_display_name(row)
+            display_name = self._get_field_attr(row, 'display_name')
             self.field_dict[display_name] = row
         # return a sorted list of field names
-        return sorted(self.field_dict, key=lambda i:self.field_dict[i].TableQueryField.order)
+        return sorted(self.field_dict, key=lambda i:self._get_field_attr(self.field_dict[i], 'order'))
 
-    def _get_field_display_name(self, row):
-        if row.TableQueryField:
-            display_name = row.TableQueryField.display_name
+    def _get_field_attr(self, row, attr):
+        if row.TableQueryField and row.TableQueryField.attr:
+            value = row.TableQueryField.attr
         else:
-            display_name = row.Field.field_name
-        return display_name
+            value = row.Field.field_name
+        return value
 
     def _order_fields(self, row):
         return OrderedDict(sorted(row.items(), key=lambda i:self._ordered_fields.index(i[0])))
@@ -93,7 +93,7 @@ class TableQuery:
                     fk_metadata = keys[i].split('|')
                     if fk_metadata[2]:
                         table = fk_metadata[2]
-                        field = fk_metadata[3].replace('_id', '')
+                        field = fk_metadata[3]
                         if for_download:
                             item_value = col
                         else:
@@ -116,7 +116,7 @@ class TableQuery:
                     row_dict[keys[i]] = item_value
                     # name column values will link to detail
                     if keys[i] == 'name' and not for_download:
-                        #table_name = self.field_dict[keys[i]].TableObject.name
+                        table_name = self.field_dict[keys[i]].TableObject.name
                         table_name = 'oligo'
                         row_dict[keys[i]]['link'] = self.get_link(
                             col,
@@ -124,8 +124,7 @@ class TableQuery:
                             'detail',
                             table_name
                         )
-            #self.table_rows.append(self._order_fields(row_dict))
-            self.table_rows.append(row_dict)
+            self.table_rows.append(self._order_fields(row_dict))
 
     def get_link(self, value, module, page = None, table = None):
         link = '/' + module

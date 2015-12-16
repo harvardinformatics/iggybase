@@ -128,7 +128,11 @@ class OrganizationAccessControl:
                     getattr(table_model, row.Field.field_name) == aliases[alias_name].id
                 ))
                 fk_columns.append(getattr(aliases[alias_name], fk_data['foreign_key']).
-                            label('fk|' + fk_data['url_prefix'] + '|' + fk_data['name'] + '|' + row.Field.field_name))
+                            label(
+                                'fk|' + fk_data['url_prefix']
+                                + '|' + fk_data['name']
+                                + '|' + row.Field.field_name)
+                            )
             else: # non-fk field
                 if row.TableQueryField and row.TableQueryField.display_name:
                     tqf_name = row.TableQueryField.display_name
