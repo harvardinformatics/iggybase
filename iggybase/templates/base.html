@@ -39,44 +39,43 @@
 
 
     {% block sidebar %}
-      <div class="container-fluid">
-	<div class="col-sm-2 sidebar">
+    <div class="container-fluid">
+      <div class="col-sm-2 sidebar">
 
-	  <div class="panel-group" id="accordion">
-	    <div class="panel panel-default">
-	      {% for menu in sidebar %}
-	      <div class="panel-heading">
-		<h4 class="panel-title">
-		  <a data-toggle="collapse" data-parent="#accordion"
-		     href="#{{ menu.name }}collapse">{{ menu.description }}</a>
-		</h4>
+	<div class="panel-group" id="accordion">
+	  <div class="panel panel-default">
+	    {% for menu in sidebar %}
+	    <div class="panel-heading">
+	      <h4 class="panel-title">
+		<a data-toggle="collapse" data-parent="#accordion"
+		   href="#{{ menu.name }}collapse">{{ menu.description }}</a>
+	      </h4>
+	    </div>
+	    <div class="panel-body">
+	      <div id="{{ menu.name }}collapse" class="panel-collapse collapse in">
+
+		{% for submenu in get_child_menu(menu.id, facility_role.id) %}
+		<a href=
+		   {% if submenu.menu_url %}"{{ submenu.menu_url.url_path }}"
+		   {% else %}"#"
+		   {% endif %} class="small">{{ submenu.description }}</a><br />
+		{% endfor %}
 	      </div>
+	    </div>
+	    {% endfor %}
+	  </div>  <!-- end panel -->
+	</div> <!-- end panel-group -->
 
-	      <div class="panel-body">
-		<div id="{{ menu.name }}collapse" class="panel-collapse collapse in">
-
-		  {% for submenu in get_child_menu(menu.id, facility_role.id) %}
-		  <a href=
-		     {% if submenu.menu_url %}"{{ submenu.menu_url.url_path }}"
-		     {% else %}"#"
-		     {% endif %} class="small">{{ submenu.description }}</a><br />
-		  {% endfor %}
-		</div>
-	      </div>
-	      {% endfor %}
-	    </div>  <!-- end panel -->
-	  </div> <!-- end panel-group -->
-
-	</div>
+      </div>
       {% endblock sidebar %}
 
       {% block navbar %}
       <div class="col-sm-10">
 	<div class="row">
-	  <nav class="navbar navbar-default">
+	  <nav class="navbar navbar-inverse">
 	    <div class="navbar-header"></div>
 	    <div>
-	      <ul class="nav navbar-nav">
+	      <ul class="nav navbar-nav nav-tabs">
 		{% for menu in navbar recursive %}
 		{% if get_child_menu(menu.id, facility_role.id) %}
 		<li class="dropdown">
@@ -96,7 +95,8 @@
 		  </ul>
 		</li>
 		{% else %}
-		<li><a href= {% if menu.menu_url %}"{{ menu.menu_url.url_path }}"
+		<li><a class="dropdown-toggle" data-toggle="dropdown"
+		       href={% if menu.menu_url %}"{{ menu.menu_url.url_path }}"
 		       {% else %}"#"
 		       {% endif %} class="small">{{ menu.description }}</a></li>
 
@@ -106,7 +106,8 @@
 	    </div>
 	  </nav>
 	</div>  <!-- end row -->
-	{%- endblock navbar %}
+
+      {%- endblock navbar %}
 	
 	{% block content -%}
 	
@@ -129,19 +130,19 @@
           {%- endblock bottombuttonbar %}
           {% endblock page_content %}
 	</div>
+      </div> <!-- end col-sm-10  -->
+    </div>  <!-- end container fluid -->
 
-      </div>  <!-- end container fluid -->
 
+      {%- endblock content %}
 
-    {%- endblock content %}
-
-    {% block scripts %}
-    <script src="{{bootstrap_find_resource('jquery.js', cdn='jquery')}}"></script>
-    <script src="{{bootstrap_find_resource('js/bootstrap.js', cdn='bootstrap')}}"></script>
-    <script type="text/javascript" src="{{ url_for( 'static', filename='main.js' ) }}"></script>
-    {{ macros.render_scripts( scripts ) }}
-    {%- endblock scripts %}
-    {%- endblock body %}
+      {% block scripts %}
+      <script src="{{bootstrap_find_resource('jquery.js', cdn='jquery')}}"></script>
+      <script src="{{bootstrap_find_resource('js/bootstrap.js', cdn='bootstrap')}}"></script>
+      <script type="text/javascript" src="{{ url_for( 'static', filename='main.js' ) }}"></script>
+      {{ macros.render_scripts( scripts ) }}
+      {%- endblock scripts %}
+      {%- endblock body %}
   </body>
   {%- endblock html %}
 </html>
