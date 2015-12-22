@@ -95,11 +95,10 @@
 		  </ul>
 		</li>
 		{% else %}
-		<li><a class="dropdown-toggle" data-toggle="dropdown"
+		<li><a class="dropdown-toggle" 
 		       href={% if menu.menu_url %}"{{ menu.menu_url.url_path }}"
 		       {% else %}"#"
 		       {% endif %} class="small">{{ menu.description }}</a></li>
-
 		{% endif %}
 		{% endfor %}
 	      </ul>

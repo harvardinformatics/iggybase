@@ -66,7 +66,7 @@ class Menu( StaticBase ):
     children = relationship('Menu')
     menu_type = relationship( "MenuType", foreign_keys = [ menu_type_id ] )
     menu_url = relationship("MenuUrl", backref='menu')
-    facility_role = relationship('MenuFacilityRole', backref='menu')
+    facility_role = relationship('MenuFacilityRole', uselist=False, back_populates='menu')
 
     def __repr__(self):
         return "<Menu(name=%s, description=%s, id=%d)>" % \
@@ -89,7 +89,7 @@ class MenuFacilityRole( StaticBase ):
 
     menu_facility_role_facility = relationship(
         "FacilityRole", foreign_keys = [ facility_role_id ] )
-    menu_facility_role_menu = relationship( "Menu", foreign_keys = [ menu_id ] )
+    menu = relationship( "Menu", back_populates='facility_role' )
     menu_facility_role_unq = UniqueConstraint( 'facility_role_id', 'menu_id' )
 
     def __repr__(self):
@@ -129,7 +129,7 @@ class MenuUrl( StaticBase ):
     url_params = Column(String(1024)) ## Stored as JSON
 
     def __repr__(self):
-        return "<MenuType(name=%s, description=%s, id=%d, url_path=%s>)" % \
+        return "<MenuUrl(name=%s, description=%s, id=%d, url_path=%s>)" % \
             (self.name, self.description, self.id, self.url_path)
 
 
