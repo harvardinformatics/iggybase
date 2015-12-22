@@ -43,8 +43,30 @@ class TableQuery:
         )
         return table_query_fields
 
+    def _get_filters(self):
+        req = dict(request.args)
+        filters = {}
+        if 'search' in req:
+            search = dict(request.args)['search'][0].replace('?', '')
+            if search:
+                search = search.split('&')
+                for param in search:
+                    pair = param.split('=')
+                    filters[pair[0]] = pair[1]
+        return filters
+
     def _get_table_query_criteria(self):
         criteria = []
+        filters = self._get_filters()
+        for key, val in filters.items():
+            col = util.get_column(
+                self.module,
+                self.table_name,
+                key
+            )
+            criteria.append(
+                col == val
+            )
         res = self._facility_role_access_control.table_query_criteria(
             self.id
         )
