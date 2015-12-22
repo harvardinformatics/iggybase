@@ -17,15 +17,18 @@ class TableQuery:
         self.module = 'mod_' + module_name
         self.table_name = table_name
         self.table_rows = []
+        self.ordered_fields = []
         self._facility_role_access_control = frac.FacilityRoleAccessControl()
+
+    def get_fields(self):
+        self.table_fields = self._get_table_query_fields()
+        self.ordered_fields = self._get_field_order(self.table_fields)
 
     def get_results(self):
         """ calls several class functions and returns results
         """
         results = []
-        self.table_fields = self._get_table_query_fields()
         self.criteria = self._get_table_query_criteria()
-        self._ordered_fields = self._get_field_order(self.table_fields)
         organization_access_control = oac.OrganizationAccessControl(self.module)
         self.results = organization_access_control.get_table_query_data(
                 self.table_fields,
@@ -73,7 +76,7 @@ class TableQuery:
         )
 
     def _order_fields(self, row):
-        return OrderedDict(sorted(row.items(), key=lambda i:self._ordered_fields.index(i[0])))
+        return OrderedDict(sorted(row.items(), key=lambda i:self.ordered_fields.index(i[0])))
 
     def format_results(self, for_download = False):
         """Formats data for summary or detail
@@ -140,3 +143,19 @@ class TableQuery:
         if self.table_rows[0]:
             first = self.table_rows[0]
         return first
+
+    def get_json(self):
+        list_rows = []
+        for row in self.table_rows:
+            list_row = []
+            for val in row.values():
+                formatted_val = ''
+                if 'text' in val:
+                    if 'link' in val:
+                        formatted_val = ('<a href="' + str(val['link']) + '">' +
+                            str(val['text']) + '</a>')
+                    else:
+                        formatted_val = str(val['text'])
+                list_row.append(formatted_val)
+            list_rows.append(list_row)
+        return list_rows

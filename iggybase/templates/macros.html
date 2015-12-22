@@ -34,6 +34,23 @@
     </div>
 {%- endmacro %}
 
+{% macro render_table_headers( table_query, page_form_name = None ) -%}
+    {% if table_query.ordered_fields %}
+        <table id="{{ table_query.display_name }}_summary_table" class="summary_table display">
+            <thead><tr>
+                {% if page_form_name == 'action_summary' %}
+                    <th>
+                        <input type="button" id="select_all" value="Select All/ None">
+                    </th>
+                {% endif %}
+                {% for field in table_query.ordered_fields %}
+                    <th>{{ field.replace('_', ' ')|title }}</th>
+                {% endfor %}
+        </tr></thead>
+    </table>
+    {% endif %}
+{%- endmacro %}
+
 {% macro render_table( table_query, page_form_name = None ) -%}
     {% if table_query.table_rows %}
         <table id="{{ table_query.display_name }}_summary_table" class="summary_table display">

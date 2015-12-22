@@ -14,11 +14,15 @@ class TableQueryCollection:
         self.table_name = table_name
         self.page_form = page_form
         self.facility_role_access_control = frac.FacilityRoleAccessControl()
+        self.queries = []
         self.results = []
 
     def get_results(self):
-        """ calls several class functions and returns results
-        """
+        for query in self.queries:
+            query.get_results()
+            self.results.append(query)
+
+    def get_fields(self):
         if self.facility_role_access_control.has_access('Module', self.module):
             table_queries_info = self.facility_role_access_control.table_queries(self.page_form, self.table_name)
             if table_queries_info:
@@ -42,8 +46,8 @@ class TableQueryCollection:
             self.module_name,
             table_name
         )
-        table_query.get_results()
-        self.results.append(table_query)
+        table_query.get_fields()
+        self.queries.append(table_query)
 
     def format_results(self, for_download = False):
         for query in self.results:
@@ -51,6 +55,6 @@ class TableQueryCollection:
 
     def get_first(self):
         first = []
-        if self.results[0]:
-            first = self.results[0]
+        if self.queries[0]:
+            first = self.queries[0]
         return first
