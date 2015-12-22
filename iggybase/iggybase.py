@@ -1,4 +1,5 @@
-from flask import Flask, g
+import os
+from flask import Flask, g, send_from_directory
 from config import config, get_config
 from flask import render_template
 from flask.ext.login import login_required, current_user
@@ -45,6 +46,10 @@ def configure_extensions( app ):
 def add_base_routes( app ):
     from iggybase import base_routes
 
+    @app.route('/favicon.ico')
+    def favicon():
+        return send_from_directory(os.path.join(app.root_path, 'static'),
+        'favicon.ico')
     @app.route( '/<module_name>/' )
     @login_required
     def default(module_name):
