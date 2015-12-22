@@ -17,7 +17,7 @@
         <p>Max Date:<input type="text" class="datepicker" id="max_date"></p>
     </div>
     <div class={{ table_name ~ "_table" }}>
-        {{ macros.render_table( table_query ) }}
+        {{ macros.render_table_headers( table_query ) }}
     </div>
     {% block bottombuttonbar %}
         {{ super() }}

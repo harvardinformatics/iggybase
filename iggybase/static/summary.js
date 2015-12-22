@@ -1,5 +1,8 @@
 $(document).ready(function(){
-    $('.summary_table').DataTable();
+    $('.summary_table').DataTable({
+        'deferRender':true,
+        'ajax':'ajax'
+    });
     $('.datepicker').datepicker();
 
     // add event listeners for date range filter

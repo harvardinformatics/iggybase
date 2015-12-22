@@ -32,7 +32,7 @@ $( document ).ready( function () {
         data[ 'user' ] = user;
 
         $.ajax({
-            url: "/auth/getrole",
+            url: scriptroot + "/auth/getrole",
             data: JSON.stringify( data, null, '' ),
             contentType: 'application/json;charset=UTF-8',
             type: 'POST',
@@ -84,7 +84,7 @@ $( document ).ready( function () {
         data[ 'role' ] = role;
 
         $.ajax({
-            url: "/auth/getorganization",
+            url: scriptroot + "/auth/getorganization",
             data: JSON.stringify( data, null, '' ),
             contentType: 'application/json;charset=UTF-8',
             type: 'POST',

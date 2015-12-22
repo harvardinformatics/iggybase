@@ -55,6 +55,11 @@ def add_base_routes( app ):
     def summary( module_name, table_name ):
         return base_routes.summary( module_name, table_name )
 
+    @app.route( '/<module_name>/summary/<table_name>/ajax' )
+    @login_required
+    def summary_ajax(module_name, table_name):
+        return base_routes.summary_ajax(module_name, table_name)
+
     @app.route( '/<module_name>/summary/<table_name>/download/' )
     @login_required
     def summary_download( module_name, table_name ):

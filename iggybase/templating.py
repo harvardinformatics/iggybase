@@ -1,4 +1,4 @@
-from flask import render_template, abort
+from flask import render_template, abort, request
 from iggybase.mod_auth.facility_role_access_control import FacilityRoleAccessControl
 from iggybase.mod_auth.facility_access_control import FacilityAccessControl
 import logging
@@ -7,6 +7,7 @@ def page_template( page_form_name, **context ):
     access_ctrl = FacilityRoleAccessControl( )
 
     context['page_form_name'] = page_form_name
+    context[ 'script_root' ] = request.script_root
 
     if access_ctrl.user is None:
         # add buttons only (login and related pages - no user)
