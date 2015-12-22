@@ -9,12 +9,13 @@ import logging
 
 # Retreives and formats data based on table_query
 class TableQuery:
-    def __init__ (self, id, order, display_name, module_name):
+    def __init__ (self, id, order, display_name, module_name, table_name = None):
         self.id = id
         self.order = order
         self.display_name = display_name
         self.module_name = module_name
         self.module = 'mod_' + module_name
+        self.table_name = table_name
         self.table_rows = []
         self._facility_role_access_control = frac.FacilityRoleAccessControl()
 
@@ -34,7 +35,8 @@ class TableQuery:
 
     def _get_table_query_fields(self):
         table_query_fields = self._facility_role_access_control.table_query_fields(
-            self.id
+            self.id,
+            self.table_name
         )
         return table_query_fields
 
@@ -57,18 +59,18 @@ class TableQuery:
     def _get_field_order(self, table_fields):
         self.field_dict = {}
         for row in table_fields:
-            display_name = self._get_field_display_name(row)
+            display_name = util.get_field_attr(row.TableQueryField, row.Field, 'display_name')
             self.field_dict[display_name] = row
         # return a sorted list of field names
-        return sorted(self.field_dict, key=lambda i:self.field_dict[i].TableQueryField.order)
-
-    def _get_field_display_name(self, row):
-        tq_name = row.TableQueryField.display_name
-        if tq_name:
-            display_name = tq_name
-        else:
-            display_name = row.Field.field_name
-        return display_name
+        return sorted(
+                self.field_dict,
+                key=lambda i:
+                    util.get_field_attr(
+                        self.field_dict[i].TableQueryField,
+                        self.field_dict[i].Field,
+                        'order'
+                    )
+        )
 
     def _order_fields(self, row):
         return OrderedDict(sorted(row.items(), key=lambda i:self._ordered_fields.index(i[0])))
@@ -92,6 +94,7 @@ class TableQuery:
                     fk_metadata = keys[i].split('|')
                     if fk_metadata[2]:
                         table = fk_metadata[2]
+                        field = fk_metadata[3]
                         if for_download:
                             item_value = col
                         else:
@@ -105,7 +108,7 @@ class TableQuery:
                                     table
                                 )
                             }
-                        row_dict[table] = item_value
+                        row_dict[field] = item_value
                 else:  # add all other colums to table_rows
                     if for_download:
                         item_value = col

@@ -21,18 +21,29 @@ class TableQueryCollection:
         """
         if self.facility_role_access_control.has_access('Module', self.module):
             table_queries_info = self.facility_role_access_control.table_queries(self.page_form, self.table_name)
-            for query in table_queries_info:
-                order = query.TableQuery.order
-                table_query = tq.TableQuery(
-                    query.TableQuery.id,
-                    order,
-                    query.TableQuery.display_name,
-                    self.module_name
-                )
-                table_query.get_results()
-                self.results.append(table_query)
+            if table_queries_info:
+                for query in table_queries_info:
+                    order = query.TableQuery.order
+                    self.populate_query(
+                        query.TableQuery.id,
+                        order,
+                        query.TableQuery.display_name
+                    )
+            elif self.table_name:
+                self.populate_query(None, 1, self.table_name, self.table_name)
             # sort queries by their order
             self.results.sort(key=operator.attrgetter('order'))
+
+    def populate_query(self, id, order, query_name, table_name = None):
+        table_query = tq.TableQuery(
+            id,
+            order,
+            query_name,
+            self.module_name,
+            table_name
+        )
+        table_query.get_results()
+        self.results.append(table_query)
 
     def format_results(self, for_download = False):
         for query in self.results:
