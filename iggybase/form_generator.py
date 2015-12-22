@@ -76,19 +76,19 @@ class FormGenerator():
                     choices = self.organization_access_control. \
                         get_lookup_data(field_data.Field.foreign_key_table_object_id)
 
-                    #if len(choices) > 25:
-                    if value is not None:
-                        wtf_field = LookUpField(field_data.FieldFacilityRole.display_name, validators,
-                                                default=[item[1] for item in choices if item[0] == value][0])
+                    if len(choices) > 25:
+                        if value is not None:
+                            wtf_field = LookUpField(field_data.FieldFacilityRole.display_name, validators,
+                                                    default=[item[1] for item in choices if item[0] == value][0])
+                        else:
+                            wtf_field = LookUpField(field_data.FieldFacilityRole.display_name, validators)
                     else:
-                        wtf_field = LookUpField(field_data.FieldFacilityRole.display_name, validators)
-                    #else:
-                        #if value is not None:
-                            #wtf_field = SelectField(field_data.FieldFacilityRole.display_name, validators, coerce=int, \
-                            #                        choices=choices, default=value)
-                        #else:
-                            #wtf_field = SelectField(field_data.FieldFacilityRole.display_name, validators, coerce=int, \
-                            #                        choices=choices)
+                        if value is not None:
+                            wtf_field = SelectField(field_data.FieldFacilityRole.display_name, validators, coerce=int, \
+                                                    choices=choices, default=value)
+                        else:
+                            wtf_field = SelectField(field_data.FieldFacilityRole.display_name, validators, coerce=int, \
+                                                    choices=choices)
                 else:
                     if field_data.Field.data_type_id == constants.INTEGER:
                         wtf_class = IntegerField

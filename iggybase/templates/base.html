@@ -136,6 +136,7 @@
     {%- endblock content %}
 
     {% block scripts %}
+	<script>var scriptroot = "{{ script_root }}";</script>
     <script src="{{bootstrap_find_resource('jquery.js', cdn='jquery')}}"></script>
     <script src="{{bootstrap_find_resource('js/bootstrap.js', cdn='bootstrap')}}"></script>
     <script type="text/javascript" src="{{ url_for( 'static', filename='main.js' ) }}"></script>
