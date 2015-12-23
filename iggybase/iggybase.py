@@ -1,4 +1,5 @@
-from flask import Flask, g
+import os
+from flask import Flask, g, send_from_directory
 from config import config, get_config
 from flask import render_template
 from flask.ext.login import login_required, current_user
@@ -42,6 +43,7 @@ def configure_extensions( app ):
 def add_base_routes( app, conf ):
     from iggybase import base_routes
 
+<<<<<<< HEAD
     @app.before_request
     def before_request( ):
         modules = [x[0] for x in conf.BLUEPRINTS]
@@ -52,6 +54,12 @@ def add_base_routes( app, conf ):
     def index():
         return base_routes.index()
 
+=======
+    @app.route('/favicon.ico')
+    def favicon():
+        return send_from_directory(os.path.join(app.root_path, 'static'),
+        'favicon.ico')
+>>>>>>> be513c37edfab69ededeb77de2c25eb97f110a2c
     @app.route( '/<module_name>/' )
     @login_required
     def default(module_name):
@@ -61,6 +69,11 @@ def add_base_routes( app, conf ):
     @login_required
     def summary( module_name, table_name ):
         return base_routes.summary( module_name, table_name )
+
+    @app.route( '/<module_name>/summary/<table_name>/ajax' )
+    @login_required
+    def summary_ajax(module_name, table_name):
+        return base_routes.summary_ajax(module_name, table_name)
 
     @app.route( '/<module_name>/summary/<table_name>/download/' )
     @login_required

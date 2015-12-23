@@ -1,4 +1,4 @@
-from flask import request
+from flask import request, jsonify
 from flask.ext import excel
 import iggybase.templating as templating
 import iggybase.form_generator as form_generator
@@ -19,10 +19,19 @@ def message(page_temp, page_msg):
 def summary(module_name, table_name):
     page_form = 'summary'
     table_queries = tqc.TableQueryCollection(module_name, page_form, table_name)
-    table_queries.get_results()
-    table_queries.format_results()
+    table_queries.get_fields()
     return templating.page_template('summary', table_name = table_name,
             table_query = table_queries.get_first())
+
+def summary_ajax(module_name, table_name):
+    page_form = 'summary'
+    table_queries = tqc.TableQueryCollection(module_name, page_form, table_name)
+    table_queries.get_fields()
+    table_queries.get_results()
+    table_queries.format_results()
+    table_query = table_queries.get_first()
+    json_rows = table_query.get_json()
+    return jsonify({'data':json_rows})
 
 def summary_download(module_name, table_name):
     page_form = 'summary'
