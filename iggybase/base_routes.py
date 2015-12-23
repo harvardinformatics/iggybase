@@ -7,6 +7,9 @@ import iggybase.table_query_collection as tqc
 import logging
 
 
+def index():
+    return templating.render_template( 'index.html' )
+
 def default():
     return templating.page_template('index.html')
 

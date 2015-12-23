@@ -2,6 +2,7 @@ from flask import Flask, g
 from config import config, get_config
 from flask import render_template
 from flask.ext.login import login_required, current_user
+from werkzeug.wsgi import DispatcherMiddleware
 from iggybase.extensions import mail, lm, bootstrap
 import logging
 
@@ -16,10 +17,6 @@ def create_app( config_name = None, app_name = None ):
     iggybase = Flask( __name__ )
     iggybase.config.from_object( conf )
 
-    @iggybase.route( '/index' )
-    def index():
-        render_template( 'index.html' )
-
     if app_name is None:
         app_name = conf.PROJECT
 
@@ -31,7 +28,7 @@ def create_app( config_name = None, app_name = None ):
     configure_hook( iggybase )
     configure_error_handlers( iggybase )
 
-    add_base_routes( iggybase )
+    add_base_routes( iggybase, conf )
 
     return iggybase
 
@@ -42,8 +39,18 @@ def configure_extensions( app ):
     mail.init_app( app )
 
 
-def add_base_routes( app ):
+def add_base_routes( app, conf ):
     from iggybase import base_routes
+
+    @app.before_request
+    def before_request( ):
+        modules = [x[0] for x in conf.BLUEPRINTS]
+        logging.info('before request' + modules[0] )
+
+    @app.route( '/index/' )
+    @login_required
+    def index():
+        return base_routes.index()
 
     @app.route( '/<module_name>/' )
     @login_required
@@ -83,6 +90,7 @@ def add_base_routes( app ):
 
 def configure_blueprints( app, blueprints ):
     for i,(module, blueprint) in enumerate(blueprints):
+        logging.info( blueprint )
         bp = getattr(__import__('iggybase.'+module, fromlist=[module]),module)
         app.register_blueprint( bp )
 
