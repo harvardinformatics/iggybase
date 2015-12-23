@@ -115,8 +115,7 @@ class FacilityRoleAccessControl:
         )
         return table_queries
 
-    def table_query_fields( self, table_query_id, table_name = None, active = 1, visible = 1 ):
-
+    def table_query_fields( self, table_query_id, table_name = None, table_id = None, field_name = None, active = 1, visible = 1 ):
         filters = [
 
                 (models.FieldFacilityRole.facility_role_id == self.facility_role.id),
@@ -131,6 +130,10 @@ class FacilityRoleAccessControl:
             filters.append((models.TableQueryField.active == active))
         elif table_name:
             filters.append((models.TableObject.name == table_name))
+        elif table_id:
+            filters.append((models.TableObject.id == table_id))
+        if field_name:
+            filters.append((models.Field.field_name == field_name))
 
         res = (
             admin_db_session.query(

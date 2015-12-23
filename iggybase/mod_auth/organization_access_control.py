@@ -104,7 +104,7 @@ class OrganizationAccessControl:
 
         return results
 
-    def get_table_query_data(self, table_fields, criteria = []):
+    def get_table_query_data(self, table_fields, criteria = {}):
         results = []
         tables = set([])
         joins = set([])
@@ -112,6 +112,7 @@ class OrganizationAccessControl:
         columns = []
         fk_columns = []
         aliases = {}
+        wheres = []
         first_table_named = None # set to first table name, dont add to joins
         for row in table_fields:
             table_model = util.get_table(row.Module.name, row.TableObject.name)
@@ -134,9 +135,17 @@ class OrganizationAccessControl:
                                 + '|' + fk_data['name']
                                 + '|' + field_display_name)
                             )
+                criteria_key = fk_data['name'] + '_' + fk_data['foreign_key']
+                if criteria_key in criteria:
+                    wheres.append(getattr(aliases[alias_name],
+                    fk_data['foreign_key']) == criteria[criteria_key])
+
             else: # non-fk field
-                columns.append(getattr(table_model, row.Field.field_name).
-                            label(field_display_name))
+                col = getattr(table_model, row.Field.field_name)
+                columns.append(col.label(field_display_name))
+                criteria_key = row.TableObject.name + '_' + row.Field.field_name
+                if criteria_key in criteria:
+                    wheres.append(col == criteria[criteria_key])
                 # add to joins if not first table, avoid joining to self
                 if (not first_table_named
                     or (first_table_named == row.TableObject.name)):
@@ -147,13 +156,13 @@ class OrganizationAccessControl:
         columns.extend(fk_columns)
         # add organization id checks on all tables, does not include fk tables
         for table_model in tables:
-            criteria.append(getattr(table_model, 'organization_id').in_(self.org_ids))
+            wheres.append(getattr(table_model, 'organization_id').in_(self.org_ids))
 
         results = (
                 db_session.query(*columns).
                 join(*joins).
                 outerjoin(*outer_joins).
-                filter(*criteria).all()
+                filter(*wheres).all()
         )
         return results
 

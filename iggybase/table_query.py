@@ -19,6 +19,7 @@ class TableQuery:
         self.table_rows = []
         self.ordered_fields = []
         self._facility_role_access_control = frac.FacilityRoleAccessControl()
+        self.criteria = {}
 
     def get_fields(self):
         self.table_fields = self._get_table_query_fields()
@@ -56,29 +57,31 @@ class TableQuery:
         return filters
 
     def _get_table_query_criteria(self):
-        criteria = []
+        criteria = {}
+        # add criteria from get params
         filters = self._get_filters()
         for key, val in filters.items():
-            col = util.get_column(
-                self.module,
-                self.table_name,
-                key
-            )
-            criteria.append(
-                col == val
-            )
+            if key in self.field_dict:
+                field = self.field_dict[key]
+                if field.Field.foreign_key_table_object_id:
+                    filter_fields = self._facility_role_access_control.table_query_fields(
+                        None,
+                        None,
+                        field.Field.foreign_key_table_object_id,
+                        'name' # if fk then we want the human readable name
+                    )
+                    if filter_fields:
+                        filter_field = filter_fields[0]
+                        criteria_key = filter_field.TableObject.name + '_' + filter_field.Field.field_name
+                        criteria[criteria_key] = val
+        # add criteria from db
         res = self._facility_role_access_control.table_query_criteria(
             self.id
         )
         for row in res:
-            col = util.get_column(
-                row.Module.name,
-                row.TableObject.name,
-                row.Field.field_name
-            )
-            criteria.append(
-                col == row.TableQueryCriteria.value
-            )
+            criteria_key = row.TableObject.name + '_' + row.Field.field_name
+            criteria[criteria_key] = row.TableQueryCriteria.value
+
         return criteria
 
     def _get_field_order(self, table_fields):
