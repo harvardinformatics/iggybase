@@ -43,7 +43,6 @@ def configure_extensions( app ):
 def add_base_routes( app, conf ):
     from iggybase import base_routes
 
-<<<<<<< HEAD
     @app.before_request
     def before_request( ):
         modules = [x[0] for x in conf.BLUEPRINTS]
@@ -54,12 +53,11 @@ def add_base_routes( app, conf ):
     def index():
         return base_routes.index()
 
-=======
     @app.route('/favicon.ico')
     def favicon():
         return send_from_directory(os.path.join(app.root_path, 'static'),
         'favicon.ico')
->>>>>>> be513c37edfab69ededeb77de2c25eb97f110a2c
+    
     @app.route( '/<module_name>/' )
     @login_required
     def default(module_name):
