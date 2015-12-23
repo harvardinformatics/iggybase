@@ -74,6 +74,10 @@ class TableQuery:
                         filter_field = filter_fields[0]
                         criteria_key = filter_field.TableObject.name + '_' + filter_field.Field.field_name
                         criteria[criteria_key] = val
+                else:
+                    criteria_key = (field.TableObject.name + '_' +
+                        field.Field.field_name)
+                    criteria[criteria_key] = val
         # add criteria from db
         res = self._facility_role_access_control.table_query_criteria(
             self.id
