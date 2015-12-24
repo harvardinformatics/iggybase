@@ -57,7 +57,7 @@ def add_base_routes( app, conf ):
     def favicon():
         return send_from_directory(os.path.join(app.root_path, 'static'),
         'favicon.ico')
-    
+
     @app.route( '/<module_name>/' )
     @login_required
     def default(module_name):

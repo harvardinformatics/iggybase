@@ -89,6 +89,18 @@ class Organization( Base ):
 
     parent = relation( 'Organization', remote_side = [ id ] )
 
+class OrganizationType( Base ):
+    __tablename__ = 'organization_type'
+    __table_args__ = {'mysql_engine':'InnoDB'}
+    id = Column( Integer, primary_key = True )
+    name = Column( String( 50 ), unique = True )
+    description = Column( String( 255 ) )
+    date_created = Column( DateTime, default=datetime.datetime.utcnow )
+    last_modified = Column( DateTime, default=datetime.datetime.utcnow )
+    active = Column( Boolean )
+    organization_id = Column( Integer )
+    order = Column( Integer )
+
 @lm.user_loader
 def load_user( id ):
     return User.query.get( int( id ) )
