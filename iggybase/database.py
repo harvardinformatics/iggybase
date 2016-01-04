@@ -5,12 +5,12 @@ from config import get_config
 import logging
 conf = get_config( )
 
-adminengine = create_engine( conf.SQLALCHEMY_DATABASE_URI + conf.ADMIN_DB_NAME, pool_recycle = 28800 )
+adminengine = create_engine( conf.SQLALCHEMY_DATABASE_URI + conf.ADMIN_DB_NAME )
 admin_db_session = scoped_session( sessionmaker( autocommit = False, autoflush = False, bind = adminengine ) )
 StaticBase = declarative_base()
 StaticBase.query = admin_db_session.query_property()
 
-engine = create_engine( conf.SQLALCHEMY_DATABASE_URI + conf.DATA_DB_NAME, pool_recycle = 28800 )
+engine = create_engine( conf.SQLALCHEMY_DATABASE_URI + conf.DATA_DB_NAME )
 db_session = scoped_session( sessionmaker( autocommit = False, autoflush = False, bind = engine ) )
 Base = declarative_base()
 Base.query = db_session.query_property()
