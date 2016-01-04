@@ -51,7 +51,12 @@ def page_template( page_form_name, **context ):
 
         scripts = access_ctrl.page_form_javascript( page_form.id )
         context[ 'scripts' ] = page_scripts( scripts )
-
+        if not 'hidden_fields' in context:
+            context['hidden_fields'] = {}
+        context['hidden_fields'].update({
+            'script_root': context['script_root'],
+            'mod': context['module_name']
+        })
 
         ## Menus
         navbar, sidebar, facility_role, get_child_menu = \

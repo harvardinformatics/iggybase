@@ -22,7 +22,9 @@ def summary(module_name, table_name):
     page_form = 'summary'
     table_queries = tqc.TableQueryCollection(module_name, page_form, table_name)
     table_queries.get_fields()
-    return templating.page_template('summary', table_name = table_name,
+    return templating.page_template('summary',
+            module_name = module_name,
+            table_name = table_name,
             table_query = table_queries.get_first())
 
 def summary_ajax(module_name, table_name):
@@ -50,10 +52,11 @@ def action_summary(module_name, table_name = None):
     page_form = 'summary'
     table_queries = tqc.TableQueryCollection(module_name, page_form, table_name)
     table_queries.get_fields()
-    mod = request.path.split('/')[1]
-    hidden_fields = {'mod': mod, 'table': table_name}
-    return templating.page_template('action_summary', table_name = table_name, table_query =
-            table_queries.get_first(), hidden_fields = hidden_fields)
+    hidden_fields = {'table': table_name}
+    return templating.page_template('action_summary',
+            module_name = module_name,
+            table_name = table_name,
+            table_query = table_queries.get_first(), hidden_fields = hidden_fields)
 
 def action_summary_ajax(module_name, table_name = None):
     page_form = 'summary'
@@ -71,10 +74,10 @@ def detail(module_name, table_name, row_name):
     table_queries.get_fields()
     table_queries.get_results()
     table_queries.format_results()
-    mod = request.path.split('/')[1]
-    hidden_fields = {'mod': mod, 'table': table_name, 'row_name': row_name}
+    hidden_fields = {'table': table_name, 'row_name': row_name}
     return templating.page_template(
         'detail',
+        module_name=module_name,
         table_name=table_name,
         row_name=row_name,
         table_queries=table_queries,
@@ -90,7 +93,8 @@ def data_entry(module_name, table_name, row_name):
         organization_access_control = oac.OrganizationAccessControl('mod_' + module_name)
         organization_access_control.save_form(form)
 
-    return templating.page_template('single_data_entry', form=form)
+    return templating.page_template('single_data_entry',
+            module_name=module_name, form=form)
 
 
 def multiple_data_entry(module_name, table_name):
@@ -102,4 +106,5 @@ def multiple_data_entry(module_name, table_name):
         organization_access_control = oac.OrganizationAccessControl('mod_' + module_name)
         organization_access_control.save_form(form)
 
-    return templating.page_template('single_data_entry', form=form)
+    return templating.page_template('single_data_entry',
+            module_name=module_name, form=form)
