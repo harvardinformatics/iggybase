@@ -260,6 +260,22 @@ class TableObject( StaticBase ):
     new_name_id = Column( Integer )
     id_length = Column( Integer )
 
+class TableObjectChildren( StaticBase ):
+    __tablename__ = 'table_object_children'
+    id = Column( Integer, primary_key = True )
+    name = Column( String( 100 ), unique = True )
+    description = Column( String( 255 ) )
+    date_created = Column( DateTime, default = datetime.datetime.utcnow )
+    last_modified = Column( DateTime, default = datetime.datetime.utcnow )
+    active = Column( Boolean )
+    organization_id = Column( Integer )
+    order = Column( Integer )
+    table_object_id = Column( Integer, ForeignKey( 'table_object.id' ) )
+    child_table_object_id = Column( Integer, ForeignKey( 'table_object.id' ) )
+
+    table_object_children_table_object = relationship( "TableObject", foreign_keys = [ table_object_id ] )
+    table_object_children_child_table_object = relationship( "TableObject", foreign_keys = [ child_table_object_id ] )
+
 class TableObjectFacilityRole( StaticBase ):
     __tablename__ = 'table_object_facility_role'
     id = Column( Integer, primary_key = True )

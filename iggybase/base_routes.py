@@ -4,6 +4,7 @@ import iggybase.templating as templating
 import iggybase.form_generator as form_generator
 import iggybase.mod_auth.organization_access_control as oac
 import iggybase.table_query_collection as tqc
+import json
 import logging
 
 
@@ -81,8 +82,9 @@ def data_entry(module_name, table_name, row_name):
     return templating.page_template('single_data_entry', form=form)
 
 
-def multiple_data_entry(module_name, table_name, row_names):
-    row_names =  request.json[ 'row_names' ]
+def multiple_data_entry(module_name, table_name):
+    row_names =  json.loads(request.args.get('row_names'))
+
     fg = form_generator.FormGenerator('mod_' + module_name, table_name)
     form = fg.default_multiple_entry_form(row_names)
 
