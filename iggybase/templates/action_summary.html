@@ -3,6 +3,8 @@
 {% block styles %}
     {{ super() }}
     <link href="{{ url_for('static', filename='jquery/DataTables/media/css/jquery.dataTables.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='jquery/DataTables/extensions/Select/css/select.dataTables.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='jquery/DataTables/extensions/Buttons/css/buttons.dataTables.min.css') }}" rel="stylesheet">
 {%- endblock styles %}
 {% block title %}Iggybase - {{ table_name.replace( '_',' ' ) }}{% endblock %}
 
@@ -13,7 +15,7 @@
         {{ macros.render_buttons(top_buttons)}}
     {%- endblock topbuttonbar %}
     <div class={{ table_name ~ "_table" }}>
-        {{ macros.render_table( table_query ) }}
+        {{ macros.render_table_headers(table_query) }}
     </div>
     {% block bottombuttonbar %}
         {{ super() }}
@@ -24,4 +26,8 @@
     {{ super() }}
     <script type="text/javascript"
         src="{{ url_for('static', filename='jquery/DataTables/media/js/jquery.dataTables.min.js')}}"></script>
+    <script type="text/javascript"
+        src="{{ url_for('static', filename='jquery/DataTables/extensions/Select/js/dataTables.select.min.js')}}"></script>
+    <script type="text/javascript"
+        src="{{ url_for('static', filename='jquery/DataTables/extensions/Buttons/js/dataTables.buttons.min.js')}}"></script>
 {%- endblock scripts %}

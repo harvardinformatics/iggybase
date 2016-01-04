@@ -17,6 +17,6 @@ $(document).ready(function(){
 
 ( function( $ ) {
     $.fn.openDownload = function () {
-        window.location = (location.pathname + '/download');
+        window.location = (location.pathname + 'download');
     }
 } ) ( jQuery );
