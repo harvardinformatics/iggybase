@@ -83,6 +83,11 @@ def add_base_routes( app, conf ):
     def action_summary( module_name, table_name ):
         return base_routes.action_summary( module_name, table_name )
 
+    @app.route( '/<module_name>/action_summary/<table_name>/ajax' )
+    @login_required
+    def action_summary_ajax( module_name, table_name ):
+        return base_routes.action_summary_ajax( module_name, table_name )
+
     @app.route( '/<module_name>/detail/<table_name>/<row_name>/' )
     @login_required
     def detail( module_name, table_name, row_name ):

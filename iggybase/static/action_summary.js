@@ -1,15 +1,22 @@
 $(document).ready(function(){
     $('.summary_table').DataTable({
-        "order":[],
-        "aoColumnDefs":[
-            {"bSortable": false, "aTargets":[0]}
-        ]
+        deferRender:true,
+        scrollX:true,
+        ajax:{
+            'url':'ajax',
+            'data': function(d) { d.search = window.location.search;}
+        },
+        dom:'Bfrtip',
+        buttons:[
+            'selectAll',
+            'selectNone'
+        ],
+        select: {
+            style:'multi'
+        }
     });
-    $("#select_all").click(function(){$.fn.toggleSelect();});
 } );
 
 ( function( $ ) {
-    $.fn.toggleSelect = function () {
-        $("input.action_checkbox").click();
-    }
+
 } ) ( jQuery );
