@@ -56,15 +56,10 @@ class OrganizationAccessControl:
 
     def get_entry_data(self, table_name, name=None):
         field_data = self.get_field_data(table_name)
-
         results = None
 
         if field_data is not None:
-            module_model = import_module('iggybase.' + self.module + '.models')
-            try:
-                table_object = getattr(module_model, table_name)
-            except AttributeError:
-                abort(404)
+            table_object = util.get_table(self.module, table_name)
 
             columns = []
             for row in field_data:

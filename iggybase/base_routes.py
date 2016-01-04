@@ -1,3 +1,4 @@
+import json
 from flask import request, jsonify
 from flask.ext import excel
 import iggybase.templating as templating
@@ -49,8 +50,10 @@ def action_summary(module_name, table_name = None):
     page_form = 'summary'
     table_queries = tqc.TableQueryCollection(module_name, page_form, table_name)
     table_queries.get_fields()
+    mod = request.path.split('/')[1]
+    hidden_fields = {'mod': mod, 'table': table_name}
     return templating.page_template('action_summary', table_name = table_name, table_query =
-            table_queries.get_first())
+            table_queries.get_first(), hidden_fields = hidden_fields)
 
 def action_summary_ajax(module_name, table_name = None):
     page_form = 'summary'
@@ -92,7 +95,6 @@ def data_entry(module_name, table_name, row_name):
 
 def multiple_data_entry(module_name, table_name):
     row_names =  json.loads(request.args.get('row_names'))
-
     fg = form_generator.FormGenerator('mod_' + module_name, table_name)
     form = fg.default_multiple_entry_form(row_names)
 

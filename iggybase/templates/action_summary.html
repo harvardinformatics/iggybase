@@ -10,6 +10,9 @@
 
 {% block page_content %}
 <h1>{{ table_name.replace( '_', ' ' )|title }} Action Summary</h1>
+    {% block hidden_fields -%}
+        {{super()}}
+    {%- endblock hidden_fields %}
     {% block topbuttonbar %}
         {{ super() }}
         {{ macros.render_buttons(top_buttons)}}

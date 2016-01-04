@@ -6,8 +6,12 @@ def get_column(module, table_name, field_name):
     return getattr(table_model, field_name)
 
 def get_table(module, table_name):
-    module_model = import_module('iggybase.' + module + '.models')
-    return getattr(module_model, TableFactory.to_camel_case(table_name))
+    try:
+        module_model = import_module('iggybase.' + module + '.models')
+        table_object = getattr(module_model, TableFactory.to_camel_case(table_name))
+    except AttributeError:
+        abort(404)
+    return table_object
 
 def get_field_attr(table_query_field_obj, field_obj, attr):
     if table_query_field_obj and getattr(table_query_field_obj, attr):
