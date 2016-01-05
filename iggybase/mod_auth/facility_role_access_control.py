@@ -39,7 +39,7 @@ class FacilityRoleAccessControl:
 
         return table_objects
 
-    def fields(self, table_object_id, module, active=1):
+    def fields(self, table_object_id, module, field_name = None, active=1):
         module = admin_db_session.query(models.Module, models.ModuleFacilityRole).join(models.ModuleFacilityRole). \
             filter(models.ModuleFacilityRole.facility_role_id == self.facility_role.id). \
             filter(models.Module.name == module).first()
@@ -47,37 +47,19 @@ class FacilityRoleAccessControl:
         if module is None:
             return []
 
+        filters = [
+            (models.FieldFacilityRole.facility_role_id ==
+                self.facility_role.id),
+            (models.Field.table_object_id == table_object_id),
+            (models.Field.active == active),
+            (models.FieldFacilityRole.active == active),
+            (models.FieldFacilityRole.module_id == module.Module.id)
+        ]
+        if field_name:
+            filters.append((models.Field.field_name == field_name))
         res = admin_db_session.query(models.Field, models.FieldFacilityRole).join(models.FieldFacilityRole). \
-            filter(models.FieldFacilityRole.facility_role_id == self.facility_role.id). \
-            filter(models.Field.table_object_id == table_object_id). \
-            filter(models.Field.active == active). \
-            filter(models.FieldFacilityRole.active == active). \
-            filter(models.FieldFacilityRole.module_id == module.Module.id). \
+            filter(*filters). \
             order_by(models.FieldFacilityRole.order, models.FieldFacilityRole.id).all()
-
-        if res is None:
-            return []
-        else:
-            return res
-
-    def field(self, table_object_id, module, field_name, active=1):
-        # TODO: I think field and fields need to be one function, suggest that
-        # all requestors deal with a list
-        module = admin_db_session.query(models.Module, models.ModuleFacilityRole).join(models.ModuleFacilityRole). \
-            filter(models.ModuleFacilityRole.facility_role_id == self.facility_role.id). \
-            filter(models.Module.name == module).first()
-
-        if module is None:
-            return []
-
-        res = admin_db_session.query(models.Field, models.FieldFacilityRole).join(models.FieldFacilityRole). \
-            filter(models.FieldFacilityRole.facility_role_id == self.facility_role.id). \
-            filter(models.Field.table_object_id == table_object_id). \
-            filter(models.Field.active == active). \
-            filter(models.Field.field_name == field_name). \
-            filter(models.FieldFacilityRole.active == active). \
-            filter(models.FieldFacilityRole.module_id == module.Module.id). \
-            order_by(models.FieldFacilityRole.order, models.FieldFacilityRole.id).first()
 
         if res is None:
             return []
