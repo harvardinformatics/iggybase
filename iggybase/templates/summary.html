@@ -13,8 +13,11 @@
         {{ macros.render_buttons(top_buttons)}}
     {%- endblock topbuttonbar %}
     <div>
-        <p>Min Date:<input type="text" class="datepicker" id="min_date"></p>
-        <p>Max Date:<input type="text" class="datepicker" id="max_date"></p>
+        {% if table_query.date_fields: %}
+            {{ macros.render_select(table_query.date_fields, 'date_field_select')}}
+            <p>Min Date:<input type="text" class="datepicker" id="min_date"></p>
+            <p>Max Date:<input type="text" class="datepicker" id="max_date"></p>
+        {% endif %}
     </div>
     <div class={{ table_name ~ "_table" }}>
         {{ macros.render_table_headers( table_query ) }}

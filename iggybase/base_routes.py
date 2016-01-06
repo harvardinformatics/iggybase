@@ -1,3 +1,4 @@
+import json
 from flask import request, jsonify
 from flask.ext import excel
 import iggybase.templating as templating
@@ -21,7 +22,9 @@ def summary(module_name, table_name):
     page_form = 'summary'
     table_queries = tqc.TableQueryCollection(module_name, page_form, table_name)
     table_queries.get_fields()
-    return templating.page_template('summary', table_name = table_name,
+    return templating.page_template('summary',
+            module_name = module_name,
+            table_name = table_name,
             table_query = table_queries.get_first())
 
 def summary_ajax(module_name, table_name):
@@ -49,8 +52,11 @@ def action_summary(module_name, table_name = None):
     page_form = 'summary'
     table_queries = tqc.TableQueryCollection(module_name, page_form, table_name)
     table_queries.get_fields()
-    return templating.page_template('action_summary', table_name = table_name, table_query =
-            table_queries.get_first())
+    hidden_fields = {'table': table_name}
+    return templating.page_template('action_summary',
+            module_name = module_name,
+            table_name = table_name,
+            table_query = table_queries.get_first(), hidden_fields = hidden_fields)
 
 def action_summary_ajax(module_name, table_name = None):
     page_form = 'summary'
@@ -68,10 +74,10 @@ def detail(module_name, table_name, row_name):
     table_queries.get_fields()
     table_queries.get_results()
     table_queries.format_results()
-    mod = request.path.split('/')[1]
-    hidden_fields = {'mod': mod, 'table': table_name, 'row_name': row_name}
+    hidden_fields = {'table': table_name, 'row_name': row_name}
     return templating.page_template(
         'detail',
+        module_name=module_name,
         table_name=table_name,
         row_name=row_name,
         table_queries=table_queries,
@@ -87,12 +93,12 @@ def data_entry(module_name, table_name, row_name):
         organization_access_control = oac.OrganizationAccessControl('mod_' + module_name)
         organization_access_control.save_form(form)
 
-    return templating.page_template('single_data_entry', form=form)
+    return templating.page_template('single_data_entry',
+            module_name=module_name, form=form)
 
 
 def multiple_data_entry(module_name, table_name):
     row_names =  json.loads(request.args.get('row_names'))
-
     fg = form_generator.FormGenerator('mod_' + module_name, table_name)
     form = fg.default_multiple_entry_form(row_names)
 
@@ -100,4 +106,9 @@ def multiple_data_entry(module_name, table_name):
         organization_access_control = oac.OrganizationAccessControl('mod_' + module_name)
         organization_access_control.save_form(form)
 
+<<<<<<< HEAD
     return templating.page_template('multiple_data_entry', form=form)
+=======
+    return templating.page_template('single_data_entry',
+            module_name=module_name, form=form)
+>>>>>>> 20d2be0d2ece59b2718b4f26c8681cc4d72fe2d5

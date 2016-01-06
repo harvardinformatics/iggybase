@@ -56,7 +56,6 @@ class OrganizationAccessControl:
 
     def get_entry_data(self, table_name, name=None):
         field_data = self.get_field_data(table_name)
-
         results = None
 
         if field_data is not None:
@@ -217,8 +216,8 @@ class OrganizationAccessControl:
             row_id = int(field_id[field_id.rindex('_')+1:])
             column_name = field_id[:field_id.rindex('_')]
 
-            field_data = self.facility_role_access_control.field(int(hidden_fields['table_id_'+str(row_id)]),
-                                                                 form.module_0.data, column_name)
+            field_data = self.facility_role_access_control.fields(int(hidden_fields['table_id_'+str(row_id)]),
+                                                                 form.module_0.data, column_name)[0]
 
             if last_row_id != row_id and row_id not in instances:
                 if hidden_fields['row_name_'+str(row_id)] == 'new':
@@ -251,16 +250,3 @@ class OrganizationAccessControl:
         for row_id, instance in instances.items():
             db_session().add(instance)
         db_session().commit()
-
-    def get_table_queries( self, table_name):
-        """TODO: remove this function use table_query_collection instead
-        """
-        table_queries = admin_db_session.query(models.TableQuery.id,
-                models.TableObject.name).\
-                join(models.TableQueryTableObject).\
-                join(models.TableObject, models.TableObject.id ==
-                        models.TableQuery.table_object_id).\
-                join(models.TableQueryPageForm).\
-                join(models.PageForm).\
-                filter(models.PageForm.name == self.page_form, models.TableObject.name == table_name.lower()).all()
-        return table_queries

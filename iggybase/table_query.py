@@ -20,10 +20,12 @@ class TableQuery:
         self.ordered_fields = []
         self._facility_role_access_control = frac.FacilityRoleAccessControl()
         self.criteria = {}
+        self.date_fields = {}
 
     def get_fields(self):
         self.table_fields = self._get_table_query_fields()
         self.ordered_fields = self._get_field_order(self.table_fields)
+        self.date_fields = self._get_date_fields(self.ordered_fields)
 
     def get_results(self):
         """ calls several class functions and returns results
@@ -104,6 +106,15 @@ class TableQuery:
                     )
         )
 
+    def _get_date_fields(self, ordered_fields):
+        date_fields = {}
+        index = 0
+        for field in ordered_fields:
+            if self.field_dict[field].Field.data_type_id == 4:
+                date_fields[field] =  index
+            index += 1
+        return date_fields
+
     def _order_fields(self, row):
         return OrderedDict(sorted(row.items(), key=lambda i:self.ordered_fields.index(i[0])))
 
@@ -136,6 +147,7 @@ class TableQuery:
                                 'link': self.get_link(
                                     col,
                                     fk_metadata[1],
+                                    request.script_root,
                                     'detail',
                                     table
                                 )
@@ -153,13 +165,17 @@ class TableQuery:
                         row_dict[keys[i]]['link'] = self.get_link(
                             col,
                             self.module_name,
+                            request.script_root,
                             'detail',
                             table_name
                         )
             self.table_rows.append(self._order_fields(row_dict))
 
-    def get_link(self, value, module, page = None, table = None):
-        link = '/' + module
+    def get_link(self, value, module, script_root = None, page = None, table = None):
+        link = ''
+        if script_root:
+            link += '/' + script_root
+        link += '/' + module
         if page:
             link += '/' + page
         if table:
