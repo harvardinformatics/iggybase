@@ -10,9 +10,24 @@ $(document).ready(function(){
     $('.datepicker').datepicker();
 
     // add event listeners for date range filter
-    $('#min_date').keyup(function() {table.draw();});
-    $('#max_date').keyup(function() {table.draw();});
+    $('#min_date, #max_date').change(function() {table.draw();});
     $("#download").click(function(){$.fn.openDownload();});
+
+    // add a date search to datatables
+    $.fn.dataTable.ext.search.push(
+        function(settings, data, dataIndex) {
+            var min = Date.parse($('#min_date').val());
+            var max = Date.parse($('#max_date').val());
+            var created = Date.parse(data[2]);
+            if ((isNaN(min) && isNaN(max)) ||
+                    (isNaN(min) && created <= max) ||
+                    (min <= created && isNaN(max)) ||
+                    (min <= created && created <= max)) {
+                return true;
+            }
+            return false;
+        }
+    );
 } );
 
 ( function( $ ) {
