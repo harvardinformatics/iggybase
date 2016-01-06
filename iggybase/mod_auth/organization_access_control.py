@@ -217,7 +217,7 @@ class OrganizationAccessControl:
             column_name = field_id[:field_id.rindex('_')]
 
             field_data = self.facility_role_access_control.fields(int(hidden_fields['table_id_'+str(row_id)]),
-                                                                 form.module_0.data, column_name)
+                                                                 form.module_0.data, column_name)[0]
 
             if last_row_id != row_id and row_id not in instances:
                 if hidden_fields['row_name_'+str(row_id)] == 'new':
