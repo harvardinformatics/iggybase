@@ -106,7 +106,6 @@ def add_base_routes( app, conf ):
 
 def configure_blueprints( app, blueprints ):
     for i,(module, blueprint) in enumerate(blueprints):
-        logging.info( blueprint )
         bp = getattr(__import__('iggybase.'+module, fromlist=[module]),module)
         app.register_blueprint( bp )
 

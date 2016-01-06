@@ -205,3 +205,6 @@ class FormGenerator():
                     HiddenField('hidden_'+field.Field.field_name+"_"+str(row_counter), default=value)
 
             self.classattr[field.Field.field_name+"_"+str(row_counter)] = self.input_field(field, value)
+
+        self.classattr['hidden_endrow_'+str(row_counter)]=\
+            HiddenField('hidden_endrow_'+str(row_counter))
