@@ -21,7 +21,7 @@ class TableQueryCollection:
             self.results.append(query)
 
     def get_fields(self):
-        if self.facility_role_access_control.has_access('Module', self.module):
+        if self.facility_role_access_control.has_access('Module', {'name': self.module}):
             table_queries_info = self.facility_role_access_control.table_queries(self.page_form, self.table_name)
             if table_queries_info:
                 for query in table_queries_info:

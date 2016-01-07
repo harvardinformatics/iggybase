@@ -32,7 +32,7 @@ def page_template( page_form_name, **context ):
 
     else:
         # add button, nav bar, side bar
-        page_form = access_ctrl.has_access( "PageForm", page_form_name )
+        page_form = access_ctrl.has_access( "PageForm", {'name': page_form_name} )
 
         if page_form is None:
             abort( 403 )

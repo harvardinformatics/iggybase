@@ -136,7 +136,7 @@ class FormGenerator():
         return wtf_field
 
     def default_single_entry_form(self, row_name='new'):
-        self.table_data = self.facility_role_access_control.has_access('TableObject', self.table_object)
+        self.table_data = self.facility_role_access_control.has_access('TableObject', {'name': self.table_object})
 
         fields = self.facility_role_access_control.fields(self.table_data.id, self.module)
 
@@ -149,7 +149,7 @@ class FormGenerator():
         return newclass()
 
     def default_multiple_entry_form(self, row_names=[]):
-        self.table_data = self.facility_role_access_control.has_access('TableObject', self.table_object)
+        self.table_data = self.facility_role_access_control.has_access('TableObject', {'name': self.table_object})
 
         fields = self.facility_role_access_control.fields(self.table_data.id, self.module)
 
