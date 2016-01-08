@@ -34,16 +34,8 @@ class OrganizationAccessControl:
             self.user_role = None
             self.current_org_id = None
 
-    def get_object(self, obj_type, filters = []):
-        """ get objects of one type with any filters
-        """
-        obj = getattr( models, obj_type )
-        res = admin_db_session.query(obj).filter(*filters).all()
-        return res
-
     def get_child_organization(self, parent_organization_id):
         self.org_ids.append(parent_organization_id)
-
         child_orgs = db_session.query(Organization).filter_by(parent_id=parent_organization_id).all()
 
         if child_orgs is None:
@@ -178,7 +170,7 @@ class OrganizationAccessControl:
         }
 
     def get_field_data(self, table_name):
-        table_data = self.facility_role_access_control.has_access('TableObject', table_name)
+        table_data = self.facility_role_access_control.has_access('TableObject', {'name': table_name})
         field_data = None
 
         if table_data is not None:

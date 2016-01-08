@@ -4,6 +4,7 @@
     {{ super() }}
     <link href="{{ url_for('static', filename='jquery/DataTables/media/css/jquery.dataTables.min.css') }}" rel="stylesheet">
     <link href="{{ url_for('static', filename='jquery/jquery-ui/jquery-ui.theme.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='summary.css') }}" rel="stylesheet">
 {%- endblock styles %}
 {% block title %}Iggybase - {{ table_name.replace( '_',' ' ) }}{% endblock %}
 {% block page_content %}
@@ -14,9 +15,13 @@
     {%- endblock topbuttonbar %}
     <div>
         {% if table_query.date_fields: %}
+        <form>
+            <fieldset>
             {{ macros.render_select(table_query.date_fields, 'date_field_select')}}
-            <p>Min Date:<input type="text" class="datepicker" id="min_date"></p>
-            <p>Max Date:<input type="text" class="datepicker" id="max_date"></p>
+            Min Date:<input type="text" class="datepicker" id="min_date">
+            Max Date:<input type="text" class="datepicker" id="max_date">
+            </fieldset>
+        </form>
         {% endif %}
     </div>
     <div class={{ table_name ~ "_table" }}>
