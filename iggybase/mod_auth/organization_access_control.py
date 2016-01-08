@@ -178,6 +178,16 @@ class OrganizationAccessControl:
 
         return field_data
 
+
+    def get_search_field_data(self, table_name):
+        table_data = self.facility_role_access_control.has_access('TableObject', {'name': table_name})
+        field_data = None
+
+        if table_data is not None:
+            field_data = self.facility_role_access_control.fields(table_data.id, self.module)
+
+        return field_data
+
     def save_form(self, form):
         module_model = import_module('iggybase.' + form.module_0.data + '.models')
         table_object = getattr( module_model, form.table_object_0.data )
