@@ -1,4 +1,5 @@
-from flask import g
+from collections import OrderedDict as OrderedDict
+from flask import g, request
 from sqlalchemy.orm import aliased
 from iggybase.database import admin_db_session
 from iggybase.mod_admin import models
@@ -150,15 +151,16 @@ class FacilityRoleAccessControl:
         Starts with the root navbar and sidebar records.
         Menus are recursive.
         """
+        # TODO: do we need to query for this or can we just use constant
         navbar_root = admin_db_session.query(models.Menu). \
             filter_by(name=admin_consts.MENU_NAVBAR_ROOT).first()
-        navbar_menus = get_child_menus(navbar_root.id, self.facility_role.id, active)
+        navbar = get_menu_items(navbar_root.id, self.facility_role.id, active)
 
         sidebar_root = admin_db_session.query(models.Menu). \
             filter_by(name=admin_consts.MENU_SIDEBAR_ROOT).first()
-        sidebar_menus = get_child_menus(sidebar_root.id, self.facility_role.id, active)
+        sidebar = get_menu_items(sidebar_root.id, self.facility_role.id, active)
 
-        return navbar_menus, sidebar_menus, self.facility_role, get_child_menus
+        return navbar, sidebar
 
     def page_forms(self, active=1):
         page_forms = []
@@ -217,15 +219,37 @@ class FacilityRoleAccessControl:
 
         return rec
 
-def get_child_menus(parent_id, facility_role_id, active=True):
-    """Get child menus for this facility role.
-    return [] if none available.
-
-    This function is called by the jinja template to get children menus.
+def get_menu_items(parent_id, facility_role_id, active=True):
+    """Recursively Get menus items and subitems
     """
-    return admin_db_session.query(models.Menu). \
-        filter(models.MenuFacilityRole.facility_role_id == facility_role_id,
-            models.MenuFacilityRole.menu_id == models.Menu.id). \
-        filter(models.Menu.parent_id == parent_id,
-            models.Menu.active == active). \
-        order_by(models.Menu.order).all()
+    menu = OrderedDict()
+    items = (admin_db_session.query(models.Menu, models.MenuUrl)
+        .join(models.MenuFacilityRole)
+        .outerjoin(models.MenuUrl)
+        .filter(
+            models.MenuFacilityRole.facility_role_id == facility_role_id,
+            models.Menu.parent_id == parent_id,
+            models.Menu.active == active
+        )
+        .order_by(models.Menu.order, models.Menu.name).all())
+    for item in items:
+        url = get_menu_url(item)
+        menu[item.Menu.description] = {
+                'url': url,
+                'name': item.Menu.name,
+                'subs': get_menu_items(item.Menu.id, facility_role_id, active)
+        }
+    return menu
+
+def get_menu_url(item):
+    url = ''
+    if item.MenuUrl:
+        url = item.MenuUrl.url_path
+        if url and item.MenuUrl.url_params:
+            url += item.MenuUrl.url_params
+    if url:
+        if request.script_root:
+            url = '/' + request.script_root + url
+    else:
+        url = '#'
+    return url
