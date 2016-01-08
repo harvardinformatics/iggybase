@@ -25,6 +25,14 @@
   </head>
   <body{% block body_attribs %}{% endblock body_attribs %}>
     {% block body -%}
+
+	{% block dialog %}
+	<div id="dialog" class="modal fade" role="dialog">
+	  <div id="modal_dialog" class="modal-dialog">
+	  </div>
+	</div>
+    {% endblock dialog %}
+
     {% block banner %}
     <div class="banner" id="banner">
       <a  href="{{ url_for('index') }}">

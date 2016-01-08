@@ -8,44 +8,60 @@ $( document ).ready( function () {
     );
     $( ".search-button" ).click(
         function( ) {
-            $.fn.searchPopUp( $( this ) );
+            $.fn.searchClick( $( this ) );
         }
     );
 } );
 
 ( function( $ ) {
-    $.fn.searchPopUp = function ( ele ) {
-        var luid = ele.attr( 'luid' );
 
-        if ( luid.match( /^Child_.*/ ) )
-            luid = luid.substr( 6 );
+    $.fn.showModalDialog = function ( url, callbacktext, callback ) {
+        $.ajax( {
+            url: url,
+            success: function ( resp ) {
+                tmpform = "<div id='modal_dialog_content' class='modal-content'>"+resp
+                tmpform += "<div class='modal-footer'>"
 
-        if ($("#message_div").length > 0)
-            $("#message_div").text("");
+                if ( callback ) {
+                    tmpform += "<button id='"+callbacktext+"' type='button' class='btn btn-default'>"+callbacktext+"</button>"
+                }
 
-        var formurl = rootdir + "/html/" + searchtype + ".php?propid=" + propertyid + "&objtype=" + objtype + "&proptype="+proptype+"&renderer="+renderer+"&decorate=half";
+                tmpform += "<button type='button' class='btn btn-default' data-dismiss='modal'>Close</button>"
 
-        var formstr = $.fn.get_url(formurl);
+                tmpform += "</div>";
+                tmpform += "</div>";
 
-        var tmpform = "<div>"+formstr+"</div>";
+                $(tmpform).appendTo("#modal_dialog");
 
-        $(tmpform).appendTo("#searchpage");
+                if ( callback ) {
+                    $( '.modal-footer #' + callbacktext ).click( callback )
+                }
 
-        $("#searchpage").dialog({
-          autoOpen: false,
-          modal:    true,
-          width:    800,
-
-          buttons: [
-              {
-                text:  "Cancel",
-                click: function() { $(this).dialog("close"); }
-              },
-              {
-                text: btnlabel,
-                click: function() { $.fn.searchResults( searchtype, propertyid, proptype, objtype, pid, renderer, '' ); }
-              }
-          ]
+                $("#dialog").modal( "show" );
+            }
         } );
+    }
+
+    $.fn.searchClick = function ( ele ) {
+        var field_name = ele.attr( 'luid' );
+        var matches = field_name.match( /(\S+)_(\d+)/);
+        var property_name = matches[ 1 ];
+        var input_id = ele.attr( 'id' );
+        var table_object = $( '#table_object_0' ).val( );
+
+        if ($("#modal_dialog").length > 0)
+            $("#modal_dialog").text("");
+
+        var formurl = $SCRIPT_ROOT + "/core/search?table_object=" + table_object + "&property_name=" + property_name + "&field_name=" + field_name + "&input_id=" + input_id;
+
+        $.fn.showModalDialog( formurl, "Search", $.fn.searchResults )
+    }
+
+    $.fn.searchResults = function ( ) {
+        $("#dialog").modal( "hide" );
+
+        $("#modal_dialog").text("");
+
+        alert('hello');
     }
 } ) ( jQuery );

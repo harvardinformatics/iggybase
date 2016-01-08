@@ -106,4 +106,4 @@ def multiple_data_entry(module_name, table_name):
         organization_access_control = oac.OrganizationAccessControl('mod_' + module_name)
         organization_access_control.save_form(form)
 
-    return templating.page_template('multiple_data_entry', form=form)
+    return templating.page_template('multiple_data_entry', module_name=module_name, form=form)

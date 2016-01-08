@@ -90,14 +90,3 @@ def page_scripts( scripts ):
         scpts.append( script.page_javascript )
 
     return scpts
-
-def page_menus( menus, menu_items ):
-    mns = [ ]
-
-    for menu in menus:
-        pass
-
-        mns.append(  )
-
-    return mns
-
