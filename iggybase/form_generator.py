@@ -74,7 +74,7 @@ class FormGenerator():
             if field_data.FieldFacilityRole.permission_id == constants.READ_WRITE:
                 if field_data.Field.foreign_key_table_object_id is not None:
                     choices = self.organization_access_control. \
-                        get_lookup_data(field_data.Field.foreign_key_table_object_id)
+                        get_foreign_key_data(field_data.Field.foreign_key_table_object_id)
 
                     if len(choices) > 25:
                         if value is not None:
@@ -113,7 +113,7 @@ class FormGenerator():
                 if field_data.Field.foreign_key_table_object_id is not None:
                     if value is not None:
                         choices = self.organization_access_control. \
-                            get_lookup_data(field_data.Field.foreign_key_table_object_id)
+                            get_foreign_key_data(field_data.Field.foreign_key_table_object_id)
                         value = [item[1] for item in choices if item[0] == value]
 
                     wtf_class = ReadonlyStringField

@@ -69,9 +69,8 @@ class OrganizationAccessControl:
 
         return results
 
-    def get_lookup_data(self, fk_table_id, column_value=None):
+    def get_foreign_key_data(self, fk_table_id, column_value=None):
         fk_table_data = admin_db_session.query(models.TableObject).filter_by(id=fk_table_id).first()
-        fk_table_name = TableFactory.to_camel_case(fk_table_data.name)
         fk_field_data = self.foreign_key(fk_table_id)
 
         results = [(-99, '')]
@@ -178,15 +177,25 @@ class OrganizationAccessControl:
 
         return field_data
 
-
-    def get_search_field_data(self, table_name):
+    def get_search_field_data(self, module, table_name, search_field_name):
         table_data = self.facility_role_access_control.has_access('TableObject', {'name': table_name})
-        field_data = None
+        search_field_data = None
 
         if table_data is not None:
-            field_data = self.facility_role_access_control.fields(table_data.id, self.module)
+            field_data = self.facility_role_access_control.fields(table_data.id, module,
+                                                                  {'field.field_name': search_field_name})
 
-        return field_data
+            if field_data is not None:
+                search_table = self.facility_role_access_control.has_access('TableObject',
+                                                                          {'id': field_data[0].Field.foreign_key_table_object_id})
+
+                if search_table is not None:
+                    search_table_data = self.foreign_key(search_table.id)
+                    search_field_data = self.facility_role_access_control.fields(search_table.id,
+                                                                                 search_table_data['module'],
+                                                                                 {'field_facility_role.search_field': 1})
+
+        return search_field_data
 
     def save_form(self, form):
         module_model = import_module('iggybase.' + form.module_0.data + '.models')
@@ -219,7 +228,7 @@ class OrganizationAccessControl:
             column_name = field_id[:field_id.rindex('_')]
 
             field_data = self.facility_role_access_control.fields(int(hidden_fields['table_id_'+str(row_id)]),
-                                                                 form.module_0.data, column_name)[0]
+                                                                 form.module_0.data, {'field_name':column_name})[0]
 
             if last_row_id != row_id and row_id not in instances:
                 if hidden_fields['row_name_'+str(row_id)] == 'new':
@@ -244,7 +253,7 @@ class OrganizationAccessControl:
                 db_session().add(history_instance)
 
             if field_data.Field.foreign_key_table_object_id is not None and not isinstance(field.data, int):
-                fk_id=self.get_lookup_data(field_data.Field.foreign_key_table_object_id, field.data)
+                fk_id=self.get_foreign_key_data(field_data.Field.foreign_key_table_object_id, field.data)
                 setattr(instances[row_id], column_name, fk_id[1][0])
             else:
                 setattr(instances[row_id], column_name, field.data)

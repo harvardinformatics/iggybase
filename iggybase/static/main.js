@@ -43,16 +43,16 @@ $( document ).ready( function () {
     }
 
     $.fn.searchClick = function ( ele ) {
-        var field_name = ele.attr( 'luid' );
-        var matches = field_name.match( /(\S+)_(\d+)/);
-        var property_name = matches[ 1 ];
-        var input_id = ele.attr( 'id' );
+        var input_id = ele.attr( 'luid' );
+        var matches = input_id.match( /(\S+)_(\d+)/);
+        var field_name = matches[ 1 ];
         var table_object = $( '#table_object_0' ).val( );
+        var module = $( '#module_0' ).val( );
 
         if ($("#modal_dialog").length > 0)
             $("#modal_dialog").text("");
 
-        var formurl = $SCRIPT_ROOT + "/core/search?table_object=" + table_object + "&property_name=" + property_name + "&field_name=" + field_name + "&input_id=" + input_id;
+        var formurl = $SCRIPT_ROOT + "/core/search?table_object=" + table_object + "&input_id=" + input_id + "&field_name=" + field_name + "&module=" + module;
 
         $.fn.showModalDialog( formurl, "Search", $.fn.searchResults )
     }

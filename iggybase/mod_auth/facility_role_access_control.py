@@ -19,12 +19,13 @@ class FacilityRoleAccessControl:
         if g.user is not None and not g.user.is_anonymous:
             self.user = load_user(g.user.id)
             self.facility_role = (admin_db_session.query(models.FacilityRole).
-                filter_by(facility_id=self.facility.id, role_id=self.user.current_user_role_id).first())
+                                  filter_by(facility_id=self.facility.id,
+                                            role_id=self.user.current_user_role_id).first())
         else:
             self.user = None
             self.facility_role = None
 
-    def fields(self, table_object_id, module, field_name = None, active=1):
+    def fields(self, table_object_id, module, filter=None, active=1):
         module = admin_db_session.query(models.Module, models.ModuleFacilityRole).join(models.ModuleFacilityRole). \
             filter(models.ModuleFacilityRole.facility_role_id == self.facility_role.id). \
             filter(models.Module.name == module).first()
@@ -33,18 +34,23 @@ class FacilityRoleAccessControl:
             return []
 
         filters = [
-            (models.FieldFacilityRole.facility_role_id ==
-                self.facility_role.id),
+            (models.FieldFacilityRole.facility_role_id == self.facility_role.id),
             (models.Field.table_object_id == table_object_id),
             (models.Field.active == active),
             (models.FieldFacilityRole.active == active),
             (models.FieldFacilityRole.module_id == module.Module.id)
         ]
-        if field_name:
-            filters.append((models.Field.field_name == field_name))
+        if filter is not None:
+            for field_name, value in filter.items():
+                field_data = field_name.split(".")
+                if field_data[0] == "field":
+                    filters.append((getattr(models.Field, field_data[1]) == value))
+                else:
+                    filters.append((getattr(models.FieldFacilityRole, field_data[1]) == value))
+
         res = admin_db_session.query(models.Field, models.FieldFacilityRole).join(models.FieldFacilityRole). \
-            filter(*filters). \
-            order_by(models.FieldFacilityRole.order, models.FieldFacilityRole.id).all()
+                    filter(*filters). \
+                    order_by(models.FieldFacilityRole.order, models.FieldFacilityRole.id).all()
 
         if res is None:
             return []
@@ -82,15 +88,15 @@ class FacilityRoleAccessControl:
         )
         return table_queries
 
-    def table_query_fields( self, table_query_id, table_name = None, table_id = None, field_name = None, active = 1, visible = 1 ):
+    def table_query_fields(self, table_query_id, table_name=None, table_id=None, field_name=None, active=1, visible=1):
         filters = [
 
-                (models.FieldFacilityRole.facility_role_id == self.facility_role.id),
-                (models.TableObjectFacilityRole.facility_role_id == self.facility_role.id),
-                (models.FieldFacilityRole.visible == visible),
-                (models.Field.active == active),
-                (models.FieldFacilityRole.active == active),
-                (models.TableObject.active == active)
+            (models.FieldFacilityRole.facility_role_id == self.facility_role.id),
+            (models.TableObjectFacilityRole.facility_role_id == self.facility_role.id),
+            (models.FieldFacilityRole.visible == visible),
+            (models.Field.active == active),
+            (models.FieldFacilityRole.active == active),
+            (models.TableObject.active == active)
         ]
 
         # add filter for the identifier
@@ -113,15 +119,15 @@ class FacilityRoleAccessControl:
                 models.TableQueryField,
                 models.Module
             ).
-            join(
+                join(
                 models.TableObject,
                 models.TableObject.id == models.Field.table_object_id
             ).
-            join(models.FieldFacilityRole).
-            join(models.TableObjectFacilityRole).
-            join(models.Module).
-            outerjoin(models.TableQueryField).
-            filter(*filters).all()
+                join(models.FieldFacilityRole).
+                join(models.TableObjectFacilityRole).
+                join(models.Module).
+                outerjoin(models.TableQueryField).
+                filter(*filters).all()
         )
         return res
 
@@ -206,16 +212,17 @@ class FacilityRoleAccessControl:
             getattr(table_object_role, 'facility_role_id') == self.facility_role.id,
             getattr(table_object, 'active') == active
         ]
-        if criteria['name']:
+        if 'name' in criteria.keys():
             filters.append(getattr(table_object, 'name') == criteria['name'])
-        elif criteria['id']:
+        elif 'id' in criteria.keys():
             filters.append(getattr(table_object, 'id') == criteria['id'])
 
         rec = (admin_db_session.query(table_object).
-            join(table_object_role).
-            filter(*filters).first())
+               join(table_object_role).
+               filter(*filters).first())
 
         return rec
+
 
 def get_child_menus(parent_id, facility_role_id, active=True):
     """Get child menus for this facility role.
@@ -225,7 +232,7 @@ def get_child_menus(parent_id, facility_role_id, active=True):
     """
     return admin_db_session.query(models.Menu). \
         filter(models.MenuFacilityRole.facility_role_id == facility_role_id,
-            models.MenuFacilityRole.menu_id == models.Menu.id). \
+               models.MenuFacilityRole.menu_id == models.Menu.id). \
         filter(models.Menu.parent_id == parent_id,
-            models.Menu.active == active). \
+               models.Menu.active == active). \
         order_by(models.Menu.order).all()
