@@ -28,6 +28,28 @@
     </select>
 {%- endmacro %}
 
+{% macro render_nav_menu(items, first_level = False) -%}
+    {% if first_level: %}
+        <ul class="nav navbar-nav nav-tabs">
+    {% else %}
+        <ul class="dropdown-menu">
+    {% endif %}
+    {% for item, info in items.items()%}
+        {% if 'subs' in info and info['subs'] %}
+        <li class="dropdown">
+            <a class="dropdown-toggle" data-toggle="dropdown"
+		     href= "{{ info['url'] }}" class="small">{{ item }}
+             <span class="caret"></span></a>
+            {{ render_nav_menu(info['subs'])}}
+        {% else %}
+              <li><a href="{{ info['url'] }}"
+             {% if not first_level %}class="small"{% endif %}>{{ item }}</a>
+         {% endif %}
+         </li>
+        {% endfor %}
+    </ul>
+{%- endmacro %}
+
 {% macro render_field(field, label_visible=true) -%}
      <div class="form-group {% if field.errors %}has-error{% endif %} {{ kwargs.pop('class_', '') }}">
         {% if field.type != 'HiddenField' and label_visible %}

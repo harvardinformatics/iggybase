@@ -59,11 +59,8 @@ def page_template( page_form_name, **context ):
         })
 
         ## Menus
-        navbar, sidebar, facility_role, get_child_menu = \
-            access_ctrl.page_form_menus( page_form.id )
-        context.update({'navbar': navbar, 'sidebar': sidebar,
-                        'facility_role': facility_role,
-                        'get_child_menu': get_child_menu})
+        navbar, sidebar = access_ctrl.page_form_menus( page_form.id )
+        context.update({'navbar': navbar, 'sidebar': sidebar})
 
     # logging.info( context )
 

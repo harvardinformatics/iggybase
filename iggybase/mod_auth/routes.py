@@ -55,10 +55,16 @@ def home():
     """redirects to user home page.
     """
     if not g.user:
-        abort( 404 )
-    return redirect( g.user.home_page )
-    
-    
+        abort( 403 )
+    if g.user.home_page:
+        home_page = g.user.home_page
+    else:
+        # TODO: figure out how best to make this module specific
+        home_page = '/murray/detail/user/' + g.user.name
+        module_name = request.path.split('/')[1]
+    return redirect( home_page )
+
+
 
 @mod_auth.route( '/register', methods = [ 'GET', 'POST' ] )
 def register():

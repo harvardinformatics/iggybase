@@ -53,26 +53,25 @@
       <div class="col-sm-2 sidebar">
 
 	<div class="panel-group" id="accordion">
-	  <div class="panel panel-default">
-	    {% for menu in sidebar %}
+        <div class="panel panel-default">
+        {% if sidebar %}
+	    {% for item, info in sidebar.items() %}
 	    <div class="panel-heading">
 	      <h4 class="panel-title">
 		<a data-toggle="collapse" data-parent="#accordion"
-		   href="#{{ menu.name }}collapse">{{ menu.description }}</a>
+		   href="#{{ info['name'] }}collapse">{{ item }}</a>
 	      </h4>
 	    </div>
 	    <div class="panel-body">
-	      <div id="{{ menu.name }}collapse" class="panel-collapse collapse in">
+	      <div id="{{ info['name'] }}collapse" class="panel-collapse collapse in">
 
-		{% for submenu in get_child_menu(menu.id, facility_role.id) %}
-		<a href=
-		   {% if submenu.menu_url %}"{{ submenu.menu_url.url_path }}"
-		   {% else %}"#"
-		   {% endif %} class="small">{{ submenu.description }}</a><br />
+		{% for sub, sub_info in info['subs'].items() %}
+		<a href="{{ sub_info['url'] }}" class="small">{{ sub }}</a><br />
 		{% endfor %}
 	      </div>
 	    </div>
-	    {% endfor %}
+        {% endfor %}
+        {% endif %}
 	  </div>  <!-- end panel -->
 	</div> <!-- end panel-group -->
 
@@ -84,34 +83,10 @@
 	<div class="row">
 	  <nav class="navbar navbar-inverse">
 	    <div class="navbar-header"></div>
-	    <div>
-	      <ul class="nav navbar-nav nav-tabs">
-		{% for menu in navbar recursive %}
-		{% if get_child_menu(menu.id, facility_role.id) %}
-		<li class="dropdown">
-		  <a class="dropdown-toggle" data-toggle="dropdown"
-		     href= {% if menu.menu_url %}"{{ menu.menu_url.url_path }}"
-		     {% else %}"#"
-		     {% endif %} class="small">{{ menu.description }}
-		    <span class="caret"></span></a>
-		  <ul class="dropdown-menu">
-		    {% for submenu in
-		    get_child_menu(menu.id, facility_role.id) %}
-		    <li><a href=
-			   {% if submenu.menu_url %}"{{ submenu.menu_url.url_path }}"
-			   {% else %}"#"
-			   {% endif %} class="small">{{ submenu.description }}</a></li>
-		    {% endfor %}
-		  </ul>
-		</li>
-		{% else %}
-		<li><a class="dropdown-toggle" 
-		       href={% if menu.menu_url %}"{{ menu.menu_url.url_path }}"
-		       {% else %}"#"
-		       {% endif %} class="small">{{ menu.description }}</a></li>
-		{% endif %}
-		{% endfor %}
-	      </ul>
+        <div>
+            {% if navbar %}
+                {{ macros.render_nav_menu( navbar, True ) }}
+            {% endif %}
 	    </div>
 	  </nav>
 	</div>  <!-- end row -->
