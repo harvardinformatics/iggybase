@@ -225,21 +225,6 @@ class FacilityRoleAccessControl:
 
         return rec
 
-<<<<<<< HEAD
-
-def get_child_menus(parent_id, facility_role_id, active=True):
-    """Get child menus for this facility role.
-    return [] if none available.
-
-    This function is called by the jinja template to get children menus.
-    """
-    return admin_db_session.query(models.Menu). \
-        filter(models.MenuFacilityRole.facility_role_id == facility_role_id,
-               models.MenuFacilityRole.menu_id == models.Menu.id). \
-        filter(models.Menu.parent_id == parent_id,
-               models.Menu.active == active). \
-        order_by(models.Menu.order).all()
-=======
     def get_menu_items(self, parent_id, facility_role_id, active=True):
         """Recursively Get menus items and subitems
         """
@@ -274,4 +259,3 @@ def get_child_menus(parent_id, facility_role_id, active=True):
         else:
             url = '#'
         return url
->>>>>>> 8d787904e35237fe9984bacde2820cac02e05cf1

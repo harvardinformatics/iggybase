@@ -179,7 +179,6 @@ class OrganizationAccessControl:
 
     def get_search_field_data(self, module, table_name, search_field_name):
         table_data = self.facility_role_access_control.has_access('TableObject', {'name': table_name})
-        search_field_data = None
 
         if table_data is not None:
             field_data = self.facility_role_access_control.fields(table_data.id, module,
@@ -195,7 +194,16 @@ class OrganizationAccessControl:
                                                                                  search_table_data['module'],
                                                                                  {'field_facility_role.search_field': 1})
 
-        return search_field_data
+                    return search_table_data['module'], search_table_data['name'], search_field_data
+
+        return None, None, None
+
+    def get_search_results(self, module, table_name, params):
+        table = util.get_table(module, table_name)
+        filters=[]
+        for key, value in params.items():
+            filters.append((getattr(table,key)).like('%'+value+'%'))
+        return table.query.filter(*filters).order_by(getattr(table,'name'))
 
     def save_form(self, form):
         module_model = import_module('iggybase.' + form.module_0.data + '.models')

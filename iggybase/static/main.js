@@ -15,27 +15,34 @@ $( document ).ready( function () {
 
 ( function( $ ) {
 
-    $.fn.showModalDialog = function ( url, callbacktext, callback ) {
+    $.fn.showModalDialog = function ( url, buttons, callback ) {
         $.ajax( {
             url: url,
             success: function ( resp ) {
-                tmpform = "<div id='modal_dialog_content' class='modal-content'>"+resp
-                tmpform += "<div class='modal-footer'>"
+                tmpform = "<div id='modal_dialog_content' class='modal-content'>"+resp;
+                tmpform += "<div class='modal-footer'>";
 
-                if ( callback ) {
-                    tmpform += "<button id='"+callbacktext+"' type='button' class='btn btn-default'>"+callbacktext+"</button>"
+                if ( buttons ) {
+                    for (var key in buttons){
+                        tmpform += "<button id='"+key+"' type='button' class='btn btn-default'>"+key+"</button>";
+                    }
                 }
 
-                tmpform += "<button type='button' class='btn btn-default' data-dismiss='modal'>Close</button>"
+                tmpform += "<button type='button' class='btn btn-default' data-dismiss='modal'>Close</button>";
 
                 tmpform += "</div>";
                 tmpform += "</div>";
 
                 $(tmpform).appendTo("#modal_dialog");
 
-                if ( callback ) {
-                    $( '.modal-footer #' + callbacktext ).click( callback )
+                if ( buttons ) {
+                    for (var key in buttons){
+                        $( '.modal-footer #' + key ).click( buttons[key] );
+                    }
                 }
+
+                if ( callback )
+                    $('#dialog').on('shown.bs.modal', function(e){ callback(); } );
 
                 $("#dialog").modal( "show" );
             }
@@ -54,14 +61,34 @@ $( document ).ready( function () {
 
         var formurl = $SCRIPT_ROOT + "/core/search?table_object=" + table_object + "&input_id=" + input_id + "&field_name=" + field_name + "&module=" + module;
 
-        $.fn.showModalDialog( formurl, "Search", $.fn.searchResults )
+        var buttons = {};
+        buttons[ "Search" ] = $.fn.searchResults;
+
+        $.fn.showModalDialog( formurl, buttons );
     }
 
     $.fn.searchResults = function ( ) {
         $("#dialog").modal( "hide" );
+        search_vals = {};
+
+        $(".modal-body input").each(function() {
+            search_vals[$(this).attr('id')] = $(this).val();
+        });
+
+
+        var formurl = $SCRIPT_ROOT + "/core/search_results?search_vals=" + JSON.stringify(search_vals);
 
         $("#modal_dialog").text("");
 
-        alert('hello');
+        $.fn.showModalDialog( formurl, {}, $.fn.searchLinks );
+    }
+
+    $.fn.searchLinks = function () {
+        $(".search-results").click( function( ){ $.fn.searchUpdate( $(this) ); } );
+    }
+
+    $.fn.searchUpdate = function (ele) {
+        $("#dialog").modal( "hide" );
+        $("#" + ele.attr('luid')).val(ele.val());
     }
 } ) ( jQuery );
