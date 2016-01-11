@@ -59,8 +59,7 @@ def home():
     if g.user.home_page:
         home_page = g.user.home_page
     else:
-        # TODO: figure out how best to make this module specific
-        home_page = '/murray/detail/user/' + g.user.name
+        home_page = '/auth/detail/user/' + g.user.name
         module_name = request.path.split('/')[1]
     return redirect( home_page )
 
