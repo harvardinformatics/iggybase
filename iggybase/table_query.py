@@ -17,15 +17,17 @@ class TableQuery:
         self.module = 'mod_' + module_name
         self.table_name = table_name
         self.table_rows = []
-        self.ordered_fields = []
+        self.field_dict = OrderedDict()
         self._facility_role_access_control = frac.FacilityRoleAccessControl()
         self.criteria = {}
         self.date_fields = {}
+        self.table_fields = []
 
     def get_fields(self):
         self.table_fields = self._get_table_query_fields()
-        self.ordered_fields = self._get_field_order(self.table_fields)
-        self.date_fields = self._get_date_fields(self.ordered_fields)
+        # get display names and set results as an ordered dict
+        self.field_dict = self._get_field_dict(self.table_fields)
+        self.date_fields = self._get_date_fields(self.field_dict)
 
     def get_results(self):
         """ calls several class functions and returns results
@@ -90,33 +92,21 @@ class TableQuery:
 
         return criteria
 
-    def _get_field_order(self, table_fields):
-        self.field_dict = {}
+    def _get_field_dict(self, table_fields):
+        field_dict = OrderedDict()
         for row in table_fields:
             display_name = util.get_field_attr(row.TableQueryField, row.Field, 'display_name')
-            self.field_dict[display_name] = row
-        # return a sorted list of field names
-        return sorted(
-                self.field_dict,
-                key=lambda i:
-                    util.get_field_attr(
-                        self.field_dict[i].TableQueryField,
-                        self.field_dict[i].Field,
-                        'order'
-                    )
-        )
+            field_dict[display_name] = row
+        return field_dict
 
-    def _get_date_fields(self, ordered_fields):
+    def _get_date_fields(self, field_dict):
         date_fields = {}
         index = 0
-        for field in ordered_fields:
-            if self.field_dict[field].Field.data_type_id == 4:
-                date_fields[field] =  index
+        for name, field in field_dict.items():
+            if field.Field.data_type_id == 4:
+                date_fields[name] =  index
             index += 1
         return date_fields
-
-    def _order_fields(self, row):
-        return OrderedDict(sorted(row.items(), key=lambda i:self.ordered_fields.index(i[0])))
 
     def format_results(self, for_download = False):
         """Formats data for summary or detail
@@ -169,7 +159,7 @@ class TableQuery:
                             'detail',
                             table_name
                         )
-            self.table_rows.append(self._order_fields(row_dict))
+            self.table_rows.append(row_dict)
 
     def get_link(self, value, module, script_root = None, page = None, table = None):
         link = ''
