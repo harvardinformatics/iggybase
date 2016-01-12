@@ -121,7 +121,7 @@ class TableQuery:
             keys = self.results[0].keys()
         # create dictionary for each row and for fk data
         for row in self.results:
-            row_dict = {}
+            row_dict = OrderedDict()
             for i, col in enumerate(row):
                 if 'fk|' in keys[i]:
                     fk_metadata = keys[i].split('|')
