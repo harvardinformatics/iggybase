@@ -32,6 +32,12 @@ class ReadonlyTextAreaField(TextAreaField):
         return super(ReadonlyTextAreaField, self).__call__(*args, **kwargs)
 
 
+class DateFieldClass(DateField):
+    def __call__(self, *args, **kwargs):
+        kwargs['class'] = 'form-control datefield'
+        return super(DateFieldClass, self).__call__(*args, **kwargs)
+
+
 class ReadonlyDateField(DateField):
     def __call__(self, *args, **kwargs):
         kwargs.setdefault('readonly', True)
@@ -97,7 +103,7 @@ class FormGenerator():
                     elif field_data.Field.data_type_id == constants.BOOLEAN:
                         wtf_class = BooleanField
                     elif field_data.Field.data_type_id == constants.DATE:
-                        wtf_class = DateField
+                        wtf_class = DateFieldClass
                     elif field_data.Field.data_type_id == constants.PASSWORD:
                         wtf_class = PasswordField
                     elif field_data.Field.data_type_id == constants.FILE:
