@@ -29,24 +29,27 @@
 {%- endmacro %}
 
 {% macro render_nav_menu(items, first_level = False) -%}
-    {% if first_level: %}
+    {% if first_level%}
         <ul class="nav navbar-nav nav-tabs">
+            <li><a href="'/auth/home'">Home</a></li>
     {% else %}
         <ul class="dropdown-menu">
     {% endif %}
-    {% for item, info in items.items()%}
-        {% if 'subs' in info and info['subs'] %}
-        <li class="dropdown">
-            <a class="dropdown-toggle" data-toggle="dropdown"
-		     href= "{{ info['url'] }}" class="small">{{ item }}
-             <span class="caret"></span></a>
-            {{ render_nav_menu(info['subs'])}}
-        {% else %}
-              <li><a href="{{ info['url'] }}"
-             {% if not first_level %}class="small"{% endif %}>{{ item }}</a>
-         {% endif %}
-         </li>
+    {% if items %}
+        {% for item, info in items.items()%}
+            {% if 'subs' in info and info['subs'] %}
+            <li class="dropdown">
+                <a class="dropdown-toggle" data-toggle="dropdown"
+                href= "{{ info['url'] }}" class="small">{{ item }}
+                <span class="caret"></span></a>
+                {{ render_nav_menu(info['subs'])}}
+            {% else %}
+                <li><a href="{{ info['url'] }}"
+                {% if not first_level %}class="small"{% endif %}>{{ item }}</a>
+            {% endif %}
+            </li>
         {% endfor %}
+    {% endif %}
     </ul>
 {%- endmacro %}
 

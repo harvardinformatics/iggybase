@@ -124,7 +124,7 @@ def configure_error_handlers( app ):
 
     @app.errorhandler( 404 )
     def page_not_found(error):
-        return render_template( "errors/page_not_found.html" ), 404
+        return render_template( "errors/page_not_found.html"), 404
 
     @app.errorhandler( 500 )
     def server_error_page(error):

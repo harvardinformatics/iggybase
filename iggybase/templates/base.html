@@ -84,9 +84,7 @@
 	  <nav class="navbar navbar-inverse">
 	    <div class="navbar-header"></div>
         <div>
-            {% if navbar %}
-                {{ macros.render_nav_menu( navbar, True ) }}
-            {% endif %}
+            {{ macros.render_nav_menu( navbar or None, True ) }}
 	    </div>
 	  </nav>
 	</div>  <!-- end row -->
