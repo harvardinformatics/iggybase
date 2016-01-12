@@ -255,7 +255,6 @@ class FacilityRoleAccessControl:
                 url += item.MenuUrl.url_params
         if url:
             url = request.url_root + url
-            url = url.replace('//','/')
         else:
             url = '#'
         return url
