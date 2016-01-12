@@ -1,5 +1,5 @@
 import json
-from flask import request, jsonify
+from flask import request, jsonify, abort
 from flask.ext import excel
 import iggybase.templating as templating
 import iggybase.form_generator as form_generator
@@ -22,10 +22,14 @@ def summary(module_name, table_name):
     page_form = 'summary'
     table_queries = tqc.TableQueryCollection(module_name, page_form, table_name)
     table_queries.get_fields()
+    first_table_query = table_queries.get_first()
+    # if nothing to display then page not found
+    if not first_table_query.table_fields:
+        abort(404)
     return templating.page_template('summary',
             module_name = module_name,
             table_name = table_name,
-            table_query = table_queries.get_first())
+            table_query = first_table_query)
 
 def summary_ajax(module_name, table_name):
     page_form = 'summary'
@@ -94,7 +98,7 @@ def data_entry(module_name, table_name, row_name):
         organization_access_control.save_form(form)
 
     return templating.page_template('single_data_entry',
-            module_name=module_name, form=form)
+            module_name=module_name, form=form, table_name=table_name)
 
 
 def multiple_data_entry(module_name, table_name):
@@ -106,4 +110,4 @@ def multiple_data_entry(module_name, table_name):
         organization_access_control = oac.OrganizationAccessControl('mod_' + module_name)
         organization_access_control.save_form(form)
 
-    return templating.page_template('multiple_data_entry', module_name=module_name, form=form)
+    return templating.page_template('multiple_data_entry', module_name=module_name, form=form, table_name=table_name)

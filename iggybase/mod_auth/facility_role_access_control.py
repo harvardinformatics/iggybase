@@ -85,7 +85,7 @@ class FacilityRoleAccessControl:
                 models.TableObject,
                 models.TableQueryRender.table_object_id == models.TableObject.id
             ).
-                filter(*filters).all()
+                filter(*filters).order_by(models.TableQuery.order).all()
         )
         return table_queries
 
@@ -124,11 +124,11 @@ class FacilityRoleAccessControl:
                 models.TableObject,
                 models.TableObject.id == models.Field.table_object_id
             ).
-                join(models.FieldFacilityRole).
-                join(models.TableObjectFacilityRole).
-                join(models.Module).
-                outerjoin(models.TableQueryField).
-                filter(*filters).all()
+            join(models.FieldFacilityRole).
+            join(models.TableObjectFacilityRole).
+            join(models.Module).
+            outerjoin(models.TableQueryField).
+            filter(*filters).order_by(models.TableQueryField.order, models.Field.order).all()
         )
         return res
 
