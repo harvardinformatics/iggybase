@@ -1,6 +1,6 @@
 .form-control-lookup {
   display: inline-block ! important ;
-  width: 85% ! important ;
+  width: calc(100% - 18px) ! important ;
 }
 .right {
     float: right ! important;

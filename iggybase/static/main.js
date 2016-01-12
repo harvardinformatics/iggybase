@@ -89,6 +89,8 @@ $( document ).ready( function () {
 
     $.fn.searchUpdate = function (ele) {
         $("#dialog").modal( "hide" );
+        $('body').removeClass('modal-open');
+        $('.modal-backdrop').remove();
         $("#" + ele.attr('luid')).val(ele.val());
     }
 } ) ( jQuery );

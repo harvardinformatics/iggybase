@@ -14,12 +14,6 @@ class ReadonlyStringField(StringField):
         return super(ReadonlyStringField, self).__call__(*args, **kwargs)
 
 
-class ReadonlyTextAreaField(TextAreaField):
-    def __call__(self, *args, **kwargs):
-        kwargs.setdefault('readonly', True)
-        return super(ReadonlyTextAreaField, self).__call__(*args, **kwargs)
-
-
 class ReadonlyIntegerField(IntegerField):
     def __call__(self, *args, **kwargs):
         kwargs.setdefault('readonly', True)
@@ -32,6 +26,12 @@ class ReadonlyBooleanField(BooleanField):
         return super(ReadonlyBooleanField, self).__call__(*args, **kwargs)
 
 
+class ReadonlyTextAreaField(TextAreaField):
+    def __call__(self, *args, **kwargs):
+        kwargs.setdefault('readonly', True)
+        return super(ReadonlyTextAreaField, self).__call__(*args, **kwargs)
+
+
 class ReadonlyDateField(DateField):
     def __call__(self, *args, **kwargs):
         kwargs.setdefault('readonly', True)
@@ -42,7 +42,8 @@ class LookUpField(StringField):
     def __call__(self, *args, **kwargs):
         kwargs.setdefault('readonly', True)
         kwargs['class'] = 'form-control lookupfield form-control-lookup'
-        return super(LookUpField, self).__call__(*args, **kwargs)
+        return \
+            super(LookUpField, self).__call__(*args, **kwargs)
 
 
 class FormGenerator():
@@ -90,6 +91,7 @@ class FormGenerator():
                             wtf_field = SelectField(field_data.FieldFacilityRole.display_name, validators, coerce=int, \
                                                     choices=choices)
                 else:
+                    kwargs = {'validators': validators}
                     if field_data.Field.data_type_id == constants.INTEGER:
                         wtf_class = IntegerField
                     elif field_data.Field.data_type_id == constants.BOOLEAN:
@@ -101,15 +103,20 @@ class FormGenerator():
                     elif field_data.Field.data_type_id == constants.FILE:
                         wtf_class = FileField
                     elif field_data.Field.data_type_id == constants.TEXT_AREA:
+                        if value is not None:
+                            lt_row = self.organization_access_control.get_long_text(value)
+                            value = lt_row.long_text
+
                         wtf_class = TextAreaField
                     else:
                         wtf_class = StringField
 
                     if value is not None:
-                        wtf_field = wtf_class(field_data.FieldFacilityRole.display_name, validators, default=value)
-                    else:
-                        wtf_field = wtf_class(field_data.FieldFacilityRole.display_name, validators)
+                        kwargs['default'] = value
+
+                    wtf_field = wtf_class(field_data.FieldFacilityRole.display_name, **kwargs)
             else:
+                kwargs = {'validators': validators}
                 if field_data.Field.foreign_key_table_object_id is not None:
                     if value is not None:
                         choices = self.organization_access_control. \
@@ -124,14 +131,18 @@ class FormGenerator():
                 elif field_data.Field.data_type_id == constants.DATE:
                     wtf_class = ReadonlyDateField
                 elif field_data.Field.data_type_id == constants.TEXT_AREA:
+                    if value is not None:
+                        lt_row = self.organization_access_control.get_long_text(value)
+                        value = lt_row.long_text
+
                     wtf_class = ReadonlyTextAreaField
                 else:
                     wtf_class = ReadonlyStringField
 
                 if value is not None:
-                    wtf_field = wtf_class(field_data.FieldFacilityRole.display_name, validators, default=value)
-                else:
-                    wtf_field = wtf_class(field_data.FieldFacilityRole.display_name, validators)
+                    kwargs['default'] = value
+
+                wtf_field = wtf_class(field_data.FieldFacilityRole.display_name, **kwargs)
 
         return wtf_field
 

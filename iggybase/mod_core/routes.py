@@ -34,7 +34,7 @@ def search():
             modal_html += '<td><input id="search_' + row.Field.field_name + '"></input></td></tr>'
     else:
         modal_html += '<tr><td><label>'+field_name.replace("_", " ").title()+'</label></td>'
-        modal_html += '<td><input id="Search_name"></input></td></tr>'
+        modal_html += '<td><input id="search_name"></input></td></tr>'
     modal_html += '</table>'
     modal_html += '</div>'
 
@@ -80,6 +80,9 @@ def search_results():
             modal_html += '<td>' + field.replace("_", " ").title() + '</td>'
 
     modal_html += '</tr>'
+
+    for field in fields:
+        logging.info(field)
 
     if search_results:
         for row in search_results:

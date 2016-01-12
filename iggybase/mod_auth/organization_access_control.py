@@ -205,11 +205,15 @@ class OrganizationAccessControl:
             filters.append((getattr(table,key)).like('%'+value+'%'))
         return table.query.filter(*filters).order_by(getattr(table,'name'))
 
+    def get_long_text(self, lt_id):
+        table = util.get_table("mod_core", "long_text")
+
+        return table.query.filter_by(id=lt_id).first()
+
     def save_form(self, form):
-        module_model = import_module('iggybase.' + form.module_0.data + '.models')
-        table_object = getattr( module_model, form.table_object_0.data )
+        table_object = util.get_table(form.module_0.data, form.table_object_0.data)
         if form.entry_0.data == 'parent_child':
-            child_table_object = getattr( module_model, form.chile_table_object_0.data )
+            child_table_object = util.get_table(form.module_0.data, form.chile_table_object_0.data )
 
         hidden_fields={}
         form_fields={}
@@ -236,7 +240,7 @@ class OrganizationAccessControl:
             column_name = field_id[:field_id.rindex('_')]
 
             field_data = self.facility_role_access_control.fields(int(hidden_fields['table_id_'+str(row_id)]),
-                                                                 form.module_0.data, {'field_name':column_name})[0]
+                                                                 form.module_0.data, {'field.field_name':column_name})[0]
 
             if last_row_id != row_id and row_id not in instances:
                 if hidden_fields['row_name_'+str(row_id)] == 'new':
@@ -263,6 +267,19 @@ class OrganizationAccessControl:
             if field_data.Field.foreign_key_table_object_id is not None and not isinstance(field.data, int):
                 fk_id=self.get_foreign_key_data(field_data.Field.foreign_key_table_object_id, field.data)
                 setattr(instances[row_id], column_name, fk_id[1][0])
+            elif field_data.Field.data_type_id == 7 and field.data != '':
+                if hidden_fields[field_id] == '':
+                    lt = core_models.LongText()
+                    setattr(lt, 'date_created', datetime.datetime.utcnow())
+                    setattr(lt, 'organization_id', self.current_org_id)
+                else:
+                    lt_id = hidden_fields[field_id]
+                    lt = db_session.query(core_models.LongText).filter_by( id=lt_id ).first( )
+
+                setattr(lt, 'last_modified', datetime.datetime.utcnow())
+                setattr(lt, 'long_text', field.data)
+                db_session().add(lt)
+                setattr(instances[row_id], column_name, lt_id)
             else:
                 setattr(instances[row_id], column_name, field.data)
 
