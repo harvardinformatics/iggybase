@@ -84,7 +84,7 @@ def search_results():
     for field in fields:
         logging.info(field)
 
-    if search_results:
+    if search_results and len(search_params) != 0:
         for row in search_results:
             modal_html += '<tr><td><input luid="'+input_id+'"class="search-results" type="button" value="' + row.name + '"></input></td>'
             for field in fields:

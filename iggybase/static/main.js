@@ -69,6 +69,8 @@ $( document ).ready( function () {
 
     $.fn.searchResults = function ( ) {
         $("#dialog").modal( "hide" );
+        $('body').removeClass('modal-open');
+        $('.modal-backdrop').remove();
         search_vals = {};
 
         $(".modal-body input").each(function() {
