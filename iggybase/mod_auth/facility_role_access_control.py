@@ -254,8 +254,7 @@ class FacilityRoleAccessControl:
             if url and item.MenuUrl.url_params:
                 url += item.MenuUrl.url_params
         if url:
-            if request.script_root:
-                url = '/' + request.script_root + url
+            url = request.url_root + url
         else:
             url = '#'
         return url
