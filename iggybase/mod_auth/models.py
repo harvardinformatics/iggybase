@@ -19,6 +19,7 @@ class User( UserMixin, Base ):
     organization_id = Column( Integer, ForeignKey( 'organization.id' ) )
     order = Column( Integer )
     password_hash = Column( String( 120 ) )
+    password = Column( String( 120 ) )
     first_name = Column( String( 50 ) )
     last_name = Column( String( 50 ) )
     email = Column( String( 120 ), unique = True )
