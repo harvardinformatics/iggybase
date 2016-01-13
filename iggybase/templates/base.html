@@ -41,7 +41,7 @@
       </a>
       {% if current_user.is_authenticated %}
       <div id="logout" class="text-align-right">
-        <a class="inline-block" href="{{ url_for('mod_auth.logout') }}">Logout</a>
+        <a class="inline-block" href="{{ url_for('security.logout') }}">Logout</a>
 	<br /><br />
       </div>
       {% endif %}
