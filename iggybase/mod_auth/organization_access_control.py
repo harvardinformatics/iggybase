@@ -213,6 +213,7 @@ class OrganizationAccessControl:
     def save_form(self, form):
         table_object = util.get_table(form.module_0.data, form.table_object_0.data)
         table_record = models.TableObject.query.filter_by(name=table_object.__tablename__).first()
+        long_text_record = models.TableObject.query.filter_by(name='long_text').first()
         if form.entry_0.data == 'parent_child':
             child_table_object = util.get_table(form.module_0.data, form.chile_table_object_0.data )
             child_table_record = models.TableObject.query.filter_by(name=child_table_object.__tablename__).first()
@@ -234,9 +235,11 @@ class OrganizationAccessControl:
             elif field.name.startswith('child_'):
                 field_id = field.name[field.name.index('_')+1:]
                 current_table_object = child_table_object
+                current_table_record = child_table_record
             else:
                 field_id = field.name
                 current_table_object = table_object
+                current_table_record = table_record
 
             row_id = int(field_id[field_id.rindex('_')+1:])
             column_name = field_id[:field_id.rindex('_')]
@@ -249,7 +252,10 @@ class OrganizationAccessControl:
                     instances[row_id] = current_table_object()
                     setattr(instances[row_id], 'date_created', datetime.datetime.utcnow())
                     setattr(instances[row_id], 'organization_id', self.current_org_id)
-
+                    if current_table_record.new_name_prefix is not None and current_table_record.new_name_prefix != "":
+                        setattr(instances[row_id], 'name', current_table_record.get_new_name())
+                        admin_db_session.add(current_table_record)
+                        admin_db_session.commit()
                 else:
                     instances[row_id] = db_session.query(current_table_object).\
                         filter_by( name=hidden_fields['row_name_'+str(row_id)] ).first( )
@@ -276,6 +282,11 @@ class OrganizationAccessControl:
                     db_session().add(lt)
                     db_session().flush
                     lt_id = lt.id
+
+                    setattr(lt, 'name', long_text_record.get_new_name())
+                    admin_db_session.add(long_text_record)
+                    admin_db_session.commit()
+
                     setattr(lt, 'date_created', datetime.datetime.utcnow())
                     setattr(lt, 'organization_id', self.current_org_id)
                 else:
@@ -292,6 +303,3 @@ class OrganizationAccessControl:
         for row_id, instance in instances.items():
             db_session().add(instance)
         db_session().commit()
-
-        def get_new_name( table_object ):
-            pass
