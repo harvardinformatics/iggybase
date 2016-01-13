@@ -34,7 +34,7 @@ class ReadonlyTextAreaField(TextAreaField):
 
 class DateFieldClass(DateField):
     def __call__(self, *args, **kwargs):
-        kwargs['class'] = 'form-control datepicker'
+        kwargs['class'] = 'form-control datepicker-field'
         return super(DateFieldClass, self).__call__(*args, **kwargs)
 
 

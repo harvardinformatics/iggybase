@@ -212,8 +212,10 @@ class OrganizationAccessControl:
 
     def save_form(self, form):
         table_object = util.get_table(form.module_0.data, form.table_object_0.data)
+        table_record = models.TableObject.query.filter_by(name=table_object.__tablename__).first()
         if form.entry_0.data == 'parent_child':
             child_table_object = util.get_table(form.module_0.data, form.chile_table_object_0.data )
+            child_table_record = models.TableObject.query.filter_by(name=child_table_object.__tablename__).first()
 
         hidden_fields={}
         form_fields={}
@@ -247,6 +249,7 @@ class OrganizationAccessControl:
                     instances[row_id] = current_table_object()
                     setattr(instances[row_id], 'date_created', datetime.datetime.utcnow())
                     setattr(instances[row_id], 'organization_id', self.current_org_id)
+
                 else:
                     instances[row_id] = db_session.query(current_table_object).\
                         filter_by( name=hidden_fields['row_name_'+str(row_id)] ).first( )
@@ -270,6 +273,9 @@ class OrganizationAccessControl:
             elif field_data.Field.data_type_id == 7 and field.data != '':
                 if hidden_fields[field_id] == '':
                     lt = core_models.LongText()
+                    db_session().add(lt)
+                    db_session().flush
+                    lt_id = lt.id
                     setattr(lt, 'date_created', datetime.datetime.utcnow())
                     setattr(lt, 'organization_id', self.current_org_id)
                 else:
@@ -286,3 +292,6 @@ class OrganizationAccessControl:
         for row_id, instance in instances.items():
             db_session().add(instance)
         db_session().commit()
+
+        def get_new_name( table_object ):
+            pass

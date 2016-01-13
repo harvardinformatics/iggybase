@@ -11,6 +11,11 @@ $( document ).ready( function () {
             $.fn.searchClick( $( this ) );
         }
     );
+    $( ".datepicker-field" ).datepicker({
+        format: 'yyyy-mm-dd',
+        autoclose: true
+
+    });
 } );
 
 ( function( $ ) {

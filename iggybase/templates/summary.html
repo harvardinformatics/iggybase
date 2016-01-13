@@ -3,7 +3,6 @@
 {% block styles %}
     {{ super() }}
     <link href="{{ url_for('static', filename='jquery/DataTables/media/css/jquery.dataTables.min.css') }}" rel="stylesheet">
-    <link href="{{ url_for('static', filename='jquery/jquery-ui/jquery-ui.theme.min.css') }}" rel="stylesheet">
     <link href="{{ url_for('static', filename='summary.css') }}" rel="stylesheet">
 {%- endblock styles %}
 {% block title %}Iggybase - {{ table_name.replace( '_',' ' ) }}{% endblock %}
@@ -36,6 +35,4 @@
     {{ super() }}
     <script type="text/javascript"
         src="{{ url_for('static', filename='jquery/DataTables/media/js/jquery.dataTables.min.js')}}"></script>
-    <script type="text/javascript"
-        src="{{ url_for('static', filename='jquery/jquery-ui/jquery-ui.min.js')}}"></script>
 {%- endblock scripts %}

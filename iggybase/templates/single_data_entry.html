@@ -1,14 +1,10 @@
 {% extends "base.html" %}
 {% import "bootstrap/wtf.html" as wtf %}
 {% import 'macros.html' as macros %}
-{% block styles %}
-    {{ super() }}
-    <link href="{{ url_for('static', filename='jquery/jquery-ui/jquery-ui.theme.min.css') }}" rel="stylesheet">
-{%- endblock styles %}
 {% block title %}{{ page_title }}{% endblock %}
 
 {% block page_content %}
-<h1>{{table_name|title}} {{ page_header }}</h1>
+<h1> {{ page_header }}</h1>
         <div id="page_message">
             <p>
                 {{ page_msg }}
@@ -46,9 +42,3 @@
     {% endif %}
 
 {% endblock %}
-
-{% block scripts %}
-    {{ super() }}
-    <script type="text/javascript"
-        src="{{ url_for('static', filename='jquery/jquery-ui/jquery-ui.min.js')}}"></script>
-{%- endblock scripts %}
