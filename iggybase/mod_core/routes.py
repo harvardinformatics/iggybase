@@ -50,6 +50,8 @@ def search_results():
     module = search_vals['modal_module']
     search_table = search_vals['modal_search_table']
     search_module = search_vals['modal_search_module']
+    if search_table == '':
+        search_module, search_table, search_fields = oac.get_search_field_data(module, table_object, field_name)
 
     search_params = {}
     fields = []
