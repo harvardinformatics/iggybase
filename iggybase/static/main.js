@@ -27,7 +27,7 @@ $( document ).ready( function () {
             var module = $( '#module_0' ).val( );
             var search_vals = {};
 
-            search_vals['name'] = $(this).val();
+            search_vals['search_name'] = $(this).val();
             search_vals['modal_input_id'] = input_id;
             search_vals['modal_table_object'] = table_object;
             search_vals['modal_field_name'] = field_name;

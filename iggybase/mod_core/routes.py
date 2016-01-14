@@ -44,14 +44,14 @@ def search():
 def search_results():
     search_vals = loads(request.args.get('search_vals'))
 
+    oac = OrganizationAccessControl("core")
+
     input_id = search_vals['modal_input_id']
     table_object = search_vals['modal_table_object']
     field_name = search_vals['modal_field_name']
     module = search_vals['modal_module']
     search_table = search_vals['modal_search_table']
     search_module = search_vals['modal_search_module']
-    if search_table == '':
-        search_module, search_table, search_fields = oac.get_search_field_data(module, table_object, field_name)
 
     search_params = {}
     fields = []
@@ -61,7 +61,13 @@ def search_results():
             if value !='':
                 search_params[key[7:]] = value
 
-    oac = OrganizationAccessControl('core')
+    if search_table == '':
+        search_module, search_table, search_fields = oac.get_search_field_data(module, table_object, field_name)
+
+        for row in search_fields:
+            if row.Field.field_name not in fields:
+                fields.append(row.Field.field_name)
+
     search_results = oac.get_search_results(search_module, search_table, search_params)
 
     modal_html = '<div class="modal-header">'
