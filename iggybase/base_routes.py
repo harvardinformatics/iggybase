@@ -89,13 +89,20 @@ def detail(module_name, table_name, row_name):
     )
 
 
+def saved_data(module_name, table_name, row_names):
+    return templating.page_template('save_message', module_name=module_name, table_name=table_name,
+                                    page_msg='Saved: ' + ', '.join(row_names))
+
+
 def data_entry(module_name, table_name, row_name):
     fg = form_generator.FormGenerator('mod_' + module_name, table_name)
     form = fg.default_single_entry_form(row_name)
 
     if form.validate_on_submit():
         organization_access_control = oac.OrganizationAccessControl('mod_' + module_name)
-        organization_access_control.save_form(form)
+        row_names = organization_access_control.save_form(form)
+
+        return saved_data(module_name, table_name, row_names)
 
     return templating.page_template('single_data_entry',
             module_name=module_name, form=form, table_name=table_name)
@@ -108,6 +115,10 @@ def multiple_data_entry(module_name, table_name):
 
     if form.validate_on_submit():
         organization_access_control = oac.OrganizationAccessControl('mod_' + module_name)
-        organization_access_control.save_form(form)
+        row_names = organization_access_control.save_form(form)
+
+        form = fg.default_multiple_entry_form(row_names)
+
+        return saved_data(module_name, table_name, row_names)
 
     return templating.page_template('multiple_data_entry', module_name=module_name, form=form, table_name=table_name)

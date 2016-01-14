@@ -46,7 +46,6 @@ class ReadonlyDateField(DateField):
 
 class LookUpField(StringField):
     def __call__(self, *args, **kwargs):
-        kwargs.setdefault('readonly', True)
         kwargs['class'] = 'form-control lookupfield form-control-lookup'
         return \
             super(LookUpField, self).__call__(*args, **kwargs)

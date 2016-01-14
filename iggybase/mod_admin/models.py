@@ -263,9 +263,26 @@ class TableObject(StaticBase):
     active = Column(Boolean)
     organization_id = Column(Integer)
     order = Column(Integer)
-    new_name_prefix = Column(String(100), unique=True)
+
+
+class TableObjectName(StaticBase):
+    __tablename__ = 'table_object_name'
+    id = Column(Integer, primary_key=True)
+    name = Column(String(100), unique=True)
+    description = Column(String(255))
+    date_created = Column(DateTime, default=datetime.datetime.utcnow)
+    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
+    active = Column(Boolean)
+    organization_id = Column(Integer)
+    order = Column(Integer)
+    facility_id = Column(Integer, ForeignKey('facility.id'))
+    table_object_id = Column(Integer, ForeignKey('table_object.id'))
+    new_name_prefix = Column(String(100))
     new_name_id = Column(Integer)
     id_length = Column(Integer)
+
+    table_object_table_object_name = relationship("TableObject", foreign_keys=[table_object_id])
+    facility_table_object_name = relationship("Facility", foreign_keys=[facility_id])
 
     def get_new_name(self):
         new_name = self.new_name_prefix + str(self.new_name_id).zfill(self.id_length)

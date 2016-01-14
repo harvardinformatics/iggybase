@@ -212,11 +212,17 @@ class OrganizationAccessControl:
 
     def save_form(self, form):
         table_object = util.get_table(form.module_0.data, form.table_object_0.data)
-        table_record = models.TableObject.query.filter_by(name=table_object.__tablename__).first()
-        long_text_record = models.TableObject.query.filter_by(name='long_text').first()
+        table_object_data = models.TableObject.query.filter_by(name=table_object.__tablename__).first()
+        table_record = models.TableObjectName.query.filter_by(table_object_id=table_object_data.id).\
+                           filter_by(facility_id=self.facility_role_access_control.facility.id).first()
+        long_text_data = models.TableObject.query.filter_by(name='long_text').first()
+        long_text_record = models.TableObjectName.query.filter_by(table_object_id=long_text_data.id).\
+                           filter_by(facility_id=self.facility_role_access_control.facility.id).first()
         if form.entry_0.data == 'parent_child':
             child_table_object = util.get_table(form.module_0.data, form.chile_table_object_0.data )
-            child_table_record = models.TableObject.query.filter_by(name=child_table_object.__tablename__).first()
+            child_table_object_data = models.TableObject.query.filter_by(name=child_table_object.__tablename__).first()
+            child_table_record = models.TableObjectName.query.filter_by(table_object_id=child_table_object_data.id).\
+                               filter_by(facility_id=self.facility_role_access_control.facility.id).first()
 
         hidden_fields={}
         form_fields={}
@@ -300,6 +306,12 @@ class OrganizationAccessControl:
             else:
                 setattr(instances[row_id], column_name, field.data)
 
+        row_names = []
+
         for row_id, instance in instances.items():
             db_session().add(instance)
+            db_session().flush()
+            row_names.append(instance.name)
         db_session().commit()
+
+        return row_names
