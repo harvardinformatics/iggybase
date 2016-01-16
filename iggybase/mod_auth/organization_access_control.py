@@ -21,6 +21,10 @@ class OrganizationAccessControl:
         # Assume that path will always take the form module/page_form/params
         self.module_name, self.page_form = request.path.split('/')[1:3]
         self.module = 'mod_' + self.module_name
+        if  self.module == 'mod_admin':
+            self.session = admin_db_session
+        else:
+            self.session = db_session
 
         if g.user is not None and not g.user.is_anonymous:
             self.user = load_user(g.user.id)
@@ -64,8 +68,7 @@ class OrganizationAccessControl:
             if name is not None:
                 criteria.append(getattr(table_object, 'name') == name)
 
-            results = db_session.query(*columns). \
-                filter(*criteria).all()
+            results = self.session.query(*columns).filter(*criteria).all()
 
         return results
 
@@ -80,9 +83,9 @@ class OrganizationAccessControl:
                     fk_table_data.name)
 
             if column_value is None:
-                rows = db_session.query(getattr(fk_table_object, 'id'), getattr(fk_table_object, 'name')).all()
+                rows = self.session.query(getattr(fk_table_object, 'id'), getattr(fk_table_object, 'name')).all()
             else:
-                rows = db_session.query(getattr(fk_table_object, 'id'), getattr(fk_table_object, 'name')).\
+                rows = self.session.query(getattr(fk_table_object, 'id'), getattr(fk_table_object, 'name')).\
                     filter(getattr(fk_table_object, 'name')==column_value).all()
 
             for row in rows:
@@ -145,10 +148,10 @@ class OrganizationAccessControl:
             wheres.append(getattr(table_model, 'organization_id').in_(self.org_ids))
 
         results = (
-                db_session.query(*columns).
-                join(*joins).
-                outerjoin(*outer_joins).
-                filter(*wheres).all()
+            self.session.query(*columns).
+            join(*joins).
+            outerjoin(*outer_joins).
+            filter(*wheres).all()
         )
         return results
 
@@ -263,7 +266,7 @@ class OrganizationAccessControl:
                         admin_db_session.add(current_table_record)
                         admin_db_session.commit()
                 else:
-                    instances[row_id] = db_session.query(current_table_object).\
+                    instances[row_id] = self.session.query(current_table_object).\
                         filter_by( name=hidden_fields['row_name_'+str(row_id)] ).first( )
 
                 setattr(instances[row_id], 'last_modified', datetime.datetime.utcnow())
@@ -291,7 +294,6 @@ class OrganizationAccessControl:
 
                     setattr(lt, 'name', long_text_record.get_new_name())
                     admin_db_session.add(long_text_record)
-                    admin_db_session.commit()
 
                     setattr(lt, 'date_created', datetime.datetime.utcnow())
                     setattr(lt, 'organization_id', self.current_org_id)
@@ -309,9 +311,10 @@ class OrganizationAccessControl:
         row_names = []
 
         for row_id, instance in instances.items():
-            db_session().add(instance)
-            db_session().flush()
+            self.session().add(instance)
+            self.session().flush()
             row_names.append(instance.name)
-        db_session().commit()
+        db_session.commit()
+        admin_db_session.commit()
 
         return row_names

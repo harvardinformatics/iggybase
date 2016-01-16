@@ -35,7 +35,7 @@ $( document ).ready( function () {
             search_vals['modal_search_table'] = '';
             search_vals['modal_search_module'] = '';
 
-            var formurl = $SCRIPT_ROOT + "/core/search_results?search_vals=" + JSON.stringify(search_vals);
+            var formurl = $URL_ROOT + "/core/search_results?search_vals=" + JSON.stringify(search_vals);
 
             $("#modal_dialog").text("");
 
@@ -92,7 +92,7 @@ $( document ).ready( function () {
         if ($("#modal_dialog").length > 0)
             $("#modal_dialog").text("");
 
-        var formurl = $SCRIPT_ROOT + "/core/search?table_object=" + table_object + "&input_id=" + input_id + "&field_name=" + field_name + "&module=" + module;
+        var formurl = $URL_ROOT + "/core/search?table_object=" + table_object + "&input_id=" + input_id + "&field_name=" + field_name + "&module=" + module;
 
         var buttons = {};
         buttons[ "Search" ] = $.fn.searchResults;
@@ -111,7 +111,7 @@ $( document ).ready( function () {
         });
 
 
-        var formurl = $SCRIPT_ROOT + "/core/search_results?search_vals=" + JSON.stringify(search_vals);
+        var formurl = $URL_ROOT + "/core/search_results?search_vals=" + JSON.stringify(search_vals);
 
         $("#modal_dialog").text("");
 

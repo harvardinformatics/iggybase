@@ -137,7 +137,7 @@ class TableQuery:
                                 'link': self.get_link(
                                     col,
                                     fk_metadata[1],
-                                    request.script_root,
+                                    request.url_root,
                                     'detail',
                                     table
                                 )
@@ -155,17 +155,14 @@ class TableQuery:
                         row_dict[keys[i]]['link'] = self.get_link(
                             col,
                             self.module_name,
-                            request.script_root,
+                            request.url_root,
                             'detail',
                             table_name
                         )
             self.table_rows.append(row_dict)
 
-    def get_link(self, value, module, script_root = None, page = None, table = None):
-        link = ''
-        if script_root:
-            link += '/' + script_root
-        link += '/' + module
+    def get_link(self, value, module, url_root, page = None, table = None):
+        link = url_root + '/' + module
         if page:
             link += '/' + page
         if table:

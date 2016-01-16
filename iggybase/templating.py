@@ -7,7 +7,7 @@ def page_template( page_form_name, **context ):
     access_ctrl = FacilityRoleAccessControl( )
 
     context['page_form_name'] = page_form_name
-    context[ 'script_root' ] = request.script_root
+    context[ 'url_root' ] = request.url_root
 
     if access_ctrl.user is None:
         # add buttons only (login and related pages - no user)
@@ -54,7 +54,7 @@ def page_template( page_form_name, **context ):
         if not 'hidden_fields' in context:
             context['hidden_fields'] = {}
         context['hidden_fields'].update({
-            'script_root': context['script_root']
+            'url_root': context['url_root']
         })
         if 'module_name' in context:
             context['hidden_fields'].update({
