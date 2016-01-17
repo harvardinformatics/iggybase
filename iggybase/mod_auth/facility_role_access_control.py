@@ -231,7 +231,7 @@ class FacilityRoleAccessControl:
         menu = OrderedDict()
         items = (admin_db_session.query(models.Menu, models.MenuUrl)
             .join(models.MenuFacilityRole)
-            .outerjoin(models.MenuUrl)
+            .outerjoin(models.MenuUrl, models.Menu.id == models.MenuUrl.menu_id)
             .filter(
                 models.MenuFacilityRole.facility_role_id == facility_role_id,
                 models.Menu.parent_id == parent_id,
@@ -240,9 +240,9 @@ class FacilityRoleAccessControl:
             .order_by(models.Menu.order, models.Menu.name).all())
         for item in items:
             url = self.get_menu_url(item)
-            menu[item.Menu.description] = {
+            menu[item.Menu.name] = {
                     'url': url,
-                    'name': item.Menu.name,
+                    'title': item.Menu.description,
                     'subs': self.get_menu_items(item.Menu.id, facility_role_id, active)
             }
         return menu
@@ -253,8 +253,9 @@ class FacilityRoleAccessControl:
             url = item.MenuUrl.url_path
             if url and item.MenuUrl.url_params:
                 url += item.MenuUrl.url_params
-        if url:
-            url = request.url_root + url
-        else:
-            url = '#'
+
+            if url:
+                url = request.url_root + url
+            else:
+                url = '#'
         return url

@@ -63,13 +63,10 @@ class Menu(StaticBase):
     organization_id = Column(Integer)
     order = Column(Integer)
     menu_type_id = Column(Integer, ForeignKey('menu_type.id'))
-    menu_url_id = Column(Integer, ForeignKey('menu_url.id'))
 
     parent = relationship('Menu', remote_side=[id])
     children = relationship('Menu')
-    menu_type = relationship("MenuType", foreign_keys=[menu_type_id])
-    menu_url = relationship("MenuUrl", backref='menu')
-    facility_role = relationship('MenuFacilityRole', uselist=False, back_populates='menu')
+    menu_menu_type = relationship("MenuType", foreign_keys=[menu_type_id])
 
     def __repr__(self):
         return "<Menu(name=%s, description=%s, id=%d)>" % \
@@ -91,8 +88,8 @@ class MenuFacilityRole(StaticBase):
 
     menu_facility_role_facility = relationship(
             "FacilityRole", foreign_keys=[facility_role_id])
-    menu = relationship("Menu", back_populates='facility_role')
     menu_facility_role_unq = UniqueConstraint('facility_role_id', 'menu_id')
+    menu_facility_role_menu = relationship("Menu", foreign_keys=[menu_id])
 
     def __repr__(self):
         return "<MenuFacilityRole(name=%s, description=%s, id=%d, menu_id=%d, order=%d>)" % \
@@ -107,6 +104,8 @@ class MenuType(StaticBase):
     date_created = Column(DateTime, default=datetime.datetime.utcnow)
     last_modified = Column(DateTime, default=datetime.datetime.utcnow)
     active = Column(Boolean)
+    organization_id = Column(Integer)
+    order = Column(Integer)
 
     def __repr__(self):
         return "<MenuType(name=%s, description=%s, id=%d>)" % \
@@ -124,9 +123,14 @@ class MenuUrl(StaticBase):
     date_created = Column(DateTime, default=datetime.datetime.utcnow)
     last_modified = Column(DateTime, default=datetime.datetime.utcnow)
     active = Column(Boolean)
+    organization_id = Column(Integer)
+    order = Column(Integer)
+    menu_id = Column(Integer, ForeignKey('menu.id'))
 
     url_path = Column(String(512), unique=True)
     url_params = Column(String(1024))  ## Stored as JSON
+
+    menu_url_menu = relationship("Menu", foreign_keys=[menu_id])
 
     def __repr__(self):
         return "<MenuUrl(name=%s, description=%s, id=%d, url_path=%s>)" % \

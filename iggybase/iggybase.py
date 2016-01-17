@@ -46,7 +46,6 @@ def add_base_routes( app, conf ):
     @app.before_request
     def before_request( ):
         modules = [x[0] for x in conf.BLUEPRINTS]
-        logging.info('before request' + modules[0] )
 
     @app.route( '/index/' )
     @login_required

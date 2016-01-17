@@ -60,14 +60,14 @@
 	    <div class="panel-heading">
 	      <h4 class="panel-title">
 		<a data-toggle="collapse" data-parent="#accordion"
-		   href="#{{ info['name'] }}collapse">{{ item }}</a>
+		   href="#{{ item }}collapse">{{ info['title'] }}</a>
 	      </h4>
 	    </div>
 	    <div class="panel-body">
-	      <div id="{{ info['name'] }}collapse" class="panel-collapse collapse in">
+	      <div id="{{ item }}collapse" class="panel-collapse collapse in">
 
 		{% for sub, sub_info in info['subs'].items() %}
-		<a href="{{ sub_info['url'] }}" class="small">{{ sub }}</a><br />
+		<a href="{{ sub_info['url'] }}" class="small">{{ sub_info['title'] }}</a><br />
 		{% endfor %}
 	      </div>
 	    </div>
