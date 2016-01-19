@@ -83,9 +83,9 @@ class OrganizationAccessControl:
                     fk_table_data.name)
 
             if column_value is None:
-                rows = self.session.query(getattr(fk_table_object, 'id'), getattr(fk_table_object, 'name')).all()
+                rows = fk_field_data['fk_session'].query(getattr(fk_table_object, 'id'), getattr(fk_table_object, 'name')).all()
             else:
-                rows = self.session.query(getattr(fk_table_object, 'id'), getattr(fk_table_object, 'name')).\
+                rows = fk_field_data['fk_session'].query(getattr(fk_table_object, 'id'), getattr(fk_table_object, 'name')).\
                     filter(getattr(fk_table_object, 'name')==column_value).all()
 
             for row in rows:
@@ -165,10 +165,16 @@ class OrganizationAccessControl:
             filter(models.Field.table_object_id == table_object_id).
             filter(models.Field.field_name == 'name').first())
 
+        if res.Module.name == 'mod_admin':
+            fk_session = admin_db_session
+        else:
+            fk_session = db_session
+
         return {'foreign_key':res.Field.field_name,
                 'module':res.Module.name,
                 'url_prefix':res.Module.url_prefix,
-                'name': res.TableObject.name
+                'name': res.TableObject.name,
+                'fk_session': fk_session
         }
 
     def get_field_data(self, table_name):
