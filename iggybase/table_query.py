@@ -7,7 +7,7 @@ import logging
 
 # Retreives and formats data based on table_query
 class TableQuery:
-    def __init__ (self, id, order, display_name, module_name, table_name = None):
+    def __init__ (self, id, order, display_name, module_name, table_name = None, criteria = {}):
         self.id = id
         self.order = order
         self.display_name = display_name
@@ -17,7 +17,7 @@ class TableQuery:
         self.table_rows = []
         self.field_dict = OrderedDict()
         self._facility_role_access_control = frac.FacilityRoleAccessControl()
-        self.criteria = {}
+        self.criteria = criteria
         self.date_fields = {}
         self.table_fields = []
 
@@ -31,7 +31,7 @@ class TableQuery:
         """ calls several class functions and returns results
         """
         results = []
-        self.criteria = self._get_table_query_criteria()
+        self.criteria = self._add_table_query_criteria(self.criteria)
         organization_access_control = oac.OrganizationAccessControl(self.module)
         self.results = organization_access_control.get_table_query_data(
                 self.table_fields,
@@ -58,7 +58,7 @@ class TableQuery:
                     filters[pair[0]] = pair[1]
         return filters
 
-    def _get_table_query_criteria(self):
+    def _add_table_query_criteria(self, orig_criteria):
         criteria = {}
         # add criteria from get params
         filters = self._get_filters()
@@ -88,6 +88,7 @@ class TableQuery:
             criteria_key = row.TableObject.name + '_' + row.Field.field_name
             criteria[criteria_key] = row.TableQueryCriteria.value
 
+        criteria.update(orig_criteria)
         return criteria
 
     def _get_field_dict(self, table_fields):

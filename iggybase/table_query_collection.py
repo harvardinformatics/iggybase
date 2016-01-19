@@ -4,11 +4,12 @@ import iggybase.table_query as tq
 import logging
 
 class TableQueryCollection:
-    def __init__ (self, module_name, page_form, table_name = None):
+    def __init__ (self, module_name, page_form, table_name = None, criteria = {}):
         self.module_name = module_name
         self.module = 'mod_' + self.module_name
         self.table_name = table_name
         self.page_form = page_form
+        self.criteria = criteria
         self.facility_role_access_control = frac.FacilityRoleAccessControl()
         self.queries = []
         self.results = []
@@ -30,17 +31,20 @@ class TableQueryCollection:
                         query.TableQuery.display_name
                     )
             elif self.table_name:
-                self.populate_query(None, 1, self.table_name, self.table_name)
+                self.populate_query(None, 1, self.table_name, self.table_name,
+                        self.criteria)
             # sort queries by their order
             self.results.sort(key=operator.attrgetter('order'))
 
-    def populate_query(self, id, order, query_name, table_name = None):
+    def populate_query(self, id, order, query_name, table_name = None, criteria
+            = {}):
         table_query = tq.TableQuery(
             id,
             order,
             query_name,
             self.module_name,
-            table_name
+            table_name,
+            criteria
         )
         table_query.get_fields()
         self.queries.append(table_query)
