@@ -1,7 +1,5 @@
 from collections import OrderedDict
 from flask import request
-from iggybase.database import db_session
-from iggybase.mod_admin import models
 from iggybase.mod_auth import organization_access_control as oac
 from iggybase.mod_auth import facility_role_access_control as frac
 from iggybase.mod_core import utilities as util

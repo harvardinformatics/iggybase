@@ -1,6 +1,5 @@
 from collections import OrderedDict as OrderedDict
 from flask import g, request
-from sqlalchemy.orm import aliased
 from iggybase.database import db_session
 from iggybase.mod_admin import models
 from iggybase.mod_admin import constants as admin_consts

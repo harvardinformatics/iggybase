@@ -1,10 +1,8 @@
 from iggybase.tablefactory import TableFactory
-from iggybase.mod_auth.facility_access_control import FacilityAccessControl
 
 table_factory = TableFactory( "mod_murray" )
-facility_access_control = FacilityAccessControl( )
 
-tables = facility_access_control.module_table_objects( "mod_murray" )
+tables = table_factory.facility_access_control.module_table_objects( "mod_murray" )
 
 for table_object in tables:
     class_name = TableFactory.to_camel_case( table_object.name )

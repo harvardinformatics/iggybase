@@ -4,7 +4,8 @@ from sqlalchemy.ext.declarative import declarative_base
 from config import get_config
 from threading import Lock
 import logging
-conf = get_config( )
+
+conf = get_config()
 
 
 # used to create an object that mimics the object created by SQLAlchemy(app)
@@ -19,14 +20,14 @@ class DB_Factory:
         self.app = None
 
 
-engine = create_engine( conf.SQLALCHEMY_DATABASE_URI + conf.DATA_DB_NAME )
-db_session = scoped_session( sessionmaker( autocommit = False, autoflush = False, bind = engine ) )
+engine = create_engine(conf.SQLALCHEMY_DATABASE_URI + conf.DATA_DB_NAME)
+db_session = scoped_session(sessionmaker(autocommit=False, autoflush=False, bind=engine))
 Base = declarative_base()
 Base.query = db_session.query_property()
 db = DB_Factory(Base.query, db_session)
 
-def init_db(  ):
 
-    for i,(module, blueprint) in enumerate(conf.BLUEPRINTS):
-        getattr(__import__('iggybase.'+module, fromlist=['models']),'models')
-    Base.metadata.create_all( bind = engine )
+def init_db():
+    for i, (module, blueprint) in enumerate(conf.BLUEPRINTS):
+        getattr(__import__('iggybase.' + module, fromlist=['models']), 'models')
+    Base.metadata.create_all(bind=engine)
