@@ -137,40 +137,6 @@ class MenuUrl(StaticBase):
                (self.name, self.description, self.id, self.url_path)
 
 
-class MenuItem(StaticBase):
-    __tablename__ = 'menu_item'
-    id = Column(Integer, primary_key=True)
-    name = Column(String(100))
-    description = Column(String(255))
-    date_created = Column(DateTime, default=datetime.datetime.utcnow)
-    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
-    active = Column(Boolean)
-    organization_id = Column(Integer)
-    order = Column(Integer)
-    menu_item_value = Column(String(250))
-    menu_id = Column(Integer, ForeignKey('menu.id'))
-
-    menu_item_menu = relationship("Menu", foreign_keys=[menu_id])
-
-
-class MenuItemFacilityRole(StaticBase):
-    __tablename__ = 'menu_item_facility_role'
-    id = Column(Integer, primary_key=True)
-    name = Column(String(100), unique=True)
-    description = Column(String(255))
-    date_created = Column(DateTime, default=datetime.datetime.utcnow)
-    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
-    active = Column(Boolean)
-    organization_id = Column(Integer)
-    order = Column(Integer)
-    facility_role_id = Column(Integer, ForeignKey('facility_role.id'))
-    menu_item_id = Column(Integer, ForeignKey('menu_item.id'))
-
-    menu_item_facility_role_facility = relationship("FacilityRole", foreign_keys=[facility_role_id])
-    menu_item_facility_role_menu_item = relationship("MenuItem", foreign_keys=[menu_item_id])
-    menu_item_facility_role_unq = UniqueConstraint('facility_role_id', 'menu_item_id')
-
-
 class PageForm(StaticBase):
     __tablename__ = 'page_form'
     id = Column(Integer, primary_key=True)
