@@ -67,7 +67,7 @@
 	      <div id="{{ item }}collapse" class="panel-collapse collapse in">
 
 		{% for sub, sub_info in info['subs'].items() %}
-		<a href="{{ sub_info['url'] }}" class="small">{{ sub_info['title'] }}</a><br />
+		<a id="{{ item }}" href="{{ sub_info['url'] }}" class="small">{{ sub_info['title'] }}</a><br />
 		{% endfor %}
 	      </div>
 	    </div>

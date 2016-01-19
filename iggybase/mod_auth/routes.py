@@ -7,7 +7,7 @@ from . import mod_auth
 from iggybase.mod_auth.role_organization import get_roles, get_organizations, get_current_user_role, \
     get_current_user_organization
 from iggybase.mod_auth.forms import LoginForm, RegisterForm
-from iggybase.database import admin_db_session, db_session
+from iggybase.database import db_session, db_session
 import os
 import socket
 import json
@@ -72,7 +72,7 @@ def register():
         rootdir = os.path.basename( os.path.dirname( os.path.dirname( os.path.dirname( os.path.abspath( __file__ ) ) ) ) )
         hostname = socket.gethostname()
 
-        session = admin_db_session( )
+        session = db_session( )
 
         newuser = NewUser( )
 

@@ -1,6 +1,6 @@
 import operator
 from flask import request
-from iggybase.database import admin_db_session
+from iggybase.database import db_session
 from iggybase.mod_auth import facility_role_access_control as frac
 import iggybase.table_query as tq
 import logging

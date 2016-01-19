@@ -1,4 +1,4 @@
-from iggybase.database import admin_db_session
+from iggybase.database import db_session
 from iggybase.mod_admin import models
 from config import get_config
 import logging
@@ -11,25 +11,25 @@ class FacilityAccessControl:
         conf = get_config( )
         #logging.debug( conf.FACILITY )
 
-        facility = admin_db_session.query( models.Facility ).filter_by( name = conf.FACILITY ).first( )
+        facility = db_session.query( models.Facility ).filter_by( name = conf.FACILITY ).first( )
 
-        self.facilityroles = admin_db_session.query( models.FacilityRole ).filter_by( facility_id = facility.id ).all( )
+        self.facilityroles = db_session.query( models.FacilityRole ).filter_by( facility_id = facility.id ).all( )
 
     def module_table_objects( self, module, active = 1 ):
         table_objects = [ ]
 
-        module_rec = admin_db_session.query( models.Module ).filter_by( name = module ).first( )
+        module_rec = db_session.query( models.Module ).filter_by( name = module ).first( )
 
         #logging.debug( 'module_table_objects' )
         #logging.info ( 'module: ' + module )
         #logging.info ( 'active: ' + str( active ) )
-        res = admin_db_session.query( models.TableObject ).filter_by( active = active ).\
+        res = db_session.query( models.TableObject ).filter_by( active = active ).\
             order_by( models.TableObject.order ).all( )
         for row in res:
             #logging.info ( 'table_object_id: ' + str( row.id ) + ' name: ' + row.name )
             for facility_role in self.facilityroles:
                 #logging.info ( 'facility_role.id: ' + str( facility_role.id ) )
-                access = admin_db_session.query( models.TableObjectFacilityRole ).filter_by( table_object_id = row.id ).\
+                access = db_session.query( models.TableObjectFacilityRole ).filter_by( table_object_id = row.id ).\
                     filter_by( module_id = module_rec.id ).filter_by( facility_role_id = facility_role.id ).\
                     filter_by( active = active ).first( )
                 if access is not None:
@@ -44,12 +44,12 @@ class FacilityAccessControl:
         #logging.debug( 'module_fields' )
         #logging.info ( 'table_object_id: ' + str( table_object_id ) )
         #logging.info ( 'active: ' + str( active ) )
-        res = admin_db_session.query( models.Field ).\
+        res = db_session.query( models.Field ).\
             filter_by( table_object_id = table_object_id, active = active ).all( )
         for row in res:
             #logging.info ( 'field_id: ' + str( row.id ) )
             for facility_role in self.facilityroles:
-                access = admin_db_session.query( models.FieldFacilityRole ).\
+                access = db_session.query( models.FieldFacilityRole ).\
                     filter_by( field_id = row.id, facility_role_id = facility_role.id, active = active ).first( )
                 if access is not None:
                     fields.append( row )
@@ -62,13 +62,13 @@ class FacilityAccessControl:
         button_objects[ 'top' ] = [ ]
         button_objects[ 'bottom' ] = [ ]
 
-        res = admin_db_session.query( models.PageFormButton ).\
+        res = db_session.query( models.PageFormButton ).\
             filter_by( page_form_id = page_form_id ).filter_by( active = active ).all( )
         for row in res:
             # logging.info ( 'table_object_id: ' + str( row.id ) + ' name: ' + row.name )
             for facility_role in self.facilityroles:
                 # logging.info ( 'facility_role.id: ' + str( facility_role.id ) )
-                access = admin_db_session.query( models.PageFormButtonFacilityRole ).\
+                access = db_session.query( models.PageFormButtonFacilityRole ).\
                     filter_by( page_form_button_id = row.id ) \
                     .filter_by( facility_role_id = facility_role.id ).filter_by( active = active ).first( )
                 if access is not None and row.button_location in [ 'top', 'bottom' ]:
@@ -78,7 +78,7 @@ class FacilityAccessControl:
         return button_objects
 
     def page_form_javascript( self, page_form_id, active = 1 ):
-        res = admin_db_session.query( models.PageFormJavaScript ).filter_by( page_form_id = page_form_id ).\
+        res = db_session.query( models.PageFormJavaScript ).filter_by( page_form_id = page_form_id ).\
             filter_by( active = active ).all( )
 
         return res
@@ -88,12 +88,12 @@ class FacilityAccessControl:
         table_col_id = table_object( ).__tablename__ + "_id"
         table_object_role = getattr( models, auth_type + "FacilityRole" )
 
-        rec = admin_db_session.query( table_object ).filter_by( name = name ).first( )
+        rec = db_session.query( table_object ).filter_by( name = name ).first( )
 
         for facility_role in self.facilityroles:
             # logging.info ( 'facility_role.id: ' + str( facility_role.id ) )
 
-            access = admin_db_session.query( table_object_role ).\
+            access = db_session.query( table_object_role ).\
                 filter( getattr( table_object_role, table_col_id ) == rec.id ).\
                 filter_by( facility_role_id = facility_role.id ).filter_by( active = active ).first( )
             if access is not None:
@@ -106,12 +106,12 @@ class FacilityAccessControl:
         table_col_id = table_object( ).__tablename__ + "_id"
         table_object_role = getattr( models, auth_type + "FacilityRole" )
 
-        rec = admin_db_session.query( table_object ).filter_by( id = id ).first( )
+        rec = db_session.query( table_object ).filter_by( id = id ).first( )
 
         for facility_role in self.facilityroles:
             # logging.info ( 'facility_role.id: ' + str( facility_role.id ) )
 
-            access = admin_db_session.query( table_object_role ).\
+            access = db_session.query( table_object_role ).\
                 filter( getattr( table_object_role, table_col_id ) == rec.id ).\
                 filter_by( facility_role_id = facility_role.id ).filter_by( active = active ).first( )
             if access is not None:

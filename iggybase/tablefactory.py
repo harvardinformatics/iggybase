@@ -3,7 +3,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy import Column, ForeignKey, UniqueConstraint
 import sqlalchemy
 from iggybase.mod_auth.facility_access_control import FacilityAccessControl
-from iggybase.database import admin_db_session, Base
+from iggybase.database import db_session, Base
 from types import new_class
 import datetime
 import logging, sys, inspect
@@ -22,8 +22,8 @@ class TableFactory:
         for col in table_object_cols:
             # logging.info( col.field_name )
             if col.foreign_key_table_object_id is not None:
-                foreign_table = admin_db_session.query( TableObject ).filter_by( id = col.foreign_key_table_object_id ).first( )
-                foreign_column = admin_db_session.query( Field ).filter_by( id = col.foreign_key_field_id ).first( )
+                foreign_table = db_session.query( TableObject ).filter_by( id = col.foreign_key_table_object_id ).first( )
+                foreign_column = db_session.query( Field ).filter_by( id = col.foreign_key_field_id ).first( )
 
                 classattr[ col.field_name ] = self.create_column( col, foreign_table.name, foreign_column.field_name )
 
@@ -47,7 +47,7 @@ class TableFactory:
         return "".join( x.title( ) for x in components )
 
     def create_column( self, attributes, foreign_table_name = None, foreign_column_name  = None ):
-        datatype = admin_db_session.query( DataType ).filter_by( id = attributes.data_type_id ).filter_by( active = 1 ).first( )
+        datatype = db_session.query( DataType ).filter_by( id = attributes.data_type_id ).filter_by( active = 1 ).first( )
 
         dtcname = getattr( sqlalchemy, datatype.name )
         if attributes.data_type_id == 2:

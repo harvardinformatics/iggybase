@@ -1,10 +1,10 @@
-from iggybase.database import StaticBase
+from iggybase.database import Base
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, UniqueConstraint, DateTime
 from sqlalchemy.orm import relationship
 import datetime
 
 
-class Facility(StaticBase):
+class Facility(Base):
     __tablename__ = 'facility'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True)
@@ -16,7 +16,7 @@ class Facility(StaticBase):
     order = Column(Integer)
 
 
-class Role(StaticBase):
+class Role(Base):
     __tablename__ = 'role'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True)
@@ -28,7 +28,7 @@ class Role(StaticBase):
     order = Column(Integer)
 
 
-class FacilityRole(StaticBase):
+class FacilityRole(Base):
     __tablename__ = 'facility_role'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True)
@@ -51,7 +51,7 @@ class FacilityRole(StaticBase):
                 self.facility_role_role.name, self.facility_role_facility.name)
 
 
-class Menu(StaticBase):
+class Menu(Base):
     __tablename__ = 'menu'
     id = Column(Integer, primary_key=True)
     parent_id = Column(Integer, ForeignKey('menu.id'))
@@ -73,7 +73,7 @@ class Menu(StaticBase):
                (self.name, self.description, self.id)
 
 
-class MenuFacilityRole(StaticBase):
+class MenuFacilityRole(Base):
     __tablename__ = 'menu_facility_role'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True)
@@ -96,7 +96,7 @@ class MenuFacilityRole(StaticBase):
                (self.name, self.description, self.id, self.menu_id, self.order)
 
 
-class MenuType(StaticBase):
+class MenuType(Base):
     __tablename__ = 'menu_type'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True)
@@ -112,7 +112,7 @@ class MenuType(StaticBase):
                (self.name, self.description, self.id)
 
 
-class MenuUrl(StaticBase):
+class MenuUrl(Base):
     """Matches a url to a menu. One to many relationship with Menu.
     """
     __tablename__ = 'menu_url'
@@ -137,7 +137,7 @@ class MenuUrl(StaticBase):
                (self.name, self.description, self.id, self.url_path)
 
 
-class PageForm(StaticBase):
+class PageForm(Base):
     __tablename__ = 'page_form'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True)
@@ -152,7 +152,7 @@ class PageForm(StaticBase):
     page_template = Column(String(100))
 
 
-class PageFormJavaScript(StaticBase):
+class PageFormJavaScript(Base):
     __tablename__ = 'page_form_javascript'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True)
@@ -168,7 +168,7 @@ class PageFormJavaScript(StaticBase):
     page_javascript_page = relationship("PageForm", foreign_keys=[page_form_id])
 
 
-class PageFormFacilityRole(StaticBase):
+class PageFormFacilityRole(Base):
     __tablename__ = 'page_form_facility_role'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True)
@@ -185,7 +185,7 @@ class PageFormFacilityRole(StaticBase):
     page_facility_role_page = relationship("PageForm", foreign_keys=[page_form_id])
 
 
-class PageFormButton(StaticBase):
+class PageFormButton(Base):
     __tablename__ = 'page_form_button'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True)
@@ -206,7 +206,7 @@ class PageFormButton(StaticBase):
     page_form_button_page_form = relationship("PageForm", foreign_keys=[page_form_id])
 
 
-class PageFormButtonFacilityRole(StaticBase):
+class PageFormButtonFacilityRole(Base):
     __tablename__ = 'page_form_button_facility_role'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True)
@@ -223,7 +223,7 @@ class PageFormButtonFacilityRole(StaticBase):
     page_form_button_facility_role_page_form = relationship("PageFormButton", foreign_keys=[page_form_button_id])
 
 
-class TableObject(StaticBase):
+class TableObject(Base):
     __tablename__ = 'table_object'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True)
@@ -235,7 +235,7 @@ class TableObject(StaticBase):
     order = Column(Integer)
 
 
-class TableObjectName(StaticBase):
+class TableObjectName(Base):
     __tablename__ = 'table_object_name'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True)
@@ -260,7 +260,7 @@ class TableObjectName(StaticBase):
         return new_name
 
 
-class TableObjectFacilityRole(StaticBase):
+class TableObjectFacilityRole(Base):
     __tablename__ = 'table_object_facility_role'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True)
@@ -280,7 +280,7 @@ class TableObjectFacilityRole(StaticBase):
     type_facility_role_unq = UniqueConstraint('facility_role_id', 'table_object_id')
 
 
-class TableObjectChildren(StaticBase):
+class TableObjectChildren(Base):
     __tablename__ = 'table_object_children'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True)
@@ -297,7 +297,7 @@ class TableObjectChildren(StaticBase):
     table_object_children_child_table_object = relationship("TableObject", foreign_keys=[child_table_object_id])
 
 
-class TableObjectChildrenFacilityRole(StaticBase):
+class TableObjectChildrenFacilityRole(Base):
     __tablename__ = 'table_object_children_facility_role'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True)
@@ -318,7 +318,7 @@ class TableObjectChildrenFacilityRole(StaticBase):
     table_object_children_facility_role_unq = UniqueConstraint('facility_role_id', 'table_object_id')
 
 
-class Field(StaticBase):
+class Field(Base):
     __tablename__ = 'field'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True)
@@ -344,7 +344,7 @@ class Field(StaticBase):
     field_foreign_key_field = relationship("Field", foreign_keys=[foreign_key_field_id])
 
 
-class FieldFacilityRole(StaticBase):
+class FieldFacilityRole(Base):
     __tablename__ = 'field_facility_role'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True)
@@ -370,7 +370,7 @@ class FieldFacilityRole(StaticBase):
     field_facility_role_module = relationship("Module", foreign_keys=[module_id])
 
 
-class DataType(StaticBase):
+class DataType(Base):
     __tablename__ = 'data_type'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True)
@@ -382,7 +382,7 @@ class DataType(StaticBase):
     order = Column(Integer)
 
 
-class Permission(StaticBase):
+class Permission(Base):
     __tablename__ = 'permission'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True)
@@ -394,7 +394,7 @@ class Permission(StaticBase):
     order = Column(Integer)
 
 
-class Action(StaticBase):
+class Action(Base):
     __tablename__ = 'action'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True)
@@ -405,7 +405,7 @@ class Action(StaticBase):
     action_value = Column(String(255))
 
 
-class NewUser(StaticBase):
+class NewUser(Base):
     __tablename__ = 'new_user'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True)
@@ -431,7 +431,7 @@ class NewUser(StaticBase):
     directory = Column(String(100))
 
 
-class TableQuery(StaticBase):
+class TableQuery(Base):
     __tablename__ = 'table_query'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True)
@@ -444,7 +444,7 @@ class TableQuery(StaticBase):
     display_name = Column(String(100))
 
 
-class TableQueryRender(StaticBase):
+class TableQueryRender(Base):
     __tablename__ = 'table_query_render'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True)
@@ -465,7 +465,7 @@ class TableQueryRender(StaticBase):
     table_query_render_table_object = relationship("TableObject", foreign_keys=[table_object_id])
 
 
-class TableQueryTableObject(StaticBase):
+class TableQueryTableObject(Base):
     __tablename__ = 'table_query_table_object'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True)
@@ -482,7 +482,7 @@ class TableQueryTableObject(StaticBase):
     table_query_type_table_query = relationship("TableQuery", foreign_keys=[table_query_id])
 
 
-class TableQueryField(StaticBase):
+class TableQueryField(Base):
     __tablename__ = 'table_query_field'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True)
@@ -500,7 +500,7 @@ class TableQueryField(StaticBase):
     table_query_field_table_query = relationship("TableQuery", foreign_keys=[table_query_id])
 
 
-class TableQueryCriteria(StaticBase):
+class TableQueryCriteria(Base):
     __tablename__ = 'table_query_criteria'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True)
@@ -519,7 +519,7 @@ class TableQueryCriteria(StaticBase):
     table_query_criteria_field = relationship("Field", foreign_keys=[field_id])
 
 
-class TableQueryOrder(StaticBase):
+class TableQueryOrder(Base):
     __tablename__ = 'table_query_order'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True)
@@ -537,7 +537,7 @@ class TableQueryOrder(StaticBase):
     table_query_order_table_query = relationship("TableQuery", foreign_keys=[table_query_id])
 
 
-class Module(StaticBase):
+class Module(Base):
     __tablename__ = 'module'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True)
@@ -550,7 +550,7 @@ class Module(StaticBase):
     url_prefix = Column(String(50))
 
 
-class ModuleFacilityRole(StaticBase):
+class ModuleFacilityRole(Base):
     __tablename__ = 'module_facility_role'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True)

@@ -19,12 +19,6 @@ class DB_Factory:
         self.app = None
 
 
-adminengine = create_engine( conf.SQLALCHEMY_DATABASE_URI + conf.ADMIN_DB_NAME )
-admin_db_session = scoped_session( sessionmaker( autocommit = False, autoflush = False, bind = adminengine ) )
-StaticBase = declarative_base()
-StaticBase.query = admin_db_session.query_property()
-admin_db = DB_Factory(StaticBase.query, admin_db_session)
-
 engine = create_engine( conf.SQLALCHEMY_DATABASE_URI + conf.DATA_DB_NAME )
 db_session = scoped_session( sessionmaker( autocommit = False, autoflush = False, bind = engine ) )
 Base = declarative_base()
@@ -36,4 +30,3 @@ def init_db(  ):
     for i,(module, blueprint) in enumerate(conf.BLUEPRINTS):
         getattr(__import__('iggybase.'+module, fromlist=['models']),'models')
     Base.metadata.create_all( bind = engine )
-    StaticBase.metadata.create_all( bind = adminengine )

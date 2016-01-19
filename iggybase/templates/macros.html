@@ -39,12 +39,12 @@
         {% for item, info in items.items()%}
             {% if 'subs' in info and info['subs'] %}
             <li class="dropdown">
-                <a class="dropdown-toggle" data-toggle="dropdown"
+                <a id="{{ item }}" class="dropdown-toggle" data-toggle="dropdown"
                 href= "{{ info['url'] }}" class="small">{{ info['title'] }}
                 <span class="caret"></span></a>
                 {{ render_nav_menu(info['subs'])}}
             {% else %}
-                <li><a href="{{ info['url'] }}"
+                <li><a id="{{ item }}" href="{{ info['url'] }}"
                 {% if not first_level %}class="small"{% endif %}>{{ info['title'] }}</a>
             {% endif %}
             </li>

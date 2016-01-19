@@ -3,7 +3,7 @@ from iggybase.database import db_session
 from iggybase.mod_auth.models import load_user, UserRole, Organization
 from iggybase.mod_auth.facility_role_access_control import FacilityRoleAccessControl
 from importlib import import_module
-from iggybase.database import admin_db_session
+from iggybase.database import db_session
 from iggybase.mod_admin import models
 from iggybase.mod_core import models as core_models
 from iggybase.mod_core import utilities as util
@@ -22,7 +22,7 @@ class OrganizationAccessControl:
         self.module_name, self.page_form = request.path.split('/')[1:3]
         self.module = 'mod_' + self.module_name
         if  self.module == 'mod_admin':
-            self.session = admin_db_session
+            self.session = db_session
         else:
             self.session = db_session
 
@@ -73,7 +73,7 @@ class OrganizationAccessControl:
         return results
 
     def get_foreign_key_data(self, fk_table_id, column_value=None):
-        fk_table_data = admin_db_session.query(models.TableObject).filter_by(id=fk_table_id).first()
+        fk_table_data = db_session.query(models.TableObject).filter_by(id=fk_table_id).first()
         fk_field_data = self.foreign_key(fk_table_id)
 
         results = [(-99, '')]
@@ -156,7 +156,7 @@ class OrganizationAccessControl:
         return results
 
     def foreign_key(self, table_object_id):
-        res = (admin_db_session.query(models.Field, models.TableObject, models.Module) .
+        res = (db_session.query(models.Field, models.TableObject, models.Module) .
             join(models.TableObject,
                 models.TableObject.id == models.Field.table_object_id
             ).
@@ -166,7 +166,7 @@ class OrganizationAccessControl:
             filter(models.Field.field_name == 'name').first())
 
         if res.Module.name == 'mod_admin':
-            fk_session = admin_db_session
+            fk_session = db_session
         else:
             fk_session = db_session
 
@@ -269,8 +269,8 @@ class OrganizationAccessControl:
                     setattr(instances[row_id], 'organization_id', self.current_org_id)
                     if current_table_record.new_name_prefix is not None and current_table_record.new_name_prefix != "":
                         setattr(instances[row_id], 'name', current_table_record.get_new_name())
-                        admin_db_session.add(current_table_record)
-                        admin_db_session.commit()
+                        db_session.add(current_table_record)
+                        db_session.commit()
                 else:
                     instances[row_id] = self.session.query(current_table_object).\
                         filter_by( name=hidden_fields['row_name_'+str(row_id)] ).first( )
@@ -299,7 +299,7 @@ class OrganizationAccessControl:
                     lt_id = lt.id
 
                     setattr(lt, 'name', long_text_record.get_new_name())
-                    admin_db_session.add(long_text_record)
+                    db_session.add(long_text_record)
 
                     setattr(lt, 'date_created', datetime.datetime.utcnow())
                     setattr(lt, 'organization_id', self.current_org_id)
@@ -321,6 +321,6 @@ class OrganizationAccessControl:
             self.session().flush()
             row_names.append(instance.name)
         db_session.commit()
-        admin_db_session.commit()
+        db_session.commit()
 
         return row_names

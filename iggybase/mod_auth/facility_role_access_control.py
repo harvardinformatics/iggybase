@@ -1,7 +1,7 @@
 from collections import OrderedDict as OrderedDict
 from flask import g, request
 from sqlalchemy.orm import aliased
-from iggybase.database import admin_db_session
+from iggybase.database import db_session
 from iggybase.mod_admin import models
 from iggybase.mod_admin import constants as admin_consts
 from iggybase.mod_auth.models import load_user
@@ -14,12 +14,12 @@ import logging
 class FacilityRoleAccessControl:
     def __init__(self):
         config = get_config()
-        self.facility = admin_db_session.query(models.Facility).filter_by(name=config.FACILITY).first()
+        self.facility = db_session.query(models.Facility).filter_by(name=config.FACILITY).first()
 
         # set user and facility_role
         if g.user is not None and not g.user.is_anonymous:
             self.user = load_user(g.user.id)
-            self.facility_role = (admin_db_session.query(models.FacilityRole).
+            self.facility_role = (db_session.query(models.FacilityRole).
                                   filter_by(facility_id=self.facility.id,
                                             role_id=self.user.current_user_role_id).first())
         else:
@@ -27,7 +27,7 @@ class FacilityRoleAccessControl:
             self.facility_role = None
 
     def fields(self, table_object_id, module, filter=None, active=1):
-        module = admin_db_session.query(models.Module, models.ModuleFacilityRole).join(models.ModuleFacilityRole). \
+        module = db_session.query(models.Module, models.ModuleFacilityRole).join(models.ModuleFacilityRole). \
             filter(models.ModuleFacilityRole.facility_role_id == self.facility_role.id). \
             filter(models.Module.name == module).first()
 
@@ -49,7 +49,7 @@ class FacilityRoleAccessControl:
                 else:
                     filters.append((getattr(models.FieldFacilityRole, field_data[1]) == value))
 
-        res = admin_db_session.query(models.Field, models.FieldFacilityRole).join(models.FieldFacilityRole). \
+        res = db_session.query(models.Field, models.FieldFacilityRole).join(models.FieldFacilityRole). \
                     filter(*filters). \
                     order_by(models.FieldFacilityRole.order, models.FieldFacilityRole.id).all()
 
@@ -73,7 +73,7 @@ class FacilityRoleAccessControl:
             )
 
         table_queries = (
-            admin_db_session.query(
+            db_session.query(
                 models.TableQueryRender,
                 models.TableQuery
             ).
@@ -114,7 +114,7 @@ class FacilityRoleAccessControl:
             filters.append((models.Field.field_name == field_name))
 
         res = (
-            admin_db_session.query(
+            db_session.query(
                 models.Field,
                 models.TableObject,
                 models.TableQueryField,
@@ -134,7 +134,7 @@ class FacilityRoleAccessControl:
 
     def table_query_criteria(self, table_query_id):
         criteria = (
-            admin_db_session.query(
+            db_session.query(
                 models.TableQueryCriteria,
                 models.Field,
                 models.TableObject,
@@ -158,11 +158,11 @@ class FacilityRoleAccessControl:
         Menus are recursive.
         """
         # TODO: do we need to query for this or can we just use constant
-        navbar_root = admin_db_session.query(models.Menu). \
+        navbar_root = db_session.query(models.Menu). \
             filter_by(name=admin_consts.MENU_NAVBAR_ROOT).first()
         navbar = self.get_menu_items(navbar_root.id, self.facility_role.id, active)
 
-        sidebar_root = admin_db_session.query(models.Menu). \
+        sidebar_root = db_session.query(models.Menu). \
             filter_by(name=admin_consts.MENU_SIDEBAR_ROOT).first()
         sidebar = self.get_menu_items(sidebar_root.id, self.facility_role.id, active)
 
@@ -171,11 +171,11 @@ class FacilityRoleAccessControl:
     def page_forms(self, active=1):
         page_forms = []
 
-        res = admin_db_session.query(models.PageFormFacilityRole). \
+        res = db_session.query(models.PageFormFacilityRole). \
             filter_by(facility_role_id=self.facility_role.id).filter_by(active=active). \
             order_by(models.PageFormFacilityRole.order, models.PageFormFacilityRole.id).all()
         for row in res:
-            page_form = admin_db_session.query(models.PageForm). \
+            page_form = db_session.query(models.PageForm). \
                 filter_by(id=row.page_form_id).filter_by(active=active).first()
             if page_form is not None:
                 page_forms.append(page_form)
@@ -188,11 +188,11 @@ class FacilityRoleAccessControl:
         page_form_buttons['top'] = []
         page_form_buttons['bottom'] = []
 
-        res = admin_db_session.query(models.PageFormButtonFacilityRole). \
+        res = db_session.query(models.PageFormButtonFacilityRole). \
             filter_by(facility_role_id=self.facility_role.id).filter_by(active=active). \
             order_by(models.PageFormButtonFacilityRole.order, models.PageFormButtonFacilityRole.id).all()
         for row in res:
-            page_form_button = admin_db_session.query(models.PageFormButton).filter_by(id=row.page_form_button_id). \
+            page_form_button = db_session.query(models.PageFormButton).filter_by(id=row.page_form_button_id). \
                 filter_by(page_form_id=page_form_id).filter_by(active=active).first()
             if page_form_button is not None and page_form_button.button_location in ['top', 'bottom']:
                 page_form_buttons[page_form_button.button_location].append(page_form_button)
@@ -201,7 +201,7 @@ class FacilityRoleAccessControl:
         return page_form_buttons
 
     def page_form_javascript(self, page_form_id, active=1):
-        res = admin_db_session.query(models.PageFormJavaScript).filter_by(page_form_id=page_form_id). \
+        res = db_session.query(models.PageFormJavaScript).filter_by(page_form_id=page_form_id). \
             filter_by(active=active).order_by(models.PageFormJavaScript.order, models.PageFormJavaScript.id).all()
 
         return res
@@ -219,7 +219,7 @@ class FacilityRoleAccessControl:
         elif 'id' in criteria.keys():
             filters.append(getattr(table_object, 'id') == criteria['id'])
 
-        rec = (admin_db_session.query(table_object).
+        rec = (db_session.query(table_object).
                join(table_object_role).
                filter(*filters).first())
 
@@ -229,7 +229,7 @@ class FacilityRoleAccessControl:
         """Recursively Get menus items and subitems
         """
         menu = OrderedDict()
-        items = (admin_db_session.query(models.Menu, models.MenuUrl)
+        items = (db_session.query(models.Menu, models.MenuUrl)
             .join(models.MenuFacilityRole)
             .outerjoin(models.MenuUrl, models.Menu.id == models.MenuUrl.menu_id)
             .filter(
