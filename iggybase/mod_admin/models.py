@@ -2,7 +2,7 @@ from iggybase.database import Base
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, UniqueConstraint, DateTime
 from sqlalchemy.orm import relationship, relation, backref
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask.ext.login import UserMixin, RoleMixin
+from flask.ext.login import UserMixin
 from iggybase.mod_admin.constants import ROLE
 from iggybase.extensions import lm
 import datetime
@@ -594,7 +594,7 @@ class UserRole( Base ):
     user_role_organization = relationship( "Organization", foreign_keys = [ organization_id ] )
 
 
-class Role( Base, RoleMixin ):
+'''class Role( Base, RoleMixin ):
     __tablename__ = 'role'
     id = Column( Integer, primary_key = True )
     name = Column( String( 100 ), unique = True )
@@ -603,7 +603,7 @@ class Role( Base, RoleMixin ):
     last_modified = Column( DateTime, default=datetime.datetime.utcnow )
     active = Column( Boolean )
     organization_id = Column( Integer )
-    order = Column( Integer )
+    order = Column( Integer )'''
 
 class User( Base, UserMixin ):
     __tablename__ = 'user'

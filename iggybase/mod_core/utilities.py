@@ -1,3 +1,4 @@
+from flask import abort
 from importlib import import_module
 from iggybase.tablefactory import TableFactory
 

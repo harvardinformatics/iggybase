@@ -3,7 +3,7 @@ from flask import g, request
 from iggybase.database import db_session
 from iggybase.mod_admin import models
 from iggybase.mod_admin import constants as admin_consts
-from iggybase.mod_auth.models import load_user
+from iggybase.mod_admin.models import load_user
 from config import get_config
 import logging
 

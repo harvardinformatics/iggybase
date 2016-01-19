@@ -1,5 +1,4 @@
-from iggybase.mod_auth.models import UserRole, Organization
-from iggybase.mod_admin.models import Role
+from iggybase.mod_admin.models import Role, UserRole, Organization
 
 def get_roles( user_id = None ):
     if user_id is None:

@@ -1,8 +1,7 @@
 from flask.ext.wtf import Form
 from wtforms import StringField, PasswordField, BooleanField, SelectField, ValidationError
 from wtforms.validators import DataRequired, Length, email
-from .models import User
-from iggybase.mod_admin.models import NewUser
+from iggybase.mod_admin.models import User, NewUser
 
 class LoginForm( Form ):
     name = StringField( 'Login name', validators = [ DataRequired( ), Length( 1, 16 ) ] )

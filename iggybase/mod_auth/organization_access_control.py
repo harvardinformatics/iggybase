@@ -1,5 +1,5 @@
 from flask import g, request
-from iggybase.mod_auth.models import load_user, UserRole, Organization
+from iggybase.mod_admin.models import load_user, UserRole, Organization
 from iggybase.mod_auth.facility_role_access_control import FacilityRoleAccessControl
 from iggybase.database import db_session
 from iggybase.mod_admin import models
