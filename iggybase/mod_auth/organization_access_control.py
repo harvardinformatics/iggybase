@@ -221,9 +221,15 @@ class OrganizationAccessControl:
         table_object_data = models.TableObject.query.filter_by(name=table_object.__tablename__).first()
         table_record = models.TableObjectName.query.filter_by(table_object_id=table_object_data.id).\
                            filter_by(facility_id=self.facility_role_access_control.facility.id).first()
+
         long_text_data = models.TableObject.query.filter_by(name='long_text').first()
         long_text_record = models.TableObjectName.query.filter_by(table_object_id=long_text_data.id).\
                            filter_by(facility_id=self.facility_role_access_control.facility.id).first()
+
+        history_data = models.TableObject.query.filter_by(name='history').first()
+        history_record = models.TableObjectName.query.filter_by(table_object_id=history_data.id).\
+                           filter_by(facility_id=self.facility_role_access_control.facility.id).first()
+
         if form.entry_0.data == 'parent_child':
             child_table_object = util.get_table(form.module_0.data, form.chile_table_object_0.data )
             child_table_object_data = models.TableObject.query.filter_by(name=child_table_object.__tablename__).first()
@@ -276,6 +282,7 @@ class OrganizationAccessControl:
 
             if not (hidden_fields[field_id]==field.data or hidden_fields[field_id]==str(field.data)):
                 history_instance=core_models.History()
+                history_instance.name=history_record.get_new_name()
                 history_instance.table_id=hidden_fields['table_id_'+str(row_id)]
                 history_instance.field_id=field_data.Field.id
                 history_instance.organization_id=self.current_org_id
