@@ -121,7 +121,7 @@ class OrganizationAccessControl:
                                 + '|' + fk_data['name']
                                 + '|' + field_display_name)
                             )
-                criteria_key = fk_data['name'] + '_' + fk_data['foreign_key']
+                criteria_key = (fk_data['name'], fk_data['foreign_key'])
                 if criteria_key in criteria:
                     wheres.append(getattr(aliases[alias_name],
                     fk_data['foreign_key']) == criteria[criteria_key])
@@ -129,7 +129,7 @@ class OrganizationAccessControl:
             else: # non-fk field
                 col = getattr(table_model, row.Field.field_name)
                 columns.append(col.label(field_display_name))
-                criteria_key = row.TableObject.name + '_' + row.Field.field_name
+                criteria_key = (row.TableObject.name, row.Field.field_name)
                 if criteria_key in criteria:
                     wheres.append(col == criteria[criteria_key])
                 # add to joins if not first table, avoid joining to self

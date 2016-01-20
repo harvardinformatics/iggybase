@@ -74,7 +74,7 @@ def action_summary_ajax(module_name, table_name = None):
 
 def detail(module_name, table_name, row_name):
     page_form = 'detail'
-    criteria = {(table_name + '_name'): row_name}
+    criteria = {(table_name, 'name'): row_name}
     table_queries = tqc.TableQueryCollection(module_name, page_form,
             table_name, criteria)
     table_queries.get_fields()
