@@ -170,9 +170,10 @@ class TableQuery:
         return link
 
     def get_first(self):
-        first = {};
-        if self.table_rows[0]:
+        try:
             first = self.table_rows[0]
+        except:
+            first = {}
         return first
 
     def get_json(self):
