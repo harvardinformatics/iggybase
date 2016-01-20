@@ -224,7 +224,7 @@ class FacilityRoleAccessControl:
 
         return rec
 
-    def get_menu_items(self, parent_id, facility_role_id, active=True):
+    def get_menu_items(self, parent_id, facility_role_id, active=1):
         """Recursively Get menus items and subitems
         """
         menu = OrderedDict()

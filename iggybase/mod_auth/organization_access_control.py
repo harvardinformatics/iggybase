@@ -287,7 +287,10 @@ class OrganizationAccessControl:
 
             if field_data.Field.foreign_key_table_object_id is not None and not isinstance(field.data, int):
                 fk_id=self.get_foreign_key_data(field_data.Field.foreign_key_table_object_id, field.data)
-                setattr(instances[row_id], column_name, fk_id[1][0])
+                if len(fk_id) > 1:
+                    setattr(instances[row_id], column_name, fk_id[1][0])
+                else:
+                    setattr(instances[row_id], column_name, None)
             elif field_data.Field.data_type_id == 7 and field.data != '':
                 if hidden_fields[field_id] == '':
                     lt = core_models.LongText()
