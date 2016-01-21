@@ -1,3 +1,6 @@
+.close_modal {
+    float: right ! important;
+}
 .form-control-lookup {
   display: inline-block ! important ;
   width: calc(100% - 18px) ! important ;

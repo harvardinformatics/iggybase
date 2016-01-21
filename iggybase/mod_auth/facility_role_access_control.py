@@ -236,12 +236,12 @@ class FacilityRoleAccessControl:
                 models.Menu.parent_id == parent_id,
                 models.Menu.active == active
             )
-            .order_by(models.Menu.order, models.Menu.name).all())
+            .order_by(models.MenuFacilityRole.order, models.MenuFacilityRole.name).all())
         for item in items:
             url = self.get_menu_url(item)
             menu[item.Menu.name] = {
                     'url': url,
-                    'title': item.Menu.description,
+                    'title': item.MenuFacilityRole.description,
                     'class': item.Menu.menu_class,
                     'subs': self.get_menu_items(item.Menu.id, facility_role_id, active)
             }

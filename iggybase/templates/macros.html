@@ -62,11 +62,11 @@
 {%- endmacro %}
 
 {% macro render_field(field) -%}
-    <tr><td class="col-md-2">
-    <label for="{{ field.id }}" class="control-label">{{ field.label }}</label>
+    <tr><td>
+    <label for="{{ field.id }}" class="control-label">{{ field.label }}:</label>
     </td>
     <td class="col-md-8">
-    {{ field(class_='f-control', **kwargs) }}
+    {{ field(class_='data-control', **kwargs) }}
     {% if field.errors %}
         {% for e in field.errors %}
             <p class="help-block">{{ e }}</p>
