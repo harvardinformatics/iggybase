@@ -67,6 +67,7 @@ class Menu(Base):
     organization_id = Column(Integer)
     order = Column(Integer)
     menu_type_id = Column(Integer, ForeignKey('menu_type.id'))
+    menu_class = Column(String(100))
 
     parent = relationship('Menu', remote_side=[id])
     children = relationship('Menu')

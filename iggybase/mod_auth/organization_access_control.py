@@ -271,12 +271,14 @@ class OrganizationAccessControl:
                     setattr(instances[row_id], 'date_created', datetime.datetime.utcnow())
                     setattr(instances[row_id], 'organization_id', self.current_org_id)
                     if current_table_record.new_name_prefix is not None and current_table_record.new_name_prefix != "":
-                        setattr(instances[row_id], 'name', current_table_record.get_new_name())
+                        current_inst_name = current_table_record.get_new_name()
+                        setattr(instances[row_id], 'name', current_inst_name)
                         db_session.add(current_table_record)
                         db_session.commit()
                 else:
+                    current_inst_name=hidden_fields['row_name_'+str(row_id)]
                     instances[row_id] = self.session.query(current_table_object).\
-                        filter_by( name=hidden_fields['row_name_'+str(row_id)] ).first( )
+                        filter_by( name=current_inst_name ).first( )
 
                 setattr(instances[row_id], 'last_modified', datetime.datetime.utcnow())
 
@@ -287,7 +289,7 @@ class OrganizationAccessControl:
                 history_instance.field_id=field_data.Field.id
                 history_instance.organization_id=self.current_org_id
                 history_instance.user_id=g.user.id
-                history_instance.instance_name=hidden_fields['row_name_'+str(row_id)]
+                history_instance.instance_name=current_inst_name
                 history_instance.old_value=hidden_fields[field_id]
                 history_instance.new_value=field.data
                 db_session().add(history_instance)

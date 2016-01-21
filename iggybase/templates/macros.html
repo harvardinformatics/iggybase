@@ -45,7 +45,15 @@
                 {{ render_nav_menu(info['subs'])}}
             {% else %}
                 <li><a id="{{ item }}" href="{{ info['url'] }}"
-                {% if not first_level %}class="small"{% endif %}>{{ info['title'] }}</a>
+                {% if not first_level %}
+                   {% if info['class'] %}
+                        class="small {{ info['class'] }}"
+                   {% else %}
+                        class="small"
+                   {% endif %}
+                {% elif info['class'] %}
+                    class="{{ info['class'] }}"
+                {% endif %}>{{ info['title'] }}</a>
             {% endif %}
             </li>
         {% endfor %}
@@ -54,11 +62,11 @@
 {%- endmacro %}
 
 {% macro render_field(field) -%}
-    <tr><td class="col-md-3">
+    <tr><td class="col-md-2">
     <label for="{{ field.id }}" class="control-label">{{ field.label }}</label>
     </td>
     <td class="col-md-8">
-    {{ field(class_='data-control', **kwargs) }}
+    {{ field(class_='f-control', **kwargs) }}
     {% if field.errors %}
         {% for e in field.errors %}
             <p class="help-block">{{ e }}</p>

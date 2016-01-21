@@ -242,6 +242,7 @@ class FacilityRoleAccessControl:
             menu[item.Menu.name] = {
                     'url': url,
                     'title': item.Menu.description,
+                    'class': item.Menu.menu_class,
                     'subs': self.get_menu_items(item.Menu.id, facility_role_id, active)
             }
         return menu
