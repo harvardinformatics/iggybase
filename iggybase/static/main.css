@@ -8,6 +8,9 @@
 .right {
     float: right ! important;
 }
+.dataTables_scrollBody {
+    float: left ! important;
+}
 .inline-block {
     display: inline-block ! important ;
 }
