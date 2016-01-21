@@ -53,18 +53,18 @@
     </ul>
 {%- endmacro %}
 
-{% macro render_field(field, label_visible=true) -%}
-     <div class="form-group {% if field.errors %}has-error{% endif %} {{ kwargs.pop('class_', '') }}">
-        {% if field.type != 'HiddenField' and label_visible %}
-            <label for="{{ field.id }}" class="control-label">{{ field.label }}</label>
-        {% endif %}
-        {{ field(class_='form-control', **kwargs) }}
-        {% if field.errors %}
-            {% for e in field.errors %}
-                <p class="help-block">{{ e }}</p>
-            {% endfor %}
-        {% endif %}
-    </div>
+{% macro render_field(field) -%}
+    <tr><td>
+    <label for="{{ field.id }}" class="control-label">{{ field.label }}</label>
+    </td>
+    <td>
+    {{ field(class_='table-control', **kwargs) }}
+    {% if field.errors %}
+        {% for e in field.errors %}
+            <p class="help-block">{{ e }}</p>
+        {% endfor %}
+    {% endif %}
+    </td></tr>
 {%- endmacro %}
 
 {% macro render_table_headers( table_query, page_form_name = None ) -%}

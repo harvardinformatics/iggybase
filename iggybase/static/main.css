@@ -1,6 +1,17 @@
+.search-button {
+    float: right ! important;
+}
+.form-control {
+  display: inline-block ! important ;
+  max-width: 80% ! important ;
+  float: right ! important;
+}
 .form-control-lookup {
   display: inline-block ! important ;
-  width: calc(100% - 18px) ! important ;
+  width: calc(80% - 18px) ! important ;
+}
+.label{
+    float: left ! important;
 }
 .datepicker-field {
     max-width:100px!important;

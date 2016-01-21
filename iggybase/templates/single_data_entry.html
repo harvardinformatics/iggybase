@@ -12,8 +12,7 @@
         </div>
 
     {% if form is defined %}
-        <form action class="form" method="post" role="form">
-            <div class="col-md-4">
+        <form action class="form form-horizontal col-md-4" method="post" role="form">
                 {{ form.hidden_tag() }}
                 {{ wtf.form_errors(form, hiddens='only') }}
     {% endif %}
@@ -24,11 +23,13 @@
     {%- endblock topbuttonbar %}
 
     {% if form is defined %}
+        <table>
         {%- for field in form %}
             {% if not bootstrap_is_hidden_field( field ) -%}
                 {{ wtf.form_field( field ) }}
             {%- endif %}
         {%- endfor %}
+        </table>
     {% endif %}
 
     {% block bottombuttonbar %}
@@ -37,7 +38,6 @@
     {%- endblock bottombuttonbar %}
 
     {% if form is defined %}
-            </div>
         </form>
     {% endif %}
 
