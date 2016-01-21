@@ -1,6 +1,7 @@
 import os
+from collections import OrderedDict
 from flask import Flask, g, send_from_directory
-from wtforms import TextField
+from wtforms import TextField, SelectField
 from wtforms.validators import Required
 from config import config, get_config
 from flask import render_template
@@ -76,8 +77,8 @@ def add_base_routes( app, conf, security ):
 
     @security.context_processor
     def security_context_processor():
-        navbar = {'Login':{'url':'/login'}, 'Register':{'url':'/register'},
-                'Reset Password':{'url':'/reset'}, 'Logout':{'url':'/logout'}}
+        navbar = OrderedDict([('Login', {'title': 'Login', 'url':'/login'}), ('Register', {'title':'Register', 'url':'/register'}),
+            ('Reset Password', {'title':'Reset Password', 'url':'/reset'}), ('Logout', {'title':'Logout', 'url':'/logout'})])
         return dict(navbar = navbar)
 
     @app.route( '/<module_name>/summary/<table_name>/' )
@@ -146,6 +147,19 @@ def configure_error_handlers( app ):
 
 class ExtendedLoginForm(LoginForm):
     email = TextField('Username:', [Required()])
+    #role = SelectField('Role:', coerce=int)
+    #organization = SelectField('Organization:', coerce=int)
 
 class ExtendedRegisterForm(RegisterForm):
     name = TextField('Username:', [Required()])
+    first_name = TextField('First Name:', [Required()])
+    last_name = TextField('Last Name:', [Required()])
+    email = TextField('Email:', [Required()])
+    organization = TextField('Organization:', [Required()])
+    address1 = TextField('Address 1:', [Required()])
+    address2 = TextField('Address 2:', [Required()])
+    city = TextField('City:', [Required()])
+    state = TextField('State:', [Required()])
+    zipcode = TextField('Zipcode:', [Required()])
+    phone = TextField('Phone:', [Required()])
+    group = TextField('Group:', [Required()])
