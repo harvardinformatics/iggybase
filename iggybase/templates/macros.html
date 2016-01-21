@@ -54,10 +54,10 @@
 {%- endmacro %}
 
 {% macro render_field(field) -%}
-    <tr><td>
+    <tr><td class="col-md-2">
     <label for="{{ field.id }}" class="control-label">{{ field.label }}</label>
     </td>
-    <td>
+    <td class="col-md-8">
     {{ field(class_='table-control', **kwargs) }}
     {% if field.errors %}
         {% for e in field.errors %}
