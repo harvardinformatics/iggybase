@@ -37,8 +37,6 @@ $( document ).ready( function () {
 
             var formurl = $URL_ROOT + "/core/search_results?search_vals=" + JSON.stringify(search_vals);
 
-            $("#modal_dialog").text("");
-
             $.fn.showModalDialog( formurl, {}, $.fn.searchLinks );
 
             return false;
