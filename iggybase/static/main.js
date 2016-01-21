@@ -49,10 +49,12 @@ $( document ).ready( function () {
 ( function( $ ) {
 
     $.fn.showModalDialog = function ( url, buttons, callback ) {
+        $("#modal_dialog_content").html("");
+
         $.ajax( {
             url: url,
             success: function ( resp ) {
-                tmpform = "<div id='modal_dialog_content' class='modal-content'>"+resp;
+                tmpform = resp;
                 tmpform += "<div class='modal-footer'>";
 
                 if ( buttons ) {
@@ -61,12 +63,13 @@ $( document ).ready( function () {
                     }
                 }
 
-                tmpform += "<button type='button' class='btn btn-default' data-dismiss='modal'>Close</button>";
+                tmpform += "<button type='button' class='btn btn-default close_modal'>Close</button>";
 
                 tmpform += "</div>";
-                tmpform += "</div>";
 
-                $(tmpform).appendTo("#modal_dialog");
+                $(tmpform).appendTo("#modal_dialog_content");
+
+                $( '.close_modal' ).click( $.fn.modal_close );
 
                 if ( buttons ) {
                     for (var key in buttons){
@@ -89,9 +92,6 @@ $( document ).ready( function () {
         var table_object = $( '#table_object_0' ).val( );
         var module = $( '#module_0' ).val( );
 
-        if ($("#modal_dialog").length > 0)
-            $("#modal_dialog").text("");
-
         var formurl = $URL_ROOT + "/core/search?table_object=" + table_object + "&input_id=" + input_id + "&field_name=" + field_name + "&module=" + module;
 
         var buttons = {};
@@ -113,8 +113,6 @@ $( document ).ready( function () {
 
         var formurl = $URL_ROOT + "/core/search_results?search_vals=" + JSON.stringify(search_vals);
 
-        $("#modal_dialog").text("");
-
         $.fn.showModalDialog( formurl, {}, $.fn.searchLinks );
     }
 
@@ -127,5 +125,11 @@ $( document ).ready( function () {
         $('body').removeClass('modal-open');
         $('.modal-backdrop').remove();
         $("#" + ele.attr('luid')).val(ele.val());
+    }
+
+    $.fn.modal_close = function () {
+        $("#dialog").modal( "hide" );
+        $('body').removeClass('modal-open');
+        $('.modal-backdrop').remove();
     }
 } ) ( jQuery );

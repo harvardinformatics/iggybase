@@ -16,7 +16,7 @@ def search():
     search_module, search_table, search_fields = oac.get_search_field_data(module, table_object, field_name)
 
     modal_html = '<div class="modal-header">'
-    modal_html += '<button type="button" class="close" data-dismiss="modal">&times;</button>'
+    modal_html += '<button type="button" class="close_modal">&times;</button>'
     modal_html += '<h4 class="modal-title">' + table_name + ' Search</h4>'
     modal_html += '</div>'
     modal_html += '<div class="modal-body">'
@@ -71,7 +71,7 @@ def search_results():
     search_results = oac.get_search_results(search_module, search_table, search_params)
 
     modal_html = '<div class="modal-header">'
-    modal_html += '<button type="button" class="close" data-dismiss="modal">&times;</button>'
+    modal_html += '<button type="button" class="close_modal">&times;</button>'
     modal_html += '<h4 class="modal-title">Search Results</h4>'
     modal_html += '</div>'
     modal_html += '<div class="modal-body">'
