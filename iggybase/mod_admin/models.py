@@ -587,6 +587,7 @@ class UserRole( Base ):
     order = Column( Integer )
     user_id = Column( Integer, ForeignKey( 'user.id' ) )
     role_id = Column( Integer, ForeignKey('role.id' ))
+    facility_role_id = Column(Integer)
     director = Column( Boolean )
     manager = Column( Boolean )
 
