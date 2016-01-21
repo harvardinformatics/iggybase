@@ -13,14 +13,12 @@ import logging
 class FacilityRoleAccessControl:
     def __init__(self):
         config = get_config()
-        self.facility = db_session.query(models.Facility).filter_by(name=config.FACILITY).first()
-
         # set user and facility_role
         if g.user is not None and not g.user.is_anonymous:
             self.user = load_user(g.user.id)
-            self.facility_role = (db_session.query(models.FacilityRole).
-                                  filter_by(facility_id=self.facility.id,
-                                            role_id=self.user.current_user_role_id).first())
+            self.facility_role = (db_session.query(models.FacilityRole)
+                                  .join(models.UserRole)
+                                  .filter(models.UserRole.id==self.user.current_user_role_id).first())
         else:
             self.user = None
             self.facility_role = None
@@ -161,11 +159,22 @@ class FacilityRoleAccessControl:
             filter_by(name=admin_consts.MENU_NAVBAR_ROOT).first()
         navbar = self.get_menu_items(navbar_root.id, self.facility_role.id, active)
 
+        # add facility role change options to navbar
+        navbar['FacilityRole'] = self.make_facility_role_menu()
+
         sidebar_root = db_session.query(models.Menu). \
             filter_by(name=admin_consts.MENU_SIDEBAR_ROOT).first()
         sidebar = self.get_menu_items(sidebar_root.id, self.facility_role.id, active)
 
         return navbar, sidebar
+
+    def make_facility_role_menu(self):
+        facility_role_menu_subs = {}
+        for fr in self.user.roles:
+            facility_role_menu_subs[fr.name] = {'title':fr.name,
+                    'class':'change_fr', 'data':{'facility_role_id': fr.id}}
+        return {'title':'Change Facility/Role',
+            'subs': facility_role_menu_subs}
 
     def page_forms(self, active=1):
         page_forms = []
@@ -259,3 +268,18 @@ class FacilityRoleAccessControl:
             else:
                 url = '#'
         return url
+
+    def change_facility_role(self, facility_role_id):
+        """updates the user.current_facility_role
+        """
+        # check that the logged in user has permission for that facility_role
+        user = models.User.query.filter_by(id=self.user.id).first()
+        user_role = models.UserRole.query.filter_by(facility_role_id =
+                facility_role_id, user_id = user.id).first()
+        if user_role:
+            user.current_user_role_id = user_role.id
+            db_session.commit()
+            return True
+        else:
+            return False
+

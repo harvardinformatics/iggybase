@@ -53,7 +53,13 @@
                    {% endif %}
                 {% elif info['class'] %}
                     class="{{ info['class'] }}"
-                {% endif %}>{{ info['title'] }}</a>
+                {% endif %}
+                {% if 'data' in info %}
+                    {% for data_key, data_val in info['data'].items() %}
+                        data-{{data_key}}={{data_val}}
+                    {% endfor %}
+                {% endif %}
+                >{{ info['title'] }}</a>
             {% endif %}
             </li>
         {% endfor %}

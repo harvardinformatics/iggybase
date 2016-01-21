@@ -42,6 +42,25 @@ $( document ).ready( function () {
             return false;
         }
     });
+    $('.change_fr').click(function(){
+        $.ajax({
+            url:'/ajax/change_facility_role',
+            data: JSON.stringify({
+                'facility_role_id': $(this).data('facility_role_id')
+            }),
+            contentType: 'application/json;charset=UTF-8',
+            type: 'POST',
+            success: function(response) {
+                response = JSON.parse(response);
+                if(response.success) {
+                    alert('facility/role changed');
+                } else {
+                    alert('facility/role not changed, user may not have permission for that facility/role, contact an administrator');
+                }
+            }
+        });
+
+    });
 } );
 
 ( function( $ ) {

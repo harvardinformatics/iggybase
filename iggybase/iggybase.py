@@ -65,6 +65,11 @@ def add_base_routes( app, conf, security ):
     def index():
         return base_routes.index()
 
+    @app.route( '/ajax/change_facility_role', methods=['POST'] )
+    @login_required
+    def change_facility_role():
+        return base_routes.change_facility_role()
+
     @app.route('/favicon.ico')
     def favicon():
         return send_from_directory(os.path.join(app.root_path, 'static'),
@@ -132,10 +137,12 @@ def configure_hook( app ):
         g.user = current_user
 
 def configure_error_handlers( app ):
+    from iggybase import base_routes
 
     @app.errorhandler( 403 )
     def forbidden_page(error):
-        return render_template( "errors/forbidden_page.html" ), 403
+        # we want menus to show up for this error
+        return base_routes.forbidden(), 403
 
     @app.errorhandler( 404 )
     def page_not_found(error):
@@ -147,8 +154,6 @@ def configure_error_handlers( app ):
 
 class ExtendedLoginForm(LoginForm):
     email = TextField('Username:', [Required()])
-    #role = SelectField('Role:', coerce=int)
-    #organization = SelectField('Organization:', coerce=int)
 
 class ExtendedRegisterForm(RegisterForm):
     name = TextField('Username:', [Required()])

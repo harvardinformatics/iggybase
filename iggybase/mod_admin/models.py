@@ -2,7 +2,7 @@ from iggybase.database import Base
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, UniqueConstraint, DateTime
 from sqlalchemy.orm import relationship, relation, backref
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask.ext.login import UserMixin
+from flask.ext.security import UserMixin, RoleMixin
 from iggybase.mod_admin.constants import ROLE
 from iggybase.extensions import lm
 import datetime
@@ -19,8 +19,7 @@ class Facility(Base):
     organization_id = Column(Integer)
     order = Column(Integer)
 
-
-class Role(Base):
+class Role(Base, RoleMixin):
     __tablename__ = 'role'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True)
@@ -586,26 +585,15 @@ class UserRole( Base ):
     organization_id = Column( Integer, ForeignKey( 'organization.id' ) )
     order = Column( Integer )
     user_id = Column( Integer, ForeignKey( 'user.id' ) )
-    role_id = Column( Integer, ForeignKey('role.id' ))
-    facility_role_id = Column(Integer)
+    role_id = Column(Integer)
+    facility_role_id = Column( Integer, ForeignKey('facility_role.id' ))
     director = Column( Boolean )
     manager = Column( Boolean )
 
     user_role_user = relationship( "User", foreign_keys = [ user_id ] )
-    user_role_role = relationship( "Role", foreign_keys = [ role_id ] )
+    user_role_facility_role = relationship( "FacilityRole", foreign_keys = [ facility_role_id ] )
     user_role_organization = relationship( "Organization", foreign_keys = [ organization_id ] )
 
-
-'''class Role( Base, RoleMixin ):
-    __tablename__ = 'role'
-    id = Column( Integer, primary_key = True )
-    name = Column( String( 100 ), unique = True )
-    description = Column( String( 255 ) )
-    date_created = Column( DateTime, default=datetime.datetime.utcnow )
-    last_modified = Column( DateTime, default=datetime.datetime.utcnow )
-    active = Column( Boolean )
-    organization_id = Column( Integer )
-    order = Column( Integer )'''
 
 class User( Base, UserMixin ):
     __tablename__ = 'user'
@@ -628,8 +616,8 @@ class User( Base, UserMixin ):
     current_user_role_id = Column( Integer, ForeignKey( 'user_role.id' ) )
     user_user_role = relationship( "UserRole", foreign_keys = [ current_user_role_id ] )
     user_organization = relationship( "Organization", foreign_keys = [ organization_id ] )
-    roles = relationship('Role', secondary='user_role',primaryjoin='user_role.c.user_id == User.id',
-        secondaryjoin='user_role.c.role_id == Role.id',
+    roles = relationship('FacilityRole', secondary='user_role',primaryjoin='user_role.c.user_id == User.id',
+        secondaryjoin='user_role.c.facility_role_id == FacilityRole.id',
         backref=backref('users', lazy='dynamic'))
 
     def get_id(self):

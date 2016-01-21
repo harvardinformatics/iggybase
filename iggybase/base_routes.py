@@ -4,6 +4,7 @@ from flask.ext import excel
 import iggybase.templating as templating
 import iggybase.form_generator as form_generator
 import iggybase.mod_auth.organization_access_control as oac
+import iggybase.mod_auth.facility_role_access_control as frac
 import iggybase.table_query_collection as tqc
 import json
 import logging
@@ -128,3 +129,12 @@ def multiple_data_entry(module_name, table_name):
         return saved_data(module_name, table_name, row_names)
 
     return templating.page_template('multiple_data_entry', module_name=module_name, form=form, table_name=table_name)
+
+def change_facility_role():
+    facility_role_id = request.json['facility_role_id']
+    facility_role_access_control = frac.FacilityRoleAccessControl()
+    success = facility_role_access_control.change_facility_role(facility_role_id)
+    return json.dumps({'success':success})
+
+def forbidden():
+    return templating.page_template('forbidden')
