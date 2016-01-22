@@ -240,6 +240,7 @@ class OrganizationAccessControl:
         form_fields={}
         last_row_id=0
         instances={}
+        prefix=''
         for field in form:
             if field.name.endswith('_token'):
                 continue
@@ -254,6 +255,7 @@ class OrganizationAccessControl:
                 field_id = field.name[field.name.index('_')+1:]
                 current_table_object = child_table_object
                 current_table_record = child_table_record
+                prefix='child_'
             else:
                 field_id = field.name
                 current_table_object = table_object
@@ -275,6 +277,8 @@ class OrganizationAccessControl:
                         setattr(instances[row_id], 'name', current_inst_name)
                         db_session.add(current_table_record)
                         db_session.commit()
+                    else:
+                        current_inst_name=hidden_fields[prefix+'name_'+str(row_id)]
                 else:
                     current_inst_name=hidden_fields['row_name_'+str(row_id)]
                     instances[row_id] = self.session.query(current_table_object).\
