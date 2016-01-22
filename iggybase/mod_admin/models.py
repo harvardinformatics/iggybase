@@ -66,7 +66,6 @@ class Menu(Base):
     organization_id = Column(Integer)
     order = Column(Integer)
     menu_type_id = Column(Integer, ForeignKey('menu_type.id'))
-    menu_class = Column(String(100))
 
     parent = relationship('Menu', remote_side=[id])
     children = relationship('Menu')
@@ -89,6 +88,7 @@ class MenuFacilityRole(Base):
     order = Column(Integer)
     facility_role_id = Column(Integer, ForeignKey('facility_role.id'))
     menu_id = Column(Integer, ForeignKey('menu.id'))
+    menu_class = Column(String(100))
 
     menu_facility_role_facility = relationship(
             "FacilityRole", foreign_keys=[facility_role_id])
@@ -638,6 +638,24 @@ class User( Base, UserMixin ):
 
     def __repr__( self ):
         return '<User %r>' % ( self.name )
+
+class UserOrganization( Base ):
+    __tablename__ = 'user_organization'
+    __table_args__ = {'mysql_engine':'InnoDB'}
+    id = Column( Integer, primary_key = True )
+    name = Column( String( 50 ), unique = True )
+    description = Column( String( 255 ) )
+    date_created = Column( DateTime, default=datetime.datetime.utcnow )
+    last_modified = Column( DateTime, default=datetime.datetime.utcnow )
+    active = Column( Boolean )
+    organization_id = Column( Integer )
+    order = Column( Integer )
+    user_id = Column( Integer, ForeignKey( 'user.id' ) )
+    user_organization_id = Column( Integer, ForeignKey( 'organization.id' ) )
+    default_organization = Column( Boolean )
+
+    user_organization_organization = relationship( 'Organization', foreign_keys = [ user_organization_id ] )
+    user_organization_user = relationship( 'User', foreign_keys = [ user_id ] )
 
 class Organization( Base ):
     __tablename__ = 'organization'

@@ -1,5 +1,5 @@
 from flask import g, request
-from iggybase.mod_admin.models import load_user, UserRole, Organization
+from iggybase.mod_admin.models import load_user, UserOrganization, Organization
 from iggybase.mod_auth.facility_role_access_control import FacilityRoleAccessControl
 from iggybase.database import db_session
 from iggybase.mod_admin import models
@@ -25,14 +25,14 @@ class OrganizationAccessControl:
 
         if g.user is not None and not g.user.is_anonymous:
             self.user = load_user(g.user.id)
-            self.user_role = db_session.query(UserRole).filter_by(id=self.user.current_user_role_id).first()
-            self.facility_role_access_control = FacilityRoleAccessControl()
-            self.current_org_id = self.user_role.organization_id
+            user_orgs = db_session.query(UserOrganization).filter_by(user_id=self.user.id).all()
 
-            self.get_child_organization(self.user_role.organization_id)
+            for user_org in user_orgs:
+                self.get_child_organization(user_org.user_organization_id)
+                if user_org.default_organization:
+                    self.current_org_id = user_org.user_organization_id
         else:
             self.user = None
-            self.user_role = None
             self.current_org_id = None
 
     def get_child_organization(self, parent_organization_id):
@@ -175,28 +175,30 @@ class OrganizationAccessControl:
         }
 
     def get_field_data(self, table_name):
-        table_data = self.facility_role_access_control.has_access('TableObject', {'name': table_name})
+        facility_role_access_control = FacilityRoleAccessControl()
+        table_data = facility_role_access_control.has_access('TableObject', {'name': table_name})
         field_data = None
 
         if table_data is not None:
-            field_data = self.facility_role_access_control.fields(table_data.id, self.module)
+            field_data = facility_role_access_control.fields(table_data.id, self.module)
 
         return field_data
 
     def get_search_field_data(self, module, table_name, search_field_name):
-        table_data = self.facility_role_access_control.has_access('TableObject', {'name': table_name})
+        facility_role_access_control = FacilityRoleAccessControl()
+        table_data = facility_role_access_control.has_access('TableObject', {'name': table_name})
 
         if table_data is not None:
-            field_data = self.facility_role_access_control.fields(table_data.id, module,
+            field_data = facility_role_access_control.fields(table_data.id, module,
                                                                   {'field.field_name': search_field_name})
 
             if field_data is not None:
-                search_table = self.facility_role_access_control.has_access('TableObject',
+                search_table = facility_role_access_control.has_access('TableObject',
                                                                           {'id': field_data[0].Field.foreign_key_table_object_id})
 
                 if search_table is not None:
                     search_table_data = self.foreign_key(search_table.id)
-                    search_field_data = self.facility_role_access_control.fields(search_table.id,
+                    search_field_data = facility_role_access_control.fields(search_table.id,
                                                                                  search_table_data['module'],
                                                                                  {'field_facility_role.search_field': 1})
 
@@ -217,24 +219,25 @@ class OrganizationAccessControl:
         return table.query.filter_by(id=lt_id).first()
 
     def save_form(self, form):
+        facility_role_access_control = FacilityRoleAccessControl()
         table_object = util.get_table(form.module_0.data, form.table_object_0.data)
         table_object_data = models.TableObject.query.filter_by(name=table_object.__tablename__).first()
         table_record = models.TableObjectName.query.filter_by(table_object_id=table_object_data.id).\
-                           filter_by(facility_id=self.facility_role_access_control.facility_role.facility_id).first()
+                           filter_by(facility_id=facility_role_access_control.facility_role.facility_id).first()
 
         long_text_data = models.TableObject.query.filter_by(name='long_text').first()
         long_text_record = models.TableObjectName.query.filter_by(table_object_id=long_text_data.id).\
-                           filter_by(facility_id=self.facility_role_access_control.facility_role.facility_id).first()
+                           filter_by(facility_id=facility_role_access_control.facility_role.facility_id).first()
 
         history_data = models.TableObject.query.filter_by(name='history').first()
         history_record = models.TableObjectName.query.filter_by(table_object_id=history_data.id).\
-                           filter_by(facility_id=self.facility_role_access_control.facility_role.facility_id).first()
+                           filter_by(facility_id=facility_role_access_control.facility_role.facility_id).first()
 
         if form.entry_0.data == 'parent_child':
             child_table_object = util.get_table(form.module_0.data, form.chile_table_object_0.data )
             child_table_object_data = models.TableObject.query.filter_by(name=child_table_object.__tablename__).first()
             child_table_record = models.TableObjectName.query.filter_by(table_object_id=child_table_object_data.id).\
-                               filter_by(facility_id=self.facility_role_access_control.facility_role.facility_id).first()
+                               filter_by(facility_id=facility_role_access_control.facility_role.facility_id).first()
 
         hidden_fields={}
         form_fields={}
@@ -264,7 +267,7 @@ class OrganizationAccessControl:
             row_id = int(field_id[field_id.rindex('_')+1:])
             column_name = field_id[:field_id.rindex('_')]
 
-            field_data = self.facility_role_access_control.fields(int(hidden_fields['table_id_'+str(row_id)]),
+            field_data = facility_role_access_control.fields(int(hidden_fields['table_id_'+str(row_id)]),
                                                                  form.module_0.data, {'field.field_name':column_name})[0]
 
             if last_row_id != row_id and row_id not in instances:
@@ -335,7 +338,10 @@ class OrganizationAccessControl:
             self.session().add(instance)
             self.session().flush()
             row_names.append(instance.name)
-        db_session.commit()
-        db_session.commit()
 
-        return row_names
+        try:
+            db_session.commit()
+            return row_names
+        except:
+            db_session.rollback()
+            raise
