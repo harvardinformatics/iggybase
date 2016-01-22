@@ -83,8 +83,8 @@ class Menu(Base):
                (self.name, self.description, self.id)
 
 
-class MenuFacilityRole(Base):
-    __tablename__ = 'menu_facility_role'
+class MenuRole(Base):
+    __tablename__ = 'menu_role'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True)
     description = Column(String(255))
@@ -93,17 +93,17 @@ class MenuFacilityRole(Base):
     active = Column(Boolean)
     organization_id = Column(Integer)
     order = Column(Integer)
-    facility_role_id = Column(Integer, ForeignKey('role.id'))
+    role_id = Column(Integer, ForeignKey('role.id'))
     menu_id = Column(Integer, ForeignKey('menu.id'))
     menu_class = Column(String(100))
 
-    menu_facility_role_facility = relationship(
-            "Role", foreign_keys=[facility_role_id])
-    menu_facility_role_unq = UniqueConstraint('facility_role_id', 'menu_id')
-    menu_facility_role_menu = relationship("Menu", foreign_keys=[menu_id])
+    menu_role_role = relationship(
+            "Role", foreign_keys=[role_id])
+    menu_role_unq = UniqueConstraint('role_id', 'menu_id')
+    menu_role_menu = relationship("Menu", foreign_keys=[menu_id])
 
     def __repr__(self):
-        return "<MenuFacilityRole(name=%s, description=%s, id=%d, menu_id=%d, order=%d>)" % \
+        return "<MenuRole(name=%s, description=%s, id=%d, menu_id=%d, order=%d>)" % \
                (self.name, self.description, self.id, self.menu_id, self.order)
 
 
@@ -179,8 +179,8 @@ class PageFormJavaScript(Base):
     page_javascript_page = relationship("PageForm", foreign_keys=[page_form_id])
 
 
-class PageFormFacilityRole(Base):
-    __tablename__ = 'page_form_facility_role'
+class PageFormRole(Base):
+    __tablename__ = 'page_form_role'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True)
     description = Column(String(255))
@@ -189,11 +189,11 @@ class PageFormFacilityRole(Base):
     active = Column(Boolean)
     organization_id = Column(Integer)
     order = Column(Integer)
-    facility_role_id = Column(Integer, ForeignKey('role.id'))
+    role_id = Column(Integer, ForeignKey('role.id'))
     page_form_id = Column(Integer, ForeignKey('page_form.id'))
 
-    page_facility_role_facility = relationship("Role", foreign_keys=[facility_role_id])
-    page_facility_role_page = relationship("PageForm", foreign_keys=[page_form_id])
+    page_role_role = relationship("Role", foreign_keys=[role_id])
+    page_role_page = relationship("PageForm", foreign_keys=[page_form_id])
 
 
 class PageFormButton(Base):
@@ -217,8 +217,8 @@ class PageFormButton(Base):
     page_form_button_page_form = relationship("PageForm", foreign_keys=[page_form_id])
 
 
-class PageFormButtonFacilityRole(Base):
-    __tablename__ = 'page_form_button_facility_role'
+class PageFormButtonRole(Base):
+    __tablename__ = 'page_form_button_role'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True)
     description = Column(String(255))
@@ -227,11 +227,11 @@ class PageFormButtonFacilityRole(Base):
     active = Column(Boolean)
     organization_id = Column(Integer)
     order = Column(Integer)
-    facility_role_id = Column(Integer, ForeignKey('role.id'))
+    role_id = Column(Integer, ForeignKey('role.id'))
     page_form_button_id = Column(Integer, ForeignKey('page_form_button.id'))
 
-    page_form_button_facility_role_facility = relationship("Role", foreign_keys=[facility_role_id])
-    page_form_button_facility_role_page_form = relationship("PageFormButton", foreign_keys=[page_form_button_id])
+    page_form_button_role_role = relationship("Role", foreign_keys=[role_id])
+    page_form_button_role_page_form = relationship("PageFormButton", foreign_keys=[page_form_button_id])
 
 
 class TableObject(Base):
@@ -271,8 +271,8 @@ class TableObjectName(Base):
         return new_name
 
 
-class TableObjectFacilityRole(Base):
-    __tablename__ = 'table_object_facility_role'
+class TableObjectRole(Base):
+    __tablename__ = 'table_object_role'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True)
     description = Column(String(255))
@@ -281,14 +281,14 @@ class TableObjectFacilityRole(Base):
     active = Column(Boolean)
     organization_id = Column(Integer)
     order = Column(Integer)
-    facility_role_id = Column(Integer, ForeignKey('role.id'))
+    role_id = Column(Integer, ForeignKey('role.id'))
     table_object_id = Column(Integer, ForeignKey('table_object.id'))
     module_id = Column(Integer, ForeignKey('module.id'))
 
-    type_facility_role_facility = relationship("Role", foreign_keys=[facility_role_id])
-    type_facility_role_type = relationship("TableObject", foreign_keys=[table_object_id])
-    type_facility_role_module = relationship("Module", foreign_keys=[module_id])
-    type_facility_role_unq = UniqueConstraint('facility_role_id', 'table_object_id')
+    table_object_role_role = relationship("Role", foreign_keys=[role_id])
+    table_object_role_table_object = relationship("TableObject", foreign_keys=[table_object_id])
+    table_object_role_module = relationship("Module", foreign_keys=[module_id])
+    table_object_role_unq = UniqueConstraint('facility_role_id', 'table_object_id')
 
 
 class TableObjectChildren(Base):
@@ -308,8 +308,8 @@ class TableObjectChildren(Base):
     table_object_children_child_table_object = relationship("TableObject", foreign_keys=[child_table_object_id])
 
 
-class TableObjectChildrenFacilityRole(Base):
-    __tablename__ = 'table_object_children_facility_role'
+class TableObjectChildrenRole(Base):
+    __tablename__ = 'table_object_children_role'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True)
     description = Column(String(255))
@@ -318,15 +318,15 @@ class TableObjectChildrenFacilityRole(Base):
     active = Column(Boolean)
     organization_id = Column(Integer)
     order = Column(Integer)
-    facility_role_id = Column(Integer, ForeignKey('role.id'))
+    role_id = Column(Integer, ForeignKey('role.id'))
     table_object_children_id = Column(Integer, ForeignKey('table_object_children.id'))
     module_id = Column(Integer, ForeignKey('module.id'))
 
-    table_object_children_facility_role_facility = relationship("Role", foreign_keys=[facility_role_id])
+    table_object_children_role_role = relationship("Role", foreign_keys=[role_id])
     table_object_children_facility_role_type = relationship("TableObjectChildren",
                                                             foreign_keys=[table_object_children_id])
     table_object_children_facility_role_module = relationship("Module", foreign_keys=[module_id])
-    table_object_children_facility_role_unq = UniqueConstraint('facility_role_id', 'table_object_id')
+    table_object_children_facility_role_unq = UniqueConstraint('role_id', 'table_object_id')
 
 
 class Field(Base):
@@ -355,8 +355,8 @@ class Field(Base):
     field_foreign_key_field = relationship("Field", foreign_keys=[foreign_key_field_id])
 
 
-class FieldFacilityRole(Base):
-    __tablename__ = 'field_facility_role'
+class FieldRole(Base):
+    __tablename__ = 'field_role'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True)
     description = Column(String(255))
@@ -365,7 +365,7 @@ class FieldFacilityRole(Base):
     active = Column(Boolean)
     organization_id = Column(Integer)
     order = Column(Integer)
-    facility_role_id = Column(Integer, ForeignKey('role.id'))
+    role_id = Column(Integer, ForeignKey('role.id'))
     module_id = Column(Integer, ForeignKey('module.id'))
     field_id = Column(Integer, ForeignKey('field.id'))
     display_name = Column(String(100))
@@ -374,11 +374,11 @@ class FieldFacilityRole(Base):
     required = Column(Boolean)
     permission_id = Column(Integer, ForeignKey('permission.id'))
 
-    field_facility_role_facility = relationship("Role", foreign_keys=[facility_role_id])
-    field_facility_role_field = relationship("Field", foreign_keys=[field_id])
-    field_facility_role_permission = relationship("Permission", foreign_keys=[permission_id])
-    field_facility_role_unq = UniqueConstraint('facility_role_id', 'field_id', 'page_id')
-    field_facility_role_module = relationship("Module", foreign_keys=[module_id])
+    field_role_role = relationship("Role", foreign_keys=[role_id])
+    field_role_field = relationship("Field", foreign_keys=[field_id])
+    field_role_permission = relationship("Permission", foreign_keys=[permission_id])
+    field_role_unq = UniqueConstraint('role_id', 'field_id', 'page_id')
+    field_role_module = relationship("Module", foreign_keys=[module_id])
 
 
 class DataType(Base):
@@ -467,11 +467,11 @@ class TableQueryRender(Base):
     order = Column(Integer)
     table_query_id = Column(Integer, ForeignKey('table_query.id'))
     table_object_id = Column(Integer, ForeignKey('table_object.id'))
-    page_form_facility_role_id = Column(Integer, ForeignKey(
-            'page_form_facility_role.id'))
+    page_form_role_id = Column(Integer, ForeignKey(
+            'page_form_role.id'))
 
-    table_query_render_page_form_facility_role = relationship("PageFormFacilityRole",
-                                                              foreign_keys=[page_form_facility_role_id])
+    table_query_render_page_form_role = relationship("PageFormRole",
+                                                              foreign_keys=[page_form_role_id])
     table_query_render_table_query = relationship("TableQuery", foreign_keys=[table_query_id])
     table_query_render_table_object = relationship("TableObject", foreign_keys=[table_object_id])
 
@@ -561,8 +561,8 @@ class Module(Base):
     url_prefix = Column(String(50))
 
 
-class ModuleFacilityRole(Base):
-    __tablename__ = 'module_facility_role'
+class ModuleRole(Base):
+    __tablename__ = 'module_role'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True)
     description = Column(String(255))
@@ -571,11 +571,11 @@ class ModuleFacilityRole(Base):
     active = Column(Boolean)
     organization_id = Column(Integer)
     order = Column(Integer)
-    facility_role_id = Column(Integer, ForeignKey('role.id'))
+    role_id = Column(Integer, ForeignKey('role.id'))
     module_id = Column(Integer, ForeignKey('module.id'))
 
-    module_role_facility = relationship("Role", foreign_keys=[facility_role_id])
-    module_facility_role_module = relationship("Module", foreign_keys=[module_id])
+    module_role_role = relationship("Role", foreign_keys=[role_id])
+    module_role_module = relationship("Module", foreign_keys=[module_id])
 
 
 class UserRole(Base):

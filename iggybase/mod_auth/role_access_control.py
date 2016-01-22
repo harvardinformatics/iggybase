@@ -32,11 +32,11 @@ class RoleAccessControl:
             return []
 
         filters = [
-            (models.FieldFacilityRole.facility_role_id == self.role.id),
+            (models.FieldRole.role_id == self.role.id),
             (models.Field.table_object_id == table_object_id),
             (models.Field.active == active),
-            (models.FieldFacilityRole.active == active),
-            (models.FieldFacilityRole.module_id == module.Module.id)
+            (models.FieldRole.active == active),
+            (models.FieldRole.module_id == module.Module.id)
         ]
         if filter is not None:
             for field_name, value in filter.items():
@@ -44,11 +44,11 @@ class RoleAccessControl:
                 if field_data[0] == "field":
                     filters.append((getattr(models.Field, field_data[1]) == value))
                 else:
-                    filters.append((getattr(models.FieldFacilityRole, field_data[1]) == value))
+                    filters.append((getattr(models.FieldRole, field_data[1]) == value))
 
-        res = db_session.query(models.Field, models.FieldFacilityRole).join(models.FieldFacilityRole). \
+        res = db_session.query(models.Field, models.FieldRole).join(models.FieldRole). \
                     filter(*filters). \
-                    order_by(models.FieldFacilityRole.order, models.FieldFacilityRole.id).all()
+                    order_by(models.FieldRole.order, models.FieldRole.id).all()
 
         if res is None:
             return []
@@ -60,7 +60,7 @@ class RoleAccessControl:
         """
         filters = [
             (models.PageForm.name == page_form),
-            (models.PageFormFacilityRole.facility_role_id ==
+            (models.PageFormRole.role_id ==
              self.role.id),
             (models.TableQuery.active == active)
         ]
@@ -74,7 +74,7 @@ class RoleAccessControl:
                 models.TableQueryRender,
                 models.TableQuery
             ).
-                join(models.PageFormFacilityRole).
+                join(models.PageFormRole).
                 join(models.PageForm).
                 join(models.TableQuery).
                 join(models.TableQueryTableObject).
@@ -89,11 +89,11 @@ class RoleAccessControl:
     def table_query_fields(self, table_query_id, table_name=None, table_id=None, field_name=None, active=1, visible=1):
         filters = [
 
-            (models.FieldFacilityRole.facility_role_id == self.role.id),
-            (models.TableObjectFacilityRole.facility_role_id == self.role.id),
-            (models.FieldFacilityRole.visible == visible),
+            (models.FieldRole.role_id == self.role.id),
+            (models.TableObjectRole.role_id == self.role.id),
+            (models.FieldRole.visible == visible),
             (models.Field.active == active),
-            (models.FieldFacilityRole.active == active),
+            (models.FieldRole.active == active),
             (models.TableObject.active == active)
         ]
 
@@ -121,8 +121,8 @@ class RoleAccessControl:
                 models.TableObject,
                 models.TableObject.id == models.Field.table_object_id
             ).
-            join(models.FieldFacilityRole).
-            join(models.TableObjectFacilityRole).
+            join(models.FieldRole).
+            join(models.TableObjectRole).
             join(models.Module).
             outerjoin(models.TableQueryField).
             filter(*filters).order_by(models.TableQueryField.order, models.Field.order).all()
@@ -142,7 +142,7 @@ class RoleAccessControl:
                 (models.TableObject, models.Field.table_object_id ==
                  models.TableObject.id)
             ).join(
-                models.TableObjectFacilityRole,
+                models.TableObjectRole,
                 models.Module
             ).
                 filter(models.TableQueryCriteria.table_query_id == table_query_id).all()
@@ -179,9 +179,9 @@ class RoleAccessControl:
     def page_forms(self, active=1):
         page_forms = []
 
-        res = db_session.query(models.PageFormFacilityRole). \
+        res = db_session.query(models.PageFormRole). \
             filter_by(facility_role_id=self.role.id).filter_by(active=active). \
-            order_by(models.PageFormFacilityRole.order, models.PageFormFacilityRole.id).all()
+            order_by(models.PageFormRole.order, models.PageFormRole.id).all()
         for row in res:
             page_form = db_session.query(models.PageForm). \
                 filter_by(id=row.page_form_id).filter_by(active=active).first()
@@ -196,9 +196,9 @@ class RoleAccessControl:
         page_form_buttons['top'] = []
         page_form_buttons['bottom'] = []
 
-        res = db_session.query(models.PageFormButtonFacilityRole). \
-            filter_by(facility_role_id=self.role.id).filter_by(active=active). \
-            order_by(models.PageFormButtonFacilityRole.order, models.PageFormButtonFacilityRole.id).all()
+        res = db_session.query(models.PageFormButtonRole). \
+            filter_by(role_id=self.role.id).filter_by(active=active). \
+            order_by(models.PageFormButtonRole.order, models.PageFormButtonRole.id).all()
         for row in res:
             page_form_button = db_session.query(models.PageFormButton).filter_by(id=row.page_form_button_id). \
                 filter_by(page_form_id=page_form_id).filter_by(active=active).first()
@@ -216,10 +216,10 @@ class RoleAccessControl:
 
     def has_access(self, auth_type, criteria, active=1):
         table_object = getattr(models, auth_type)
-        table_object_role = getattr(models, auth_type + "FacilityRole")
+        table_object_role = getattr(models, auth_type + "Role")
 
         filters = [
-            getattr(table_object_role, 'facility_role_id') == self.role.id,
+            getattr(table_object_role, 'role_id') == self.role.id,
             getattr(table_object, 'active') == active
         ]
         if 'name' in criteria.keys():
@@ -237,21 +237,21 @@ class RoleAccessControl:
         """Recursively Get menus items and subitems
         """
         menu = OrderedDict()
-        items = (db_session.query(models.Menu, models.MenuUrl, models.MenuFacilityRole)
-            .join(models.MenuFacilityRole)
+        items = (db_session.query(models.Menu, models.MenuUrl, models.MenuRole)
+            .join(models.MenuRole)
             .outerjoin(models.MenuUrl, models.Menu.id == models.MenuUrl.menu_id)
             .filter(
-                models.MenuFacilityRole.facility_role_id == self.role.id,
+                models.MenuRole.role_id == self.role.id,
                 models.Menu.parent_id == parent_id,
                 models.Menu.active == active
             )
-            .order_by(models.MenuFacilityRole.order, models.MenuFacilityRole.name).all())
+            .order_by(models.MenuRole.order, models.MenuRole.name).all())
         for item in items:
             url = self.get_menu_url(item)
             menu[item.Menu.name] = {
                     'url': url,
-                    'title': item.MenuFacilityRole.description,
-                    'class': item.MenuFacilityRole.menu_class,
+                    'title': item.MenuRole.description,
+                    'class': item.MenuRole.menu_class,
                     'subs': self.get_menu_items(item.Menu.id, active)
             }
         return menu

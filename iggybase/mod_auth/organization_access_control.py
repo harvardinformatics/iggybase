@@ -153,7 +153,7 @@ class OrganizationAccessControl:
             join(models.TableObject,
                 models.TableObject.id == models.Field.table_object_id
             ).
-            join(models.TableObjectFacilityRole).
+            join(models.TableObjectRole).
             join(models.Module).
             filter(models.Field.table_object_id == table_object_id).
             filter(models.Field.field_name == 'name').first())

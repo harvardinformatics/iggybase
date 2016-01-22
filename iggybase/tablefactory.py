@@ -1,4 +1,4 @@
-from iggybase.mod_admin.models import DataType, TableObject, Field, Module, TableObjectFacilityRole, FieldFacilityRole
+from iggybase.mod_admin.models import DataType, TableObject, Field, Module, TableObjectRole, FieldRole
 from sqlalchemy.orm import relationship
 from sqlalchemy import Column, ForeignKey, UniqueConstraint
 import sqlalchemy
@@ -86,7 +86,7 @@ class TableFactory:
         res = db_session.query(TableObject).filter_by(active=active). \
             order_by(TableObject.order).all()
         for row in res:
-            access = db_session.query(TableObjectFacilityRole).filter_by(table_object_id=row.id). \
+            access = db_session.query(TableObjectRole).filter_by(table_object_id=row.id). \
                 filter_by(module_id=module_rec.id).filter_by(active=active).first()
             if access is not None:
                 table_objects.append(row)
@@ -100,7 +100,7 @@ class TableFactory:
         res = db_session.query(Field). \
             filter_by(table_object_id=table_object_id, active=active).all()
         for row in res:
-            access = db_session.query(FieldFacilityRole). \
+            access = db_session.query(FieldRole). \
                 filter_by(field_id=row.id, active=active).first()
             if access is not None:
                 fields.append(row)
