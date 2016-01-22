@@ -53,7 +53,7 @@ class Role(Base, RoleMixin):
 
     role_facility = relationship("Facility", foreign_keys=[facility_id])
     role_level = relationship("Level", foreign_keys=[level_id])
-    facility_role_unq = UniqueConstraint('facility_id', 'level_id')
+    role_unq = UniqueConstraint('facility_id', 'level_id')
 
     def __repr__(self):
         return "<Role=%s, description=%s, id=%d, level=%s, facility=%s>)" % \
@@ -288,7 +288,7 @@ class TableObjectRole(Base):
     table_object_role_role = relationship("Role", foreign_keys=[role_id])
     table_object_role_table_object = relationship("TableObject", foreign_keys=[table_object_id])
     table_object_role_module = relationship("Module", foreign_keys=[module_id])
-    table_object_role_unq = UniqueConstraint('facility_role_id', 'table_object_id')
+    table_object_role_unq = UniqueConstraint('role_id', 'table_object_id')
 
 
 class TableObjectChildren(Base):
@@ -323,10 +323,10 @@ class TableObjectChildrenRole(Base):
     module_id = Column(Integer, ForeignKey('module.id'))
 
     table_object_children_role_role = relationship("Role", foreign_keys=[role_id])
-    table_object_children_facility_role_type = relationship("TableObjectChildren",
+    table_object_children_role_type = relationship("TableObjectChildren",
                                                             foreign_keys=[table_object_children_id])
-    table_object_children_facility_role_module = relationship("Module", foreign_keys=[module_id])
-    table_object_children_facility_role_unq = UniqueConstraint('role_id', 'table_object_id')
+    table_object_children_role_module = relationship("Module", foreign_keys=[module_id])
+    table_object_children_role_unq = UniqueConstraint('role_id', 'table_object_id')
 
 
 class Field(Base):
@@ -590,13 +590,12 @@ class UserRole(Base):
     organization_id = Column(Integer, ForeignKey('organization.id'))
     order = Column(Integer)
     user_id = Column(Integer, ForeignKey('user.id'))
-    role_id = Column(Integer)
-    facility_role_id = Column(Integer, ForeignKey('role.id'))
+    role_id = Column(Integer, ForeignKey('role.id'))
     director = Column(Boolean)
     manager = Column(Boolean)
 
     user_role_user = relationship("User", foreign_keys=[user_id])
-    user_role_facility_role = relationship("Role", foreign_keys=[facility_role_id])
+    user_role_role = relationship("Role", foreign_keys=[role_id])
     user_role_organization = relationship("Organization", foreign_keys=[organization_id])
 
 
@@ -622,7 +621,7 @@ class User(Base, UserMixin):
     user_user_role = relationship("UserRole", foreign_keys=[current_user_role_id])
     user_organization = relationship("Organization", foreign_keys=[organization_id])
     roles = relationship('Role', secondary='user_role', primaryjoin='user_role.c.user_id == User.id',
-                         secondaryjoin='user_role.c.facility_role_id == Role.id',
+                         secondaryjoin='user_role.c.role_id == Role.id',
                          backref=backref('users', lazy='dynamic'))
 
     def get_id(self):

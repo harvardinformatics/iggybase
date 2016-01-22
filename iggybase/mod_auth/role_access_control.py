@@ -24,8 +24,8 @@ class RoleAccessControl:
             self.role = None
 
     def fields(self, table_object_id, module, filter=None, active=1):
-        module = db_session.query(models.Module, models.ModuleFacilityRole).join(models.ModuleFacilityRole). \
-            filter(models.ModuleFacilityRole.facility_role_id == self.role.id). \
+        module = db_session.query(models.Module, models.ModuleRole).join(models.ModuleRole). \
+            filter(models.ModuleRole.role_id == self.role.id). \
             filter(models.Module.name == module).first()
 
         if module is None:
@@ -160,7 +160,7 @@ class RoleAccessControl:
         navbar = self.get_menu_items(navbar_root.id, active)
 
         # add facility role change options to navbar
-        navbar['FacilityRole'] = self.make_role_menu()
+        navbar['Role'] = self.make_role_menu()
 
         sidebar_root = db_session.query(models.Menu). \
             filter_by(name=admin_consts.MENU_SIDEBAR_ROOT).first()
@@ -180,7 +180,7 @@ class RoleAccessControl:
         page_forms = []
 
         res = db_session.query(models.PageFormRole). \
-            filter_by(facility_role_id=self.role.id).filter_by(active=active). \
+            filter_by(role_id=self.role.id).filter_by(active=active). \
             order_by(models.PageFormRole.order, models.PageFormRole.id).all()
         for row in res:
             page_form = db_session.query(models.PageForm). \
@@ -274,7 +274,7 @@ class RoleAccessControl:
         """
         # check that the logged in user has permission for that role
         user = models.User.query.filter_by(id=self.user.id).first()
-        user_role = models.UserRole.query.filter_by(facility_role_id =
+        user_role = models.UserRole.query.filter_by(role_id =
                 role_id, user_id = user.id).first()
         if user_role:
             user.current_user_role_id = user_role.id

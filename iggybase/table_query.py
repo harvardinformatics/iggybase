@@ -1,7 +1,7 @@
 from collections import OrderedDict
 from flask import request
 from iggybase.mod_auth import organization_access_control as oac
-from iggybase.mod_auth import role_access_control as frac
+from iggybase.mod_auth import role_access_control as rac
 from iggybase.mod_core import utilities as util
 import logging
 
@@ -16,7 +16,7 @@ class TableQuery:
         self.table_name = table_name
         self.table_rows = []
         self.field_dict = OrderedDict()
-        self._facility_role_access_control = frac.RoleAccessControl()
+        self._role_access_control = rac.RoleAccessControl()
         self.criteria = criteria
         self.date_fields = {}
         self.table_fields = []
@@ -40,7 +40,7 @@ class TableQuery:
         return self.results
 
     def _get_table_query_fields(self):
-        table_query_fields = self._facility_role_access_control.table_query_fields(
+        table_query_fields = self._role_access_control.table_query_fields(
             self.id,
             self.table_name
         )
@@ -66,7 +66,7 @@ class TableQuery:
             if key in self.field_dict:
                 field = self.field_dict[key]
                 if field.Field.foreign_key_table_object_id:
-                    filter_fields = self._facility_role_access_control.table_query_fields(
+                    filter_fields = self._role_access_control.table_query_fields(
                         None,
                         None,
                         field.Field.foreign_key_table_object_id,
@@ -80,7 +80,7 @@ class TableQuery:
                     criteria_key = (field.TableObject.name, field.Field.field_name)
                     criteria[criteria_key] = val
         # add criteria from db
-        res = self._facility_role_access_control.table_query_criteria(
+        res = self._role_access_control.table_query_criteria(
             self.id
         )
         for row in res:

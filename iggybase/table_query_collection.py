@@ -1,5 +1,5 @@
 import operator
-from iggybase.mod_auth import role_access_control as frac
+from iggybase.mod_auth import role_access_control as rac
 import iggybase.table_query as tq
 import logging
 
@@ -10,7 +10,7 @@ class TableQueryCollection:
         self.table_name = table_name
         self.page_form = page_form
         self.criteria = criteria
-        self.facility_role_access_control = frac.RoleAccessControl()
+        self.role_access_control = rac.RoleAccessControl()
         self.queries = []
         self.results = []
 
@@ -20,8 +20,8 @@ class TableQueryCollection:
             self.results.append(query)
 
     def get_fields(self):
-        if self.facility_role_access_control.has_access('Module', {'name': self.module}):
-            table_queries_info = self.facility_role_access_control.table_queries(self.page_form, self.table_name)
+        if self.role_access_control.has_access('Module', {'name': self.module}):
+            table_queries_info = self.role_access_control.table_queries(self.page_form, self.table_name)
             if table_queries_info:
                 for query in table_queries_info:
                     order = query.TableQuery.order
