@@ -269,6 +269,7 @@ class OrganizationAccessControl:
 
             if last_row_id != row_id and row_id not in instances:
                 if hidden_fields['row_name_'+str(row_id)] == 'new':
+                    name_field = getattr(form, prefix+'name_'+str(row_id))
                     instances[row_id] = current_table_object()
                     setattr(instances[row_id], 'date_created', datetime.datetime.utcnow())
                     setattr(instances[row_id], 'organization_id', self.current_org_id)
@@ -277,8 +278,9 @@ class OrganizationAccessControl:
                         setattr(instances[row_id], 'name', current_inst_name)
                         db_session.add(current_table_record)
                         db_session.commit()
-                    else:
-                        current_inst_name=hidden_fields[prefix+'name_'+str(row_id)]
+
+                    if name_field.data != '':
+                        current_inst_name=name_field.data
                 else:
                     current_inst_name=hidden_fields['row_name_'+str(row_id)]
                     instances[row_id] = self.session.query(current_table_object).\
