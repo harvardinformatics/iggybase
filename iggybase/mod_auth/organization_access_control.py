@@ -220,21 +220,21 @@ class OrganizationAccessControl:
         table_object = util.get_table(form.module_0.data, form.table_object_0.data)
         table_object_data = models.TableObject.query.filter_by(name=table_object.__tablename__).first()
         table_record = models.TableObjectName.query.filter_by(table_object_id=table_object_data.id).\
-                           filter_by(facility_id=self.facility_role_access_control.facility.id).first()
+                           filter_by(facility_id=self.facility_role_access_control.facility_role.facility_id).first()
 
         long_text_data = models.TableObject.query.filter_by(name='long_text').first()
         long_text_record = models.TableObjectName.query.filter_by(table_object_id=long_text_data.id).\
-                           filter_by(facility_id=self.facility_role_access_control.facility.id).first()
+                           filter_by(facility_id=self.facility_role_access_control.facility_role.facility_id).first()
 
         history_data = models.TableObject.query.filter_by(name='history').first()
         history_record = models.TableObjectName.query.filter_by(table_object_id=history_data.id).\
-                           filter_by(facility_id=self.facility_role_access_control.facility.id).first()
+                           filter_by(facility_id=self.facility_role_access_control.facility_role.facility_id).first()
 
         if form.entry_0.data == 'parent_child':
             child_table_object = util.get_table(form.module_0.data, form.chile_table_object_0.data )
             child_table_object_data = models.TableObject.query.filter_by(name=child_table_object.__tablename__).first()
             child_table_record = models.TableObjectName.query.filter_by(table_object_id=child_table_object_data.id).\
-                               filter_by(facility_id=self.facility_role_access_control.facility.id).first()
+                               filter_by(facility_id=self.facility_role_access_control.facility_role.facility_id).first()
 
         hidden_fields={}
         form_fields={}
