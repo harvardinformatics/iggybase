@@ -19,6 +19,7 @@ class Facility(Base):
     organization_id = Column(Integer)
     order = Column(Integer)
 
+
 class Level(Base, RoleMixin):
     __tablename__ = 'level'
     id = Column(Integer, primary_key=True)
@@ -578,122 +579,124 @@ class ModuleFacilityRole(Base):
     module_facility_role_module = relationship("Module", foreign_keys=[module_id])
 
 
-
-
-class UserRole( Base ):
+class UserRole(Base):
     __tablename__ = 'user_role'
-    __table_args__ = {'mysql_engine':'InnoDB'}
-    id = Column( Integer, primary_key = True )
-    name = Column( String( 50 ), unique = True )
-    description = Column( String( 255 ) )
-    date_created = Column( DateTime, default=datetime.datetime.utcnow )
-    last_modified = Column( DateTime, default=datetime.datetime.utcnow )
-    active = Column( Boolean )
-    organization_id = Column( Integer, ForeignKey( 'organization.id' ) )
-    order = Column( Integer )
-    user_id = Column( Integer, ForeignKey( 'user.id' ) )
+    __table_args__ = {'mysql_engine': 'InnoDB'}
+    id = Column(Integer, primary_key=True)
+    name = Column(String(50), unique=True)
+    description = Column(String(255))
+    date_created = Column(DateTime, default=datetime.datetime.utcnow)
+    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
+    active = Column(Boolean)
+    organization_id = Column(Integer, ForeignKey('organization.id'))
+    order = Column(Integer)
+    user_id = Column(Integer, ForeignKey('user.id'))
     role_id = Column(Integer)
-    facility_role_id = Column( Integer, ForeignKey('role.id' ))
-    director = Column( Boolean )
-    manager = Column( Boolean )
+    facility_role_id = Column(Integer, ForeignKey('role.id'))
+    director = Column(Boolean)
+    manager = Column(Boolean)
 
-    user_role_user = relationship( "User", foreign_keys = [ user_id ] )
-    user_role_facility_role = relationship( "Role", foreign_keys = [ facility_role_id ] )
-    user_role_organization = relationship( "Organization", foreign_keys = [ organization_id ] )
+    user_role_user = relationship("User", foreign_keys=[user_id])
+    user_role_facility_role = relationship("Role", foreign_keys=[facility_role_id])
+    user_role_organization = relationship("Organization", foreign_keys=[organization_id])
 
 
-class User( Base, UserMixin ):
+class User(Base, UserMixin):
     __tablename__ = 'user'
-    __table_args__ = {'mysql_engine':'InnoDB'}
-    id = Column( Integer, primary_key = True )
-    name = Column( String( 50 ), unique = True )
-    description = Column( String( 255 ) )
-    date_created = Column( DateTime, default=datetime.datetime.utcnow )
-    last_modified = Column( DateTime, default=datetime.datetime.utcnow )
-    active = Column( Boolean )
-    organization_id = Column( Integer, ForeignKey( 'organization.id' ) )
-    order = Column( Integer )
-    password_hash = Column( String( 120 ) )
-    password = Column( String( 120 ) )
-    first_name = Column( String( 50 ) )
-    last_name = Column( String( 50 ) )
-    email = Column( String( 120 ), unique = True )
-    address_id = Column( Integer, ForeignKey( 'address.id' ) )
-    home_page = Column( String( 50 ) )
-    current_user_role_id = Column( Integer, ForeignKey( 'user_role.id' ) )
-    user_user_role = relationship( "UserRole", foreign_keys = [ current_user_role_id ] )
-    user_organization = relationship( "Organization", foreign_keys = [ organization_id ] )
-    roles = relationship('Role', secondary='user_role',primaryjoin='user_role.c.user_id == User.id',
-        secondaryjoin='user_role.c.facility_role_id == Role.id',
-        backref=backref('users', lazy='dynamic'))
+    __table_args__ = {'mysql_engine': 'InnoDB'}
+    id = Column(Integer, primary_key=True)
+    name = Column(String(50), unique=True)
+    description = Column(String(255))
+    date_created = Column(DateTime, default=datetime.datetime.utcnow)
+    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
+    active = Column(Boolean)
+    organization_id = Column(Integer, ForeignKey('organization.id'))
+    order = Column(Integer)
+    password_hash = Column(String(120))
+    password = Column(String(120))
+    first_name = Column(String(50))
+    last_name = Column(String(50))
+    email = Column(String(120), unique=True)
+    address_id = Column(Integer, ForeignKey('address.id'))
+    home_page = Column(String(50))
+    current_user_role_id = Column(Integer, ForeignKey('user_role.id'))
+    user_user_role = relationship("UserRole", foreign_keys=[current_user_role_id])
+    user_organization = relationship("Organization", foreign_keys=[organization_id])
+    roles = relationship('Role', secondary='user_role', primaryjoin='user_role.c.user_id == User.id',
+                         secondaryjoin='user_role.c.facility_role_id == Role.id',
+                         backref=backref('users', lazy='dynamic'))
 
     def get_id(self):
-        return str( self.id )
+        return str(self.id)
 
-    def set_password( self, password ):
-        self.password_hash = generate_password_hash( password )
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
 
-    def verify_password( self, password ):
-        return check_password_hash( self.password_hash, password )
+    def verify_password(self, password):
+        return check_password_hash(self.password_hash, password)
 
     @staticmethod
-    def get_password_hash( password ):
-        return generate_password_hash( password )
+    def get_password_hash(password):
+        return generate_password_hash(password)
 
-    def get_role( self ):
-        return ROLE[ self.role_id ]
+    def get_role(self):
+        return ROLE[self.role_id]
 
-    def __repr__( self ):
-        return '<User %r>' % ( self.name )
+    def __repr__(self):
+        return '<User %r>' % (self.name)
 
-class UserOrganization( Base ):
+
+class UserOrganization(Base):
     __tablename__ = 'user_organization'
-    __table_args__ = {'mysql_engine':'InnoDB'}
-    id = Column( Integer, primary_key = True )
-    name = Column( String( 50 ), unique = True )
-    description = Column( String( 255 ) )
-    date_created = Column( DateTime, default=datetime.datetime.utcnow )
-    last_modified = Column( DateTime, default=datetime.datetime.utcnow )
-    active = Column( Boolean )
-    organization_id = Column( Integer )
-    order = Column( Integer )
-    user_id = Column( Integer, ForeignKey( 'user.id' ) )
-    user_organization_id = Column( Integer, ForeignKey( 'organization.id' ) )
-    default_organization = Column( Boolean )
+    __table_args__ = {'mysql_engine': 'InnoDB'}
+    id = Column(Integer, primary_key=True)
+    name = Column(String(50), unique=True)
+    description = Column(String(255))
+    date_created = Column(DateTime, default=datetime.datetime.utcnow)
+    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
+    active = Column(Boolean)
+    organization_id = Column(Integer)
+    order = Column(Integer)
+    user_id = Column(Integer, ForeignKey('user.id'))
+    user_organization_id = Column(Integer, ForeignKey('organization.id'))
+    default_organization = Column(Boolean)
 
-    user_organization_organization = relationship( 'Organization', foreign_keys = [ user_organization_id ] )
-    user_organization_user = relationship( 'User', foreign_keys = [ user_id ] )
+    user_organization_organization = relationship('Organization', foreign_keys=[user_organization_id])
+    user_organization_user = relationship('User', foreign_keys=[user_id])
 
-class Organization( Base ):
+
+class Organization(Base):
     __tablename__ = 'organization'
-    __table_args__ = {'mysql_engine':'InnoDB'}
-    id = Column( Integer, primary_key = True )
-    name = Column( String( 50 ), unique = True )
-    description = Column( String( 255 ) )
-    date_created = Column( DateTime, default=datetime.datetime.utcnow )
-    last_modified = Column( DateTime, default=datetime.datetime.utcnow )
-    active = Column( Boolean )
-    organization_id = Column( Integer )
-    order = Column( Integer )
-    address_id = Column( Integer, ForeignKey( 'address.id' ) )
-    billing_address_id = Column( Integer )
-    organization_type_id = Column( Integer )
-    parent_id = Column( Integer, ForeignKey( 'organization.id' ) )
+    __table_args__ = {'mysql_engine': 'InnoDB'}
+    id = Column(Integer, primary_key=True)
+    name = Column(String(50), unique=True)
+    description = Column(String(255))
+    date_created = Column(DateTime, default=datetime.datetime.utcnow)
+    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
+    active = Column(Boolean)
+    organization_id = Column(Integer)
+    order = Column(Integer)
+    address_id = Column(Integer, ForeignKey('address.id'))
+    billing_address_id = Column(Integer)
+    organization_type_id = Column(Integer)
+    parent_id = Column(Integer, ForeignKey('organization.id'))
 
-    parent = relation( 'Organization', remote_side = [ id ] )
+    parent = relation('Organization', remote_side=[id])
 
-class OrganizationType( Base ):
+
+class OrganizationType(Base):
     __tablename__ = 'organization_type'
-    __table_args__ = {'mysql_engine':'InnoDB'}
-    id = Column( Integer, primary_key = True )
-    name = Column( String( 50 ), unique = True )
-    description = Column( String( 255 ) )
-    date_created = Column( DateTime, default=datetime.datetime.utcnow )
-    last_modified = Column( DateTime, default=datetime.datetime.utcnow )
-    active = Column( Boolean )
-    organization_id = Column( Integer )
-    order = Column( Integer )
+    __table_args__ = {'mysql_engine': 'InnoDB'}
+    id = Column(Integer, primary_key=True)
+    name = Column(String(50), unique=True)
+    description = Column(String(255))
+    date_created = Column(DateTime, default=datetime.datetime.utcnow)
+    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
+    active = Column(Boolean)
+    organization_id = Column(Integer)
+    order = Column(Integer)
+
 
 @lm.user_loader
-def load_user( id ):
-    return User.query.get( int( id ) )
+def load_user(id):
+    return User.query.get(int(id))
