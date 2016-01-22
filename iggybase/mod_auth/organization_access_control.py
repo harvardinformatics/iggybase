@@ -1,6 +1,6 @@
 from flask import g, request
 from iggybase.mod_admin.models import load_user, UserOrganization, Organization
-from iggybase.mod_auth.facility_role_access_control import FacilityRoleAccessControl
+from iggybase.mod_auth.role_access_control import RoleAccessControl
 from iggybase.database import db_session
 from iggybase.mod_admin import models
 from iggybase.mod_core import models as core_models
@@ -171,7 +171,7 @@ class OrganizationAccessControl:
         }
 
     def get_field_data(self, table_name):
-        facility_role_access_control = FacilityRoleAccessControl()
+        facility_role_access_control = RoleAccessControl()
         table_data = facility_role_access_control.has_access('TableObject', {'name': table_name})
         field_data = None
 
@@ -181,7 +181,7 @@ class OrganizationAccessControl:
         return field_data
 
     def get_search_field_data(self, module, table_name, search_field_name):
-        facility_role_access_control = FacilityRoleAccessControl()
+        facility_role_access_control = RoleAccessControl()
         table_data = facility_role_access_control.has_access('TableObject', {'name': table_name})
 
         if table_data is not None:
@@ -215,7 +215,7 @@ class OrganizationAccessControl:
         return table.query.filter_by(id=lt_id).first()
 
     def save_form(self, form):
-        facility_role_access_control = FacilityRoleAccessControl()
+        facility_role_access_control = RoleAccessControl()
         table_object = util.get_table(form.module_0.data, form.table_object_0.data)
         table_object_data = models.TableObject.query.filter_by(name=table_object.__tablename__).first()
         table_record = models.TableObjectName.query.filter_by(table_object_id=table_object_data.id).\
@@ -290,7 +290,7 @@ class OrganizationAccessControl:
             if not (hidden_fields[field_id]==field.data or hidden_fields[field_id]==str(field.data)):
                 history_instance=core_models.History()
                 history_instance.name=history_record.get_new_name()
-                history_instance.table_id=hidden_fields['table_id_'+str(row_id)]
+                history_instance.table_object_id=hidden_fields['table_id_'+str(row_id)]
                 history_instance.field_id=field_data.Field.id
                 history_instance.organization_id=self.current_org_id
                 history_instance.user_id=g.user.id

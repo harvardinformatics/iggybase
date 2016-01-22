@@ -4,7 +4,7 @@ from wtforms import StringField, IntegerField, PasswordField, BooleanField, Sele
     HiddenField, FileField, TextAreaField
 from wtforms.validators import DataRequired, Length, email
 from iggybase.mod_auth.organization_access_control import OrganizationAccessControl
-from iggybase.mod_auth.facility_role_access_control import FacilityRoleAccessControl
+from iggybase.mod_auth.role_access_control import RoleAccessControl
 from iggybase import constants
 import logging
 
@@ -55,7 +55,7 @@ class LookUpField(StringField):
 class FormGenerator():
     def __init__(self, module, table_object):
         self.organization_access_control = OrganizationAccessControl(module)
-        self.facility_role_access_control = FacilityRoleAccessControl()
+        self.facility_role_access_control = RoleAccessControl()
         self.table_object = table_object
         self.module = module
         self.classattr = {}

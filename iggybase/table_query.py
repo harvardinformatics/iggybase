@@ -1,7 +1,7 @@
 from collections import OrderedDict
 from flask import request
 from iggybase.mod_auth import organization_access_control as oac
-from iggybase.mod_auth import facility_role_access_control as frac
+from iggybase.mod_auth import role_access_control as frac
 from iggybase.mod_core import utilities as util
 import logging
 
@@ -16,7 +16,7 @@ class TableQuery:
         self.table_name = table_name
         self.table_rows = []
         self.field_dict = OrderedDict()
-        self._facility_role_access_control = frac.FacilityRoleAccessControl()
+        self._facility_role_access_control = frac.RoleAccessControl()
         self.criteria = criteria
         self.date_fields = {}
         self.table_fields = []

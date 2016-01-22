@@ -1,5 +1,5 @@
 import operator
-from iggybase.mod_auth import facility_role_access_control as frac
+from iggybase.mod_auth import role_access_control as frac
 import iggybase.table_query as tq
 import logging
 
@@ -10,7 +10,7 @@ class TableQueryCollection:
         self.table_name = table_name
         self.page_form = page_form
         self.criteria = criteria
-        self.facility_role_access_control = frac.FacilityRoleAccessControl()
+        self.facility_role_access_control = frac.RoleAccessControl()
         self.queries = []
         self.results = []
 

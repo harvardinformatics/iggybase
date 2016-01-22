@@ -676,7 +676,7 @@ class Organization(Base):
     active = Column(Boolean)
     organization_id = Column(Integer)
     order = Column(Integer)
-    address_id = Column(Integer, ForeignKey('address.id'))
+    address_id = Column(Integer)
     billing_address_id = Column(Integer)
     organization_type_id = Column(Integer)
     parent_id = Column(Integer, ForeignKey('organization.id'))

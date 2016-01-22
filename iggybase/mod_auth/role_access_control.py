@@ -10,29 +10,29 @@ import logging
 
 # Controls access to system based on Role (USER) and Facility (config)
 # Uses the permissions stored in the admin db
-class FacilityRoleAccessControl:
+class RoleAccessControl:
     def __init__(self):
         config = get_config()
-        # set user and facility_role
+        # set user and role
         if g.user is not None and not g.user.is_anonymous:
             self.user = load_user(g.user.id)
-            self.facility_role = (db_session.query(models.Role)
+            self.role = (db_session.query(models.Role)
                                   .join(models.UserRole)
                                   .filter(models.UserRole.id==self.user.current_user_role_id).first())
         else:
             self.user = None
-            self.facility_role = None
+            self.role = None
 
     def fields(self, table_object_id, module, filter=None, active=1):
         module = db_session.query(models.Module, models.ModuleFacilityRole).join(models.ModuleFacilityRole). \
-            filter(models.ModuleFacilityRole.facility_role_id == self.facility_role.id). \
+            filter(models.ModuleFacilityRole.facility_role_id == self.role.id). \
             filter(models.Module.name == module).first()
 
         if module is None:
             return []
 
         filters = [
-            (models.FieldFacilityRole.facility_role_id == self.facility_role.id),
+            (models.FieldFacilityRole.facility_role_id == self.role.id),
             (models.Field.table_object_id == table_object_id),
             (models.Field.active == active),
             (models.FieldFacilityRole.active == active),
@@ -61,7 +61,7 @@ class FacilityRoleAccessControl:
         filters = [
             (models.PageForm.name == page_form),
             (models.PageFormFacilityRole.facility_role_id ==
-             self.facility_role.id),
+             self.role.id),
             (models.TableQuery.active == active)
         ]
         if table_name:
@@ -89,8 +89,8 @@ class FacilityRoleAccessControl:
     def table_query_fields(self, table_query_id, table_name=None, table_id=None, field_name=None, active=1, visible=1):
         filters = [
 
-            (models.FieldFacilityRole.facility_role_id == self.facility_role.id),
-            (models.TableObjectFacilityRole.facility_role_id == self.facility_role.id),
+            (models.FieldFacilityRole.facility_role_id == self.role.id),
+            (models.TableObjectFacilityRole.facility_role_id == self.role.id),
             (models.FieldFacilityRole.visible == visible),
             (models.Field.active == active),
             (models.FieldFacilityRole.active == active),
@@ -160,7 +160,7 @@ class FacilityRoleAccessControl:
         navbar = self.get_menu_items(navbar_root.id, active)
 
         # add facility role change options to navbar
-        navbar['FacilityRole'] = self.make_facility_role_menu()
+        navbar['FacilityRole'] = self.make_role_menu()
 
         sidebar_root = db_session.query(models.Menu). \
             filter_by(name=admin_consts.MENU_SIDEBAR_ROOT).first()
@@ -168,19 +168,19 @@ class FacilityRoleAccessControl:
 
         return navbar, sidebar
 
-    def make_facility_role_menu(self):
-        facility_role_menu_subs = {}
+    def make_role_menu(self):
+        role_menu_subs = {}
         for fr in self.user.roles:
-            facility_role_menu_subs[fr.name] = {'title':fr.name,
-                    'class':'change_fr', 'data':{'facility_role_id': fr.id}}
+            role_menu_subs[fr.name] = {'title':fr.name,
+                    'class':'change_fr', 'data':{'role_id': fr.id}}
         return {'title':'Change Facility/Role',
-            'subs': facility_role_menu_subs}
+            'subs': role_menu_subs}
 
     def page_forms(self, active=1):
         page_forms = []
 
         res = db_session.query(models.PageFormFacilityRole). \
-            filter_by(facility_role_id=self.facility_role.id).filter_by(active=active). \
+            filter_by(facility_role_id=self.role.id).filter_by(active=active). \
             order_by(models.PageFormFacilityRole.order, models.PageFormFacilityRole.id).all()
         for row in res:
             page_form = db_session.query(models.PageForm). \
@@ -197,7 +197,7 @@ class FacilityRoleAccessControl:
         page_form_buttons['bottom'] = []
 
         res = db_session.query(models.PageFormButtonFacilityRole). \
-            filter_by(facility_role_id=self.facility_role.id).filter_by(active=active). \
+            filter_by(facility_role_id=self.role.id).filter_by(active=active). \
             order_by(models.PageFormButtonFacilityRole.order, models.PageFormButtonFacilityRole.id).all()
         for row in res:
             page_form_button = db_session.query(models.PageFormButton).filter_by(id=row.page_form_button_id). \
@@ -219,7 +219,7 @@ class FacilityRoleAccessControl:
         table_object_role = getattr(models, auth_type + "FacilityRole")
 
         filters = [
-            getattr(table_object_role, 'facility_role_id') == self.facility_role.id,
+            getattr(table_object_role, 'facility_role_id') == self.role.id,
             getattr(table_object, 'active') == active
         ]
         if 'name' in criteria.keys():
@@ -241,7 +241,7 @@ class FacilityRoleAccessControl:
             .join(models.MenuFacilityRole)
             .outerjoin(models.MenuUrl, models.Menu.id == models.MenuUrl.menu_id)
             .filter(
-                models.MenuFacilityRole.facility_role_id == self.facility_role.id,
+                models.MenuFacilityRole.facility_role_id == self.role.id,
                 models.Menu.parent_id == parent_id,
                 models.Menu.active == active
             )
@@ -269,13 +269,13 @@ class FacilityRoleAccessControl:
                 url = '#'
         return url
 
-    def change_facility_role(self, facility_role_id):
-        """updates the user.current_facility_role
+    def change_role(self, role_id):
+        """updates the user.current_role
         """
-        # check that the logged in user has permission for that facility_role
+        # check that the logged in user has permission for that role
         user = models.User.query.filter_by(id=self.user.id).first()
         user_role = models.UserRole.query.filter_by(facility_role_id =
-                facility_role_id, user_id = user.id).first()
+                role_id, user_id = user.id).first()
         if user_role:
             user.current_user_role_id = user_role.id
             db_session.commit()
