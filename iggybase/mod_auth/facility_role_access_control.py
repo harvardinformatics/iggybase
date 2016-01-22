@@ -157,14 +157,14 @@ class FacilityRoleAccessControl:
         # TODO: do we need to query for this or can we just use constant
         navbar_root = db_session.query(models.Menu). \
             filter_by(name=admin_consts.MENU_NAVBAR_ROOT).first()
-        navbar = self.get_menu_items(navbar_root.id, self.facility_role.id, active)
+        navbar = self.get_menu_items(navbar_root.id, active)
 
         # add facility role change options to navbar
         navbar['FacilityRole'] = self.make_facility_role_menu()
 
         sidebar_root = db_session.query(models.Menu). \
             filter_by(name=admin_consts.MENU_SIDEBAR_ROOT).first()
-        sidebar = self.get_menu_items(sidebar_root.id, self.facility_role.id, active)
+        sidebar = self.get_menu_items(sidebar_root.id, active)
 
         return navbar, sidebar
 
@@ -233,15 +233,15 @@ class FacilityRoleAccessControl:
 
         return rec
 
-    def get_menu_items(self, parent_id, facility_role_id, active=1):
+    def get_menu_items(self, parent_id, active=1):
         """Recursively Get menus items and subitems
         """
         menu = OrderedDict()
-        items = (db_session.query(models.Menu, models.MenuUrl)
+        items = (db_session.query(models.Menu, models.MenuUrl, models.MenuFacilityRole)
             .join(models.MenuFacilityRole)
             .outerjoin(models.MenuUrl, models.Menu.id == models.MenuUrl.menu_id)
             .filter(
-                models.MenuFacilityRole.facility_role_id == facility_role_id,
+                models.MenuFacilityRole.facility_role_id == self.facility_role.id,
                 models.Menu.parent_id == parent_id,
                 models.Menu.active == active
             )
@@ -252,7 +252,7 @@ class FacilityRoleAccessControl:
                     'url': url,
                     'title': item.MenuFacilityRole.description,
                     'class': item.Menu.menu_class,
-                    'subs': self.get_menu_items(item.Menu.id, facility_role_id, active)
+                    'subs': self.get_menu_items(item.Menu.id, active)
             }
         return menu
 
