@@ -13,7 +13,7 @@ class FacilityAccessControl:
 
         facility = db_session.query( models.Facility ).filter_by( name = conf.FACILITY ).first( )
 
-        self.facilityroles = db_session.query( models.FacilityRole ).filter_by( facility_id = facility.id ).all( )
+        self.facilityroles = db_session.query( models.Role ).filter_by( facility_id = facility.id ).all( )
 
     def module_table_objects( self, module, active = 1 ):
         table_objects = [ ]
