@@ -17,7 +17,8 @@
   {{ render_field_with_errors(register_user_form.state) }}
   {{ render_field_with_errors(register_user_form.zipcode) }}
   {{ render_field_with_errors(register_user_form.phone) }}
-  {{ render_field_with_errors(register_user_form.group) }}
+  {{ render_field_with_errors(register_user_form.organization) }}
+  {{ render_field_with_errors(register_user_form.facility) }}
   {{ render_field_with_errors(register_user_form.password) }}
   {% if register_user_form.password_confirm %}
     {{ render_field_with_errors(register_user_form.password_confirm) }}

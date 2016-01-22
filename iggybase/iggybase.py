@@ -6,7 +6,8 @@ from wtforms.validators import Required
 from config import config, get_config
 from flask import render_template
 from flask.ext.security import Security, SQLAlchemyUserDatastore, UserMixin, \
-RoleMixin, login_required, current_user, LoginForm, RegisterForm
+RoleMixin, login_required, current_user, LoginForm, RegisterForm, \
+user_registered, logout_user
 from flask.ext.sqlalchemy import SQLAlchemy
 from werkzeug.wsgi import DispatcherMiddleware
 from iggybase.extensions import mail, lm, bootstrap
@@ -31,11 +32,13 @@ def create_app( config_name = None, app_name = None ):
     init_db( )
 
     configure_blueprints( iggybase, conf.BLUEPRINTS )
-    security = configure_extensions( iggybase, db )
+    security, user_datastore = configure_extensions( iggybase, db )
     configure_hook( iggybase )
     configure_error_handlers( iggybase )
 
-    add_base_routes( iggybase, conf, security )
+    add_base_routes( iggybase, conf, security, user_datastore )
+
+
 
     return iggybase
 
@@ -51,10 +54,28 @@ def configure_extensions( app, db ):
     security = Security(app, user_datastore, login_form = ExtendedLoginForm,
             register_form = ExtendedRegisterForm)
 
-    return security
+    return security, user_datastore
 
-def add_base_routes( app, conf, security ):
+def add_base_routes( app, conf, security, user_datastore ):
     from iggybase import base_routes
+
+    @user_registered.connect_via(app)
+    def user_registered_sighandler(sender, **extra):
+        print('test sighandler')
+        # TODO: we should dynamically enter facility based on what's in user
+        # or perhaps we just need to overide some other function in sqlalchemy
+        # for now i'm hardcogin one facility
+        user = extra.get('user')
+        role = user_datastore.find_or_create_role('new_user', facility_id = 2,
+                level_id = 7)
+        user_datastore.add_role_to_user(user, role)
+        db.session.commit()
+        print('updated sighandler')
+
+    @app.route( '/registration_success' )
+    def registration_success():
+        logout_user()
+        return render_template( 'registration_sucess.html')
 
     @app.before_request
     def before_request( ):
@@ -152,6 +173,8 @@ def configure_error_handlers( app ):
     def server_error_page(error):
         return render_template( "errors/server_error.html" ), 500
 
+
+
 class ExtendedLoginForm(LoginForm):
     email = TextField('Username:', [Required()])
 
@@ -167,4 +190,21 @@ class ExtendedRegisterForm(RegisterForm):
     state = TextField('State:', [Required()])
     zipcode = TextField('Zipcode:', [Required()])
     phone = TextField('Phone:', [Required()])
-    group = TextField('Group:', [Required()])
+    organization = SelectField('Organization:', coerce=int)
+    facility = SelectField('Service:', coerce=int)
+
+    def __init__(self, *args, **kwargs):
+        super(ExtendedRegisterForm, self).__init__(*args, **kwargs)
+        from iggybase.mod_admin import models
+
+        orgs = models.Organization.query
+        org_choices = []
+        for org in orgs:
+            org_choices.append((org.id, org.name))
+        self.organization.choices = org_choices
+
+        facilities = models.Facility.query
+        fac_choices = []
+        for fac in facilities:
+            fac_choices.append((fac.id, fac.name))
+        self.facility.choices = fac_choices

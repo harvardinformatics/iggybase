@@ -19,8 +19,7 @@ class Facility(Base):
     organization_id = Column(Integer)
     order = Column(Integer)
 
-
-class Level(Base, RoleMixin):
+class Level(Base):
     __tablename__ = 'level'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True)
@@ -32,7 +31,7 @@ class Level(Base, RoleMixin):
     order = Column(Integer)
 
 
-class Role(Base):
+class Role(Base, RoleMixin):
     ''' Role will be a combination of Facility and Level,
         a user may belong to more than one Facility but at different functional
         levels (admin, user, etc).
