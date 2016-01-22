@@ -44,7 +44,7 @@ $( document ).ready( function () {
     });
     $('.change_fr').click(function(){
         $.ajax({
-            url:'/ajax/change_facility_role',
+            url:$URL_ROOT + 'ajax/change_facility_role',
             data: JSON.stringify({
                 'facility_role_id': $(this).data('facility_role_id')
             }),
