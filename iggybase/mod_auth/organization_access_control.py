@@ -18,10 +18,6 @@ class OrganizationAccessControl:
         # Assume that path will always take the form module/page_form/params
         self.module_name, self.page_form = request.path.split('/')[1:3]
         self.module = 'mod_' + self.module_name
-        if  self.module == 'mod_admin':
-            self.session = db_session
-        else:
-            self.session = db_session
 
         if g.user is not None and not g.user.is_anonymous:
             self.user = load_user(g.user.id)
@@ -65,7 +61,7 @@ class OrganizationAccessControl:
             if name is not None:
                 criteria.append(getattr(table_object, 'name') == name)
 
-            results = self.session.query(*columns).filter(*criteria).all()
+            results = db_session.query(*columns).filter(*criteria).all()
 
         return results
 
@@ -145,7 +141,7 @@ class OrganizationAccessControl:
             wheres.append(getattr(table_model, 'organization_id').in_(self.org_ids))
 
         results = (
-            self.session.query(*columns).
+            db_session.query(*columns).
             join(*joins).
             outerjoin(*outer_joins).
             filter(*wheres).all()
@@ -286,7 +282,7 @@ class OrganizationAccessControl:
                         current_inst_name=name_field.data
                 else:
                     current_inst_name=hidden_fields['row_name_'+str(row_id)]
-                    instances[row_id] = self.session.query(current_table_object).\
+                    instances[row_id] = db_session.query(current_table_object).\
                         filter_by( name=current_inst_name ).first( )
 
                 setattr(instances[row_id], 'last_modified', datetime.datetime.utcnow())
@@ -335,8 +331,8 @@ class OrganizationAccessControl:
         row_names = []
 
         for row_id, instance in instances.items():
-            self.session().add(instance)
-            self.session().flush()
+            db_session().add(instance)
+            db_session().flush()
             row_names.append(instance.name)
 
         try:
