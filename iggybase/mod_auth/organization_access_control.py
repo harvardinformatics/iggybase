@@ -101,11 +101,17 @@ class OrganizationAccessControl:
                 # solves the case of more than one join to same table
                 alias_name = row.TableObject.name + '_' + row.Field.field_name + '_' + fk_data['name']
                 aliases[alias_name] = aliased(util.get_table(fk_data['name']))
-                outer_joins.append((
-                    aliases[alias_name],
-                    getattr(table_model, row.Field.field_name) == aliases[alias_name].id
-                ))
-                fk_columns.append(getattr(aliases[alias_name], fk_data['foreign_key']).
+                # TODO: consider a refacotr to move this out of if else because
+                # it applys to both FK and non FK tables
+                if (not first_table_named
+                    or (first_table_named == row.TableObject.name)):
+                    first_table_named = row.TableObject.name
+                else:
+                    outer_joins.append((
+                        aliases[alias_name],
+                        getattr(table_model, row.Field.field_name) == aliases[alias_name].id
+                    ))
+                columns.append(getattr(aliases[alias_name], fk_data['foreign_key']).
                             label(
                                 'fk|' + fk_data['url_prefix']
                                 + '|' + fk_data['name']
@@ -128,12 +134,9 @@ class OrganizationAccessControl:
                     first_table_named = row.TableObject.name
                 else:
                     joins.add(table_model)
-        # fk_columns must be last to avoid joining on themselves
-        columns.extend(fk_columns)
         # add organization id checks on all tables, does not include fk tables
         for table_model in tables:
             wheres.append(getattr(table_model, 'organization_id').in_(self.org_ids))
-
         results = (
             db_session.query(*columns).
             join(*joins).
