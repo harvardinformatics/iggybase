@@ -72,6 +72,8 @@ class Menu(Base):
     organization_id = Column(Integer)
     order = Column(Integer)
     menu_type_id = Column(Integer, ForeignKey('menu_type.id'))
+    url_path = Column(String(512), unique=True)
+    url_params = Column(String(1024))  ## Stored as JSON
 
     parent = relationship('Menu', remote_side=[id])
     children = relationship('Menu')
@@ -94,8 +96,7 @@ class MenuRole(Base):
     order = Column(Integer)
     role_id = Column(Integer, ForeignKey('role.id'))
     menu_id = Column(Integer, ForeignKey('menu.id'))
-    url_path = Column(String(512), unique=True)
-    url_params = Column(String(1024))  ## Stored as JSON
+    menu_class = Column(String(100))
 
     menu_role_role = relationship(
             "Role", foreign_keys=[role_id])

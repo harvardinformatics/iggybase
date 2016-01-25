@@ -236,9 +236,8 @@ class RoleAccessControl:
         """Recursively Get menus items and subitems
         """
         menu = OrderedDict()
-        items = (db_session.query(models.Menu, models.MenuUrl, models.MenuRole)
+        items = (db_session.query(models.Menu, models.MenuRole)
             .join(models.MenuRole)
-            .outerjoin(models.MenuUrl, models.Menu.id == models.MenuUrl.menu_id)
             .filter(
                 models.MenuRole.role_id == self.role.id,
                 models.Menu.parent_id == parent_id,
@@ -257,10 +256,10 @@ class RoleAccessControl:
 
     def get_menu_url(self, item):
         url = ''
-        if item.MenuUrl:
-            url = item.MenuUrl.url_path
-            if url and item.MenuUrl.url_params:
-                url += item.MenuUrl.url_params
+        if item.Menu.url_path and item.Menu.url_path != '':
+            url = item.Menu.url_path
+            if url and item.Menu.url_params:
+                url += item.Menu.url_params
 
             if url:
                 url = request.url_root + url
