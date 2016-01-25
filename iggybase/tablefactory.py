@@ -1,4 +1,4 @@
-from iggybase.mod_admin.models import DataType, TableObject, Field, Module, TableObjectRole, FieldRole
+from iggybase.mod_admin.models import DataType, TableObject, Field
 from sqlalchemy.orm import relationship
 from sqlalchemy import Column, ForeignKey, UniqueConstraint
 import sqlalchemy
@@ -15,11 +15,14 @@ class TableFactory:
     def table_object_factory(self, class_name, table_object):
         classattr = {"__tablename__": table_object.name}
 
-        table_object_cols = self.module_fields(table_object.id, self.active)
+        table_object_cols = self.fields(table_object.id, self.active)
 
-        # logging.info( 'table name: ' + class_name )
+        if not table_object_cols:
+            return None
+
+        logging.info( 'table name: ' + class_name )
         for col in table_object_cols:
-            # logging.info( col.field_name )
+            logging.info( col.field_name )
             if col.foreign_key_table_object_id is not None:
                 foreign_table = db_session.query(TableObject).filter_by(id=col.foreign_key_table_object_id).first()
                 foreign_column = db_session.query(Field).filter_by(id=col.foreign_key_field_id).first()
@@ -78,32 +81,24 @@ class TableFactory:
 
         return relationship(foreign_table_name, **arg)
 
-    def module_table_objects(self, module, active=1):
+    def table_objects(self, active=1):
         table_objects = []
 
-        module_rec = db_session.query(Module).filter_by(name=module).first()
-
-        res = db_session.query(TableObject).filter_by(active=active). \
+        res = db_session.query(TableObject).filter_by(admin_table_object!=1).filter_by(active=active). \
             order_by(TableObject.order).all()
+
         for row in res:
-            access = db_session.query(TableObjectRole).filter_by(table_object_id=row.id). \
-                filter_by(module_id=module_rec.id).filter_by(active=active).first()
-            if access is not None:
-                table_objects.append(row)
-                break
+            table_objects.append(row)
 
         return table_objects
 
-    def module_fields(self, table_object_id, active=1):
+    def fields(self, table_object_id, active=1):
         fields = []
 
         res = db_session.query(Field). \
             filter_by(table_object_id=table_object_id, active=active).all()
+
         for row in res:
-            access = db_session.query(FieldRole). \
-                filter_by(field_id=row.id, active=active).first()
-            if access is not None:
-                fields.append(row)
-                break
+            fields.append(row)
 
         return fields

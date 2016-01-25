@@ -35,7 +35,6 @@ class Role(Base, RoleMixin):
     ''' Role will be a combination of Facility and Level,
         a user may belong to more than one Facility but at different functional
         levels (admin, user, etc).
-
         Role will determine what functionality on the site the user has access
         to.
     '''
@@ -244,6 +243,7 @@ class TableObject(Base):
     active = Column(Boolean)
     organization_id = Column(Integer)
     order = Column(Integer)
+    admin_table_object = Column(Boolean)
 
 
 class TableObjectName(Base):

@@ -195,7 +195,6 @@ class ExtendedRegisterForm(RegisterForm):
 
     def __init__(self, *args, **kwargs):
         super(ExtendedRegisterForm, self).__init__(*args, **kwargs)
-        from iggybase.mod_admin import models
 
         orgs = models.Organization.query
         org_choices = []
