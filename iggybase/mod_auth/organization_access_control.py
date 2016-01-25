@@ -101,16 +101,10 @@ class OrganizationAccessControl:
                 # solves the case of more than one join to same table
                 alias_name = row.TableObject.name + '_' + row.Field.field_name + '_' + fk_data['name']
                 aliases[alias_name] = aliased(util.get_table(fk_data['name']))
-                # TODO: consider a refacotr to move this out of if else because
-                # it applys to both FK and non FK tables
-                if (not first_table_named
-                    or (first_table_named == fk_data['name'])):
-                    first_table_named = fk_data['name']
-                else:
-                    outer_joins.append((
-                        aliases[alias_name],
-                        getattr(table_model, row.Field.field_name) == aliases[alias_name].id
-                    ))
+                outer_joins.append((
+                    aliases[alias_name],
+                    getattr(table_model, row.Field.field_name) == aliases[alias_name].id
+                ))
                 columns.append(getattr(aliases[alias_name], fk_data['foreign_key']).
                             label(
                                 'fk|' + fk_data['url_prefix']
