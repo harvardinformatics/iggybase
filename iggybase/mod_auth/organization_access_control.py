@@ -104,8 +104,8 @@ class OrganizationAccessControl:
                 # TODO: consider a refacotr to move this out of if else because
                 # it applys to both FK and non FK tables
                 if (not first_table_named
-                    or (first_table_named == row.TableObject.name)):
-                    first_table_named = row.TableObject.name
+                    or (first_table_named == fk_data['name'])):
+                    first_table_named = fk_data['name']
                 else:
                     outer_joins.append((
                         aliases[alias_name],
