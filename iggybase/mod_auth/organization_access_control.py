@@ -332,3 +332,17 @@ class OrganizationAccessControl:
         except:
             db_session.rollback()
             raise
+
+    def update_table_rows(self, table, updates, ids):
+        # TODO: make this deal with foreign keys
+        # for now i'm just going to pass in the numeric value
+        table_model = util.get_table(table)
+        rows = table_model.query.filter(table_model.id.in_(ids), getattr(table_model, 'organization_id').in_(self.org_ids)).all()
+        for row in rows:
+            for col, val in updates.items():
+                try:
+                    setattr(row, col, val)
+                    db_session.commit()
+                except AttributeError:
+                    pass
+        return True

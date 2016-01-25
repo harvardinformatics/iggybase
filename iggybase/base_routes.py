@@ -57,11 +57,33 @@ def action_summary(module_name, table_name = None):
     page_form = 'summary'
     table_queries = tqc.TableQueryCollection(module_name, page_form, table_name)
     table_queries.get_fields()
-    hidden_fields = {'table': table_name}
+    first_table_query = table_queries.get_first()
+    # if nothing to display then page not found
+    if not first_table_query.table_fields:
+        abort(404)
     return templating.page_template('action_summary',
             module_name = module_name,
             table_name = table_name,
-            table_query = table_queries.get_first(), hidden_fields = hidden_fields)
+            table_query = first_table_query)
+
+def update_ajax(module_name, table_name):
+    return summary_ajax(module_name, table_name)
+
+def update(module_name, table_name):
+    page_form = 'summary'
+    table_queries = tqc.TableQueryCollection(module_name, page_form, table_name)
+    table_queries.get_fields()
+    first_table_query = table_queries.get_first()
+    column_defaults =  request.args.get('column_defaults')
+    hidden_fields = {}
+    hidden_fields['column_defaults'] = column_defaults
+    # if nothing to display then page not found
+    if not first_table_query.table_fields:
+        abort(404)
+    return templating.page_template('update',
+            module_name = module_name,
+            table_name = table_name,
+            table_query = first_table_query, hidden_fields = hidden_fields)
 
 def action_summary_ajax(module_name, table_name = None):
     return summary_ajax(module_name, table_name)
@@ -127,6 +149,13 @@ def change_facility_role():
     facility_role_id = request.json['facility_role_id']
     facility_role_access_control = frac.RoleAccessControl()
     success = facility_role_access_control.change_facility_role(facility_role_id)
+    return json.dumps({'success':success})
+
+def update_table_rows(table_name):
+    updates = request.json['updates']
+    ids = request.json['ids']
+    organizational_access_control = oac.OrganizationAccessControl()
+    success = organizational_access_control.update_table_rows(table_name, updates, ids)
     return json.dumps({'success':success})
 
 def forbidden():
