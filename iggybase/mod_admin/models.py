@@ -94,7 +94,8 @@ class MenuRole(Base):
     order = Column(Integer)
     role_id = Column(Integer, ForeignKey('role.id'))
     menu_id = Column(Integer, ForeignKey('menu.id'))
-    menu_class = Column(String(100))
+    url_path = Column(String(512), unique=True)
+    url_params = Column(String(1024))  ## Stored as JSON
 
     menu_role_role = relationship(
             "Role", foreign_keys=[role_id])
@@ -120,31 +121,6 @@ class MenuType(Base):
     def __repr__(self):
         return "<MenuType(name=%s, description=%s, id=%d>)" % \
                (self.name, self.description, self.id)
-
-
-class MenuUrl(Base):
-    """Matches a url to a menu. One to many relationship with Menu.
-    """
-    __tablename__ = 'menu_url'
-    id = Column(Integer, primary_key=True)
-
-    name = Column(String(100), unique=True)
-    description = Column(String(255))
-    date_created = Column(DateTime, default=datetime.datetime.utcnow)
-    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
-    active = Column(Boolean)
-    organization_id = Column(Integer)
-    order = Column(Integer)
-    menu_id = Column(Integer, ForeignKey('menu.id'))
-
-    url_path = Column(String(512), unique=True)
-    url_params = Column(String(1024))  ## Stored as JSON
-
-    menu_url_menu = relationship("Menu", foreign_keys=[menu_id])
-
-    def __repr__(self):
-        return "<MenuUrl(name=%s, description=%s, id=%d, url_path=%s>)" % \
-               (self.name, self.description, self.id, self.url_path)
 
 
 class PageForm(Base):
