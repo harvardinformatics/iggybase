@@ -14,7 +14,7 @@ class RoleAccessControl:
         config = get_config()
         # set user and role
         if g.user is not None and not g.user.is_anonymous:
-            self.user = load_user(g.user.id)
+            self.user = models.load_user(g.user.id)
             self.role = (db_session.query(models.Role)
                                   .join(models.UserRole)
                                   .filter(models.UserRole.id==self.user.current_user_role_id).first())

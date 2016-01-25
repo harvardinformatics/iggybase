@@ -1,14 +1,20 @@
 from flask import abort
 from importlib import import_module
 from iggybase.tablefactory import TableFactory
+from iggybase.mod_admin.models import TableObject
+from iggybase.database import db_session
 
 def get_column(module, table_name, field_name):
-    table_model = get_table(module, table_name)
+    table_model = get_table(table_name)
     return getattr(table_model, field_name)
 
-def get_table(module, table_name):
+def get_table(table_name):
+    table = db_session.query(TableObject).filter_by(name=table_name).first()
     try:
-        module_model = import_module('iggybase.' + module + '.models')
+        if table.admin_table_object == 1:
+            module_model = import_module('iggybase.mod_admin.models')
+        else:
+            module_model = import_module('iggybase.models')
         table_object = getattr(module_model, TableFactory.to_camel_case(table_name))
     except AttributeError:
         abort(404)

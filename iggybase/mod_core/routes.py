@@ -12,7 +12,7 @@ def search():
     module = request.args.get('module')
     table_name = table_object.replace("_", " ").title()
 
-    oac = OrganizationAccessControl("core")
+    oac = OrganizationAccessControl()
     search_module, search_table, search_fields = oac.get_search_field_data(module, table_object, field_name)
 
     modal_html = '<div class="modal-header">'
@@ -30,7 +30,7 @@ def search():
     modal_html += '<table>'
     if search_fields:
         for row in search_fields:
-            modal_html += '<tr><td><label>' + row.FieldFacilityRole.display_name.replace("_", " ").title() + '</label></td>'
+            modal_html += '<tr><td><label>' + row.FieldRole.display_name.replace("_", " ").title() + '</label></td>'
             modal_html += '<td><input id="search_' + row.Field.field_name + '"></input></td></tr>'
     else:
         modal_html += '<tr><td><label>'+field_name.replace("_", " ").title()+'</label></td>'
@@ -44,7 +44,7 @@ def search():
 def search_results():
     search_vals = loads(request.args.get('search_vals'))
 
-    oac = OrganizationAccessControl("core")
+    oac = OrganizationAccessControl()
 
     input_id = search_vals['modal_input_id']
     table_object = search_vals['modal_table_object']

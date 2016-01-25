@@ -12,15 +12,11 @@ import logging
 # all data db access should run through this class
 class OrganizationAccessControl:
     #TODO: remove module from calls to init
-    def __init__(self, module):
+    def __init__(self):
         self.org_ids = []
-        # Assume that path will always take the form module/page_form/params
-        self.module_name, self.page_form = request.path.split('/')[1:3]
-        self.module = 'mod_' + self.module_name
-
         if g.user is not None and not g.user.is_anonymous:
-            self.user = load_user(g.user.id)
-            user_orgs = db_session.query(UserOrganization).filter_by(user_id=self.user.id).all()
+            self.user = models.load_user(g.user.id)
+            user_orgs = db_session.query(models.UserOrganization).filter_by(user_id=self.user.id).all()
 
             for user_org in user_orgs:
                 self.get_child_organization(user_org.user_organization_id)
@@ -32,7 +28,7 @@ class OrganizationAccessControl:
 
     def get_child_organization(self, parent_organization_id):
         self.org_ids.append(parent_organization_id)
-        child_orgs = db_session.query(Organization).filter_by(parent_id=parent_organization_id).all()
+        child_orgs = db_session.query(models.Organization).filter_by(parent_id=parent_organization_id).all()
 
         if child_orgs is None:
             return
@@ -42,12 +38,12 @@ class OrganizationAccessControl:
 
         return
 
-    def get_entry_data(self, table_name, name=None):
-        field_data = self.get_field_data(table_name)
+    def get_entry_data(self, module, table_name, name=None):
+        field_data = self.get_field_data(module, table_name)
         results = None
 
         if field_data is not None:
-            table_object = util.get_table(self.module, table_name)
+            table_object = util.get_table(table_name)
 
             columns = []
             for row in field_data:
@@ -71,8 +67,7 @@ class OrganizationAccessControl:
         results = [(-99, '')]
 
         if fk_field_data is not None:
-            fk_table_object = util.get_table(fk_field_data['module'],
-                    fk_table_data.name)
+            fk_table_object = util.get_table(fk_table_data.name)
 
             if column_value is None:
                 rows = fk_field_data['fk_session'].query(getattr(fk_table_object, 'id'), getattr(fk_table_object, 'name')).all()
@@ -96,7 +91,7 @@ class OrganizationAccessControl:
         wheres = []
         first_table_named = None # set to first table name, dont add to joins
         for row in table_fields:
-            table_model = util.get_table(row.Module.name, row.TableObject.name)
+            table_model = util.get_table(row.TableObject.name)
             tables.add(table_model)
             field_display_name = util.get_field_attr(row.TableQueryField, row.Field, 'display_name')
             if row.Field.foreign_key_table_object_id is not None: # fk field
@@ -105,7 +100,7 @@ class OrganizationAccessControl:
                 # create alias to the fk table
                 # solves the case of more than one join to same table
                 alias_name = row.TableObject.name + '_' + row.Field.field_name + '_' + fk_data['name']
-                aliases[alias_name] = aliased(util.get_table(fk_data['module'], fk_data['name']))
+                aliases[alias_name] = aliased(util.get_table(fk_data['name']))
                 outer_joins.append((
                     aliases[alias_name],
                     getattr(table_model, row.Field.field_name) == aliases[alias_name].id
@@ -169,13 +164,13 @@ class OrganizationAccessControl:
                 'fk_session': fk_session
         }
 
-    def get_field_data(self, table_name):
+    def get_field_data(self, module, table_name):
         role_access_control = RoleAccessControl()
         table_data = role_access_control.has_access('TableObject', {'name': table_name})
         field_data = None
 
         if table_data is not None:
-            field_data = role_access_control.fields(table_data.id, self.module)
+            field_data = role_access_control.fields(table_data.id, module)
 
         return field_data
 
@@ -202,20 +197,20 @@ class OrganizationAccessControl:
         return None, None, None
 
     def get_search_results(self, module, table_name, params):
-        table = util.get_table(module, table_name)
+        table = util.get_table(table_name)
         filters=[]
         for key, value in params.items():
             filters.append((getattr(table,key)).like('%'+value+'%'))
         return table.query.filter(*filters).order_by(getattr(table,'name'))
 
     def get_long_text(self, lt_id):
-        table = util.get_table("mod_core", "long_text")
+        table = util.get_table("long_text")
 
         return table.query.filter_by(id=lt_id).first()
 
     def save_form(self, form):
         role_access_control = RoleAccessControl()
-        table_object = util.get_table(form.module_0.data, form.table_object_0.data)
+        table_object = util.get_table(form.table_object_0.data)
         table_object_data = models.TableObject.query.filter_by(name=table_object.__tablename__).first()
         table_record = models.TableObjectName.query.filter_by(table_object_id=table_object_data.id).\
                            filter_by(facility_id=role_access_control.role.facility_id).first()
@@ -229,7 +224,7 @@ class OrganizationAccessControl:
                            filter_by(facility_id=role_access_control.role.facility_id).first()
 
         if form.entry_0.data == 'parent_child':
-            child_table_object = util.get_table(form.module_0.data, form.chile_table_object_0.data )
+            child_table_object = util.get_table(form.chile_table_object_0.data )
             child_table_object_data = models.TableObject.query.filter_by(name=child_table_object.__tablename__).first()
             child_table_record = models.TableObjectName.query.filter_by(table_object_id=child_table_object_data.id).\
                                filter_by(facility_id=role_access_control.role.facility_id).first()

@@ -32,7 +32,7 @@ class TableQuery:
         """
         results = []
         self.criteria = self._add_table_query_criteria(self.criteria)
-        organization_access_control = oac.OrganizationAccessControl(self.module)
+        organization_access_control = oac.OrganizationAccessControl()
         self.results = organization_access_control.get_table_query_data(
                 self.table_fields,
                 self.criteria

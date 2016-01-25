@@ -20,9 +20,9 @@ class TableFactory:
         if not table_object_cols:
             return None
 
-        logging.info( 'table name: ' + class_name )
+        # logging.info( 'table name: ' + class_name )
         for col in table_object_cols:
-            logging.info( col.field_name )
+            # logging.info( col.field_name )
             if col.foreign_key_table_object_id is not None:
                 foreign_table = db_session.query(TableObject).filter_by(id=col.foreign_key_table_object_id).first()
                 foreign_column = db_session.query(Field).filter_by(id=col.foreign_key_field_id).first()
@@ -84,11 +84,15 @@ class TableFactory:
     def table_objects(self, active=1):
         table_objects = []
 
-        res = db_session.query(TableObject).filter_by(admin_table_object!=1).filter_by(active=active). \
+        # res = db_session.query(TableObject).filter_by(active=active).filter_by(admin_table_object!=1). \
+        #    order_by(TableObject.order).all()
+
+        res = db_session.query(TableObject).filter_by(active=active). \
             order_by(TableObject.order).all()
 
         for row in res:
-            table_objects.append(row)
+            if (row.admin_table_object!=1):
+                table_objects.append(row)
 
         return table_objects
 

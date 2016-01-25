@@ -106,7 +106,7 @@ def data_entry(module_name, table_name, row_name):
     form = fg.default_single_entry_form(row_name)
 
     if form.validate_on_submit():
-        organization_access_control = oac.OrganizationAccessControl('mod_' + module_name)
+        organization_access_control = oac.OrganizationAccessControl()
         row_names = organization_access_control.save_form(form)
 
         return saved_data(module_name, table_name, row_names)
@@ -121,7 +121,7 @@ def multiple_data_entry(module_name, table_name):
     form = fg.default_multiple_entry_form(row_names)
 
     if form.validate_on_submit():
-        organization_access_control = oac.OrganizationAccessControl('mod_' + module_name)
+        organization_access_control = oac.OrganizationAccessControl()
         row_names = organization_access_control.save_form(form)
 
         form = fg.default_multiple_entry_form(row_names)

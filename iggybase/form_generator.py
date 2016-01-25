@@ -54,7 +54,7 @@ class LookUpField(StringField):
 
 class FormGenerator():
     def __init__(self, module, table_object):
-        self.organization_access_control = OrganizationAccessControl(module)
+        self.organization_access_control = OrganizationAccessControl()
         self.facility_role_access_control = RoleAccessControl()
         self.table_object = table_object
         self.module = module
@@ -63,7 +63,7 @@ class FormGenerator():
 
     def input_field(self, field_data, value=None):
         validators = []
-        if field_data.FieldFacilityRole.required == constants.REQUIRED:
+        if field_data.FieldRole.required == constants.REQUIRED:
             validators.append(DataRequired())
 
         if field_data.Field.length is not None and field_data.Field.data_type_id == constants.STRING:
@@ -72,29 +72,29 @@ class FormGenerator():
         if "email" in field_data.Field.field_name:
             validators.append(email())
 
-        if field_data.FieldFacilityRole.visible != constants.VISIBLE:
+        if field_data.FieldRole.visible != constants.VISIBLE:
             if value is not None:
-                wtf_field = HiddenField(field_data.FieldFacilityRole.display_name, default=value)
+                wtf_field = HiddenField(field_data.FieldRole.display_name, default=value)
             else:
-                wtf_field = HiddenField(field_data.FieldFacilityRole.display_name)
+                wtf_field = HiddenField(field_data.FieldRole.display_name)
         else:
-            if field_data.FieldFacilityRole.permission_id == constants.READ_WRITE:
+            if field_data.FieldRole.permission_id == constants.READ_WRITE:
                 if field_data.Field.foreign_key_table_object_id is not None:
                     choices = self.organization_access_control. \
                         get_foreign_key_data(field_data.Field.foreign_key_table_object_id)
 
                     if len(choices) > 25:
                         if value is not None:
-                            wtf_field = LookUpField(field_data.FieldFacilityRole.display_name, validators,
+                            wtf_field = LookUpField(field_data.FieldRole.display_name, validators,
                                                     default=[item[1] for item in choices if item[0] == value][0])
                         else:
-                            wtf_field = LookUpField(field_data.FieldFacilityRole.display_name, validators)
+                            wtf_field = LookUpField(field_data.FieldRole.display_name, validators)
                     else:
                         if value is not None:
-                            wtf_field = SelectField(field_data.FieldFacilityRole.display_name, validators, coerce=int, \
+                            wtf_field = SelectField(field_data.FieldRole.display_name, validators, coerce=int, \
                                                     choices=choices, default=value)
                         else:
-                            wtf_field = SelectField(field_data.FieldFacilityRole.display_name, validators, coerce=int, \
+                            wtf_field = SelectField(field_data.FieldRole.display_name, validators, coerce=int, \
                                                     choices=choices)
                 else:
                     kwargs = {'validators': validators}
@@ -120,7 +120,7 @@ class FormGenerator():
                     if value is not None:
                         kwargs['default'] = value
 
-                    wtf_field = wtf_class(field_data.FieldFacilityRole.display_name, **kwargs)
+                    wtf_field = wtf_class(field_data.FieldRole.display_name, **kwargs)
             else:
                 kwargs = {'validators': validators}
                 if field_data.Field.foreign_key_table_object_id is not None:
@@ -148,7 +148,7 @@ class FormGenerator():
                 if value is not None:
                     kwargs['default'] = value
 
-                wtf_field = wtf_class(field_data.FieldFacilityRole.display_name, **kwargs)
+                wtf_field = wtf_class(field_data.FieldRole.display_name, **kwargs)
 
         return wtf_field
 
@@ -200,7 +200,7 @@ class FormGenerator():
 
     def get_row(self, fields, row_name, row_counter):
         if row_name != 'new':
-            data = self.organization_access_control.get_entry_data(self.table_object, row_name)
+            data = self.organization_access_control.get_entry_data(self.module, self.table_object, row_name)
             if data:
                 data = data[0]
 
@@ -211,8 +211,8 @@ class FormGenerator():
         for field in fields:
             value = None
             if row_name != 'new' and data is not None:
-                if  field.FieldFacilityRole.display_name in data.keys():
-                    value = data[data.keys().index(field.FieldFacilityRole.display_name)]
+                if  field.FieldRole.display_name in data.keys():
+                    value = data[data.keys().index(field.FieldRole.display_name)]
 
             if value is None:
                 self.classattr['hidden_'+field.Field.field_name+"_"+str(row_counter)]=\
