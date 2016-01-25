@@ -1,6 +1,6 @@
 import os
 from collections import OrderedDict
-from flask import Flask, g, send_from_directory
+from flask import Flask, g, send_from_directory, abort
 from wtforms import TextField, SelectField
 from wtforms.validators import Required
 from config import config, get_config
@@ -61,7 +61,6 @@ def add_base_routes( app, conf, security, user_datastore ):
 
     @user_registered.connect_via(app)
     def user_registered_sighandler(sender, **extra):
-        print('test sighandler')
         # TODO: we should dynamically enter facility based on what's in user
         # or perhaps we just need to overide some other function in sqlalchemy
         # for now i'm hardcogin one facility
@@ -107,35 +106,38 @@ def add_base_routes( app, conf, security, user_datastore ):
             ('Reset Password', {'title':'Reset Password', 'url':'/reset'}), ('Logout', {'title':'Logout', 'url':'/logout'})])
         return dict(navbar = navbar)
 
-    @app.route( '/<module_name>/summary/<table_name>/' )
+    @app.route( '/<module_name>/<page_form>/<table_name>/' )
     @login_required
-    def summary( module_name, table_name ):
-        return base_routes.summary( module_name, table_name )
+    def module_page_table_function(module_name, page_form, table_name):
+        try:
+            base_function = getattr(base_routes, page_form)
+        except AttributeError:
+            abort(404)
+        return base_function( module_name, table_name )
 
-    @app.route( '/<module_name>/summary/<table_name>/ajax' )
+
+    @app.route( '/<module_name>/<page_form>/<table_name>/ajax' )
     @login_required
-    def summary_ajax(module_name, table_name):
-        return base_routes.summary_ajax(module_name, table_name)
+    def module_page_table_function_ajax(module_name, page_form, table_name):
+        try:
+            base_function = getattr(base_routes, (page_form + '_ajax'))
+        except AttributeError:
+            abort(404)
+        return base_function(module_name, table_name)
 
     @app.route( '/<module_name>/summary/<table_name>/download/' )
     @login_required
     def summary_download( module_name, table_name ):
         return base_routes.summary_download( module_name, table_name )
 
-    @app.route( '/<module_name>/action_summary/<table_name>/' )
+    @app.route( '/<module_name>/<page_form>/<table_name>/<row_name>/' )
     @login_required
-    def action_summary( module_name, table_name ):
-        return base_routes.action_summary( module_name, table_name )
-
-    @app.route( '/<module_name>/action_summary/<table_name>/ajax' )
-    @login_required
-    def action_summary_ajax( module_name, table_name ):
-        return base_routes.action_summary_ajax( module_name, table_name )
-
-    @app.route( '/<module_name>/detail/<table_name>/<row_name>/' )
-    @login_required
-    def detail( module_name, table_name, row_name ):
-        return base_routes.detail( module_name, table_name, row_name )
+    def module_page_row_function( module_name, page_form, table_name, row_name ):
+        try:
+            base_function = getattr(base_routes, page_form)
+        except AttributeError:
+            abort(404)
+        return base_function( module_name, table_name, row_name )
 
     @app.route( '/<module_name>/data_entry/<table_name>/<row_name>/', methods=['GET', 'POST'] )
     @login_required

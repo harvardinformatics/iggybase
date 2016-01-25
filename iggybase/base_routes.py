@@ -64,14 +64,7 @@ def action_summary(module_name, table_name = None):
             table_query = table_queries.get_first(), hidden_fields = hidden_fields)
 
 def action_summary_ajax(module_name, table_name = None):
-    page_form = 'summary'
-    table_queries = tqc.TableQueryCollection(module_name, page_form, table_name)
-    table_queries.get_fields()
-    table_queries.get_results()
-    table_queries.format_results()
-    table_query = table_queries.get_first()
-    json_rows = table_query.get_json()
-    return jsonify({'data':json_rows})
+    return summary_ajax(module_name, table_name)
 
 def detail(module_name, table_name, row_name):
     page_form = 'detail'
