@@ -130,14 +130,10 @@ def add_base_routes( app, conf, security, user_datastore ):
     def summary_download( module_name, table_name ):
         return base_routes.summary_download( module_name, table_name )
 
-    @app.route( '/<module_name>/<page_form>/<table_name>/<row_name>/' )
+    @app.route( '/<module_name>/detail/<table_name>/<row_name>/' )
     @login_required
-    def module_page_row_function( module_name, page_form, table_name, row_name ):
-        try:
-            base_function = getattr(base_routes, page_form)
-        except AttributeError:
-            abort(404)
-        return base_function( module_name, table_name, row_name )
+    def detail( module_name, table_name, row_name ):
+        return base_routes.detail( module_name, table_name, row_name )
 
     @app.route( '/<module_name>/data_entry/<table_name>/<row_name>/', methods=['GET', 'POST'] )
     @login_required
