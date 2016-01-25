@@ -84,15 +84,12 @@ class TableFactory:
     def table_objects(self, active=1):
         table_objects = []
 
-        # res = db_session.query(TableObject).filter_by(active=active).filter_by(admin_table_object!=1). \
-        #    order_by(TableObject.order).all()
-
-        res = db_session.query(TableObject).filter_by(active=active). \
+        res = db_session.query(TableObject).filter(TableObject.active==active). \
+            filter(TableObject.admin_table_object!=1). \
             order_by(TableObject.order).all()
 
         for row in res:
-            if (row.admin_table_object!=1):
-                table_objects.append(row)
+            table_objects.append(row)
 
         return table_objects
 
