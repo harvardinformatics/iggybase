@@ -42,20 +42,20 @@ $( document ).ready( function () {
             return false;
         }
     });
-    $('.change_fr').click(function(){
+    $('.change_role').click(function(){
         $.ajax({
-            url:$URL_ROOT + 'ajax/change_facility_role',
+            url:$URL_ROOT + 'ajax/change_role',
             data: JSON.stringify({
-                'facility_role_id': $(this).data('facility_role_id')
+                'role_id': $(this).data('role_id')
             }),
             contentType: 'application/json;charset=UTF-8',
             type: 'POST',
             success: function(response) {
                 response = JSON.parse(response);
                 if(response.success) {
-                    alert('facility/role changed');
+                    alert('role changed');
                 } else {
-                    alert('facility/role not changed, user may not have permission for that facility/role, contact an administrator');
+                    alert('role not changed, user may not have permission for that role, contact an administrator');
                 }
             }
         });
