@@ -117,9 +117,10 @@ def saved_data(module_name, table_name, row_names):
 
 
 def data_entry(module_name, table_name, row_name):
-    table_data = rac.has_access('TableObject', {'name': table_name})
+    role_access = rac.RoleAccessControl()
+    table_data = role_access.has_access('TableObject', {'name': table_name})
 
-    child_tables = rac.get_child_tables(table_data.id)
+    child_tables = role_access.get_child_tables(table_data.id)
 
     fg = form_generator.FormGenerator('mod_' + module_name, table_name)
     if not child_tables:

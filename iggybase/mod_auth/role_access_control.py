@@ -221,10 +221,9 @@ class RoleAccessControl:
             getattr(table_object_role, 'role_id') == self.role.id,
             getattr(table_object, 'active') == active
         ]
-        if 'name' in criteria.keys():
-            filters.append(getattr(table_object, 'name') == criteria['name'])
-        elif 'id' in criteria.keys():
-            filters.append(getattr(table_object, 'id') == criteria['id'])
+
+        for column, value in criteria.items():
+            filters.append(getattr(table_object, column) == value)
 
         rec = (db_session.query(table_object).
                join(table_object_role).
