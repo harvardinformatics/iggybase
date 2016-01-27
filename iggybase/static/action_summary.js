@@ -17,6 +17,7 @@ $(document).ready(function(){
     });
     $("#edit").click(function(){$.fn.editSelected(table);});
     $("#update_table").click(function(){$.fn.updateTable(table);});
+    $.fn.updateButtonText();
 } );
 
 ( function( $ ) {
@@ -32,6 +33,11 @@ $(document).ready(function(){
         } else {
             alert("No rows selected.  Select rows to edit by clicking.");
         }
+    }
+    $.fn.updateButtonText = function (table) {
+        var hidden_fields = $("#hidden_fields");
+        var button_text = hidden_fields.find('input[name=button_text]').val();
+        $("#update_table").val(button_text);
     }
     $.fn.updateTable = function (table) {
         var ids = $.map(table.rows('.selected').data(), function (i) {return i[0]});
