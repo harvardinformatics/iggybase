@@ -44,22 +44,28 @@ $(document).ready(function(){
         if (ids.length > 0) {
             var hidden_fields = $("#hidden_fields");
             var column_defaults = hidden_fields.find('input[name=column_defaults]').val();
-            var table = hidden_fields.find('input[name=table]').val();
+            var table_name = hidden_fields.find('input[name=table]').val();
+            var message_fields = hidden_fields.find('input[name=message_fields]').val();
             $.ajax({
-                url:$URL_ROOT + 'ajax/update_table_rows/' + table,
+                url:$URL_ROOT + 'ajax/update_table_rows/' + table_name,
                 data: JSON.stringify({
                     'updates': JSON.parse(column_defaults),
-                    'ids': ids
+                    'ids': ids,
+                    'message_fields': JSON.parse(message_fields)
                 }),
                 contentType: 'application/json;charset=UTF-8',
                 type: 'POST',
+                table: table,
                 success: function(response) {
                     response = JSON.parse(response);
-                    if(response.success) {
-                        location.reload();
+                    var message = '';
+                    if(response.updated.length > 0) {
+                        message = 'Successfully Updated:<br>' + response.updated.join('<br>');
+                        this.table.ajax.reload();
                     } else {
-                        alert('rows could not be updated');
+                        message = 'Unable to update any rows.';
                     }
+                    $('#page_message p').html(message);
                 }
             });
         } else {
