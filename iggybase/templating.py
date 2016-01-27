@@ -38,6 +38,10 @@ def page_template( page_form_name, **context ):
             'mod': context['module_name']
         })
 
+    if 'table_name' in context:
+        context['hidden_fields'].update({
+            'table': context['table_name']
+        })
     ## Menus
     navbar, sidebar = access_ctrl.page_form_menus( page_form.id )
     context.update({'navbar': navbar, 'sidebar': sidebar})

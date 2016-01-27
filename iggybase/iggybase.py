@@ -69,7 +69,6 @@ def add_base_routes( app, conf, security, user_datastore ):
                 level_id = 7)
         user_datastore.add_role_to_user(user, role)
         db.session.commit()
-        print('updated sighandler')
 
     @app.route( '/registration_success' )
     def registration_success():
@@ -89,6 +88,11 @@ def add_base_routes( app, conf, security, user_datastore ):
     @login_required
     def change_facility_role():
         return base_routes.change_facility_role()
+
+    @app.route( '/ajax/update_table_rows/<table_name>', methods=['GET', 'POST'] )
+    @login_required
+    def update_table_rows(table_name):
+        return base_routes.update_table_rows(table_name)
 
     @app.route('/favicon.ico')
     def favicon():
