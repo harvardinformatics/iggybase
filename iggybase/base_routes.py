@@ -120,13 +120,13 @@ def data_entry(module_name, table_name, row_name):
     role_access = rac.RoleAccessControl()
     table_data = role_access.has_access('TableObject', {'name': table_name})
 
-    child_tables = role_access.get_child_tables(table_data.id)
+    link_data, child_tables = role_access.get_child_tables(table_data.id)
 
     fg = form_generator.FormGenerator('mod_' + module_name, table_name)
     if not child_tables:
         form = fg.default_single_entry_form(table_data, row_name)
     else:
-        form = fg.default_parent_child_form(table_data, child_tables, row_name)
+        form = fg.default_parent_child_form(table_data, child_tables, link_data, row_name)
 
     if form.validate_on_submit():
         organization_access_control = oac.OrganizationAccessControl()

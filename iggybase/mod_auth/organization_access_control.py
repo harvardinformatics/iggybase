@@ -355,7 +355,7 @@ class OrganizationAccessControl:
 
         names = []
         for row in rows:
-            names.append(row.nome)
+            names.append(row.name)
 
         return names
 

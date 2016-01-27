@@ -280,9 +280,11 @@ class TableObjectChildren(Base):
     order = Column(Integer)
     table_object_id = Column(Integer, ForeignKey('table_object.id'))
     child_table_object_id = Column(Integer, ForeignKey('table_object.id'))
+    child_link_field_id = Column(Integer, ForeignKey('field.id'))
 
     table_object_children_table_object = relationship("TableObject", foreign_keys=[table_object_id])
     table_object_children_child_table_object = relationship("TableObject", foreign_keys=[child_table_object_id])
+    table_object_children_field = relationship("Field", foreign_keys=[child_link_field_id])
 
 
 class Field(Base):

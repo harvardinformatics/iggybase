@@ -183,7 +183,7 @@ class FormGenerator():
 
         return newclass()
 
-    def default_parent_child_form(self, table_data, child_tables, row_name='new'):
+    def default_parent_child_form(self, table_data, child_tables, link_data, row_name='new'):
         self.table_data = table_data
 
         self.classattr = self.hidden_fields('parent_child')
@@ -197,7 +197,7 @@ class FormGenerator():
             self.table_data = child_table
             fields = self.role_access_control.fields(self.table_data.id, self.module)
             child_row_names = self.organization_access_control.get_child_row_names(child_table.name,
-                                                                                   child_table.child_link_field_id,
+                                                                                   link_data[row_counter-2].child_link_field_id,
                                                                                    parent_id)
 
             for child_row_name in child_row_names:

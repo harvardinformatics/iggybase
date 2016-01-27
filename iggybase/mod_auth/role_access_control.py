@@ -282,6 +282,7 @@ class RoleAccessControl:
 
     def get_child_tables(self, table_object_id, active = 1):
         child_tables = []
+        link_data = []
 
         res = db_session.query(models.TableObjectChildren). \
             filter_by(table_object_id=table_object_id).filter_by(active=active). \
@@ -291,5 +292,6 @@ class RoleAccessControl:
             table_data = self.has_access('TableObject', {'id': row.child_table_object_id})
             if table_data:
                 child_tables.append(table_data)
+                link_data.append(row)
 
-        return child_tables
+        return link_data, child_tables
