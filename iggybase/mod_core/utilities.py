@@ -3,6 +3,7 @@ from importlib import import_module
 from iggybase.tablefactory import TableFactory
 from iggybase.mod_admin.models import TableObject
 from iggybase.database import db_session
+import logging
 
 def get_column(module, table_name, field_name):
     table_model = get_table(table_name)
@@ -17,6 +18,7 @@ def get_table(table_name):
             module_model = import_module('iggybase.models')
         table_object = getattr(module_model, TableFactory.to_camel_case(table_name))
     except AttributeError:
+        logging.info('abort ' + table_name)
         abort(404)
     return table_object
 

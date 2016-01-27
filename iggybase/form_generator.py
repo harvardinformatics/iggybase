@@ -196,15 +196,23 @@ class FormGenerator():
         for child_table in child_tables:
             self.table_data = child_table
             fields = self.role_access_control.fields(self.table_data.id, self.module)
+
             child_row_names = self.organization_access_control.get_child_row_names(child_table.name,
                                                                                    link_data[row_counter-2].child_link_field_id,
                                                                                    parent_id)
+
+            child_title = child_table.name.replace('_', ' ').title()
+            self.classattr['hidden_starttable_'+str(child_table.id)]=\
+                HiddenField('hidden_starttable_'+str(child_table.id), default=child_title)
 
             for child_row_name in child_row_names:
                 self.classattr.update(self.row_fields(row_counter, child_row_name, 'child_'))
                 self.get_row(fields, child_row_name, row_counter, 'child_')
                 row_counter += 1
-                
+
+            self.classattr['hidden_endtable_'+str(child_table.id)]=\
+                HiddenField('hidden_endtable_'+str(child_table.id))
+
         newclass = new_class('DynamicForm', (Form,), {}, lambda ns: ns.update(self.classattr))
 
         return newclass()
@@ -226,7 +234,7 @@ class FormGenerator():
         id = None
 
         if row_name != 'new':
-            data = self.organization_access_control.get_entry_data(self.module, self.table_object, row_name)
+            data = self.organization_access_control.get_entry_data(self.module, self.table_data.name, row_name)
             if data:
                 data = data[0]
 
