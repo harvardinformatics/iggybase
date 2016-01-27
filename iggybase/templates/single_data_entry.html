@@ -32,13 +32,17 @@
             {%- for field in form %}
                 {% if "hidden_startmaintable_" in field.id -%}
                     <div class="col-md-4">
-                    <table class="table">
+                    {% set table_id = field.data|replace(" ", "_") %}
+                    <table id="{{ table_id }}" class="table">
                     {% set maintable = 1 %}
                 {% elif "hidden_startchildtable_" in field.id -%}
                     </table></div><br><br><div class="col-md-12">
                     <h3>{{ field.data }}</h3>
-                    <table class="table table-striped"><tr>
+                    {% set table_id = field.data|replace(" ", "_") %}
+                    <input type="button" class="add_new_child_item" target_table="{{ table_id}}" value="Add {{ field.data }}">
+                    <table id="{{ table_id }}" class="table table-striped"><tr>
                     {% set maintable = 0 %}
+                    {% set endrow = 1 %}
                 {% endif %}
 
                 {% if maintable == 1 -%}
@@ -48,18 +52,20 @@
                 {% else -%}
 
                     {% if field.id|truncate(14, True, '') == 'hidden_endrow_' %}
-                        </tr><tr>
+                        </tr>
+                        {% set endrow = 1 %}
                     {% endif %}
 
                     {% if not bootstrap_is_hidden_field( field ) -%}
+                        {% if endrow == 1 -%}
+                            <tr>
+                            {% set endrow = 0 %}
+                        {% endif %}
+
                         <td>{{ macros.table_field( field ) }}</td>
                     {% endif %}
                 {%- endif %}
             {%- endfor %}
-
-            {% if maintable == 0 -%}
-                </tr>
-            {%- endif %}
 
             </table>
             </div>

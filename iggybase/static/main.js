@@ -11,6 +11,11 @@ $( document ).ready( function () {
             $.fn.searchClick( $( this ) );
         }
     );
+    $( ".add_new_child_item" ).click(
+        function( ) {
+            $.fn.addChildTableRow( $( this ) );
+        }
+    );
     $( ".datepicker-field" ).datepicker({
         format: 'yyyy-mm-dd',
         autoclose: true
@@ -64,6 +69,24 @@ $( document ).ready( function () {
 } );
 
 ( function( $ ) {
+    $.fn.addChildTableRow = function( ele ) {
+        var target = ele.attr("target_table");
+        var new_id;
+
+        $( "#" + target + " tr:last" ).clone( ).find( "input" ).each(
+            function() {
+		        var id = $(this).attr( 'id' );
+		        var matches = id.match( /child_(\S+)_(\d+)/);
+		        var new_id = "child_" + matches[ 1 ] + "_" + ( parseInt( matches[ 2 ] )+ 1 );
+		        var hidden_id = "hidden_" + matches[ 1 ] + "_" + ( parseInt( matches[ 2 ] )+ 1 );
+                $( this ).val( '' ).attr( 'id', new_id );
+                if ( matches[ 1 ] == 'name' )
+                    $( this ).closest( "td" ).append( "<input id='" + hidden_id + "' type='hidden' value='new'>");
+                else
+                    $( this ).closest( "td" ).append( "<input id='" + hidden_id + "' type='hidden' value=''>");
+            }
+        ).end( ).appendTo( "#" + target );
+    }
 
     $.fn.showModalDialog = function ( url, buttons, callback ) {
         $("#modal_dialog_content").html("");
