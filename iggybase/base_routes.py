@@ -4,7 +4,7 @@ from flask.ext import excel
 import iggybase.templating as templating
 import iggybase.form_generator as form_generator
 import iggybase.mod_auth.organization_access_control as oac
-import iggybase.mod_auth.role_access_control as frac
+import iggybase.mod_auth.role_access_control as rac
 import iggybase.table_query_collection as tqc
 import json
 import logging
@@ -95,8 +95,15 @@ def saved_data(module_name, table_name, row_names):
 
 
 def data_entry(module_name, table_name, row_name):
+    table_data = rac.has_access('TableObject', {'name': table_name})
+
+    child_tables = rac.get_child_tables(table_data.id)
+
     fg = form_generator.FormGenerator('mod_' + module_name, table_name)
-    form = fg.default_single_entry_form(row_name)
+    if not child_tables:
+        form = fg.default_single_entry_form(table_data, row_name)
+    else:
+        form = fg.default_parent_child_form(table_data, child_tables, row_name)
 
     if form.validate_on_submit():
         organization_access_control = oac.OrganizationAccessControl()
@@ -108,7 +115,7 @@ def data_entry(module_name, table_name, row_name):
             module_name=module_name, form=form, table_name=table_name)
 
 
-def multiple_data_entry(module_name, table_name):
+def multiple_entry(module_name, table_name):
     row_names =  json.loads(request.args.get('row_names'))
     fg = form_generator.FormGenerator('mod_' + module_name, table_name)
     form = fg.default_multiple_entry_form(row_names)
@@ -125,7 +132,7 @@ def multiple_data_entry(module_name, table_name):
 
 def change_facility_role():
     facility_role_id = request.json['facility_role_id']
-    facility_role_access_control = frac.RoleAccessControl()
+    facility_role_access_control = rac.RoleAccessControl()
     success = facility_role_access_control.change_facility_role(facility_role_id)
     return json.dumps({'success':success})
 

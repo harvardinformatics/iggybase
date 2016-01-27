@@ -285,27 +285,6 @@ class TableObjectChildren(Base):
     table_object_children_child_table_object = relationship("TableObject", foreign_keys=[child_table_object_id])
 
 
-class TableObjectChildrenRole(Base):
-    __tablename__ = 'table_object_children_role'
-    id = Column(Integer, primary_key=True)
-    name = Column(String(100), unique=True)
-    description = Column(String(255))
-    date_created = Column(DateTime, default=datetime.datetime.utcnow)
-    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
-    active = Column(Boolean)
-    organization_id = Column(Integer)
-    order = Column(Integer)
-    role_id = Column(Integer, ForeignKey('role.id'))
-    table_object_children_id = Column(Integer, ForeignKey('table_object_children.id'))
-    module_id = Column(Integer, ForeignKey('module.id'))
-
-    table_object_children_role_role = relationship("Role", foreign_keys=[role_id])
-    table_object_children_role_type = relationship("TableObjectChildren",
-                                                            foreign_keys=[table_object_children_id])
-    table_object_children_role_module = relationship("Module", foreign_keys=[module_id])
-    table_object_children_role_unq = UniqueConstraint('role_id', 'table_object_id')
-
-
 class Field(Base):
     __tablename__ = 'field'
     id = Column(Integer, primary_key=True)

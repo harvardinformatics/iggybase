@@ -143,7 +143,7 @@ def add_base_routes( app, conf, security, user_datastore ):
     @app.route( '/<module_name>/multiple_entry/<table_name>/', methods=['GET', 'POST'] )
     @login_required
     def multiple_entry( module_name, table_name ):
-        return base_routes.multiple_data_entry( module_name, table_name )
+        return base_routes.multiple_entry( module_name, table_name )
 
 def configure_blueprints( app, blueprints ):
     for i,(module, blueprint) in enumerate(blueprints):

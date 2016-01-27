@@ -281,3 +281,16 @@ class RoleAccessControl:
         else:
             return False
 
+    def get_child_tables(self, table_object_id, active = 1):
+        child_tables = []
+
+        res = db_session.query(models.TableObjectChildren). \
+            filter_by(table_object_id=table_object_id).filter_by(active=active). \
+            order_by(models.TableObjectChildren.order, models.TableObjectChildren.child_table_object_id).all()
+
+        for row in res:
+            table_data = self.has_access('TableObject', {'id': row.child_table_object_id})
+            if table_data:
+                child_tables.append(table_data)
+
+        return child_tables

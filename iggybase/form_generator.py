@@ -55,7 +55,7 @@ class LookUpField(StringField):
 class FormGenerator():
     def __init__(self, module, table_object):
         self.organization_access_control = OrganizationAccessControl()
-        self.facility_role_access_control = RoleAccessControl()
+        self.role_access_control = RoleAccessControl()
         self.table_object = table_object
         self.module = module
         self.classattr = {}
@@ -152,13 +152,14 @@ class FormGenerator():
 
         return wtf_field
 
-    def default_single_entry_form(self, row_name='new'):
-        self.table_data = self.facility_role_access_control.has_access('TableObject', {'name': self.table_object})
-
-        fields = self.facility_role_access_control.fields(self.table_data.id, self.module)
+    def default_single_entry_form(self, table_data, row_name='new'):
+        self.table_data = table_data
 
         self.classattr = self.hidden_fields('single')
         self.classattr.update(self.row_fields(1, row_name))
+
+        fields = self.role_access_control.fields(self.table_data.id, self.module)
+
         self.get_row(fields, row_name, 1)
 
         newclass = new_class('DynamicForm', (Form,), {}, lambda ns: ns.update(self.classattr))
@@ -166,9 +167,9 @@ class FormGenerator():
         return newclass()
 
     def default_multiple_entry_form(self, row_names=[]):
-        self.table_data = self.facility_role_access_control.has_access('TableObject', {'name': self.table_object})
+        self.table_data = self.role_access_control.has_access('TableObject', {'name': self.table_object})
 
-        fields = self.facility_role_access_control.fields(self.table_data.id, self.module)
+        fields = self.role_access_control.fields(self.table_data.id, self.module)
 
         self.classattr = self.hidden_fields('multiple')
 
@@ -182,8 +183,31 @@ class FormGenerator():
 
         return newclass()
 
-    def default_parent_child_entry_form(self, parent_row_name=None):
-        pass
+    def default_parent_child_form(self, table_data, child_tables, row_name='new'):
+        self.table_data = table_data
+
+        self.classattr = self.hidden_fields('parent_child')
+        self.classattr.update(self.row_fields(1, row_name))
+
+        fields = self.role_access_control.fields(self.table_data.id, self.module)
+        parent_id = self.get_row(fields, row_name, 1)
+
+        row_counter = 2
+        for child_table in child_tables:
+            self.table_data = child_table
+            fields = self.role_access_control.fields(self.table_data.id, self.module)
+            child_row_names = self.organization_access_control.get_child_row_names(child_table.name,
+                                                                                   child_table.child_link_field_id,
+                                                                                   parent_id)
+
+            for child_row_name in child_row_names:
+                self.classattr.update(self.row_fields(row_counter, child_row_name, 'child_'))
+                self.get_row(fields, child_row_name, row_counter, 'child_')
+                row_counter += 1
+                
+        newclass = new_class('DynamicForm', (Form,), {}, lambda ns: ns.update(self.classattr))
+
+        return newclass()
 
     def hidden_fields(self, form_type):
         module_field = HiddenField('module_0', default=self.module)
@@ -192,13 +216,15 @@ class FormGenerator():
 
         return {'module_0': module_field, 'table_object_0': table_field, 'entry_0': entry_field}
 
-    def row_fields(self, row_count, row_name):
-        table_id_field = HiddenField('table_id_'+str(row_count), default=self.table_data.id)
-        row_field = HiddenField('row_name_'+str(row_count), default=row_name)
+    def row_fields(self, row_count, row_name, prefix = ''):
+        table_id_field = HiddenField(prefix + 'table_id_'+str(row_count), default=self.table_data.id)
+        row_field = HiddenField(prefix + 'row_name_'+str(row_count), default=row_name)
 
         return {'hidden_row_name_'+str(row_count): row_field, 'hidden_table_id_'+str(row_count): table_id_field}
 
-    def get_row(self, fields, row_name, row_counter):
+    def get_row(self, fields, row_name, row_counter, prefix = ''):
+        id = None
+
         if row_name != 'new':
             data = self.organization_access_control.get_entry_data(self.module, self.table_object, row_name)
             if data:
@@ -207,6 +233,8 @@ class FormGenerator():
                 if type(data) is list:
                     data = None
                     row_name = 'new'
+                else:
+                    id = data[data.keys().index('id')]
 
         for field in fields:
             value = None
@@ -221,7 +249,9 @@ class FormGenerator():
                 self.classattr['hidden_'+field.Field.field_name+"_"+str(row_counter)]=\
                     HiddenField('hidden_'+field.Field.field_name+"_"+str(row_counter), default=value)
 
-            self.classattr[field.Field.field_name+"_"+str(row_counter)] = self.input_field(field, value)
+            self.classattr[prefix + field.Field.field_name+"_"+str(row_counter)] = self.input_field(field, value)
 
         self.classattr['hidden_endrow_'+str(row_counter)]=\
             HiddenField('hidden_endrow_'+str(row_counter))
+
+        return id
