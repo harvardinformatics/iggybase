@@ -143,10 +143,11 @@ def change_facility_role():
 
 def update_table_rows(table_name):
     updates = request.json['updates']
+    message_fields = request.json['message_fields']
     ids = request.json['ids']
     organizational_access_control = oac.OrganizationAccessControl()
-    success = organizational_access_control.update_table_rows(table_name, updates, ids)
-    return json.dumps({'success':success})
+    updated = organizational_access_control.update_table_rows(table_name, updates, ids, message_fields)
+    return json.dumps({'updated': updated})
 
 def forbidden():
     return templating.page_template('forbidden')
