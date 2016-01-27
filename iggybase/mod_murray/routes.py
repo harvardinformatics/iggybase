@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-from flask import g
-=======
 from flask import g, abort
->>>>>>> 0df698083d22144b1d6d3cc487fa4b25c252f730
 from iggybase import base_routes, templating
 from flask.ext.security import login_required, current_user
 from iggybase.mod_murray import mod_murray
@@ -39,11 +35,8 @@ def update_ordered(table_name):
     hidden_fields['message_fields'] = '["name"]'
     # if nothing to display then page not found
     if not first_table_query.table_fields:
-<<<<<<< HEAD
-        abort(404)
-=======
         abort(403)
->>>>>>> 0df698083d22144b1d6d3cc487fa4b25c252f730
+
     return templating.page_template('update',
             module_name = 'murray',
             table_name = table_name,
@@ -69,13 +62,9 @@ def update_requested(table_name):
     hidden_fields['button_text'] = 'Order Selected Oligos'
     hidden_fields['message_fields'] = '["name", "sequence"]'
     # if nothing to display then page not found
-<<<<<<< HEAD
-    if not first_table_query.table_fields:
-        abort(404)
-=======
     if not first_table_query or not first_table_query.table_fields:
         abort(403)
->>>>>>> 0df698083d22144b1d6d3cc487fa4b25c252f730
+
     return templating.page_template('update',
             module_name = 'murray',
             table_name = table_name,
