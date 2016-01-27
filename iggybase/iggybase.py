@@ -84,10 +84,10 @@ def add_base_routes( app, conf, security, user_datastore ):
     def index():
         return base_routes.index()
 
-    @app.route( '/ajax/change_facility_role', methods=['POST'] )
+    @app.route( '/ajax/change_role', methods=['POST'] )
     @login_required
-    def change_facility_role():
-        return base_routes.change_facility_role()
+    def change_role():
+        return base_routes.change_role()
 
     @app.route( '/ajax/update_table_rows/<table_name>', methods=['GET', 'POST'] )
     @login_required

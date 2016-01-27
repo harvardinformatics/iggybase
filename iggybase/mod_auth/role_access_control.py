@@ -169,10 +169,10 @@ class RoleAccessControl:
 
     def make_role_menu(self):
         role_menu_subs = {}
-        for fr in self.user.roles:
-            role_menu_subs[fr.name] = {'title':fr.name,
-                    'class':'change_fr', 'data':{'role_id': fr.id}}
-        return {'title':'Change Facility/Role',
+        for role in self.user.roles:
+            role_menu_subs[role.name] = {'title':role.name,
+                    'class':'change_role', 'data':{'role_id': role.id}}
+        return {'title':'Change Role',
             'subs': role_menu_subs}
 
     def page_forms(self, active=1):

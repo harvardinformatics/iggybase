@@ -55,6 +55,6 @@ class TableQueryCollection:
 
     def get_first(self):
         first = []
-        if self.queries[0]:
+        if self.queries:
             first = self.queries[0]
         return first

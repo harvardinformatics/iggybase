@@ -135,10 +135,10 @@ def multiple_entry(module_name, table_name):
 
     return templating.page_template('multiple_data_entry', module_name=module_name, form=form, table_name=table_name)
 
-def change_facility_role():
-    facility_role_id = request.json['facility_role_id']
-    facility_role_access_control = rac.RoleAccessControl()
-    success = facility_role_access_control.change_facility_role(facility_role_id)
+def change_role():
+    role_id = request.json['role_id']
+    role_access_control = rac.RoleAccessControl()
+    success = role_access_control.change_role(role_id)
     return json.dumps({'success':success})
 
 def update_table_rows(table_name):
