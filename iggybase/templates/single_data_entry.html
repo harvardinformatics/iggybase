@@ -3,42 +3,77 @@
 {% import 'macros.html' as macros %}
 {% block title %}{{ page_title }}{% endblock %}
 
-{% block page_content %}
-<h1> {{ page_header }}</h1>
-        <div id="page_message">
-            <p>
-                {{ page_msg|safe }}
-            </p>
-        </div>
-
+{% block content -%}
     {% if form is defined %}
-        <form action class="form form-horizontal col-md-4" method="post" role="form">
+        <form action class="form form-horizontal" method="post" role="form">
                 {{ form.hidden_tag() }}
                 {{ wtf.form_errors(form, hiddens='only') }}
     {% endif %}
 
-    {% block topbuttonbar %}
-        {{ super() }}
+    {% block content_title -%}
+        <div class="content_title">
+            <h1> {{ page_header }}</h1>
+        </div>
+    {%- endblock content_title %}
+
+    {% block topbuttonbar -%}
+        <div class="top_buttons">
         {{ macros.render_buttons( top_buttons ) }}
+        </div>
     {%- endblock topbuttonbar %}
 
+    <div id="page_message">
+        <p>{{ page_msg|safe }}</p>
+    </div>
+
     {% if form is defined %}
-        <table class="table">
-        {%- for field in form %}
-            {% if not bootstrap_is_hidden_field( field ) -%}
-                {{ macros.render_field( field ) }}
+        {% block page_content -%}
+        <div class="page_content">
+            {%- for field in form %}
+                {% if "hidden_startmaintable_" in field.id -%}
+                    <div class="col-md-4">
+                    <table class="table">
+                    {% set maintable = 1 %}
+                {% elif "hidden_startchildtable_" in field.id -%}
+                    </table></div><br><br><div class="col-md-12">
+                    <h3>{{ field.data }}</h3>
+                    <table class="table table-striped"><tr>
+                    {% set maintable = 0 %}
+                {% endif %}
+
+                {% if maintable == 1 -%}
+                    {% if not bootstrap_is_hidden_field( field ) -%}
+                        {{ macros.render_field( field ) }}
+                    {% endif %}
+                {% else -%}
+
+                    {% if field.id|truncate(14, True, '') == 'hidden_endrow_' %}
+                        </tr><tr>
+                    {% endif %}
+
+                    {% if not bootstrap_is_hidden_field( field ) -%}
+                        <td>{{ macros.table_field( field ) }}</td>
+                    {% endif %}
+                {%- endif %}
+            {%- endfor %}
+
+            {% if maintable == 0 -%}
+                </tr>
             {%- endif %}
-        {%- endfor %}
-        </table>
-    {% endif %}
+
+            </table>
+            </div>
+        </div>
+        {% endblock page_content -%}
+    {% endif -%}
 
     {% block bottombuttonbar %}
-        {{ super() }}
+        <div class="bottom_buttons">
         {{ macros.render_buttons( bottom_buttons ) }}
+        </div>
     {%- endblock bottombuttonbar %}
 
     {% if form is defined %}
         </form>
     {% endif %}
-
-{% endblock %}
+{%- endblock content %}

@@ -1,3 +1,19 @@
+.top_buttons {
+    display: block;
+    vertical-align: top!important;
+}
+.content_title {
+    display: block;
+    vertical-align: top!important;
+}
+.bottom_buttons {
+    vertical-align: bottom!important;
+    display: block;
+}
+.page_content {
+    display: block;
+    vertical-align: middle!important;
+}
 .close_modal {
     float: right ! important;
 }

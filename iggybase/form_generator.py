@@ -160,6 +160,10 @@ class FormGenerator():
 
         fields = self.role_access_control.fields(self.table_data.id, self.module)
 
+        main_title = self.table_data.name.replace('_', ' ').title()
+        self.classattr['hidden_startmaintable_'+str(self.table_data.id)]=\
+            HiddenField('hidden_startmaintable_'+str(self.table_data.id), default=main_title)
+
         self.get_row(fields, row_name, 1)
 
         newclass = new_class('DynamicForm', (Form,), {}, lambda ns: ns.update(self.classattr))
@@ -172,6 +176,10 @@ class FormGenerator():
         fields = self.role_access_control.fields(self.table_data.id, self.module)
 
         self.classattr = self.hidden_fields('multiple')
+
+        main_title = self.table_data.name.replace('_', ' ').title()
+        self.classattr['hidden_startmaintable_'+str(self.table_data.id)]=\
+            HiddenField('hidden_startmaintable_'+str(self.table_data.id), default=main_title)
 
         row_counter = 1
         for row_name in row_names:
@@ -189,6 +197,10 @@ class FormGenerator():
         self.classattr = self.hidden_fields('parent_child')
         self.classattr.update(self.row_fields(1, row_name))
 
+        main_title = self.table_data.name.replace('_', ' ').title()
+        self.classattr['hidden_startmaintable_'+str(self.table_data.id)]=\
+            HiddenField('hidden_startmaintable_'+str(self.table_data.id), default=main_title)
+
         fields = self.role_access_control.fields(self.table_data.id, self.module)
         parent_id = self.get_row(fields, row_name, 1)
 
@@ -202,16 +214,16 @@ class FormGenerator():
                                                                                    parent_id)
 
             child_title = child_table.name.replace('_', ' ').title()
-            self.classattr['hidden_starttable_'+str(child_table.id)]=\
-                HiddenField('hidden_starttable_'+str(child_table.id), default=child_title)
+            self.classattr['hidden_startchildtable_'+str(child_table.id)]=\
+                HiddenField('hidden_startchildtable_'+str(child_table.id), default=child_title)
 
             for child_row_name in child_row_names:
                 self.classattr.update(self.row_fields(row_counter, child_row_name, 'child_'))
                 self.get_row(fields, child_row_name, row_counter, 'child_')
                 row_counter += 1
 
-            self.classattr['hidden_endtable_'+str(child_table.id)]=\
-                HiddenField('hidden_endtable_'+str(child_table.id))
+            self.classattr['hidden_endchildtable_'+str(child_table.id)]=\
+                HiddenField('hidden_endchildtable_'+str(child_table.id))
 
         newclass = new_class('DynamicForm', (Form,), {}, lambda ns: ns.update(self.classattr))
 
@@ -226,9 +238,12 @@ class FormGenerator():
 
     def row_fields(self, row_count, row_name, prefix = ''):
         table_id_field = HiddenField(prefix + 'table_id_'+str(row_count), default=self.table_data.id)
+        table_name_field = HiddenField(prefix + 'table_name_'+str(row_count), default=self.table_data.name)
         row_field = HiddenField(prefix + 'row_name_'+str(row_count), default=row_name)
 
-        return {'hidden_row_name_'+str(row_count): row_field, 'hidden_table_id_'+str(row_count): table_id_field}
+        return {'hidden_row_name_'+str(row_count): row_field,
+                'hidden_table_name_'+str(row_count): table_name_field,
+                'hidden_table_id_'+str(row_count): table_id_field}
 
     def get_row(self, fields, row_name, row_counter, prefix = ''):
         id = None

@@ -245,20 +245,19 @@ class OrganizationAccessControl:
                 row_id = int(field_id[field_id.rindex('_') + 1:])
                 column_name = field_id[:field_id.rindex('_')]
 
-                if field['child_table_id_' + str(row_id)] not in child_tables.keys():
-                    child_tables[field['child_table_id_' + str(row_id)]] = util.get_table(
-                            field['child_table_id_' + str(row_id)])
+                child_name_field = getattr(form, 'hidden_table_name_' + str(row_id))
+                child_id_field = getattr(form, 'hidden_table_id_' + str(row_id))
+                if child_id_field.data not in child_tables.keys():
+                    child_tables[child_id_field.data] = util.get_table(child_name_field.data)
 
-                    child_table_object_data = models.TableObject.query.\
-                        filter_by(name=child_tables[field['child_table_id_' + str(row_id)]].__tablename__).first()
+                    child_table_object_data = models.TableObject.query.filter_by(name=child_name_field.data).first()
 
-                    child_record_tables[field['child_table_id_' + str(row_id)]] = models.TableObjectName.query.\
-                        filter_by(table_object_id=child_table_object_data.id). \
+                    child_record_tables[child_id_field.data] = models.TableObjectName.query.\
+                        filter_by(table_object_id=child_id_field.data). \
                         filter_by(facility_id=role_access_control.role.facility_id).first()
 
-                current_table_object = child_tables[field['child_table_id_' + str(row_id)]]
-                current_table_record = child_record_tables[field['child_table_id_' + str(row_id)]]
-
+                current_table_object = child_tables[child_id_field.data]
+                current_table_record = child_record_tables[child_id_field.data]
             else:
                 current_table_object = table_object
                 current_table_record = table_record
