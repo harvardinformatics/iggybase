@@ -346,7 +346,6 @@ class OrganizationAccessControl:
             db_session.rollback()
             raise
 
-<<<<<<< HEAD
     def get_child_row_names(self, child_table_name, child_link_field_id, parent_id):
         field = db_session.query(models.Field).filter_by(id=child_link_field_id).first()
 
@@ -359,7 +358,7 @@ class OrganizationAccessControl:
             names.append(row.nome)
 
         return names
-=======
+
     def update_table_rows(self, table, updates, ids):
         # TODO: make this deal with foreign keys
         # for now i'm just going to pass in the numeric value
@@ -373,4 +372,3 @@ class OrganizationAccessControl:
                 except AttributeError:
                     pass
         return True
->>>>>>> 8ea08b3c1aa4327a384d9fde175386644e411ff8
