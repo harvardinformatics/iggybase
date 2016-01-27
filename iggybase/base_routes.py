@@ -67,50 +67,6 @@ def action_summary(module_name, table_name = None):
             table_name = table_name,
             table_query = first_table_query)
 
-def update_ordered_ajax(module_name, table_name):
-    return summary_ajax(module_name, table_name, {('status', 'name'):'ordered'})
-
-def update_ordered(module_name, table_name):
-    # update ordered to received
-    page_form = 'summary'
-    table_queries = tqc.TableQueryCollection(module_name, page_form, table_name,
-            {('status', 'name'):'ordered'})
-    table_queries.get_fields()
-    first_table_query = table_queries.get_first()
-    hidden_fields = {}
-    hidden_fields['column_defaults'] = '{"status":1}'
-    # TODO if we can sort out foreign keys for the update then
-    # we don't need to pass in button text
-    hidden_fields['button_text'] = 'Receive Selected Oligos'
-    # if nothing to display then page not found
-    if not first_table_query.table_fields:
-        abort(404)
-    return templating.page_template('update',
-            module_name = module_name,
-            table_name = table_name,
-            table_query = first_table_query, hidden_fields = hidden_fields)
-
-def update_requested_ajax(module_name, table_name):
-    return summary_ajax(module_name, table_name, {('status', 'name'):'requested'})
-
-def update_requested(module_name, table_name):
-    # update requested to ordered
-    page_form = 'summary'
-    table_queries = tqc.TableQueryCollection(module_name, page_form, table_name,
-            {('name', 'status'):'requested'})
-    table_queries.get_fields()
-    first_table_query = table_queries.get_first()
-    hidden_fields = {}
-    hidden_fields['column_defaults'] = '{"status":2}'
-    hidden_fields['button_text'] = 'Order Selected Oligos'
-    # if nothing to display then page not found
-    if not first_table_query.table_fields:
-        abort(404)
-    return templating.page_template('update',
-            module_name = module_name,
-            table_name = table_name,
-            table_query = first_table_query, hidden_fields = hidden_fields)
-
 def action_summary_ajax(module_name, table_name = None):
     return summary_ajax(module_name, table_name)
 
