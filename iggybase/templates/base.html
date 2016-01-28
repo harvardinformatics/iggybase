@@ -93,13 +93,11 @@
                         {%- endblock topbuttonbar %}
 
                         {% block hidden_fields -%}
-                        <div id="hidden_fields">
                             {% if hidden_fields %}
                                 {% for name, value in hidden_fields.items() %}
                                     <input type="hidden" name="{{name}}"value="{{value}}" class="hidden_field">
                                 {% endfor %}
                             {% endif %}
-                        </div>
                         {% endblock hidden_fields %}
 
                         {% block page_content -%}

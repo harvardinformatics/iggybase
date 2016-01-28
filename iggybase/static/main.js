@@ -1,9 +1,7 @@
 $( document ).ready( function () {
     $( ".lookupfield" ).each(
-        function() {
-            var spancls = "ui-icon ui-icon-search search-button"
-            var spanstl = "display: inline-block;float:right;"
-            $('<span class="'+spancls+'" style="'+spanstl+'" luid="'+$(this).attr('id')+'"/>').appendTo($(this).parent());
+        function( ) {
+            $.fn.addLookup( $( this ) );
         }
     );
     $( ".search-button" ).click(
@@ -16,37 +14,19 @@ $( document ).ready( function () {
             $.fn.addChildTableRow( $( this ) );
         }
     );
-    $( ".datepicker-field" ).datepicker({
-        format: 'yyyy-mm-dd',
-        autoclose: true
-
-    });
-    $( "form .lookupfield" ).keydown(function (e) {
-        var key = e.which;
-        if(key == 13)  // the enter key code
+    $( ".datepicker-field" ).datepicker(
         {
-            var input_id = $(this).attr( 'id' );
-            var matches = input_id.match( /(\S+)_(\d+)/);
-            var field_name = matches[ 1 ];
-            var table_object = $( '#table_object_0' ).val( );
-            var module = $( '#module_0' ).val( );
-            var search_vals = {};
+            format: 'yyyy-mm-dd',
+            autoclose: true
 
-            search_vals['search_name'] = $(this).val();
-            search_vals['modal_input_id'] = input_id;
-            search_vals['modal_table_object'] = table_object;
-            search_vals['modal_field_name'] = field_name;
-            search_vals['modal_module'] = module;
-            search_vals['modal_search_table'] = '';
-            search_vals['modal_search_module'] = '';
-
-            var formurl = $URL_ROOT + "/core/search_results?search_vals=" + JSON.stringify(search_vals);
-
-            $.fn.showModalDialog( formurl, {}, $.fn.searchLinks );
-
-            return false;
         }
-    });
+    );
+    $( "form .lookupfield" ).keydown(
+        function ( e ) {
+            $.fn.keydownLookupField( e );
+        }
+    );
+
     $('.change_role').click(function(){
         $.ajax({
             url:$URL_ROOT + 'ajax/change_role',
@@ -70,20 +50,67 @@ $( document ).ready( function () {
 
 ( function( $ ) {
     $.fn.addChildTableRow = function( ele ) {
-        var target = ele.attr("target_table");
+        var target = ele.attr( "target_table" );
+        var table_object_id = ele.attr( "table_object_id" );
+        var link_column = $( "#hidden_linkcolumn_" + table_object_id ).val( );
         var new_id;
+        var parser = location;
+        var parent_id;
 
-        $( "#" + target + " tr:last" ).clone( ).find( "input" ).each(
+        var path = parser.pathname.split( "/" );
+        if ( path[ path.length - 1 ] == "" )
+            parent_id = path[ path.length - 2 ];
+        else
+            parent_id = path[ path.length - 1 ];
+
+        $( "#" + target + " tr:last" ).clone( ).find( "input", "select" ).each(
             function() {
 		        var id = $(this).attr( 'id' );
 		        var matches = id.match( /child_(\S+)_(\d+)/);
 		        var new_id = "child_" + matches[ 1 ] + "_" + ( parseInt( matches[ 2 ] )+ 1 );
 		        var hidden_id = "hidden_" + matches[ 1 ] + "_" + ( parseInt( matches[ 2 ] )+ 1 );
-                $( this ).val( '' ).attr( 'id', new_id );
-                if ( matches[ 1 ] == 'name' )
-                    $( this ).closest( "td" ).append( "<input id='" + hidden_id + "' type='hidden' value='new'>");
+
+                if ( link_column == matches[ 1 ] )
+                    $( this ).val( parent_id ).attr( 'id', new_id ).attr( 'name', new_id );
                 else
-                    $( this ).closest( "td" ).append( "<input id='" + hidden_id + "' type='hidden' value=''>");
+                    $( this ).val( '' ).attr( 'id', new_id ).attr( 'name', new_id );
+
+                if ( matches[ 1 ] == 'name' )
+                    $( "#hidden_fields" ).append( "<input id='" + hidden_id + "' type='hidden' value='new'>" );
+                else if ( link_column == matches[ 1 ] )
+                    $( "#hidden_fields" ).append( "<input id='" + hidden_id + "' type='hidden' value='" + parent_id + "'>" );
+                else
+                    $( "#hidden_fields" ).append( "<input id='" + hidden_id + "' type='hidden' value=''>" );
+
+                var td = $( this ).closest( "td" );
+                var searchbutton = $( td > '.search-button' )
+                if ( $( searchbutton ) ) {
+                    $( searchbutton ).click(
+                        function( ) {
+                            $.fn.searchClick( $( this ) );
+                        }
+                    );
+                    var luid = $( this ).closest( "input" ).attr( "id" )
+		            matches = luid.match( /(\S+)_(\d+)/);
+		            new_luid = matches[ 1 ] + "_" + ( parseInt( matches[ 2 ] )+ 1 );
+                    $( searchbutton ).attr( "luid", new_luid )
+                }
+
+                if ( $( this ).hasClass( 'datepicker-field' ) ) {
+                    $( this ).datepicker({
+                        format: 'yyyy-mm-dd',
+                        autoclose: true
+
+                    });
+                }
+
+                if ( $( this ).hasClass( 'lookupfield' ) ) {
+                    $( this ).keydown(
+                        function ( e ) {
+                            $.fn.keydownLookupField( e );
+                        }
+                    );
+                }
             }
         ).end( ).appendTo( "#" + target );
     }
@@ -123,6 +150,39 @@ $( document ).ready( function () {
                 $("#dialog").modal( "show" );
             }
         } );
+    }
+
+    $.fn.addLookup = function ( ele ) {
+        var spancls = "ui-icon ui-icon-search search-button"
+        var spanstl = "display: inline-block;float:right;"
+        $('<span class="'+spancls+'" style="'+spanstl+'" luid="'+ele.attr('id')+'"/>').appendTo(ele.parent());
+    }
+
+    $.fn.keydownLookupField = function ( e ) {
+        var key = e.which;
+        if(key == 13)  // the enter key code
+        {
+            var input_id = $(this).attr( 'id' );
+            var matches = input_id.match( /(\S+)_(\d+)/);
+            var field_name = matches[ 1 ];
+            var table_object = $( '#table_object_0' ).val( );
+            var module = $( '#module_0' ).val( );
+            var search_vals = {};
+
+            search_vals['search_name'] = $(this).val();
+            search_vals['modal_input_id'] = input_id;
+            search_vals['modal_table_object'] = table_object;
+            search_vals['modal_field_name'] = field_name;
+            search_vals['modal_module'] = module;
+            search_vals['modal_search_table'] = '';
+            search_vals['modal_search_module'] = '';
+
+            var formurl = $URL_ROOT + "/core/search_results?search_vals=" + JSON.stringify(search_vals);
+
+            $.fn.showModalDialog( formurl, {}, $.fn.searchLinks );
+
+            return false;
+        }
     }
 
     $.fn.searchClick = function ( ele ) {

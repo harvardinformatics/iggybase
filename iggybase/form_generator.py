@@ -213,7 +213,13 @@ class FormGenerator():
                                                                                    link_data[row_counter-2].child_link_field_id,
                                                                                    parent_id)
 
+            link_field = self.role_access_control.has_access('Field',
+                                                             {'id': link_data[row_counter-2].child_link_field_id})
+            self.classattr['hidden_linkcolumn_'+str(child_table.id)]=\
+                HiddenField('hidden_linkcolumn_'+str(child_table.id), default=link_field.field_name)
+
             child_title = child_table.name.replace('_', ' ').title()
+
             self.classattr['hidden_startchildtable_'+str(child_table.id)]=\
                 HiddenField('hidden_startchildtable_'+str(child_table.id), default=child_title)
 
