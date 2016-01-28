@@ -63,7 +63,7 @@ $( document ).ready( function () {
         else
             parent_id = path[ path.length - 1 ];
 
-        $( "#" + target + " tr:last" ).clone( ).find( "input", "select" ).each(
+        $( "#" + target + " tr:last" ).clone( ).find( "input, select" ).each(
             function() {
 		        var id = $(this).attr( 'id' );
 		        var matches = id.match( /child_(\S+)_(\d+)/);
@@ -83,17 +83,15 @@ $( document ).ready( function () {
                     $( "#hidden_fields" ).append( "<input id='" + hidden_id + "' type='hidden' value=''>" );
 
                 var td = $( this ).closest( "td" );
-                var searchbutton = $( td > '.search-button' )
-                if ( $( searchbutton ) ) {
+                var searchbutton = $( td ).find( '.search-button' );
+                if ( searchbutton.length ) {
                     $( searchbutton ).click(
                         function( ) {
                             $.fn.searchClick( $( this ) );
                         }
                     );
-                    var luid = $( this ).closest( "input" ).attr( "id" )
-		            matches = luid.match( /(\S+)_(\d+)/);
-		            new_luid = matches[ 1 ] + "_" + ( parseInt( matches[ 2 ] )+ 1 );
-                    $( searchbutton ).attr( "luid", new_luid )
+                    var luid = $( this ).attr( "id" )
+                    $( searchbutton ).attr( "luid", luid )
                 }
 
                 if ( $( this ).hasClass( 'datepicker-field' ) ) {
@@ -163,7 +161,17 @@ $( document ).ready( function () {
         if(key == 13)  // the enter key code
         {
             var input_id = $(this).attr( 'id' );
-            var matches = input_id.match( /(\S+)_(\d+)/);
+            var child;
+            var matches;
+
+            if ( input_id.substring( 1, 5 ) == 'child' ) {
+                matches = input_id.match( /'child_'(\S+)_(\d+)/);
+                child = true;
+            } else {
+                matches = input_id.match( /(\S+)_(\d+)/);
+                child = false;
+            }
+
             var field_name = matches[ 1 ];
             var table_object = $( '#table_object_0' ).val( );
             var module = $( '#module_0' ).val( );
