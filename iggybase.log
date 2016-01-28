@@ -109,3 +109,4 @@ DEBUG:passlib.registry:registered 'sha256_crypt' handler: <class 'passlib.handle
 DEBUG:passlib.registry:registered 'sha512_crypt' handler: <class 'passlib.handlers.sha2_crypt.sha512_crypt'>
 DEBUG:passlib.registry:registered 'plaintext' handler: <class 'passlib.handlers.misc.plaintext'>
 INFO:root:name
+INFO:root:name
