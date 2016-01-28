@@ -40,7 +40,7 @@ $(document).ready(function(){
         $("#update_table").val(button_text);
     }
     $.fn.updateTable = function (table) {
-        var ids = $.map(table.rows('.selected').data(), function (i) {return i[0]});
+        var ids = $.map(table.rows('.selected').data(), function (i) {return i['DT_RowId']});
         if (ids.length > 0) {
             var hidden_fields = $("#hidden_fields");
             var column_defaults = hidden_fields.find('input[name=column_defaults]').val();

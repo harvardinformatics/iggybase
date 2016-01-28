@@ -87,7 +87,6 @@ class RoleAccessControl:
 
     def table_query_fields(self, table_query_id, table_name=None, table_id=None, field_name=None, active=1, visible=1):
         filters = [
-
             (models.FieldRole.role_id == self.role.id),
             (models.TableObjectRole.role_id == self.role.id),
             (models.FieldRole.visible == visible),

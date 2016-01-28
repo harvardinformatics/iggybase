@@ -115,7 +115,11 @@ class OrganizationAccessControl:
                 )
                 criteria_key = (fk_data['name'], fk_data['foreign_key'])
                 if criteria_key in criteria:
-                    wheres.append(getattr(aliases[alias_name],
+                    if type(criteria[criteria_key]) is list:
+                        wheres.append(getattr(aliases[alias_name],
+                                          fk_data['foreign_key']).in_(criteria[criteria_key]))
+                    else:
+                        wheres.append(getattr(aliases[alias_name],
                                           fk_data['foreign_key']) == criteria[criteria_key])
 
             else:  # non-fk field
@@ -123,7 +127,10 @@ class OrganizationAccessControl:
                 columns.append(col.label(field_display_name))
                 criteria_key = (row.TableObject.name, row.Field.field_name)
                 if criteria_key in criteria:
-                    wheres.append(col == criteria[criteria_key])
+                    if type(criteria[criteria_key]) is list:
+                        wheres.append(col.in_(criteria[criteria_key]))
+                    else:
+                        wheres.append(col == criteria[criteria_key])
                 # add to joins if not first table, avoid joining to self
                 if (not first_table_named
                     or (first_table_named == row.TableObject.name)):
@@ -132,6 +139,10 @@ class OrganizationAccessControl:
                     joins.add(table_model)
         # add organization id checks on all tables, does not include fk tables
         for table_model in tables:
+            # add a row id that is the id of the first table named
+            if (table_model.__name__.lower() == first_table_named):
+                col = getattr(table_model, 'id')
+                columns.append(col.label('DT_RowId'))
             wheres.append(getattr(table_model, 'organization_id').in_(self.org_ids))
         results = (
             db_session.query(*columns).
@@ -155,7 +166,6 @@ class OrganizationAccessControl:
             fk_session = db_session
         else:
             fk_session = db_session
-
         return {'foreign_key': res.Field.field_name,
                 'module': res.Module.name,
                 'url_prefix': res.Module.url_prefix,

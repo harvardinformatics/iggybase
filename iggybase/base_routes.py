@@ -32,8 +32,7 @@ def summary(module_name, table_name):
             table_name = table_name,
             table_query = first_table_query)
 
-def summary_ajax(module_name, table_name, criteria = {}):
-    page_form = 'summary'
+def summary_ajax(module_name, table_name, page_form = 'summary', criteria = {}):
     table_queries = tqc.TableQueryCollection(module_name, page_form, table_name,
             criteria)
     table_queries.get_fields()
