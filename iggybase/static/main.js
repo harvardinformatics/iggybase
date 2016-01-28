@@ -23,7 +23,7 @@ $( document ).ready( function () {
     );
     $( "form .lookupfield" ).keydown(
         function ( e ) {
-            $.fn.keydownLookupField( e );
+            return $.fn.keydownLookupField( e, $( this ) );
         }
     );
 
@@ -105,7 +105,7 @@ $( document ).ready( function () {
                 if ( $( this ).hasClass( 'lookupfield' ) ) {
                     $( this ).keydown(
                         function ( e ) {
-                            $.fn.keydownLookupField( e );
+                            return $.fn.keydownLookupField( e );
                         }
                     );
                 }
@@ -156,25 +156,24 @@ $( document ).ready( function () {
         $('<span class="'+spancls+'" style="'+spanstl+'" luid="'+ele.attr('id')+'"/>').appendTo(ele.parent());
     }
 
-    $.fn.keydownLookupField = function ( e ) {
+    $.fn.keydownLookupField = function ( e, ele ) {
         var key = e.which;
         if(key == 13)  // the enter key code
         {
-            var input_id = $(this).attr( 'id' );
-            var child;
+            var input_id = ele.attr( 'id' );
             var matches;
+            var table_object;
 
-            if ( input_id.substring( 1, 5 ) == 'child' ) {
-                matches = input_id.match( /'child_'(\S+)_(\d+)/);
-                child = true;
+            if ( input_id.substring( 0, 5 ) == 'child' ) {
+                matches = input_id.match( /child_(\S+)_(\d+)/);
+                table_object = ele.closest( 'tr' ).attr( 'table_object_name' );
             } else {
                 matches = input_id.match( /(\S+)_(\d+)/);
-                child = false;
+                table_object = $( '#table_object_0' ).val( );
             }
 
-            var field_name = matches[ 1 ];
-            var table_object = $( '#table_object_0' ).val( );
             var module = $( '#module_0' ).val( );
+            var field_name = matches[ 1 ];
             var search_vals = {};
 
             search_vals['search_name'] = $(this).val();
@@ -195,9 +194,18 @@ $( document ).ready( function () {
 
     $.fn.searchClick = function ( ele ) {
         var input_id = ele.attr( 'luid' );
-        var matches = input_id.match( /(\S+)_(\d+)/);
+        var matches;
+        var table_object;
+
+        if ( input_id.substring( 0, 5 ) == 'child' ) {
+            matches = input_id.match( /child_(\S+)_(\d+)/);
+            table_object = ele.closest( 'tr' ).attr( 'table_object_name' );
+        } else {
+            matches = input_id.match( /(\S+)_(\d+)/);
+            table_object = $( '#table_object_0' ).val( );
+        }
+
         var field_name = matches[ 1 ];
-        var table_object = $( '#table_object_0' ).val( );
         var module = $( '#module_0' ).val( );
 
         var formurl = $URL_ROOT + "/core/search?table_object=" + table_object + "&input_id=" + input_id + "&field_name=" + field_name + "&module=" + module;

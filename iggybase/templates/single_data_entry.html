@@ -23,9 +23,7 @@
     {%- endblock topbuttonbar %}
 
     {% block hidden_fields -%}
-        <div id="hidden_fields">
-            {{ super() }}
-        </div>
+        {{ super() }}
     {% endblock hidden_fields -%}
 
     <div id="page_message">
@@ -38,15 +36,16 @@
             {%- for field in form %}
                 {% if "hidden_startmaintable_" in field.id -%}
                     <div class="col-md-4">
-                    {% set table_name = field.data|replace(" ", "_") %}
+                    {% set table_name = field.data %}
                     <table id="{{ table_name }}" class="table">
                     {% set maintable = 1 %}
                 {% elif "hidden_startchildtable_" in field.id -%}
                     {% set html_id = field.id.split("_") %}
                     {% set table_id = html_id[2] %}
                     </table></div><br><br><div class="col-md-12">
-                    <h3>{{ field.data }}</h3>
-                    {% set table_name = field.data|replace(" ", "_") %}
+                    {% set table_title = field.data|replace("_", " ")|title %}
+                    <h3>{{ table_title }}</h3>
+                    {% set table_name = field.data %}
                     <input type="button" class="add_new_child_item" target_table="{{ table_name}}" table_object_id="{{ table_id }}" value="Add {{ field.data }}">
                     <table id="{{ table_name }}" class="table table-striped"><tr>
                     {% set maintable = 0 %}
@@ -66,7 +65,7 @@
 
                     {% if not bootstrap_is_hidden_field( field ) -%}
                         {% if endrow == 1 -%}
-                            <tr>
+                            <tr table_object_name="{{ table_name }}">
                             {% set endrow = 0 %}
                         {% endif %}
 

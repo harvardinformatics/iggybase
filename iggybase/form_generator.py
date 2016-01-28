@@ -160,9 +160,8 @@ class FormGenerator():
 
         fields = self.role_access_control.fields(self.table_data.id, self.module)
 
-        main_title = self.table_data.name.replace('_', ' ').title()
         self.classattr['hidden_startmaintable_'+str(self.table_data.id)]=\
-            HiddenField('hidden_startmaintable_'+str(self.table_data.id), default=main_title)
+            HiddenField('hidden_startmaintable_'+str(self.table_data.id), default=self.table_data.name)
 
         self.get_row(fields, row_name, 1)
 
@@ -177,9 +176,8 @@ class FormGenerator():
 
         self.classattr = self.hidden_fields('multiple')
 
-        main_title = self.table_data.name.replace('_', ' ').title()
         self.classattr['hidden_startmaintable_'+str(self.table_data.id)]=\
-            HiddenField('hidden_startmaintable_'+str(self.table_data.id), default=main_title)
+            HiddenField('hidden_startmaintable_'+str(self.table_data.id), default=self.table_data.name)
 
         row_counter = 1
         for row_name in row_names:
@@ -197,9 +195,8 @@ class FormGenerator():
         self.classattr = self.hidden_fields('parent_child')
         self.classattr.update(self.row_fields(1, row_name))
 
-        main_title = self.table_data.name.replace('_', ' ').title()
         self.classattr['hidden_startmaintable_'+str(self.table_data.id)]=\
-            HiddenField('hidden_startmaintable_'+str(self.table_data.id), default=main_title)
+            HiddenField('hidden_startmaintable_'+str(self.table_data.id), default=self.table_data.name)
 
         fields = self.role_access_control.fields(self.table_data.id, self.module)
         parent_id = self.get_row(fields, row_name, 1)
@@ -218,10 +215,8 @@ class FormGenerator():
             self.classattr['hidden_linkcolumn_'+str(child_table.id)]=\
                 HiddenField('hidden_linkcolumn_'+str(child_table.id), default=link_field.field_name)
 
-            child_title = child_table.name.replace('_', ' ').title()
-
             self.classattr['hidden_startchildtable_'+str(child_table.id)]=\
-                HiddenField('hidden_startchildtable_'+str(child_table.id), default=child_title)
+                HiddenField('hidden_startchildtable_'+str(child_table.id), default=child_table.name)
 
             for child_row_name in child_row_names:
                 self.classattr.update(self.row_fields(row_counter, child_row_name, 'child_'))
