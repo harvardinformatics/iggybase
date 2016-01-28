@@ -98,7 +98,7 @@ class OrganizationAccessControl:
             field_display_name = util.get_field_attr(row.TableQueryField, row.Field, 'display_name')
             if row.Field.foreign_key_table_object_id is not None:  # fk field
                 # get fk data so we can include name and form url link
-                fk_data = self.foreign_key(row.Field.foreign_key_table_object_id)
+                fk_data = self.foreign_key(row.Field.foreign_key_table_object_id, row.Field.foreign_key_display)
                 # create alias to the fk table
                 # solves the case of more than one join to same table
                 alias_name = row.TableObject.name + '_' + row.Field.field_name + '_' + fk_data['name']
@@ -152,16 +152,20 @@ class OrganizationAccessControl:
         )
         return results
 
-    def foreign_key(self, table_object_id):
+    def foreign_key(self, table_object_id, display = None):
+        filters = [(models.Field.table_object_id == table_object_id)]
+        if not display:
+            # name is default display column for FK
+            filters.append(models.Field.field_name == 'name')
+        else:
+            filters.append(models.Field.id == display)
         res = (db_session.query(models.Field, models.TableObject, models.Module).
                join(models.TableObject,
                     models.TableObject.id == models.Field.table_object_id
                     ).
                join(models.TableObjectRole).
                join(models.Module).
-               filter(models.Field.table_object_id == table_object_id).
-               filter(models.Field.field_name == 'name').first())
-
+               filter(*filters).first())
         if res.Module.name == 'mod_admin':
             fk_session = db_session
         else:

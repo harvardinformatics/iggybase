@@ -306,11 +306,13 @@ class Field(Base):
     default = Column(String(255))
     foreign_key_table_object_id = Column(Integer, ForeignKey('table_object.id'))
     foreign_key_field_id = Column(Integer, ForeignKey('field.id'))
+    foreign_key_display = Column(Integer, ForeignKey('field.id'))
 
     field_type = relationship("TableObject", foreign_keys=[table_object_id])
     field_data_type = relationship("DataType", foreign_keys=[data_type_id])
     field_foreign_key_table_object = relationship("TableObject", foreign_keys=[foreign_key_table_object_id])
     field_foreign_key_field = relationship("Field", foreign_keys=[foreign_key_field_id])
+    field_foreign_key_display = relationship("Field", foreign_keys=[foreign_key_display])
 
 
 class FieldRole(Base):
