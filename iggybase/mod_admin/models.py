@@ -517,6 +517,7 @@ class User(Base, UserMixin):
     address_id = Column(Integer, ForeignKey('address.id'))
     home_page = Column(String(50))
     current_user_role_id = Column(Integer, ForeignKey('user_role.id'))
+
     user_user_role = relationship("UserRole", foreign_keys=[current_user_role_id])
     user_organization = relationship("Organization", foreign_keys=[organization_id])
     roles = relationship('Role', secondary='user_role', primaryjoin='user_role.c.user_id == User.id',
