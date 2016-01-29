@@ -85,7 +85,7 @@ class TableFactory:
         table_objects = []
 
         res = db_session.query(TableObject).filter(TableObject.active==active). \
-            filter(TableObject.admin_table_object!=1). \
+            filter(TableObject.module_id!=4). \
             order_by(TableObject.order).all()
 
         for row in res:
