@@ -488,25 +488,6 @@ class TableQueryCriteria(Base):
     table_query_criteria_table_query = relationship("TableQuery", foreign_keys=[table_query_id])
     table_query_criteria_field = relationship("Field", foreign_keys=[field_id])
 
-
-class TableQueryOrder(Base):
-    __tablename__ = 'table_query_order'
-    id = Column(Integer, primary_key=True)
-    name = Column(String(100), unique=True)
-    description = Column(String(255))
-    date_created = Column(DateTime, default=datetime.datetime.utcnow)
-    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
-    active = Column(Boolean)
-    organization_id = Column(Integer)
-    order = Column(Integer)
-    table_query_id = Column(Integer, ForeignKey('table_query.id'))
-    field_id = Column(Integer, ForeignKey('field.id'))
-    direction = Column(String(50))
-
-    table_query_order_field = relationship("Field", foreign_keys=[field_id])
-    table_query_order_table_query = relationship("TableQuery", foreign_keys=[table_query_id])
-
-
 class Module(Base):
     __tablename__ = 'module'
     id = Column(Integer, primary_key=True)
