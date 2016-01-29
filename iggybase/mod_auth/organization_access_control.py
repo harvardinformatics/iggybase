@@ -165,7 +165,6 @@ class OrganizationAccessControl:
                     models.TableObject.id == models.Field.table_object_id
                     ).
                join(models.TableObjectRole).
-               join(models.FieldRole).
                join(models.Module).
                filter(*filters).first())
         if res.Module.name == 'mod_admin':
