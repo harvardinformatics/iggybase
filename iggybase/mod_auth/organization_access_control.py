@@ -5,6 +5,7 @@ from iggybase.mod_admin import models
 from iggybase import models as core_models
 from iggybase.mod_core import utilities as util
 from sqlalchemy.orm import aliased
+import re
 import datetime
 import logging
 
@@ -222,6 +223,7 @@ class OrganizationAccessControl:
         history_record = models.TableObjectName.query.filter_by(table_object_id=history_data.id). \
             filter_by(facility_id=role_access_control.role.facility_id).first()
 
+        fields = {}
         hidden_fields = {}
         child_tables = {}
         child_record_tables = {}
@@ -229,40 +231,41 @@ class OrganizationAccessControl:
         last_row_id = 0
         instances = {}
         prefix = ''
-        for field in form:
-            if field.name.endswith('_token'):
+        field_pattern = re.compile('(\S+)_(\d+)')
+
+        for key in request.form:
+            data = request.form.get(key)
+            if key.endswith('_token') or key.endswith('_0'):
                 continue
-            elif field.name.endswith('_0'):
-                form_fields[field.name[:field.name.index('_')]] = field.data
-                continue
-            elif field.name.startswith('hidden_'):
-                field_id = field.name[field.name.index('_') + 1:]
-                hidden_fields[field_id] = field.data
-                continue
-            elif field.name.startswith('child_'):
+            elif key.startswith('hidden_'):
+                field_id = key[key.index('_') + 1:]
+                hidden_fields[field_id] = data
+            elif field_pattern.match(key):
+                fields[key] = data
+
+        for field, data in fields.items():
+            if field.startswith('child_'):
                 prefix = 'child_'
-                field_id = field.name[field.name.index('_') + 1:]
+                field_id = field[field.index('_') + 1:]
                 row_id = int(field_id[field_id.rindex('_') + 1:])
                 column_name = field_id[:field_id.rindex('_')]
 
-                child_name_field = getattr(form, 'hidden_table_name_' + str(row_id))
-                child_id_field = getattr(form, 'hidden_table_id_' + str(row_id))
-                if child_id_field.data not in child_tables.keys():
-                    child_tables[child_id_field.data] = util.get_table(child_name_field.data)
+                child_name_field = hidden_fields['table_name_' + str(row_id)]
+                child_id_field = hidden_fields['table_id_' + str(row_id)]
+                if child_id_field not in child_tables.keys():
+                    child_tables[child_id_field] = util.get_table(child_name_field)
 
-                    child_table_object_data = models.TableObject.query.filter_by(name=child_name_field.data).first()
-
-                    child_record_tables[child_id_field.data] = models.TableObjectName.query.\
-                        filter_by(table_object_id=child_id_field.data). \
+                    child_record_tables[child_id_field] = models.TableObjectName.query.\
+                        filter_by(table_object_id=child_id_field). \
                         filter_by(facility_id=role_access_control.role.facility_id).first()
 
-                current_table_object = child_tables[child_id_field.data]
-                current_table_record = child_record_tables[child_id_field.data]
+                current_table_object = child_tables[child_id_field]
+                current_table_record = child_record_tables[child_id_field]
             else:
                 current_table_object = table_object
                 current_table_record = table_record
 
-                field_id = field.name
+                field_id = field
                 row_id = int(field_id[field_id.rindex('_') + 1:])
                 column_name = field_id[:field_id.rindex('_')]
 
@@ -271,7 +274,7 @@ class OrganizationAccessControl:
 
             if last_row_id != row_id and row_id not in instances:
                 if hidden_fields['row_name_' + str(row_id)] == 'new':
-                    name_field = getattr(form, prefix + 'name_' + str(row_id))
+                    name_field = fields[prefix + 'name_' + str(row_id)]
                     instances[row_id] = current_table_object()
                     setattr(instances[row_id], 'date_created', datetime.datetime.utcnow())
                     setattr(instances[row_id], 'organization_id', self.current_org_id)
@@ -281,8 +284,8 @@ class OrganizationAccessControl:
                         db_session.add(current_table_record)
                         db_session.commit()
 
-                    if name_field.data != '':
-                        current_inst_name = name_field.data
+                    if name_field != '':
+                        current_inst_name = name_field
                 else:
                     current_inst_name = hidden_fields['row_name_' + str(row_id)]
                     instances[row_id] = db_session.query(current_table_object). \
@@ -290,7 +293,7 @@ class OrganizationAccessControl:
 
                 setattr(instances[row_id], 'last_modified', datetime.datetime.utcnow())
 
-            if not (hidden_fields[field_id] == field.data or hidden_fields[field_id] == str(field.data)):
+            if not (hidden_fields[field_id] == data or hidden_fields[field_id] == str(data)):
                 history_instance = core_models.History()
                 history_instance.name = history_record.get_new_name()
                 history_instance.table_object_id = hidden_fields['table_id_' + str(row_id)]
@@ -299,16 +302,10 @@ class OrganizationAccessControl:
                 history_instance.user_id = g.user.id
                 history_instance.instance_name = current_inst_name
                 history_instance.old_value = hidden_fields[field_id]
-                history_instance.new_value = field.data
+                history_instance.new_value = data
                 db_session().add(history_instance)
 
-            if field_data.Field.foreign_key_table_object_id is not None and not isinstance(field.data, int):
-                fk_id = self.get_foreign_key_data(field_data.Field.foreign_key_table_object_id, field.data)
-                if len(fk_id) > 1:
-                    setattr(instances[row_id], column_name, fk_id[1][0])
-                else:
-                    setattr(instances[row_id], column_name, None)
-            elif field_data.Field.data_type_id == 7 and field.data != '':
+            if field_data.Field.foreign_key_table_object_id == long_text_data.id and data != '':
                 if hidden_fields[field_id] == '':
                     lt = core_models.LongText()
                     db_session().add(lt)
@@ -325,11 +322,30 @@ class OrganizationAccessControl:
                     lt = db_session.query(core_models.LongText).filter_by(id=lt_id).first()
 
                 setattr(lt, 'last_modified', datetime.datetime.utcnow())
-                setattr(lt, 'long_text', field.data)
+                setattr(lt, 'long_text', data)
                 db_session().add(lt)
                 setattr(instances[row_id], column_name, lt_id)
-            else:
-                setattr(instances[row_id], column_name, field.data)
+            elif field_data.Field.foreign_key_table_object_id is not None:
+                try:
+                    setattr(instances[row_id], column_name, int(data))
+                except ValueError:
+                    fk_id = self.get_foreign_key_data(field_data.Field.foreign_key_table_object_id, data)
+                    if len(fk_id) > 1:
+                        setattr(instances[row_id], column_name, fk_id[1][0])
+                    else:
+                        setattr(instances[row_id], column_name, None)
+            elif column_name != 'id' and column_name != 'last_modified' and column_name != 'date_created':
+                if field_data.Field.data_type_id == 1 and data is not None:
+                    setattr(instances[row_id], column_name, int(data))
+                elif field_data.Field.data_type_id == 8 and data is not None:
+                    setattr(instances[row_id], column_name, float(data))
+                elif field_data.Field.data_type_id == 3:
+                    if data == 'y':
+                        setattr(instances[row_id], column_name, 1)
+                    else:
+                        setattr(instances[row_id], column_name, 0)
+                else:
+                    setattr(instances[row_id], column_name, data)
 
         row_names = []
 

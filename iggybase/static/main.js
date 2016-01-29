@@ -56,7 +56,8 @@ $( document ).ready( function () {
         var new_id;
         var parser = location;
         var parent_id;
-
+        var row_id;
+        var td;
         var path = parser.pathname.split( "/" );
         if ( path[ path.length - 1 ] == "" )
             parent_id = path[ path.length - 2 ];
@@ -67,22 +68,24 @@ $( document ).ready( function () {
             function() {
 		        var id = $(this).attr( 'id' );
 		        var matches = id.match( /child_(\S+)_(\d+)/);
-		        var new_id = "child_" + matches[ 1 ] + "_" + ( parseInt( matches[ 2 ] )+ 1 );
-		        var hidden_id = "hidden_" + matches[ 1 ] + "_" + ( parseInt( matches[ 2 ] )+ 1 );
+		        row_id = parseInt( matches[ 2 ] )+ 1;
+		        var new_id = "child_" + matches[ 1 ] + "_" + ( row_id );
+		        var hidden_id = "hidden_" + matches[ 1 ] + "_" + ( row_id );
+                td = $( this ).closest( 'td' );
 
                 if ( link_column == matches[ 1 ] )
                     $( this ).val( parent_id ).attr( 'id', new_id ).attr( 'name', new_id );
                 else
                     $( this ).val( '' ).attr( 'id', new_id ).attr( 'name', new_id );
 
-                if ( matches[ 1 ] == 'name' )
-                    $( "#hidden_fields" ).append( "<input id='" + hidden_id + "' type='hidden' value='new'>" );
-                else if ( link_column == matches[ 1 ] )
-                    $( "#hidden_fields" ).append( "<input id='" + hidden_id + "' type='hidden' value='" + parent_id + "'>" );
+                if ( matches[ 1 ] == 'name' ) {
+                    td.append( "<input id='" + hidden_id + "' name='" + hidden_id + "' type='hidden' value='new'>" );
+                    td.append( "<input id='hidden_row_name_" + row_id + "' name='hidden_row_name_" + row_id + "' type='hidden' value='new'>" );
+                } else if ( link_column == matches[ 1 ] )
+                    td.append( "<input id='" + hidden_id + "' name='" + hidden_id + "' type='hidden' value='" + parent_id + "'>" );
                 else
-                    $( "#hidden_fields" ).append( "<input id='" + hidden_id + "' type='hidden' value=''>" );
+                    td.append( "<input id='" + hidden_id + "' name='" + hidden_id + "' type='hidden' value=''>" );
 
-                var td = $( this ).closest( "td" );
                 var searchbutton = $( td ).find( '.search-button' );
                 if ( searchbutton.length ) {
                     $( searchbutton ).click(
@@ -111,6 +114,8 @@ $( document ).ready( function () {
                 }
             }
         ).end( ).appendTo( "#" + target );
+        td.append( "<input id='hidden_table_name_" + row_id +"' name='hidden_table_name_" + row_id +"' type='hidden' value='" + target + "'>" );
+        td.append( "<input id='hidden_table_id_" + row_id +"' name='hidden_table_id_" + row_id +"' type='hidden' value='" + table_object_id + "'>" );
     }
 
     $.fn.showModalDialog = function ( url, buttons, callback ) {

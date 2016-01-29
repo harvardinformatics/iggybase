@@ -1,7 +1,7 @@
 from flask.ext.wtf import Form
 from types import new_class
 from wtforms import StringField, IntegerField, PasswordField, BooleanField, SelectField, ValidationError, DateField, \
-    HiddenField, FileField, TextAreaField
+    HiddenField, FileField, TextAreaField, FloatField
 from wtforms.validators import DataRequired, Length, email
 from iggybase.mod_auth.organization_access_control import OrganizationAccessControl
 from iggybase.mod_auth.role_access_control import RoleAccessControl
@@ -19,6 +19,12 @@ class ReadonlyIntegerField(IntegerField):
     def __call__(self, *args, **kwargs):
         kwargs.setdefault('readonly', True)
         return super(ReadonlyIntegerField, self).__call__(*args, **kwargs)
+
+
+class ReadonlyFloatField(FloatField):
+    def __call__(self, *args, **kwargs):
+        kwargs.setdefault('readonly', True)
+        return super(ReadonlyFloatField, self).__call__(*args, **kwargs)
 
 
 class ReadonlyBooleanField(BooleanField):
@@ -100,6 +106,8 @@ class FormGenerator():
                     kwargs = {'validators': validators}
                     if field_data.Field.data_type_id == constants.INTEGER:
                         wtf_class = IntegerField
+                    elif field_data.Field.data_type_id == constants.FLOAT:
+                        wtf_class = FloatField
                     elif field_data.Field.data_type_id == constants.BOOLEAN:
                         wtf_class = BooleanField
                     elif field_data.Field.data_type_id == constants.DATE:
@@ -132,6 +140,8 @@ class FormGenerator():
                     wtf_class = ReadonlyStringField
                 elif field_data.Field.data_type_id == constants.INTEGER:
                     wtf_class = ReadonlyIntegerField
+                elif field_data.Field.data_type_id == constants.FLOAT:
+                    wtf_class = ReadonlyFloatField
                 elif field_data.Field.data_type_id == constants.BOOLEAN:
                     wtf_class = ReadonlyBooleanField
                 elif field_data.Field.data_type_id == constants.DATE:
