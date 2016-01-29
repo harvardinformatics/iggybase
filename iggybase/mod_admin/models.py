@@ -227,6 +227,11 @@ class TableObject(Base):
 
     table_object_role_module = relationship("Module", foreign_keys=[module_id])
 
+     def get_new_name(self):
+         new_name = self.new_name_prefix + str(self.new_name_id).zfill(self.id_length)
+         self.new_name_id += 1
+         return new_name
+
 
 class TableObjectRole(Base):
     __tablename__ = 'table_object_role'
@@ -350,33 +355,9 @@ class Action(Base):
     date_created = Column(DateTime, default=datetime.datetime.utcnow)
     last_modified = Column(DateTime, default=datetime.datetime.utcnow)
     active = Column(Boolean)
-    action_value = Column(String(255))
-
-
-class NewUser(Base):
-    __tablename__ = 'new_user'
-    id = Column(Integer, primary_key=True)
-    name = Column(String(100), unique=True)
-    description = Column(String(255))
-    date_created = Column(DateTime, default=datetime.datetime.utcnow)
-    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
-    active = Column(Boolean)
     organization_id = Column(Integer)
     order = Column(Integer)
-    first_name = Column(String(100))
-    last_name = Column(String(100))
-    password_hash = Column(String(100))
-    email = Column(String(100))
-    organization = Column(String(100))
-    address1 = Column(String(100))
-    address2 = Column(String(100))
-    city = Column(String(100))
-    state = Column(String(100))
-    postcode = Column(String(100))
-    phone = Column(String(100))
-    pi = Column(String(100))
-    server = Column(String(100))
-    directory = Column(String(100))
+    action_value = Column(String(255))
 
 
 class TableQuery(Base):

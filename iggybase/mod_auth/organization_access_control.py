@@ -225,23 +225,14 @@ class OrganizationAccessControl:
     def save_form(self, form):
         role_access_control = RoleAccessControl()
         table_object = util.get_table(form.table_object_0.data)
-        table_object_data = models.TableObject.query.filter_by(name=table_object.__tablename__).first()
-        table_record = models.TableObjectName.query.filter_by(table_object_id=table_object_data.id). \
-            filter_by(facility_id=role_access_control.role.facility_id).first()
 
-        long_text_data = models.TableObject.query.filter_by(name='long_text').first()
-        long_text_record = models.TableObjectName.query.filter_by(table_object_id=long_text_data.id). \
-            filter_by(facility_id=role_access_control.role.facility_id).first()
+        long_text_object = models.TableObject.query.filter_by(name='long_text').first()
 
-        history_data = models.TableObject.query.filter_by(name='history').first()
-        history_record = models.TableObjectName.query.filter_by(table_object_id=history_data.id). \
-            filter_by(facility_id=role_access_control.role.facility_id).first()
+        history_object = models.TableObject.query.filter_by(name='history').first()
 
         fields = {}
         hidden_fields = {}
         child_tables = {}
-        child_record_tables = {}
-        form_fields = {}
         last_row_id = 0
         instances = {}
         prefix = ''
@@ -269,15 +260,9 @@ class OrganizationAccessControl:
                 if child_id_field not in child_tables.keys():
                     child_tables[child_id_field] = util.get_table(child_name_field)
 
-                    child_record_tables[child_id_field] = models.TableObjectName.query.\
-                        filter_by(table_object_id=child_id_field). \
-                        filter_by(facility_id=role_access_control.role.facility_id).first()
-
                 current_table_object = child_tables[child_id_field]
-                current_table_record = child_record_tables[child_id_field]
             else:
                 current_table_object = table_object
-                current_table_record = table_record
 
                 field_id = field
                 row_id = int(field_id[field_id.rindex('_') + 1:])
@@ -292,11 +277,11 @@ class OrganizationAccessControl:
                     instances[row_id] = current_table_object()
                     setattr(instances[row_id], 'date_created', datetime.datetime.utcnow())
                     setattr(instances[row_id], 'organization_id', self.current_org_id)
-                    if current_table_record.new_name_prefix is not None and current_table_record.new_name_prefix != "":
-                        current_inst_name = current_table_record.get_new_name()
+                    if current_table_object.new_name_prefix is not None and current_table_object.new_name_prefix != "":
+                        current_inst_name = current_table_object.get_new_name()
                         fields[prefix + 'name_' + str(row_id)] = current_inst_name
                         setattr(instances[row_id], 'name', current_inst_name)
-                        db_session.add(current_table_record)
+                        db_session.add(current_table_object)
                         db_session.flush()
                 else:
                     current_inst_name = hidden_fields['row_name_' + str(row_id)]
@@ -307,7 +292,7 @@ class OrganizationAccessControl:
 
             if not (hidden_fields[field_id] == data or hidden_fields[field_id] == str(data)):
                 history_instance = core_models.History()
-                history_instance.name = history_record.get_new_name()
+                history_instance.name = history_object.get_new_name()
                 history_instance.table_object_id = hidden_fields['table_id_' + str(row_id)]
                 history_instance.field_id = field_data.Field.id
                 history_instance.organization_id = self.current_org_id
@@ -317,15 +302,15 @@ class OrganizationAccessControl:
                 history_instance.new_value = data
                 db_session().add(history_instance)
 
-            if field_data.Field.foreign_key_table_object_id == long_text_data.id and data != '':
+            if field_data.Field.foreign_key_table_object_id == long_text_object.id and data != '':
                 if hidden_fields[field_id] == '':
                     lt = core_models.LongText()
                     db_session().add(lt)
                     db_session().flush
                     lt_id = lt.id
 
-                    setattr(lt, 'name', long_text_record.get_new_name())
-                    db_session.add(long_text_record)
+                    setattr(lt, 'name', long_text_object.get_new_name())
+                    db_session.add(long_text_object)
 
                     setattr(lt, 'date_created', datetime.datetime.utcnow())
                     setattr(lt, 'organization_id', self.current_org_id)
