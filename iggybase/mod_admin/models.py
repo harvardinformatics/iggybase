@@ -220,7 +220,7 @@ class TableObject(Base):
     active = Column(Boolean)
     organization_id = Column(Integer)
     order = Column(Integer)
-    module_id = Column(Boolean)
+    module_id = Column(Integer, ForeignKey('module.id'))
     new_name_prefix = Column(String(10))
     new_name_id = Column(Integer)
     id_length = Column(Integer)
