@@ -111,3 +111,6 @@ DEBUG:passlib.registry:registered 'plaintext' handler: <class 'passlib.handlers.
 INFO:root:abort table_object
 INFO:root:abort menu
 INFO:root:abort menu
+INFO:root:abort menu
+INFO:root:abort menu
+INFO:root:abort table_object

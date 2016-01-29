@@ -227,10 +227,10 @@ class TableObject(Base):
 
     table_object_role_module = relationship("Module", foreign_keys=[module_id])
 
-     def get_new_name(self):
-         new_name = self.new_name_prefix + str(self.new_name_id).zfill(self.id_length)
-         self.new_name_id += 1
-         return new_name
+    def get_new_name(self):
+        new_name = self.new_name_prefix + str(self.new_name_id).zfill(self.id_length)
+        self.new_name_id += 1
+        return new_name
 
 
 class TableObjectRole(Base):
