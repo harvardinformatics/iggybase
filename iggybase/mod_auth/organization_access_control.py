@@ -296,10 +296,12 @@ class OrganizationAccessControl:
                         current_inst_name = current_table_record.get_new_name()
                         setattr(instances[row_id], 'name', current_inst_name)
                         db_session.add(current_table_record)
-                        db_session.commit()
+                        db_session.flush()
 
-                    if name_field != '':
+                    if name_field is not None and name_field != '':
                         current_inst_name = name_field
+                        
+                    fields[prefix + 'name_' + str(row_id)] = current_inst_name
                 else:
                     current_inst_name = hidden_fields['row_name_' + str(row_id)]
                     instances[row_id] = db_session.query(current_table_object). \

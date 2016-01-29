@@ -175,3 +175,214 @@ DEBUG:passlib.registry:registered 'pbkdf2_sha512' handler: <class 'passlib.handl
 DEBUG:passlib.registry:registered 'sha256_crypt' handler: <class 'passlib.handlers.sha2_crypt.sha256_crypt'>
 DEBUG:passlib.registry:registered 'sha512_crypt' handler: <class 'passlib.handlers.sha2_crypt.sha512_crypt'>
 DEBUG:passlib.registry:registered 'plaintext' handler: <class 'passlib.handlers.misc.plaintext'>
+DEBUG:passlib.utils.compat:loaded lazy attr 'SafeConfigParser': <class 'configparser.ConfigParser'>
+DEBUG:passlib.utils.compat:loaded lazy attr 'NativeStringIO': <class '_io.StringIO'>
+DEBUG:passlib.utils.compat:loaded lazy attr 'BytesIO': <class '_io.BytesIO'>
+DEBUG:passlib.registry:registered 'bcrypt' handler: <class 'passlib.handlers.bcrypt.bcrypt'>
+DEBUG:passlib.registry:registered 'des_crypt' handler: <class 'passlib.handlers.des_crypt.des_crypt'>
+DEBUG:passlib.registry:registered 'pbkdf2_sha256' handler: <class 'passlib.handlers.pbkdf2.pbkdf2_sha256'>
+DEBUG:passlib.registry:registered 'pbkdf2_sha512' handler: <class 'passlib.handlers.pbkdf2.pbkdf2_sha512'>
+DEBUG:passlib.registry:registered 'sha256_crypt' handler: <class 'passlib.handlers.sha2_crypt.sha256_crypt'>
+DEBUG:passlib.registry:registered 'sha512_crypt' handler: <class 'passlib.handlers.sha2_crypt.sha512_crypt'>
+DEBUG:passlib.registry:registered 'plaintext' handler: <class 'passlib.handlers.misc.plaintext'>
+DEBUG:passlib.utils.compat:loaded lazy attr 'SafeConfigParser': <class 'configparser.ConfigParser'>
+DEBUG:passlib.utils.compat:loaded lazy attr 'NativeStringIO': <class '_io.StringIO'>
+DEBUG:passlib.utils.compat:loaded lazy attr 'BytesIO': <class '_io.BytesIO'>
+DEBUG:passlib.registry:registered 'bcrypt' handler: <class 'passlib.handlers.bcrypt.bcrypt'>
+DEBUG:passlib.registry:registered 'des_crypt' handler: <class 'passlib.handlers.des_crypt.des_crypt'>
+DEBUG:passlib.registry:registered 'pbkdf2_sha256' handler: <class 'passlib.handlers.pbkdf2.pbkdf2_sha256'>
+DEBUG:passlib.registry:registered 'pbkdf2_sha512' handler: <class 'passlib.handlers.pbkdf2.pbkdf2_sha512'>
+DEBUG:passlib.registry:registered 'sha256_crypt' handler: <class 'passlib.handlers.sha2_crypt.sha256_crypt'>
+DEBUG:passlib.registry:registered 'sha512_crypt' handler: <class 'passlib.handlers.sha2_crypt.sha512_crypt'>
+DEBUG:passlib.registry:registered 'plaintext' handler: <class 'passlib.handlers.misc.plaintext'>
+INFO:root:hidden_row_name_1: NBAdminAdd
+INFO:root:hidden_role_id_2: 1
+INFO:root:hidden_table_id_2: 21
+INFO:root:hidden_table_name_1: menu
+INFO:root:description_1: Admin Add
+INFO:root:child_description_2: Admin Add
+INFO:root:hidden_endchildtable_21: 
+INFO:root:hidden_row_name_2: RC-NBAdminAdd
+INFO:root:hidden_url_params_1: 
+INFO:root:child_order_2: 5
+INFO:root:hidden_endrow_1: 
+INFO:root:hidden_date_created_2: 
+INFO:root:hidden_name_1: NBAdminAdd
+INFO:root:entry_0: parent_child
+INFO:root:hidden_table_id_1: 18
+INFO:root:child_active_2: y
+INFO:root:url_root: http://timbran.rc.fas.harvard.edu/rc_dev/
+INFO:root:id_1: 98
+INFO:root:hidden_url_path_1: 
+INFO:root:order_1: 5
+INFO:root:table_object_0: menu
+INFO:root:hidden_linkcolumn_21: menu_id
+INFO:root:hidden_startchildtable_21: menu_role
+INFO:root:mod: admin
+INFO:root:child_date_created_2: 2016-01-25
+INFO:root:hidden_description_2: Admin Add
+INFO:root:url_params_1: 
+INFO:root:hidden_last_modified_1: 2016-01-21 00:00:00
+INFO:root:hidden_last_modified_2: 
+INFO:root:hidden_organization_id_1: 1
+INFO:root:child_role_id_2: 1
+INFO:root:child_id_2: 98
+INFO:root:organization_id_1: 1
+INFO:root:hidden_order_1: 5
+INFO:root:hidden_name_2: RC-NBAdminAdd
+INFO:root:name_1: NBAdminAdd
+INFO:root:table: menu
+INFO:root:hidden_description_1: Admin Add
+INFO:root:hidden_date_created_1: 2016-01-21 00:00:00
+INFO:root:hidden_parent_id_1: 4
+INFO:root:hidden_endrow_2: 
+INFO:root:child_last_modified_2: 2016-01-25
+INFO:root:csrf_token: 1454032246##38fc8689d71ccf7cb2c6d5cb41cb473d57c52c08
+INFO:root:module_0: mod_admin
+INFO:root:parent_id_1: AdminNavBar
+INFO:root:child_name_2: RC-NBAdminAdd
+INFO:root:hidden_menu_id_2: 98
+INFO:root:child_organization_id_2: 1
+INFO:root:submit: Save
+INFO:root:hidden_id_2: 98
+INFO:root:hidden_active_2: True
+INFO:root:menu_type_id_1: 3
+INFO:root:last_modified_1: 2016-01-21
+INFO:root:hidden_organization_id_2: 1
+INFO:root:child_menu_id_2: NBAdminAdd
+INFO:root:url_path_1: 
+INFO:root:hidden_id_1: 98
+INFO:root:hidden_active_1: True
+INFO:root:hidden_table_name_2: menu_role
+INFO:root:hidden_menu_type_id_1: 3
+INFO:root:date_created_1: 2016-01-21
+INFO:root:hidden_order_2: 5
+INFO:root:hidden_startmaintable_18: menu
+INFO:root:hidden_row_name_1: NBAdminTableObjectRole
+INFO:root:hidden_table_name_1: menu
+INFO:root:description_1: Table Object Facility Role
+INFO:root:hidden_endchildtable_21: 
+INFO:root:hidden_row_name_2: RC-AdminNBAdminQuickBuildGroup
+INFO:root:hidden_url_params_1: 
+INFO:root:child_order_2: 35
+INFO:root:hidden_date_created_2: 2015-12-22 16:58:37
+INFO:root:hidden_name_1: NBAdminTableObjectRole
+INFO:root:entry_0: parent_child
+INFO:root:hidden_table_id_1: 18
+INFO:root:child_active_2: y
+INFO:root:url_root: http://timbran.rc.fas.harvard.edu/rc_dev/
+INFO:root:table_object_0: menu
+INFO:root:hidden_linkcolumn_21: menu_id
+INFO:root:id_1: 88
+INFO:root:child_date_created_2: 2015-12-22
+INFO:root:hidden_description_2: Table Object Facility Role
+INFO:root:hidden_last_modified_1: 2015-12-22 00:00:00
+INFO:root:hidden_last_modified_2: 2015-12-22 16:58:37
+INFO:root:hidden_organization_id_1: 1
+INFO:root:child_id_2: 88
+INFO:root:hidden_order_1: 35
+INFO:root:hidden_name_2: RC-AdminNBAdminQuickBuildGroup
+INFO:root:name_1: NBAdminTableObjectRole
+INFO:root:table: menu
+INFO:root:hidden_description_1: Table Object Facility Role
+INFO:root:hidden_parent_id_1: 27
+INFO:root:hidden_endrow_2: 
+INFO:root:child_last_modified_2: 2015-12-22
+INFO:root:csrf_token: 1454032452##1d63d5c6815b36dbc31bf6f2e05ff3d21b6fcdc2
+INFO:root:parent_id_1: NBAdmin
+INFO:root:child_organization_id_2: 1
+INFO:root:submit: Save
+INFO:root:hidden_id_2: 88
+INFO:root:last_modified_1: 2015-12-22
+INFO:root:url_path_1: admin/summary/table_object_role
+INFO:root:hidden_id_1: 88
+INFO:root:date_created_1: 2015-12-22
+INFO:root:hidden_startmaintable_18: menu
+INFO:root:hidden_role_id_2: 1
+INFO:root:hidden_table_id_2: 21
+INFO:root:child_description_2: Table Object Facility Role
+INFO:root:hidden_menu_id_2: 88
+INFO:root:hidden_endrow_1: 
+INFO:root:active_1: y
+INFO:root:child_role_id_2: 1
+INFO:root:hidden_organization_id_2: 1
+INFO:root:hidden_url_path_1: 
+INFO:root:order_1: 35
+INFO:root:hidden_startchildtable_21: menu_role
+INFO:root:mod: admin
+INFO:root:url_params_1: 
+INFO:root:organization_id_1: 1
+INFO:root:hidden_date_created_1: 2015-12-22 00:00:00
+INFO:root:module_0: mod_admin
+INFO:root:hidden_table_name_2: menu_role
+INFO:root:hidden_active_2: True
+INFO:root:menu_type_id_1: 4
+INFO:root:child_name_2: RC-AdminNBAdminQuickBuildGroup
+INFO:root:child_menu_id_2: NBAdminTableObjectRole
+INFO:root:hidden_active_1: True
+INFO:root:hidden_menu_type_id_1: 4
+INFO:root:hidden_order_2: 35
+INFO:root:organization_id_1: 1
+INFO:root:hidden_startchildtable_21: menu_role
+INFO:root:entry_0: parent_child
+INFO:root:hidden_date_created_2: 2015-12-22 16:58:37
+INFO:root:hidden_row_name_1: NBAdminTableObjectRole
+INFO:root:child_description_2: Table Object Role
+INFO:root:hidden_id_1: 88
+INFO:root:hidden_startmaintable_18: menu
+INFO:root:hidden_description_2: Table Object Facility Role
+INFO:root:hidden_id_2: 88
+INFO:root:hidden_name_2: RC-AdminNBAdminQuickBuildGroup
+INFO:root:hidden_row_name_2: RC-AdminNBAdminQuickBuildGroup
+INFO:root:hidden_role_id_2: 1
+INFO:root:date_created_1: 2015-12-22
+INFO:root:child_role_id_2: 1
+INFO:root:url_root: http://timbran.rc.fas.harvard.edu/rc_dev/
+INFO:root:table_object_0: menu
+INFO:root:hidden_name_1: NBAdminTableObjectRole
+INFO:root:child_menu_id_2: NBAdminTableObjectRole
+INFO:root:csrf_token: 1454032504##c208368cc1cc0f40b04fc1fd0a4ff71628060577
+INFO:root:hidden_last_modified_1: 2016-01-29 00:54:33
+INFO:root:child_date_created_2: 2015-12-22
+INFO:root:hidden_endrow_1: 
+INFO:root:parent_id_1: NBAdmin
+INFO:root:last_modified_1: 2016-01-29
+INFO:root:hidden_description_1: Table Object Facility Role
+INFO:root:child_order_2: 35
+INFO:root:hidden_table_name_1: menu
+INFO:root:hidden_url_params_1: 
+INFO:root:submit: Save
+INFO:root:child_last_modified_2: 2016-01-29
+INFO:root:hidden_endchildtable_21: 
+INFO:root:child_organization_id_2: 1
+INFO:root:hidden_table_name_2: menu_role
+INFO:root:hidden_url_path_1: admin/summary/table_object_role
+INFO:root:hidden_parent_id_1: 27
+INFO:root:menu_type_id_1: 4
+INFO:root:url_params_1: 
+INFO:root:hidden_date_created_1: 2015-12-22 00:00:00
+INFO:root:active_1: y
+INFO:root:table: menu
+INFO:root:description_1: Table Object Facility Role
+INFO:root:module_0: mod_admin
+INFO:root:hidden_table_id_2: 21
+INFO:root:hidden_active_2: True
+INFO:root:hidden_table_id_1: 18
+INFO:root:hidden_organization_id_1: 1
+INFO:root:url_path_1: admin/summary/table_object_role
+INFO:root:hidden_endrow_2: 
+INFO:root:hidden_order_2: 35
+INFO:root:order_1: 35
+INFO:root:hidden_order_1: 35
+INFO:root:child_name_2: RC-AdminNBAdminQuickBuildGroup
+INFO:root:id_1: 88
+INFO:root:mod: admin
+INFO:root:hidden_menu_type_id_1: 4
+INFO:root:hidden_linkcolumn_21: menu_id
+INFO:root:hidden_last_modified_2: 2016-01-29 00:54:33
+INFO:root:name_1: NBAdminTableObjectRole
+INFO:root:hidden_organization_id_2: 1
+INFO:root:hidden_menu_id_2: 88
+INFO:root:child_id_2: 88
+INFO:root:child_active_2: y
+INFO:root:hidden_active_1: True
