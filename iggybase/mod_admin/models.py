@@ -260,11 +260,10 @@ class TableObjectRole(Base):
     order = Column(Integer)
     role_id = Column(Integer, ForeignKey('role.id'))
     table_object_id = Column(Integer, ForeignKey('table_object.id'))
-    module_id = Column(Integer, ForeignKey('module.id'))
+    display_name = Column(String(100))
 
     table_object_role_role = relationship("Role", foreign_keys=[role_id])
     table_object_role_table_object = relationship("TableObject", foreign_keys=[table_object_id])
-    table_object_role_module = relationship("Module", foreign_keys=[module_id])
     table_object_role_unq = UniqueConstraint('role_id', 'table_object_id')
 
 
