@@ -178,8 +178,9 @@ class TableQuery:
     def get_json(self):
         list_rows = []
         for row in self.table_rows:
-            list_row = []
-            for val in row.values():
+            list_row = OrderedDict()
+            col_num = 0
+            for key, val in row.items():
                 formatted_val = ''
                 if 'text' in val:
                     if 'link' in val:
@@ -187,6 +188,10 @@ class TableQuery:
                             str(val['text']) + '</a>')
                     else:
                         formatted_val = str(val['text'])
-                list_row.append(formatted_val)
+                if (key == 'DT_RowId'):
+                    list_row[key] = formatted_val
+                else:
+                    list_row[str(col_num)] = formatted_val
+                    col_num += 1
             list_rows.append(list_row)
         return list_rows

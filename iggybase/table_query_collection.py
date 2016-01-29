@@ -28,7 +28,9 @@ class TableQueryCollection:
                     self.populate_query(
                         query.TableQuery.id,
                         order,
-                        query.TableQuery.display_name
+                        query.TableQuery.display_name,
+                        None,
+                        self.criteria
                     )
             elif self.table_name:
                 self.populate_query(None, 1, self.table_name, self.table_name,

@@ -99,7 +99,7 @@ class OrganizationAccessControl:
             field_display_name = util.get_field_attr(row.TableQueryField, row.Field, 'display_name')
             if row.Field.foreign_key_table_object_id is not None:  # fk field
                 # get fk data so we can include name and form url link
-                fk_data = self.foreign_key(row.Field.foreign_key_table_object_id)
+                fk_data = self.foreign_key(row.Field.foreign_key_table_object_id, row.Field.foreign_key_display)
                 # create alias to the fk table
                 # solves the case of more than one join to same table
                 alias_name = row.TableObject.name + '_' + row.Field.field_name + '_' + fk_data['name']
@@ -116,7 +116,11 @@ class OrganizationAccessControl:
                 )
                 criteria_key = (fk_data['name'], fk_data['foreign_key'])
                 if criteria_key in criteria:
-                    wheres.append(getattr(aliases[alias_name],
+                    if type(criteria[criteria_key]) is list:
+                        wheres.append(getattr(aliases[alias_name],
+                                          fk_data['foreign_key']).in_(criteria[criteria_key]))
+                    else:
+                        wheres.append(getattr(aliases[alias_name],
                                           fk_data['foreign_key']) == criteria[criteria_key])
 
             else:  # non-fk field
@@ -124,7 +128,10 @@ class OrganizationAccessControl:
                 columns.append(col.label(field_display_name))
                 criteria_key = (row.TableObject.name, row.Field.field_name)
                 if criteria_key in criteria:
-                    wheres.append(col == criteria[criteria_key])
+                    if type(criteria[criteria_key]) is list:
+                        wheres.append(col.in_(criteria[criteria_key]))
+                    else:
+                        wheres.append(col == criteria[criteria_key])
                 # add to joins if not first table, avoid joining to self
                 if (not first_table_named
                     or (first_table_named == row.TableObject.name)):
@@ -133,6 +140,10 @@ class OrganizationAccessControl:
                     joins.add(table_model)
         # add organization id checks on all tables, does not include fk tables
         for table_model in tables:
+            # add a row id that is the id of the first table named
+            if (table_model.__name__.lower() == first_table_named):
+                col = getattr(table_model, 'id')
+                columns.append(col.label('DT_RowId'))
             wheres.append(getattr(table_model, 'organization_id').in_(self.org_ids))
         results = (
             db_session.query(*columns).
@@ -142,21 +153,24 @@ class OrganizationAccessControl:
         )
         return results
 
-    def foreign_key(self, table_object_id):
+    def foreign_key(self, table_object_id, display = None):
+        filters = [(models.Field.table_object_id == table_object_id)]
+        if not display:
+            # name is default display column for FK
+            filters.append(models.Field.field_name == 'name')
+        else:
+            filters.append(models.Field.id == display)
         res = (db_session.query(models.Field, models.TableObject, models.Module).
                join(models.TableObject,
                     models.TableObject.id == models.Field.table_object_id
                     ).
                join(models.TableObjectRole).
                join(models.Module).
-               filter(models.Field.table_object_id == table_object_id).
-               filter(models.Field.field_name == 'name').first())
-
+               filter(*filters).first())
         if res.Module.name == 'mod_admin':
             fk_session = db_session
         else:
             fk_session = db_session
-
         return {'foreign_key': res.Field.field_name,
                 'module': res.Module.name,
                 'url_prefix': res.Module.url_prefix,
