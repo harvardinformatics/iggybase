@@ -86,22 +86,32 @@ class FormGenerator():
         else:
             if field_data.FieldRole.permission_id == constants.READ_WRITE:
                 if field_data.Field.foreign_key_table_object_id is not None:
-                    choices = self.organization_access_control. \
-                        get_foreign_key_data(field_data.Field.foreign_key_table_object_id)
+                    long_text = self.role_access_control.has_access("TableObject", {'name': 'long_text'})
+                    if long_text.id == field_data.Field.foreign_key_table_object_id:
+                        if value is not None:
+                            lt_row = self.organization_access_control.get_long_text(value)
+                            value = lt_row.long_text
 
-                    if len(choices) > 25:
-                        if value is not None:
-                            wtf_field = LookUpField(field_data.FieldRole.display_name, validators,
-                                                    default=[item[1] for item in choices if item[0] == value][0])
+                            wtf_field = TextAreaField(field_data.FieldRole.display_name, validators, default=value)
                         else:
-                            wtf_field = LookUpField(field_data.FieldRole.display_name, validators)
+                            wtf_field = TextAreaField(field_data.FieldRole.display_name, validators)
                     else:
-                        if value is not None:
-                            wtf_field = SelectField(field_data.FieldRole.display_name, validators, coerce=int, \
-                                                    choices=choices, default=value)
+                        choices = self.organization_access_control. \
+                            get_foreign_key_data(field_data.Field.foreign_key_table_object_id)
+
+                        if len(choices) > 25:
+                            if value is not None:
+                                wtf_field = LookUpField(field_data.FieldRole.display_name, validators,
+                                                        default=[item[1] for item in choices if item[0] == value][0])
+                            else:
+                                wtf_field = LookUpField(field_data.FieldRole.display_name, validators)
                         else:
-                            wtf_field = SelectField(field_data.FieldRole.display_name, validators, coerce=int, \
-                                                    choices=choices)
+                            if value is not None:
+                                wtf_field = SelectField(field_data.FieldRole.display_name, validators, coerce=int, \
+                                                        choices=choices, default=value)
+                            else:
+                                wtf_field = SelectField(field_data.FieldRole.display_name, validators, coerce=int, \
+                                                        choices=choices)
                 else:
                     kwargs = {'validators': validators}
                     if field_data.Field.data_type_id == constants.INTEGER:
@@ -117,10 +127,6 @@ class FormGenerator():
                     elif field_data.Field.data_type_id == constants.FILE:
                         wtf_class = FileField
                     elif field_data.Field.data_type_id == constants.TEXT_AREA:
-                        if value is not None:
-                            lt_row = self.organization_access_control.get_long_text(value)
-                            value = lt_row.long_text
-
                         wtf_class = TextAreaField
                     else:
                         wtf_class = StringField
@@ -132,12 +138,20 @@ class FormGenerator():
             else:
                 kwargs = {'validators': validators}
                 if field_data.Field.foreign_key_table_object_id is not None:
-                    if value is not None:
-                        choices = self.organization_access_control. \
-                            get_foreign_key_data(field_data.Field.foreign_key_table_object_id)
-                        value = [item[1] for item in choices if item[0] == value]
+                    long_text = self.role_access_control.has_access("TableObject", {'name': 'long_text'})
+                    if long_text.id == field_data.Field.foreign_key_table_object_id:
+                        if value is not None:
+                            lt_row = self.organization_access_control.get_long_text(value)
+                            value = lt_row.long_text
 
-                    wtf_class = ReadonlyStringField
+                        wtf_class = TextAreaField
+                    else:
+                        if value is not None:
+                            choices = self.organization_access_control. \
+                                get_foreign_key_data(field_data.Field.foreign_key_table_object_id)
+                            value = [item[1] for item in choices if item[0] == value]
+
+                        wtf_class = ReadonlyStringField
                 elif field_data.Field.data_type_id == constants.INTEGER:
                     wtf_class = ReadonlyIntegerField
                 elif field_data.Field.data_type_id == constants.FLOAT:
@@ -147,10 +161,6 @@ class FormGenerator():
                 elif field_data.Field.data_type_id == constants.DATE:
                     wtf_class = ReadonlyDateField
                 elif field_data.Field.data_type_id == constants.TEXT_AREA:
-                    if value is not None:
-                        lt_row = self.organization_access_control.get_long_text(value)
-                        value = lt_row.long_text
-
                     wtf_class = ReadonlyTextAreaField
                 else:
                     wtf_class = ReadonlyStringField
