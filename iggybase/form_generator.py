@@ -274,7 +274,7 @@ class FormGenerator():
         id = None
 
         if row_name != 'new':
-            data = self.organization_access_control.get_entry_data(self.module, self.table_data.name, row_name)
+            data = self.organization_access_control.get_entry_data(self.table_data.name, row_name)
             if data:
                 data = data[0]
 

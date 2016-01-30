@@ -39,8 +39,8 @@ class OrganizationAccessControl:
 
         return
 
-    def get_entry_data(self, module, table_name, name=None):
-        field_data = self.get_field_data(module, table_name)
+    def get_entry_data(self, table_name, name=None):
+        field_data = self.get_field_data(table_name)
         results = None
 
         if field_data is not None:
@@ -178,7 +178,7 @@ class OrganizationAccessControl:
                 'fk_session': fk_session
                 }
 
-    def get_field_data(self, module, table_name):
+    def get_field_data(self, table_name):
         role_access_control = RoleAccessControl()
         table_data = role_access_control.has_access('TableObject', {'name': table_name})
         field_data = None
@@ -224,14 +224,18 @@ class OrganizationAccessControl:
     def save_form(self, form):
         role_access_control = RoleAccessControl()
         table_object = util.get_table(form.table_object_0.data)
+        table_data = db_session.query(models.TableObject).filter_by(name=table_object.__tablename__).first()
 
         long_text_object = models.TableObject.query.filter_by(name='long_text').first()
+        long_text_data = db_session.query(models.TableObject).filter_by(name=long_text_object.__tablename__).first()
 
         history_object = models.TableObject.query.filter_by(name='history').first()
+        history_data = db_session.query(models.TableObject).filter_by(name=history_object.__tablename__).first()
 
         fields = {}
         hidden_fields = {}
         child_tables = {}
+        child_data = {}
         last_row_id = 0
         instances = {}
         prefix = ''
@@ -258,10 +262,14 @@ class OrganizationAccessControl:
                 child_id_field = hidden_fields['table_id_' + str(row_id)]
                 if child_id_field not in child_tables.keys():
                     child_tables[child_id_field] = util.get_table(child_name_field)
+                    child_data[child_id_field] = db_session.query(models.TableObject).\
+                        filter_by(name=child_tables[child_id_field].__tablename__).first()
 
                 current_table_object = child_tables[child_id_field]
+                current_table_data = child_data[child_id_field]
             else:
                 current_table_object = table_object
+                current_table_data = table_data
 
                 field_id = field
                 row_id = int(field_id[field_id.rindex('_') + 1:])
@@ -276,8 +284,8 @@ class OrganizationAccessControl:
                     instances[row_id] = current_table_object()
                     setattr(instances[row_id], 'date_created', datetime.datetime.utcnow())
                     setattr(instances[row_id], 'organization_id', self.current_org_id)
-                    if current_table_object.new_name_prefix is not None and current_table_object.new_name_prefix != "":
-                        current_inst_name = current_table_object.get_new_name()
+                    if current_table_data.new_name_prefix is not None and current_table_data.new_name_prefix != "":
+                        current_inst_name = current_table_data.get_new_name()
                         fields[prefix + 'name_' + str(row_id)] = current_inst_name
                         setattr(instances[row_id], 'name', current_inst_name)
                         db_session.add(current_table_object)
@@ -291,7 +299,7 @@ class OrganizationAccessControl:
 
             if not (hidden_fields[field_id] == data or hidden_fields[field_id] == str(data)):
                 history_instance = core_models.History()
-                history_instance.name = history_object.get_new_name()
+                history_instance.name = history_data.get_new_name()
                 history_instance.table_object_id = hidden_fields['table_id_' + str(row_id)]
                 history_instance.field_id = field_data.Field.id
                 history_instance.organization_id = self.current_org_id
@@ -308,7 +316,7 @@ class OrganizationAccessControl:
                     db_session().flush
                     lt_id = lt.id
 
-                    setattr(lt, 'name', long_text_object.get_new_name())
+                    setattr(lt, 'name', long_text_data.get_new_name())
                     db_session.add(long_text_object)
 
                     setattr(lt, 'date_created', datetime.datetime.utcnow())
