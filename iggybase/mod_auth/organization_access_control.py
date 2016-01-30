@@ -184,7 +184,7 @@ class OrganizationAccessControl:
         field_data = None
 
         if table_data is not None:
-            field_data = role_access_control.fields(table_data.id, module)
+            field_data = role_access_control.fields(table_data.id)
 
         return field_data
 
@@ -193,7 +193,7 @@ class OrganizationAccessControl:
         table_data = role_access_control.has_access('TableObject', {'name': table_name})
 
         if table_data is not None:
-            field_data = role_access_control.fields(table_data.id, module,
+            field_data = role_access_control.fields(table_data.id,
                                                     {'field.field_name': search_field_name})
 
             if field_data is not None:
@@ -203,7 +203,6 @@ class OrganizationAccessControl:
                 if search_table is not None:
                     search_table_data = self.foreign_key(search_table.id)
                     search_field_data = role_access_control.fields(search_table.id,
-                                                                   search_table_data['module'],
                                                                    {'field_role.search_field': 1})
 
                     return search_table_data['module'], search_table_data['name'], search_field_data
@@ -269,7 +268,7 @@ class OrganizationAccessControl:
                 column_name = field_id[:field_id.rindex('_')]
 
             field_data = role_access_control.fields(int(hidden_fields['table_id_' + str(row_id)]),
-                                                    form.module_0.data, {'field.field_name': column_name})[0]
+                                                    {'field.field_name': column_name})[0]
 
             if last_row_id != row_id and row_id not in instances:
                 if hidden_fields['row_name_' + str(row_id)] == 'new':

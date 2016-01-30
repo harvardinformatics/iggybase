@@ -22,20 +22,12 @@ class RoleAccessControl:
             self.user = None
             self.role = None
 
-    def fields(self, table_object_id, module, filter=None, active=1):
-        module = db_session.query(models.Module, models.ModuleRole).join(models.ModuleRole). \
-            filter(models.ModuleRole.role_id == self.role.id). \
-            filter(models.Module.name == module).first()
-
-        if module is None:
-            return []
-
+    def fields(self, table_object_id, filter=None, active=1):
         filters = [
             (models.FieldRole.role_id == self.role.id),
             (models.Field.table_object_id == table_object_id),
             (models.Field.active == active),
-            (models.FieldRole.active == active),
-            (models.FieldRole.module_id == module.Module.id)
+            (models.FieldRole.active == active)
         ]
         if filter is not None:
             for field_name, value in filter.items():

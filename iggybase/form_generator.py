@@ -178,7 +178,7 @@ class FormGenerator():
         self.classattr = self.hidden_fields('single')
         self.classattr.update(self.row_fields(1, row_name))
 
-        fields = self.role_access_control.fields(self.table_data.id, self.module)
+        fields = self.role_access_control.fields(self.table_data.id)
 
         self.classattr['hidden_startmaintable_'+str(self.table_data.id)]=\
             HiddenField('hidden_startmaintable_'+str(self.table_data.id), default=self.table_data.name)
@@ -192,7 +192,7 @@ class FormGenerator():
     def default_multiple_entry_form(self, row_names=[]):
         self.table_data = self.role_access_control.has_access('TableObject', {'name': self.table_object})
 
-        fields = self.role_access_control.fields(self.table_data.id, self.module)
+        fields = self.role_access_control.fields(self.table_data.id)
 
         self.classattr = self.hidden_fields('multiple')
 
@@ -218,13 +218,13 @@ class FormGenerator():
         self.classattr['hidden_startmaintable_'+str(self.table_data.id)]=\
             HiddenField('hidden_startmaintable_'+str(self.table_data.id), default=self.table_data.name)
 
-        fields = self.role_access_control.fields(self.table_data.id, self.module)
+        fields = self.role_access_control.fields(self.table_data.id)
         parent_id = self.get_row(fields, row_name, 1)
 
         row_counter = 2
         for child_table in child_tables:
             self.table_data = child_table
-            fields = self.role_access_control.fields(self.table_data.id, self.module)
+            fields = self.role_access_control.fields(self.table_data.id)
 
             child_row_names = self.organization_access_control.get_child_row_names(child_table.name,
                                                                                    link_data[row_counter-2].child_link_field_id,
