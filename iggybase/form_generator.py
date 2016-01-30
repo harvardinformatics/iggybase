@@ -222,21 +222,23 @@ class FormGenerator():
         parent_id = self.get_row(fields, row_name, 1)
 
         row_counter = 2
+        child_index = 0
         for child_table in child_tables:
             self.table_data = child_table
             fields = self.role_access_control.fields(self.table_data.id)
 
             child_row_names = self.organization_access_control.get_child_row_names(child_table.name,
-                                                                                   link_data[row_counter-2].child_link_field_id,
+                                                                                   link_data[child_index].child_link_field_id,
                                                                                    parent_id)
 
             link_field = self.role_access_control.has_access('Field',
-                                                             {'id': link_data[row_counter-2].child_link_field_id})
+                                                             {'id': link_data[child_index].child_link_field_id})
             self.classattr['hidden_linkcolumn_'+str(child_table.id)]=\
                 HiddenField('hidden_linkcolumn_'+str(child_table.id), default=link_field.field_name)
 
             self.classattr['hidden_startchildtable_'+str(child_table.id)]=\
                 HiddenField('hidden_startchildtable_'+str(child_table.id), default=child_table.name)
+
 
             for child_row_name in child_row_names:
                 self.classattr.update(self.row_fields(row_counter, child_row_name, 'child_'))
@@ -245,6 +247,8 @@ class FormGenerator():
 
             self.classattr['hidden_endchildtable_'+str(child_table.id)]=\
                 HiddenField('hidden_endchildtable_'+str(child_table.id))
+
+            child_index += 1
 
         newclass = new_class('DynamicForm', (Form,), {}, lambda ns: ns.update(self.classattr))
 
