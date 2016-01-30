@@ -67,50 +67,74 @@ $( document ).ready( function () {
         $( "#" + target + " tr:last" ).clone( ).find( "input, select" ).each(
             function() {
 		        var id = $(this).attr( 'id' );
-		        var matches = id.match( /child_(\S+)_(\d+)/);
-		        row_id = parseInt( matches[ 2 ] )+ 1;
-		        var new_id = "child_" + matches[ 1 ] + "_" + ( row_id );
-		        var hidden_id = "hidden_" + matches[ 1 ] + "_" + ( row_id );
-                td = $( this ).closest( 'td' );
+		        var matches = id.match( /(\S+)_(\S+)_(\d+)/);
 
-                if ( link_column == matches[ 1 ] )
-                    $( this ).val( parent_id ).attr( 'id', new_id ).attr( 'name', new_id );
-                else
-                    $( this ).val( '' ).attr( 'id', new_id ).attr( 'name', new_id );
+		        if ( matches[ 1 ] == 'child' ) {
+		            row_id = parseInt( matches[ 3 ] )+ 1;
+                    td = $( this ).closest( 'td' );
 
-                if ( matches[ 1 ] == 'name' ) {
-                    td.append( "<input id='" + hidden_id + "' name='" + hidden_id + "' type='hidden' value='new'>" );
-                    td.append( "<input id='hidden_row_name_" + row_id + "' name='hidden_row_name_" + row_id + "' type='hidden' value='new'>" );
-                } else if ( link_column == matches[ 1 ] )
-                    td.append( "<input id='" + hidden_id + "' name='" + hidden_id + "' type='hidden' value='" + parent_id + "'>" );
-                else
-                    td.append( "<input id='" + hidden_id + "' name='" + hidden_id + "' type='hidden' value=''>" );
+                    var old_id = "hidden_" + matches[ 2 ] + "_" + ( matches[ 3 ] );
+                    var new_id = "child_" + matches[ 2 ] + "_" + ( row_id );
+                    var hidden_id = "hidden_" + matches[ 2 ] + "_" + ( row_id );
 
-                var searchbutton = $( td ).find( '.search-button' );
-                if ( searchbutton.length ) {
-                    $( searchbutton ).click(
-                        function( ) {
-                            $.fn.searchClick( $( this ) );
+		            var old_ctrl;
+                    if ( td.find( '#' + old_id ).length )
+                        old_ctrl = td.find( '#' + old_id );
+                    else
+                        old_ctrl = 0;
+
+                    if ( link_column == matches[ 1 ] )
+                        $( this ).val( parent_id ).attr( 'id', new_id ).attr( 'name', new_id );
+                    else
+                        $( this ).val( '' ).attr( 'id', new_id ).attr( 'name', new_id );
+
+                    if ( matches[ 1 ] == 'name' ) {
+                        td.append( "<input id='" + hidden_id + "' name='" + hidden_id + "' type='hidden' value='new'>" );
+                        if ( old_ctrl )
+                            old_ctrl.val( 'new' ).attr( 'id', 'hidden_row_name_' + row_id ).attr( 'name', 'hidden_row_name_' + row_id );
+                        else
+                            td.append( "<input id='hidden_row_name_" + row_id + "' name='hidden_row_name_" + row_id + "' type='hidden' value='new'>" );
+                    } else {
+                        var input_value = '';
+                        if ( link_column == matches[ 1 ] )
+                            input_value = parent_id;
+
+                        alert('hi');
+                        if ( old_ctrl ){
+                            alert('old');
+                            old_ctrl.val( input_value ).attr( 'id', hidden_id ).attr( 'name', hidden_id );
+                        } else {
+                            alert('new');
+                            td.append( "<input id='" + hidden_id + "' name='" + hidden_id + "' type='hidden' value='" + input_value + "'>" );
                         }
-                    );
-                    var luid = $( this ).attr( "id" )
-                    $( searchbutton ).attr( "luid", luid )
-                }
+                    }
 
-                if ( $( this ).hasClass( 'datepicker-field' ) ) {
-                    $( this ).datepicker({
-                        format: 'yyyy-mm-dd',
-                        autoclose: true
+                    var searchbutton = $( td ).find( '.search-button' );
+                    if ( searchbutton.length ) {
+                        $( searchbutton ).click(
+                            function( ) {
+                                $.fn.searchClick( $( this ) );
+                            }
+                        );
+                        var luid = $( this ).attr( "id" )
+                        $( searchbutton ).attr( "luid", luid )
+                    }
 
-                    });
-                }
+                    if ( $( this ).hasClass( 'datepicker-field' ) ) {
+                        $( this ).datepicker({
+                            format: 'yyyy-mm-dd',
+                            autoclose: true
 
-                if ( $( this ).hasClass( 'lookupfield' ) ) {
-                    $( this ).keydown(
-                        function ( e ) {
-                            return $.fn.keydownLookupField( e );
-                        }
-                    );
+                        });
+                    }
+
+                    if ( $( this ).hasClass( 'lookupfield' ) ) {
+                        $( this ).keydown(
+                            function ( e ) {
+                                return $.fn.keydownLookupField( e );
+                            }
+                        );
+                    }
                 }
             }
         ).end( ).appendTo( "#" + target );
