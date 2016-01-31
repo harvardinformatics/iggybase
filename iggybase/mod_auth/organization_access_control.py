@@ -39,7 +39,7 @@ class OrganizationAccessControl:
 
         return
 
-    def get_entry_data(self, table_name, name=None):
+    def get_entry_data(self, table_name, params):
         field_data = self.get_field_data(table_name)
         results = None
 
@@ -54,8 +54,8 @@ class OrganizationAccessControl:
 
             criteria = [getattr(table_object, 'organization_id').in_(self.org_ids)]
 
-            if name is not None:
-                criteria.append(getattr(table_object, 'name') == name)
+            for key, value in params.items():
+                criteria.append(getattr(table_object, key) == value)
 
             results = db_session.query(*columns).filter(*criteria).all()
 
@@ -226,11 +226,9 @@ class OrganizationAccessControl:
         table_object = util.get_table(form.table_object_0.data)
         table_data = db_session.query(models.TableObject).filter_by(name=table_object.__tablename__).first()
 
-        long_text_object = models.TableObject.query.filter_by(name='long_text').first()
-        long_text_data = db_session.query(models.TableObject).filter_by(name=long_text_object.__tablename__).first()
+        long_text_data = models.TableObject.query.filter_by(name='long_text').first()
 
-        history_object = models.TableObject.query.filter_by(name='history').first()
-        history_data = db_session.query(models.TableObject).filter_by(name=history_object.__tablename__).first()
+        history_data = models.TableObject.query.filter_by(name='history').first()
 
         fields = {}
         hidden_fields = {}
@@ -288,7 +286,7 @@ class OrganizationAccessControl:
                         current_inst_name = current_table_data.get_new_name()
                         fields[prefix + 'name_' + str(row_id)] = current_inst_name
                         setattr(instances[row_id], 'name', current_inst_name)
-                        db_session.add(current_table_object)
+                        db_session.add(current_table_data)
                         db_session.flush()
                 else:
                     current_inst_name = hidden_fields['row_name_' + str(row_id)]
@@ -307,17 +305,20 @@ class OrganizationAccessControl:
                 history_instance.instance_name = current_inst_name
                 history_instance.old_value = hidden_fields[field_id]
                 history_instance.new_value = data
-                db_session().add(history_instance)
+                db_session.add(history_instance)
+                db_session.add(history_data)
+                db_session.flush()
 
-            if field_data.Field.foreign_key_table_object_id == long_text_object.id and data != '':
+            if field_data.Field.foreign_key_table_object_id == long_text_data.id and data != '':
                 if hidden_fields[field_id] == '':
                     lt = core_models.LongText()
-                    db_session().add(lt)
-                    db_session().flush
+                    db_session.add(lt)
+                    db_session.flush
                     lt_id = lt.id
 
                     setattr(lt, 'name', long_text_data.get_new_name())
-                    db_session.add(long_text_object)
+                    db_session.add(long_text_data)
+                    db_session.flush()
 
                     setattr(lt, 'date_created', datetime.datetime.utcnow())
                     setattr(lt, 'organization_id', self.current_org_id)
@@ -327,7 +328,7 @@ class OrganizationAccessControl:
 
                 setattr(lt, 'last_modified', datetime.datetime.utcnow())
                 setattr(lt, 'long_text', data)
-                db_session().add(lt)
+                db_session.add(lt)
                 setattr(instances[row_id], column_name, lt_id)
             elif field_data.Field.foreign_key_table_object_id is not None:
                 try:
