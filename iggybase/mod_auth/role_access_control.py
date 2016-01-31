@@ -223,19 +223,26 @@ class RoleAccessControl:
         return rec
 
     def get_menu_items(self, parent_id, active=1):
-        """Recursively Get menus items and subitems
-        """
         menu = OrderedDict()
-        items = (db_session.query(models.Menu, models.MenuRole)
-            .join(models.MenuRole)
+        items = (db_session.query(models.Menu, models.MenuRole).join(models.MenuRole)
             .filter(
                 models.MenuRole.role_id == self.role.id,
                 models.Menu.parent_id == parent_id,
-                models.Menu.active == active
-            )
-            .order_by(models.MenuRole.order, models.MenuRole.name).all())
+                models.MenuRole.active == active
+            ).order_by(models.MenuRole.order, models.MenuRole.name).all())
+
         for item in items:
-            url = self.get_menu_url(item)
+            url = ''
+            if item.Menu.url_path and item.Menu.url_path != '':
+                url = item.Menu.url_path
+                if url and item.Menu.url_params:
+                    url += item.Menu.url_params
+
+                if url:
+                    url = request.url_root + url
+                else:
+                    url = '#'
+
             menu[item.Menu.name] = {
                     'url': url,
                     'title': item.MenuRole.description,
@@ -243,19 +250,6 @@ class RoleAccessControl:
                     'subs': self.get_menu_items(item.Menu.id, active)
             }
         return menu
-
-    def get_menu_url(self, item):
-        url = ''
-        if item.Menu.url_path and item.Menu.url_path != '':
-            url = item.Menu.url_path
-            if url and item.Menu.url_params:
-                url += item.Menu.url_params
-
-            if url:
-                url = request.url_root + url
-            else:
-                url = '#'
-        return url
 
     def change_role(self, role_id):
         """updates the user.current_role

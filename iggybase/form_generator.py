@@ -27,6 +27,12 @@ class ReadonlyFloatField(FloatField):
         return super(ReadonlyFloatField, self).__call__(*args, **kwargs)
 
 
+class IggybaseBooleanField(BooleanField):
+    def __call__(self, *args, **kwargs):
+        kwargs['class'] = 'form-control boolean-field'
+        return super(IggybaseBooleanField, self).__call__(*args, **kwargs)
+
+
 class ReadonlyBooleanField(BooleanField):
     def __call__(self, *args, **kwargs):
         kwargs.setdefault('readonly', True)
@@ -41,7 +47,7 @@ class ReadonlyTextAreaField(TextAreaField):
 
 class DateFieldClass(DateField):
     def __call__(self, *args, **kwargs):
-        kwargs['class'] = 'form-control datepicker-field'
+        kwargs['class'] = 'data-control datepicker-field'
         return super(DateFieldClass, self).__call__(*args, **kwargs)
 
 
@@ -53,9 +59,8 @@ class ReadonlyDateField(DateField):
 
 class LookUpField(StringField):
     def __call__(self, *args, **kwargs):
-        kwargs['class'] = 'form-control lookupfield form-control-lookup'
-        return \
-            super(LookUpField, self).__call__(*args, **kwargs)
+        kwargs['class'] = 'data-control lookupfield form-control-lookup'
+        return super(LookUpField, self).__call__(*args, **kwargs)
 
 
 class FormGenerator():
@@ -67,7 +72,7 @@ class FormGenerator():
         self.classattr = {}
         self.table_data = None
 
-    def input_field(self, field_data, value=None):
+    def input_field(self, field_data, control_id, value=None):
         validators = []
         if field_data.FieldRole.required == constants.REQUIRED:
             validators.append(DataRequired())
@@ -119,7 +124,8 @@ class FormGenerator():
                     elif field_data.Field.data_type_id == constants.FLOAT:
                         wtf_class = FloatField
                     elif field_data.Field.data_type_id == constants.BOOLEAN:
-                        wtf_class = BooleanField
+                        wtf_class = IggybaseBooleanField
+                        self.classattr['bool_' + control_id]=HiddenField('bool_' + control_id, default=value)
                     elif field_data.Field.data_type_id == constants.DATE:
                         wtf_class = DateFieldClass
                     elif field_data.Field.data_type_id == constants.PASSWORD:
@@ -297,7 +303,8 @@ class FormGenerator():
                 self.classattr['hidden_'+field.Field.field_name+"_"+str(row_counter)]=\
                     HiddenField('hidden_'+field.Field.field_name+"_"+str(row_counter), default=value)
 
-            self.classattr[prefix + field.Field.field_name+"_"+str(row_counter)] = self.input_field(field, value)
+            control_id = prefix + field.Field.field_name+"_"+str(row_counter)
+            self.classattr[control_id] = self.input_field(field, control_id, value)
 
         self.classattr['hidden_endrow_'+str(row_counter)]=\
             HiddenField('hidden_endrow_'+str(row_counter))

@@ -221,9 +221,9 @@ class OrganizationAccessControl:
 
         return table.query.filter_by(id=lt_id).first()
 
-    def save_form(self, form):
+    def save_form(self):
         role_access_control = RoleAccessControl()
-        table_object = util.get_table(form.table_object_0.data)
+        table_object = util.get_table(request.form['table_object_0'])
         table_data = db_session.query(models.TableObject).filter_by(name=table_object.__tablename__).first()
 
         long_text_data = models.TableObject.query.filter_by(name='long_text').first()
@@ -241,6 +241,9 @@ class OrganizationAccessControl:
 
         for key in request.form:
             data = request.form.get(key)
+            if key.startswith('bool_'):
+                key = key[key.index('_') + 1:]
+
             if key.endswith('_token') or key.endswith('_0'):
                 continue
             elif key.startswith('hidden_'):
@@ -295,9 +298,13 @@ class OrganizationAccessControl:
 
                 setattr(instances[row_id], 'last_modified', datetime.datetime.utcnow())
 
-            if not (hidden_fields[field_id] == data or hidden_fields[field_id] == str(data)):
+            if column_name != 'last_modified' and column_name != 'date_created' and \
+                    not (hidden_fields[field_id] == data or hidden_fields[field_id] == str(data)):
+                logging.info('add history')
                 history_instance = core_models.History()
                 history_instance.name = history_data.get_new_name()
+                history_instance.date_created = datetime.datetime.utcnow()
+                history_instance.last_modified = datetime.datetime.utcnow()
                 history_instance.table_object_id = hidden_fields['table_id_' + str(row_id)]
                 history_instance.field_id = field_data.Field.id
                 history_instance.organization_id = self.current_org_id
@@ -306,8 +313,6 @@ class OrganizationAccessControl:
                 history_instance.old_value = hidden_fields[field_id]
                 history_instance.new_value = data
                 db_session.add(history_instance)
-                db_session.add(history_data)
-                db_session.flush()
 
             if field_data.Field.foreign_key_table_object_id == long_text_data.id and data != '':
                 if hidden_fields[field_id] == '':
@@ -354,9 +359,11 @@ class OrganizationAccessControl:
 
         row_names = []
 
+        db_session.add(history_data)
+
         for row_id, instance in instances.items():
-            db_session().add(instance)
-            db_session().flush()
+            db_session.add(instance)
+            db_session.flush()
             row_names.append(instance.name)
 
         try:

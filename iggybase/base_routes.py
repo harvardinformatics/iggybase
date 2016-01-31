@@ -111,7 +111,7 @@ def data_entry(module_name, table_name, row_name):
 
     if form.validate_on_submit():
         organization_access_control = oac.OrganizationAccessControl()
-        row_names = organization_access_control.save_form(form)
+        row_names = organization_access_control.save_form()
 
         return saved_data(module_name, table_name, row_names)
 
@@ -126,7 +126,7 @@ def multiple_entry(module_name, table_name):
 
     if form.validate_on_submit():
         organization_access_control = oac.OrganizationAccessControl()
-        row_names = organization_access_control.save_form(form)
+        row_names = organization_access_control.save_form()
 
         form = fg.default_multiple_entry_form(row_names)
 

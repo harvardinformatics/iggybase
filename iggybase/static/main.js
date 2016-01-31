@@ -26,6 +26,16 @@ $( document ).ready( function () {
             return $.fn.keydownLookupField( e, $( this ) );
         }
     );
+    $( ".boolean-field" ).each(
+        function( ) {
+            $.fn.changeCheckBox( $( this) );
+        }
+    );
+    $( ".boolean-field" ).change(
+        function( ) {
+            $.fn.changeCheckBox( $( this) );
+        }
+    );
 
     $('.change_role').click(function(){
         $.ajax({
@@ -135,6 +145,14 @@ $( document ).ready( function () {
                             }
                         );
                     }
+
+                    if ( $( this ).hasClass( 'boolean-field' ) ) {
+                        $( this ).click(
+                            function( ) {
+                                $.fn.changeCheckBox( $( this ) );
+                            }
+                        );
+                    }
                 }
             }
         ).end( ).appendTo( "#" + target );
@@ -177,6 +195,14 @@ $( document ).ready( function () {
                 $("#dialog").modal( "show" );
             }
         } );
+    }
+
+    $.fn.changeCheckBox = function ( ele ) {
+        if ( ele.is(':checked') ) {
+            $( "input[ type='hidden' ][ id='bool_" + $( this ).attr( "id" ) + "' ]" ).attr( 'disabled', 'disabled' );
+        } else {
+            $( "input[ type='hidden' ][ id='bool_" + $( this ).attr( "id" ) + "' ]" ).removeAttr( 'disabled' );
+        }
     }
 
     $.fn.addLookup = function ( ele ) {
