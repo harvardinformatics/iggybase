@@ -219,7 +219,9 @@ class FormGenerator():
             HiddenField('hidden_startmaintable_'+str(self.table_data.id), default=self.table_data.name)
 
         fields = self.role_access_control.fields(self.table_data.id)
-        parent_id = self.get_row(fields, row_name, 1)
+        self.get_row(fields, row_name, 1)
+
+        parent_id = self.organization_access_control.get_row_id(table_data.name, {'name': row_name})
 
         row_counter = 2
         child_index = 0
@@ -281,8 +283,6 @@ class FormGenerator():
                 if type(data) is list:
                     data = None
                     row_name = 'new'
-                else:
-                    id = data[data.keys().index('id')]
 
         for field in fields:
             value = None
@@ -301,5 +301,3 @@ class FormGenerator():
 
         self.classattr['hidden_endrow_'+str(row_counter)]=\
             HiddenField('hidden_endrow_'+str(row_counter))
-
-        return id

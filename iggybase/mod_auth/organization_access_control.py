@@ -366,6 +366,21 @@ class OrganizationAccessControl:
             db_session.rollback()
             raise
 
+    def get_row_id(self, table_name, params):
+        table_object = util.get_table(table_name)
+
+        criteria = []
+
+        for key, value in params.items():
+            criteria.append(getattr(table_object, key) == value)
+
+        result = db_session.query(table_object).filter(*criteria).first()
+
+        if result:
+            return result.id
+        else:
+            return None
+
     def get_child_row_names(self, child_table_name, child_link_field_id, parent_id):
         field = db_session.query(models.Field).filter_by(id=child_link_field_id).first()
 

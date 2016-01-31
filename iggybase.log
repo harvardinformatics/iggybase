@@ -8,160 +8,6 @@ DEBUG:passlib.registry:registered 'pbkdf2_sha512' handler: <class 'passlib.handl
 DEBUG:passlib.registry:registered 'sha256_crypt' handler: <class 'passlib.handlers.sha2_crypt.sha256_crypt'>
 DEBUG:passlib.registry:registered 'sha512_crypt' handler: <class 'passlib.handlers.sha2_crypt.sha512_crypt'>
 DEBUG:passlib.registry:registered 'plaintext' handler: <class 'passlib.handlers.misc.plaintext'>
-INFO:root:row_name: Admin
-INFO:root::name_1 || level.name
-INFO:root:get_entry_data row.Field.name: id
-INFO:root:get_entry_data row.FieldRole.display_name: id
-INFO:root:get_entry_data row.Field.name: name
-INFO:root:get_entry_data row.FieldRole.display_name: name
-INFO:root:get_entry_data row.Field.name: date_created
-INFO:root:get_entry_data row.FieldRole.display_name: date_created
-INFO:root:get_entry_data row.Field.name: last_modified
-INFO:root:get_entry_data row.FieldRole.display_name: last_modified
-INFO:root:get_entry_data row.Field.name: description
-INFO:root:get_entry_data row.FieldRole.display_name: description
-INFO:root:get_entry_data row.Field.name: active
-INFO:root:get_entry_data row.FieldRole.display_name: active
-INFO:root:get_entry_data row.Field.name: organization_id
-INFO:root:get_entry_data row.FieldRole.display_name: organization_id
-INFO:root:get_entry_data row.Field.name: order
-INFO:root:get_entry_data row.FieldRole.display_name: order
-INFO:root:name: Admin
-INFO:root:field.FieldRole.display_name: id
-INFO:root:field.FieldRole.display_name: name
-INFO:root:field.FieldRole.display_name: date_created
-INFO:root:field.FieldRole.display_name: last_modified
-INFO:root:field.FieldRole.display_name: description
-INFO:root:field.FieldRole.display_name: active
-INFO:root:field.FieldRole.display_name: organization_id
-INFO:root:field.FieldRole.display_name: order
-INFO:root:row_name: RC-Admin
-INFO:root::name_1 || role.name
-INFO:root:get_entry_data row.Field.name: id
-INFO:root:get_entry_data row.FieldRole.display_name: id
-INFO:root:get_entry_data row.Field.name: name
-INFO:root:get_entry_data row.FieldRole.display_name: name
-INFO:root:get_entry_data row.Field.name: date_created
-INFO:root:get_entry_data row.FieldRole.display_name: date_created
-INFO:root:get_entry_data row.Field.name: last_modified
-INFO:root:get_entry_data row.FieldRole.display_name: last_modified
-INFO:root:get_entry_data row.Field.name: description
-INFO:root:get_entry_data row.FieldRole.display_name: description
-INFO:root:get_entry_data row.Field.name: active
-INFO:root:get_entry_data row.FieldRole.display_name: active
-INFO:root:get_entry_data row.Field.name: organization_id
-INFO:root:get_entry_data row.FieldRole.display_name: organization_id
-INFO:root:get_entry_data row.Field.name: facility_id
-INFO:root:get_entry_data row.FieldRole.display_name: facility_id
-INFO:root:get_entry_data row.Field.name: level_id
-INFO:root:get_entry_data row.FieldRole.display_name: level_id
-INFO:root:get_entry_data row.Field.name: order
-INFO:root:get_entry_data row.FieldRole.display_name: order
-INFO:root:name: RC-Admin
-INFO:root:field.FieldRole.display_name: id
-DEBUG:passlib.utils.compat:loaded lazy attr 'SafeConfigParser': <class 'configparser.ConfigParser'>
-DEBUG:passlib.utils.compat:loaded lazy attr 'NativeStringIO': <class '_io.StringIO'>
-DEBUG:passlib.utils.compat:loaded lazy attr 'BytesIO': <class '_io.BytesIO'>
-DEBUG:passlib.registry:registered 'bcrypt' handler: <class 'passlib.handlers.bcrypt.bcrypt'>
-DEBUG:passlib.registry:registered 'des_crypt' handler: <class 'passlib.handlers.des_crypt.des_crypt'>
-DEBUG:passlib.registry:registered 'pbkdf2_sha256' handler: <class 'passlib.handlers.pbkdf2.pbkdf2_sha256'>
-DEBUG:passlib.registry:registered 'pbkdf2_sha512' handler: <class 'passlib.handlers.pbkdf2.pbkdf2_sha512'>
-DEBUG:passlib.registry:registered 'sha256_crypt' handler: <class 'passlib.handlers.sha2_crypt.sha256_crypt'>
-DEBUG:passlib.registry:registered 'sha512_crypt' handler: <class 'passlib.handlers.sha2_crypt.sha512_crypt'>
-DEBUG:passlib.registry:registered 'plaintext' handler: <class 'passlib.handlers.misc.plaintext'>
-INFO:root:row_name: Admin
-INFO:root::name_1 || level.name
-INFO:root:get_entry_data row.Field.name: id
-INFO:root:get_entry_data row.FieldRole.display_name: id
-INFO:root:get_entry_data row.Field.name: name
-INFO:root:get_entry_data row.FieldRole.display_name: name
-INFO:root:get_entry_data row.Field.name: date_created
-INFO:root:get_entry_data row.FieldRole.display_name: date_created
-INFO:root:get_entry_data row.Field.name: last_modified
-INFO:root:get_entry_data row.FieldRole.display_name: last_modified
-INFO:root:get_entry_data row.Field.name: description
-INFO:root:get_entry_data row.FieldRole.display_name: description
-INFO:root:get_entry_data row.Field.name: active
-INFO:root:get_entry_data row.FieldRole.display_name: active
-INFO:root:get_entry_data row.Field.name: organization_id
-INFO:root:get_entry_data row.FieldRole.display_name: organization_id
-INFO:root:get_entry_data row.Field.name: order
-INFO:root:get_entry_data row.FieldRole.display_name: order
-INFO:root:name: Admin
-INFO:root:field.FieldRole.display_name: id
-INFO:root:field.FieldRole.display_name: name
-INFO:root:field.FieldRole.display_name: date_created
-INFO:root:field.FieldRole.display_name: last_modified
-INFO:root:field.FieldRole.display_name: description
-INFO:root:field.FieldRole.display_name: active
-INFO:root:field.FieldRole.display_name: organization_id
-INFO:root:field.FieldRole.display_name: order
-INFO:root:row_name: RC-Admin
-INFO:root::name_1 || role.name
-INFO:root:get_entry_data row.Field.name: id
-INFO:root:get_entry_data row.FieldRole.display_name: id
-INFO:root:get_entry_data row.Field.name: name
-INFO:root:get_entry_data row.FieldRole.display_name: name
-INFO:root:get_entry_data row.Field.name: date_created
-INFO:root:get_entry_data row.FieldRole.display_name: date_created
-INFO:root:get_entry_data row.Field.name: last_modified
-INFO:root:get_entry_data row.FieldRole.display_name: last_modified
-INFO:root:get_entry_data row.Field.name: description
-INFO:root:get_entry_data row.FieldRole.display_name: description
-INFO:root:get_entry_data row.Field.name: active
-INFO:root:get_entry_data row.FieldRole.display_name: active
-INFO:root:get_entry_data row.Field.name: organization_id
-INFO:root:get_entry_data row.FieldRole.display_name: organization_id
-INFO:root:get_entry_data row.Field.name: facility_id
-INFO:root:get_entry_data row.FieldRole.display_name: facility_id
-INFO:root:get_entry_data row.Field.name: level_id
-INFO:root:get_entry_data row.FieldRole.display_name: level_id
-INFO:root:get_entry_data row.Field.name: order
-INFO:root:get_entry_data row.FieldRole.display_name: order
-INFO:root:name: RC-Admin
-INFO:root:field.FieldRole.display_name: id
-INFO:root:field.FieldRole.display_name: name
-INFO:root:field.FieldRole.display_name: date_created
-INFO:root:field.FieldRole.display_name: last_modified
-INFO:root:field.FieldRole.display_name: description
-INFO:root:field.FieldRole.display_name: active
-INFO:root:field.FieldRole.display_name: organization_id
-INFO:root:field.FieldRole.display_name: facility_id
-INFO:root:field.FieldRole.display_name: level_id
-INFO:root:field.FieldRole.display_name: order
-INFO:root:row_name: Murray-Admin
-INFO:root::name_1 || role.name
-INFO:root:get_entry_data row.Field.name: id
-INFO:root:get_entry_data row.FieldRole.display_name: id
-INFO:root:get_entry_data row.Field.name: name
-INFO:root:get_entry_data row.FieldRole.display_name: name
-INFO:root:get_entry_data row.Field.name: date_created
-INFO:root:get_entry_data row.FieldRole.display_name: date_created
-INFO:root:get_entry_data row.Field.name: last_modified
-INFO:root:get_entry_data row.FieldRole.display_name: last_modified
-INFO:root:get_entry_data row.Field.name: description
-INFO:root:get_entry_data row.FieldRole.display_name: description
-INFO:root:get_entry_data row.Field.name: active
-INFO:root:get_entry_data row.FieldRole.display_name: active
-INFO:root:get_entry_data row.Field.name: organization_id
-INFO:root:get_entry_data row.FieldRole.display_name: organization_id
-INFO:root:get_entry_data row.Field.name: facility_id
-INFO:root:get_entry_data row.FieldRole.display_name: facility_id
-INFO:root:get_entry_data row.Field.name: level_id
-INFO:root:get_entry_data row.FieldRole.display_name: level_id
-INFO:root:get_entry_data row.Field.name: order
-INFO:root:get_entry_data row.FieldRole.display_name: order
-INFO:root:name: Murray-Admin
-INFO:root:field.FieldRole.display_name: id
-INFO:root:field.FieldRole.display_name: name
-INFO:root:field.FieldRole.display_name: date_created
-INFO:root:field.FieldRole.display_name: last_modified
-INFO:root:field.FieldRole.display_name: description
-INFO:root:field.FieldRole.display_name: active
-INFO:root:field.FieldRole.display_name: organization_id
-INFO:root:field.FieldRole.display_name: facility_id
-INFO:root:field.FieldRole.display_name: level_id
-INFO:root:field.FieldRole.display_name: order
 DEBUG:passlib.utils.compat:loaded lazy attr 'SafeConfigParser': <class 'configparser.ConfigParser'>
 DEBUG:passlib.utils.compat:loaded lazy attr 'NativeStringIO': <class '_io.StringIO'>
 DEBUG:passlib.utils.compat:loaded lazy attr 'BytesIO': <class '_io.BytesIO'>
@@ -195,16 +41,16 @@ DEBUG:passlib.registry:registered 'sha256_crypt' handler: <class 'passlib.handle
 DEBUG:passlib.registry:registered 'sha512_crypt' handler: <class 'passlib.handlers.sha2_crypt.sha512_crypt'>
 DEBUG:passlib.registry:registered 'plaintext' handler: <class 'passlib.handlers.misc.plaintext'>
 DEBUG:passlib.registry:registered 'bcrypt' handler: <class 'passlib.handlers.bcrypt.bcrypt'>
-DEBUG:passlib.registry:registered 'bcrypt' handler: <class 'passlib.handlers.bcrypt.bcrypt'>
-DEBUG:passlib.registry:registered 'des_crypt' handler: <class 'passlib.handlers.des_crypt.des_crypt'>
 DEBUG:passlib.registry:registered 'des_crypt' handler: <class 'passlib.handlers.des_crypt.des_crypt'>
 DEBUG:passlib.registry:registered 'pbkdf2_sha256' handler: <class 'passlib.handlers.pbkdf2.pbkdf2_sha256'>
 DEBUG:passlib.registry:registered 'pbkdf2_sha512' handler: <class 'passlib.handlers.pbkdf2.pbkdf2_sha512'>
 DEBUG:passlib.registry:registered 'sha256_crypt' handler: <class 'passlib.handlers.sha2_crypt.sha256_crypt'>
 DEBUG:passlib.registry:registered 'sha512_crypt' handler: <class 'passlib.handlers.sha2_crypt.sha512_crypt'>
+DEBUG:passlib.registry:registered 'plaintext' handler: <class 'passlib.handlers.misc.plaintext'>
+DEBUG:passlib.registry:registered 'bcrypt' handler: <class 'passlib.handlers.bcrypt.bcrypt'>
+DEBUG:passlib.registry:registered 'des_crypt' handler: <class 'passlib.handlers.des_crypt.des_crypt'>
 DEBUG:passlib.registry:registered 'pbkdf2_sha256' handler: <class 'passlib.handlers.pbkdf2.pbkdf2_sha256'>
 DEBUG:passlib.registry:registered 'pbkdf2_sha512' handler: <class 'passlib.handlers.pbkdf2.pbkdf2_sha512'>
-DEBUG:passlib.registry:registered 'plaintext' handler: <class 'passlib.handlers.misc.plaintext'>
 DEBUG:passlib.registry:registered 'sha256_crypt' handler: <class 'passlib.handlers.sha2_crypt.sha256_crypt'>
 DEBUG:passlib.registry:registered 'sha512_crypt' handler: <class 'passlib.handlers.sha2_crypt.sha512_crypt'>
 DEBUG:passlib.registry:registered 'plaintext' handler: <class 'passlib.handlers.misc.plaintext'>
