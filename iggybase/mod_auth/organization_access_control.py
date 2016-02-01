@@ -300,7 +300,6 @@ class OrganizationAccessControl:
 
             if column_name != 'last_modified' and column_name != 'date_created' and \
                     not (hidden_fields[field_id] == data or hidden_fields[field_id] == str(data)):
-                logging.info('add history')
                 history_instance = core_models.History()
                 history_instance.name = history_data.get_new_name()
                 history_instance.date_created = datetime.datetime.utcnow()
@@ -313,6 +312,7 @@ class OrganizationAccessControl:
                 history_instance.old_value = hidden_fields[field_id]
                 history_instance.new_value = data
                 db_session.add(history_instance)
+                db_session.flush
 
             if field_data.Field.foreign_key_table_object_id == long_text_data.id and data != '':
                 if hidden_fields[field_id] == '':
@@ -334,6 +334,7 @@ class OrganizationAccessControl:
                 setattr(lt, 'last_modified', datetime.datetime.utcnow())
                 setattr(lt, 'long_text', data)
                 db_session.add(lt)
+                db_session.flush()
                 setattr(instances[row_id], column_name, lt_id)
             elif field_data.Field.foreign_key_table_object_id is not None:
                 try:
@@ -357,10 +358,9 @@ class OrganizationAccessControl:
                 else:
                     setattr(instances[row_id], column_name, data)
 
-        row_names = []
-
         db_session.add(history_data)
-
+        db_session.flush()
+        row_names = []
         for row_id, instance in instances.items():
             db_session.add(instance)
             db_session.flush()

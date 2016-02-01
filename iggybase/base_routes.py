@@ -109,7 +109,7 @@ def data_entry(module_name, table_name, row_name):
     else:
         form = fg.default_parent_child_form(table_data, child_tables, link_data, row_name)
 
-    if form.validate_on_submit():
+    if form.validate_on_submit() and len(form.errors) == 0:
         organization_access_control = oac.OrganizationAccessControl()
         row_names = organization_access_control.save_form()
 
