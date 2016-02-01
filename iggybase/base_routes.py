@@ -124,7 +124,7 @@ def multiple_entry(module_name, table_name):
     fg = form_generator.FormGenerator('mod_' + module_name, table_name)
     form = fg.default_multiple_entry_form(row_names)
 
-    if form.validate_on_submit():
+    if form.validate_on_submit() and len(form.errors) == 0:
         organization_access_control = oac.OrganizationAccessControl()
         row_names = organization_access_control.save_form()
 

@@ -109,12 +109,9 @@ $( document ).ready( function () {
                         if ( link_column == matches[ 1 ] )
                             input_value = parent_id;
 
-                        alert('hi');
                         if ( old_ctrl ){
-                            alert('old');
                             old_ctrl.val( input_value ).attr( 'id', hidden_id ).attr( 'name', hidden_id );
                         } else {
-                            alert('new');
                             td.append( "<input id='" + hidden_id + "' name='" + hidden_id + "' type='hidden' value='" + input_value + "'>" );
                         }
                     }

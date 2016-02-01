@@ -239,8 +239,12 @@ class FormGenerator():
                                                                                    link_data[child_index].child_link_field_id,
                                                                                    parent_id)
 
+            #needed to prevent oevrlapping row ids if rows are added dynamically
+            child_row = (child_index * 1000) + row_counter
+
             link_field = self.role_access_control.has_access('Field',
                                                              {'id': link_data[child_index].child_link_field_id})
+
             self.classattr['hidden_linkcolumn_'+str(child_table.id)]=\
                 HiddenField('hidden_linkcolumn_'+str(child_table.id), default=link_field.field_name)
 
@@ -249,8 +253,8 @@ class FormGenerator():
 
 
             for child_row_name in child_row_names:
-                self.classattr.update(self.row_fields(row_counter, child_row_name, 'child_'))
-                self.get_row(fields, child_row_name, row_counter, 'child_')
+                self.classattr.update(self.row_fields(child_row, child_row_name, 'child_'))
+                self.get_row(fields, child_row_name, child_row, 'child_')
                 row_counter += 1
 
             self.classattr['hidden_endchildtable_'+str(child_table.id)]=\
