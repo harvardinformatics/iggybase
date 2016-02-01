@@ -198,10 +198,13 @@ $( document ).ready( function () {
     }
 
     $.fn.changeCheckBox = function ( ele ) {
+        hidden_id = 'bool_' + ele.attr( 'id' );
         if ( ele.is(':checked') ) {
-            $( "input[ type='hidden' ][ id='bool_" + $( this ).attr( "id" ) + "' ]" ).attr( 'disabled', 'disabled' );
+            $( "#" + hidden_id ).attr( 'disabled', 'disabled' );
+            $( "#" + hidden_id ).val( 'y' )
         } else {
-            $( "input[ type='hidden' ][ id='bool_" + $( this ).attr( "id" ) + "' ]" ).removeAttr( 'disabled' );
+            $( "#" + hidden_id ).removeAttr( 'disabled' );
+            $( "#" + hidden_id ).val( 'n' )
         }
     }
 
