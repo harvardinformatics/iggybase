@@ -302,6 +302,9 @@ class OrganizationAccessControl:
                         instances[row_id] = db_session.query(current_table_object). \
                             filter_by(name=current_inst_name).first()
 
+                        if hidden_fields['date_created_' + str(row_id)] == '':
+                            setattr(instances[row_id], 'date_created', datetime.datetime.utcnow())
+
                     setattr(instances[row_id], 'last_modified', datetime.datetime.utcnow())
 
                 if field_data.Field.foreign_key_table_object_id == long_text_data.id and data != '':
@@ -363,8 +366,9 @@ class OrganizationAccessControl:
                     history_instance.new_value = data
                     db_session.add(history_instance)
                     db_session.flush
-                    db_session.add(history_data)
-                    db_session.flush()
+
+            db_session.add(history_data)
+            db_session.flush()
 
             row_names = []
             for row_id, instance in instances.items():

@@ -252,7 +252,7 @@ class FormGenerator():
             for child_row_name in child_row_names:
                 #   needed to prevent oevrlapping row ids if rows are added dynamically
                 child_row = (child_index * 1000) + row_counter
-                
+
                 self.classattr.update(self.row_fields(child_row, child_row_name, 'child_'))
                 self.get_row(fields, child_row_name, child_row, 'child_')
                 row_counter += 1

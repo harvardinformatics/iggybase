@@ -3,48 +3,58 @@
 {% import 'macros.html' as macros %}
 {% block title %}{{ page_title }}{% endblock %}
 
-{% block page_content %}
-<h1>{{table_name|title}} {{ page_header }}</h1>
-        <div id="page_message">
-            <p>
-                {{ page_msg }}
-            </p>
-        </div>
-
+{% block content %}
     <form action class="form form-horizontal form-group form-inline" method="post" role="form">
-        {{ form.hidden_tag() }}
-        {{ wtf.form_errors(form, hiddens='only') }}
+    {{ form.hidden_tag() }}
+    {{ wtf.form_errors(form, hiddens='only') }}
 
-        {% block topbuttonbar %}
-            {{ super() }}
-            {{ macros.render_buttons( top_buttons ) }}
-        {%- endblock topbuttonbar %}
-            <table class="table table-striped">
-                <tr>
-                    {% set firstrow = 1 %}
-                    {%- for field in form if firstrow == 1 %}
-                        {% if field.id|truncate(14, True, '') == 'hidden_endrow_' %}{% set firstrow = 0 %}{% endif %}
-                        {% if not bootstrap_is_hidden_field( field ) %}
-                            <th>{{ field.label }}</th>
-                        {% endif %}
-                    {%- endfor %}
-                </tr>
-                <tr>
-                    {%- for field in form %}
-                        {% if field.id|truncate(14, True, '') == 'hidden_endrow_' %}
-                            </tr><tr>
-                        {% endif %}
-                        {% if not bootstrap_is_hidden_field( field ) -%}
-                            <td><div  class="col-md-12">{{ macros.table_field( field ) }}</div></td>
-                        {% endif %}
-                    {% endfor %}
-                </tr>
-            </table>
-        {% block bottombuttonbar %}
-            {{ super() }}
-            {{ macros.render_buttons( bottom_buttons ) }}
-        {%- endblock bottombuttonbar %}
+    {% block content_title -%}
+        <div class="content_title">
+            <h1> {{ page_header }}</h1>
+        </div>
+    {%- endblock content_title %}
+
+    {% block topbuttonbar %}
+        {{ super() }}
+        {{ macros.render_buttons( top_buttons ) }}
+    {%- endblock topbuttonbar %}
+
+    {% block hidden_fields -%}
+        {{ super() }}
+    {% endblock hidden_fields -%}
+
+    <div id="page_message">
+        <p>{{ page_msg|safe }}</p>
+    </div>
+
+    {% block page_content -%}
+        <table class="table table-striped">
+            <tr>
+                {% set firstrow = 1 %}
+                {%- for field in form if firstrow == 1 %}
+                    {% if field.id|truncate(14, True, '') == 'hidden_endrow_' %}{% set firstrow = 0 %}{% endif %}
+                    {% if not bootstrap_is_hidden_field( field ) %}
+                        <th>{{ field.label }}</th>
+                    {% endif %}
+                {%- endfor %}
+            </tr>
+            <tr>
+                {%- for field in form %}
+                    {% if field.id|truncate(14, True, '') == 'hidden_endrow_' %}
+                        </tr><tr>
+                    {% endif %}
+                    {% if not bootstrap_is_hidden_field( field ) -%}
+                        <td><div  class="col-md-12">{{ macros.table_field( field ) }}</div></td>
+                    {% endif %}
+                {% endfor %}
+            </tr>
+        </table>
+    {% endblock page_content -%}
+
+    {% block bottombuttonbar %}
+        {{ super() }}
+        {{ macros.render_buttons( bottom_buttons ) }}
+    {%- endblock bottombuttonbar %}
 
     </form>
-
 {% endblock %}
