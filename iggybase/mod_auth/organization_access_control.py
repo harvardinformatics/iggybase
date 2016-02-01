@@ -96,7 +96,7 @@ class OrganizationAccessControl:
         for row in table_fields:
             table_model = util.get_table(row.TableObject.name)
             tables.add(table_model)
-            field_display_name = util.get_field_attr(row.TableQueryField, row.Field, 'display_name')
+            field_display_name = util.get_field_attr(row, 'display_name')
             if row.Field.foreign_key_table_object_id is not None:  # fk field
                 # get fk data so we can include name and form url link
                 fk_data = self.foreign_key(row.Field.foreign_key_table_object_id, row.Field.foreign_key_display)

@@ -93,7 +93,7 @@ class TableQuery:
     def _get_field_dict(self, table_fields):
         field_dict = OrderedDict()
         for row in table_fields:
-            display_name = util.get_field_attr(row.TableQueryField, row.Field, 'display_name')
+            display_name = util.get_field_attr(row, 'display_name')
             field_dict[display_name] = row
         return field_dict
 
@@ -147,9 +147,19 @@ class TableQuery:
                     else:
                         item_value = {'text': col}
                     row_dict[keys[i]] = item_value
-                    # name column values will link to detail
-                    if keys[i] == 'name' and not for_download:
+                    # name and table title columns values will link to detail
+                    if keys[i] in self.field_dict:
                         table_name = self.field_dict[keys[i]].TableObject.name
+                        is_title_field = (keys[i] == table_name)
+                    else:
+                        is_title_field = False
+                    if (
+                            not for_download and
+                            (
+                                keys[i] == 'name' or
+                                is_title_field
+                            )
+                        ):
                         row_dict[keys[i]]['link'] = self.get_link(
                             col,
                             self.module_name,
@@ -160,7 +170,7 @@ class TableQuery:
             self.table_rows.append(row_dict)
 
     def get_link(self, value, module, url_root, page = None, table = None):
-        link = url_root + '/' + module
+        link = url_root + module
         if page:
             link += '/' + page
         if table:

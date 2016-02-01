@@ -22,7 +22,9 @@ def get_table(table_name):
         abort(404)
     return table_object
 
-def get_field_attr(table_query_field_obj, field_obj, attr):
+def get_field_attr(row, attr):
+    table_query_field_obj =  getattr(row, 'TableQueryField', None)
+    field_obj = getattr(row, 'Field', None)
     if table_query_field_obj and getattr(table_query_field_obj, attr):
         value = getattr(table_query_field_obj, attr)
     else:

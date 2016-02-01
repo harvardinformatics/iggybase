@@ -86,11 +86,30 @@ class RoleAccessControl:
             (models.FieldRole.active == active),
             (models.TableObject.active == active)
         ]
+        selects = [
+            models.Field,
+            models.TableObject,
+            models.Module
+        ]
+        joins = [
+            models.FieldRole,
+            models.TableObjectRole,
+            models.Module
+        ]
+        orders= [
+            models.Field.order
+        ]
 
         # add filter for the identifier
         if table_query_id:
             filters.append((models.TableQueryField.table_query_id == table_query_id))
             filters.append((models.TableQueryField.active == active))
+            selects.append(models.TableQueryField)
+            joins.append(models.TableQueryField)
+            orders= [
+                models.TableQueryField.order,
+                models.Field.order
+            ]
         elif table_name:
             filters.append((models.TableObject.name == table_name))
         elif table_id:
@@ -101,21 +120,13 @@ class RoleAccessControl:
             filters.append((models.Field.field_name == field_name))
 
         res = (
-            db_session.query(
-                models.Field,
-                models.TableObject,
-                models.TableQueryField,
-                models.Module
-            ).
+            db_session.query(*selects).
                 join(
                 models.TableObject,
                 models.TableObject.id == models.Field.table_object_id
             ).
-            join(models.FieldRole).
-            join(models.TableObjectRole).
-            join(models.Module).
-            outerjoin(models.TableQueryField).
-            filter(*filters).order_by(models.TableQueryField.order, models.Field.order).all()
+            join(*joins).
+            filter(*filters).order_by(*orders).all()
         )
         return res
 

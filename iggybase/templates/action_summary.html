@@ -8,8 +8,8 @@
 {%- endblock styles %}
 {% block title %}Iggybase - {{ table_name.replace( '_',' ' ) }}{% endblock %}
 
-{% block page_content %}
-<h1>{{page_form_name|title}} {{ table_name.replace( '_', ' ' )|title }}s</h1>
+{% block content %}
+    <h1>{{page_form_name|title}} {{ table_name.replace( '_', ' ' )|title }}s</h1>
     <div id="page_message">
             <p>
                 {{ page_msg|safe }}
@@ -22,14 +22,16 @@
         {{ super() }}
         {{ macros.render_buttons(top_buttons)}}
     {%- endblock topbuttonbar %}
-    <div class={{ table_name ~ "_table" }}>
-        {{ macros.render_table_headers(table_query) }}
-    </div>
+    {% block page_content %}
+        <div class={{ table_name ~ "_table" }}>
+            {{ macros.render_table_headers(table_query) }}
+        </div>
+    {%- endblock page_content %}
     {% block bottombuttonbar %}
         {{ super() }}
         {{ macros.render_buttons(bottom_buttons)}}
     {%- endblock bottombuttonbar %}
-{%- endblock page_content %}
+{%- endblock content %}
 {% block scripts %}
     {{ super() }}
     <script type="text/javascript"
