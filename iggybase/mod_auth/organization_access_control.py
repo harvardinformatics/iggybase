@@ -83,7 +83,7 @@ class OrganizationAccessControl:
 
         return results
 
-    def get_table_query_data(self, table_fields, criteria={}):
+    def get_table_query_data(self, table_fields, criteria={}, row_id = False):
         results = []
         tables = set([])
         joins = set([])
@@ -141,7 +141,7 @@ class OrganizationAccessControl:
         # add organization id checks on all tables, does not include fk tables
         for table_model in tables:
             # add a row id that is the id of the first table named
-            if (table_model.__name__.lower() == first_table_named):
+            if row_id and (table_model.__name__.lower() == first_table_named):
                 col = getattr(table_model, 'id')
                 columns.append(col.label('DT_RowId'))
             wheres.append(getattr(table_model, 'organization_id').in_(self.org_ids))
@@ -251,7 +251,7 @@ class OrganizationAccessControl:
                 hidden_fields[field_id] = data
             elif field_pattern.match(key):
                 fields[key] = data
-                
+
         try:
             db_session.begin(subtransactions=True)
             for field, data in fields.items():

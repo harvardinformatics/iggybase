@@ -7,7 +7,7 @@ import logging
 
 # Retreives and formats data based on table_query
 class TableQuery:
-    def __init__ (self, id, order, display_name, module_name, table_name = None, criteria = {}):
+    def __init__ (self, id, order, display_name, module_name, table_name = None, criteria = {}, row_id = False):
         self.id = id
         self.order = order
         self.display_name = display_name
@@ -20,6 +20,7 @@ class TableQuery:
         self.criteria = criteria
         self.date_fields = {}
         self.table_fields = []
+        self.row_id = row_id
 
     def get_fields(self):
         self.table_fields = self._get_table_query_fields()
@@ -35,7 +36,8 @@ class TableQuery:
         organization_access_control = oac.OrganizationAccessControl()
         self.results = organization_access_control.get_table_query_data(
                 self.table_fields,
-                self.criteria
+                self.criteria,
+                self.row_id
         )
         return self.results
 
