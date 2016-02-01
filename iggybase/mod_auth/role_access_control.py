@@ -239,10 +239,12 @@ class RoleAccessControl:
             .filter(
                 models.MenuRole.role_id == self.role.id,
                 models.Menu.parent_id == parent_id,
-                models.MenuRole.active == active
-            ).order_by(models.MenuRole.order, models.MenuRole.name).all())
+                models.MenuRole.active == active,
+                models.Menu.active == active
+            ).order_by(models.MenuRole.order, models.MenuRole.description).all())
 
         for item in items:
+            logging.info(item.MenuRole.description)
             url = ''
             if item.Menu.url_path and item.Menu.url_path != '':
                 url = item.Menu.url_path
@@ -258,7 +260,8 @@ class RoleAccessControl:
                     'url': url,
                     'title': item.MenuRole.description,
                     'class': item.MenuRole.menu_class,
-                    'subs': self.get_menu_items(item.Menu.id, active)
+                    'subs': self.get_menu_items(item.Menu.id, active),
+                    'order': item.MenuRole.order
             }
         return menu
 

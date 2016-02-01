@@ -288,35 +288,21 @@ class OrganizationAccessControl:
                         setattr(instances[row_id], 'date_created', datetime.datetime.utcnow())
                         setattr(instances[row_id], 'organization_id', self.current_org_id)
                         if current_table_data.new_name_prefix is not None and current_table_data.new_name_prefix != "":
-                            current_inst_name = current_table_data.get_new_name()
+                            if fields[prefix + 'name_' + str(row_id)] == 'new' or \
+                                            fields[prefix + 'name_' + str(row_id)] == '':
+                                current_inst_name = current_table_data.get_new_name()
+                                db_session.add(current_table_data)
+                                db_session.flush()
+                            else:
+                                current_inst_name = fields[prefix + 'name_' + str(row_id)]
+
                             fields[prefix + 'name_' + str(row_id)] = current_inst_name
-                            setattr(instances[row_id], 'name', current_inst_name)
-                            db_session.add(current_table_data)
-                            db_session.flush()
                     else:
                         current_inst_name = hidden_fields['row_name_' + str(row_id)]
                         instances[row_id] = db_session.query(current_table_object). \
                             filter_by(name=current_inst_name).first()
 
                     setattr(instances[row_id], 'last_modified', datetime.datetime.utcnow())
-
-                if column_name != 'last_modified' and column_name != 'date_created' and \
-                        not (hidden_fields[field_id] == data or hidden_fields[field_id] == str(data)):
-                    history_instance = core_models.History()
-                    history_instance.name = history_data.get_new_name()
-                    history_instance.date_created = datetime.datetime.utcnow()
-                    history_instance.last_modified = datetime.datetime.utcnow()
-                    history_instance.table_object_id = hidden_fields['table_id_' + str(row_id)]
-                    history_instance.field_id = field_data.Field.id
-                    history_instance.organization_id = self.current_org_id
-                    history_instance.user_id = g.user.id
-                    history_instance.instance_name = current_inst_name
-                    history_instance.old_value = hidden_fields[field_id]
-                    history_instance.new_value = data
-                    db_session.add(history_instance)
-                    db_session.flush
-                    db_session.add(history_data)
-                    db_session.flush()
 
                 if field_data.Field.foreign_key_table_object_id == long_text_data.id and data != '':
                     if hidden_fields[field_id] == '':
@@ -361,6 +347,24 @@ class OrganizationAccessControl:
                             setattr(instances[row_id], column_name, 0)
                     else:
                         setattr(instances[row_id], column_name, data)
+
+                if column_name != 'last_modified' and column_name != 'date_created' and \
+                        not (hidden_fields[field_id] == data or hidden_fields[field_id] == str(data)):
+                    history_instance = core_models.History()
+                    history_instance.name = history_data.get_new_name()
+                    history_instance.date_created = datetime.datetime.utcnow()
+                    history_instance.last_modified = datetime.datetime.utcnow()
+                    history_instance.table_object_id = hidden_fields['table_id_' + str(row_id)]
+                    history_instance.field_id = field_data.Field.id
+                    history_instance.organization_id = self.current_org_id
+                    history_instance.user_id = g.user.id
+                    history_instance.instance_name = current_inst_name
+                    history_instance.old_value = hidden_fields[field_id]
+                    history_instance.new_value = data
+                    db_session.add(history_instance)
+                    db_session.flush
+                    db_session.add(history_data)
+                    db_session.flush()
 
             row_names = []
             for row_id, instance in instances.items():
