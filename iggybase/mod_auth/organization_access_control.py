@@ -15,9 +15,10 @@ import logging
 class OrganizationAccessControl:
     def __init__(self):
         self.org_ids = []
+        self.current_org_id = None
         if g.user is not None and not g.user.is_anonymous:
             self.user = models.load_user(g.user.id)
-            user_orgs = db_session.query(models.UserOrganization).filter_by(user_id=self.user.id).all()
+            user_orgs = db_session.query(models.UserOrganization).filter_by(active=1, user_id=self.user.id).all()
 
             for user_org in user_orgs:
                 if user_org.user_organization_id is not None:
@@ -26,7 +27,6 @@ class OrganizationAccessControl:
                         self.current_org_id = user_org.user_organization_id
         else:
             self.user = None
-            self.current_org_id = None
 
     def get_child_organization(self, parent_organization_id):
         self.org_ids.append(parent_organization_id)
