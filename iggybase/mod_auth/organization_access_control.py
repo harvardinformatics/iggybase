@@ -378,7 +378,7 @@ class OrganizationAccessControl:
             for row_id, instance in instances.items():
                 session.add(instance)
                 session.flush()
-                row_names.append(instance.name)
+                row_names.append([instance.name, instance.__tablename__])
 
             session.commit()
             return row_names

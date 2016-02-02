@@ -91,7 +91,7 @@ def detail(module_name, table_name, row_name):
 def saved_data(module_name, table_name, row_names):
     msg = 'Saved: '
     for row_name in row_names:
-        msg += ' <a href='+request.url_root+module_name+'/detail/'+table_name+'/'+row_name+'>'+row_name+'</a>,'
+        msg += ' <a href='+request.url_root+module_name+'/detail/'+row_name[1]+'/'+row_name[0]+'>'+row_name[0]+'</a>,'
 
     msg = msg[:-1]
     return templating.page_template('save_message', module_name=module_name, table_name=table_name, page_msg=msg)
