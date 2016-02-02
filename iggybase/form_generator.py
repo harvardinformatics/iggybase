@@ -223,6 +223,8 @@ class FormGenerator():
     def default_parent_child_form(self, table_data, child_tables, link_data, row_name='new'):
         self.table_data = table_data
 
+        logging.info(table_data.name)
+
         self.classattr = self.hidden_fields('parent_child')
         self.classattr.update(self.row_fields(1, row_name))
 
@@ -237,6 +239,7 @@ class FormGenerator():
         row_counter = 2
         child_index = 0
         for child_table in child_tables:
+            logging.info(child_table.name)
             self.table_data = child_table
             fields = self.role_access_control.fields(self.table_data.id)
 
@@ -300,6 +303,7 @@ class FormGenerator():
                     row_name = 'new'
 
         for field in fields:
+            logging.info(field.Field.field_name)
             value = None
             if row_name != 'new' and data is not None:
                 if  field.FieldRole.display_name in data.keys():
