@@ -20,9 +20,10 @@ class OrganizationAccessControl:
             user_orgs = db_session.query(models.UserOrganization).filter_by(user_id=self.user.id).all()
 
             for user_org in user_orgs:
-                self.get_child_organization(user_org.user_organization_id)
-                if user_org.default_organization:
-                    self.current_org_id = user_org.user_organization_id
+                if user_org.user_organization_id is not None:
+                    self.get_child_organization(user_org.user_organization_id)
+                    if user_org.default_organization:
+                        self.current_org_id = user_org.user_organization_id
         else:
             self.user = None
             self.current_org_id = None
@@ -253,7 +254,7 @@ class OrganizationAccessControl:
                 fields[key] = data
 
         try:
-            db_session.begin(subtransactions=True)
+            session = db_session()
             for field, data in fields.items():
                 if field.startswith('child_'):
                     prefix = 'child_'
@@ -291,8 +292,8 @@ class OrganizationAccessControl:
                             if fields[prefix + 'name_' + str(row_id)] == 'new' or \
                                             fields[prefix + 'name_' + str(row_id)] == '':
                                 current_inst_name = current_table_data.get_new_name()
-                                db_session.add(current_table_data)
-                                db_session.flush()
+                                session.add(current_table_data)
+                                session.flush()
                             else:
                                 current_inst_name = fields[prefix + 'name_' + str(row_id)]
 
@@ -310,13 +311,13 @@ class OrganizationAccessControl:
                 if field_data.Field.foreign_key_table_object_id == long_text_data.id and data != '':
                     if hidden_fields[field_id] == '':
                         lt = core_models.LongText()
-                        db_session.add(lt)
-                        db_session.flush
+                        session.add(lt)
+                        session.flush
                         lt_id = lt.id
 
                         setattr(lt, 'name', long_text_data.get_new_name())
-                        db_session.add(long_text_data)
-                        db_session.flush()
+                        session.add(long_text_data)
+                        session.flush()
 
                         setattr(lt, 'date_created', datetime.datetime.utcnow())
                         setattr(lt, 'organization_id', self.current_org_id)
@@ -326,8 +327,8 @@ class OrganizationAccessControl:
 
                     setattr(lt, 'last_modified', datetime.datetime.utcnow())
                     setattr(lt, 'long_text', data)
-                    db_session.add(lt)
-                    db_session.flush()
+                    session.add(lt)
+                    session.flush()
                     setattr(instances[row_id], column_name, lt_id)
                 elif field_data.Field.foreign_key_table_object_id is not None:
                     try:
@@ -336,6 +337,7 @@ class OrganizationAccessControl:
                         fk_id = self.get_foreign_key_data(field_data.Field.foreign_key_table_object_id, data)
                         if len(fk_id) > 1:
                             setattr(instances[row_id], column_name, fk_id[1][0])
+                            data = fk_id[1][0]
                         else:
                             setattr(instances[row_id], column_name, None)
                 elif column_name != 'id' and column_name != 'last_modified' and column_name != 'date_created':
@@ -346,8 +348,10 @@ class OrganizationAccessControl:
                     elif field_data.Field.data_type_id == 3:
                         if data == 'y':
                             setattr(instances[row_id], column_name, 1)
+                            data = True
                         else:
                             setattr(instances[row_id], column_name, 0)
+                            data = False
                     else:
                         setattr(instances[row_id], column_name, data)
 
@@ -364,22 +368,22 @@ class OrganizationAccessControl:
                     history_instance.instance_name = current_inst_name
                     history_instance.old_value = hidden_fields[field_id]
                     history_instance.new_value = data
-                    db_session.add(history_instance)
-                    db_session.flush
+                    session.add(history_instance)
+                    session.flush
 
-            db_session.add(history_data)
-            db_session.flush()
+            session.add(history_data)
+            session.flush()
 
             row_names = []
             for row_id, instance in instances.items():
-                db_session.add(instance)
-                db_session.flush()
+                session.add(instance)
+                session.flush()
                 row_names.append(instance.name)
 
-            db_session.commit()
+            session.commit()
             return row_names
         except:
-            db_session.rollback()
+            session.rollback()
             raise
 
     def get_row_id(self, table_name, params):
