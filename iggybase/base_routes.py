@@ -90,11 +90,19 @@ def detail(module_name, table_name, row_name):
 
 def saved_data(module_name, table_name, row_names):
     msg = 'Saved: '
+    error = False
     for row_name in row_names:
-        msg += ' <a href='+request.url_root+module_name+'/detail/'+row_name[1]+'/'+row_name[0]+'>'+row_name[0]+'</a>,'
+        if row_name[0] == 'error':
+            msg = 'Error: {0},' . format(row_name[1])
+            error = True
+        else:
+            msg += ' <a href='+request.url_root+module_name+'/detail/'+row_name[1]+'/'+row_name[0]+'>'+row_name[0]+'</a>,'
 
     msg = msg[:-1]
-    return templating.page_template('save_message', module_name=module_name, table_name=table_name, page_msg=msg)
+    if error:
+        return templating.page_template('error_message', module_name=module_name, table_name=table_name, page_msg=msg)
+    else:
+        return templating.page_template('save_message', module_name=module_name, table_name=table_name, page_msg=msg)
 
 
 def data_entry(module_name, table_name, row_name):

@@ -1,4 +1,5 @@
 from flask import g, request
+from sqlalchemy.exc import IntegrityError
 from iggybase.mod_auth.role_access_control import RoleAccessControl
 from iggybase.database import db_session
 from iggybase.mod_admin import models
@@ -266,7 +267,7 @@ class OrganizationAccessControl:
                     child_id_field = hidden_fields['table_id_' + str(row_id)]
                     if child_id_field not in child_tables.keys():
                         child_tables[child_id_field] = util.get_table(child_name_field)
-                        child_data[child_id_field] = db_session.query(models.TableObject).\
+                        child_data[child_id_field] = session.query(models.TableObject).\
                             filter_by(name=child_tables[child_id_field].__tablename__).first()
 
                     current_table_object = child_tables[child_id_field]
@@ -300,7 +301,7 @@ class OrganizationAccessControl:
                             fields[prefix + 'name_' + str(row_id)] = current_inst_name
                     else:
                         current_inst_name = hidden_fields['row_name_' + str(row_id)]
-                        instances[row_id] = db_session.query(current_table_object). \
+                        instances[row_id] = session.query(current_table_object). \
                             filter_by(name=current_inst_name).first()
 
                         if hidden_fields['date_created_' + str(row_id)] == '':
@@ -323,7 +324,7 @@ class OrganizationAccessControl:
                         setattr(lt, 'organization_id', self.current_org_id)
                     else:
                         lt_id = hidden_fields[field_id]
-                        lt = db_session.query(core_models.LongText).filter_by(id=lt_id).first()
+                        lt = session.query(core_models.LongText).filter_by(id=lt_id).first()
 
                     setattr(lt, 'last_modified', datetime.datetime.utcnow())
                     setattr(lt, 'long_text', data)
@@ -382,6 +383,9 @@ class OrganizationAccessControl:
 
             session.commit()
             return row_names
+        except IntegrityError as err:
+            session.rollback()
+            return [['error',err]]
         except:
             session.rollback()
             raise
