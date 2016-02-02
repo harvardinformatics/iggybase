@@ -6,6 +6,7 @@ from wtforms.validators import DataRequired, Length, email
 from iggybase.mod_auth.organization_access_control import OrganizationAccessControl
 from iggybase.mod_auth.role_access_control import RoleAccessControl
 from iggybase import constants
+from datetime import datetime, date
 import logging
 
 
@@ -165,7 +166,9 @@ class FormGenerator():
                 elif field_data.Field.data_type_id == constants.BOOLEAN:
                     wtf_class = ReadonlyBooleanField
                 elif field_data.Field.data_type_id == constants.DATE:
-                    wtf_class = ReadonlyDateField
+                    wtf_class = ReadonlyStringField
+                    if isinstance(value, datetime):
+                        value = value.strftime('%Y-%m-%d')
                 elif field_data.Field.data_type_id == constants.TEXT_AREA:
                     wtf_class = ReadonlyTextAreaField
                 else:
