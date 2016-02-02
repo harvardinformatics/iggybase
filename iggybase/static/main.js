@@ -33,7 +33,7 @@ $( document ).ready( function () {
     );
     $( ".boolean-field" ).change(
         function( ) {
-            $.fn.changeCheckBox( $( this) );
+            $.fn.changeCheckBox( $( this ) );
         }
     );
 
@@ -77,15 +77,15 @@ $( document ).ready( function () {
         $( "#" + target + " tr:last" ).clone( ).find( "input, select" ).each(
             function() {
 		        var id = $(this).attr( 'id' );
-		        var matches = id.match( /(\S+)_(\S+)_(\d+)/);
+		        var matches = id.match( /child_(\S+)_(\d+)/);
 
-		        if ( matches[ 1 ] == 'child' ) {
-		            row_id = parseInt( matches[ 3 ] )+ 1;
+		        if ( matches.length > 1 ) {
+		            row_id = parseInt( matches[ 2 ] )+ 1;
                     td = $( this ).closest( 'td' );
 
-                    var old_id = "hidden_" + matches[ 2 ] + "_" + ( matches[ 3 ] );
-                    var new_id = "child_" + matches[ 2 ] + "_" + ( row_id );
-                    var hidden_id = "hidden_" + matches[ 2 ] + "_" + ( row_id );
+                    var old_id = "hidden_" + matches[ 1 ] + "_" + ( matches[ 2 ] );
+                    var new_id = "child_" + matches[ 1 ] + "_" + ( row_id );
+                    var hidden_id = "hidden_" + matches[ 1 ] + "_" + ( row_id );
 
 		            var old_ctrl;
                     if ( td.find( '#' + old_id ).length )
@@ -93,27 +93,31 @@ $( document ).ready( function () {
                     else
                         old_ctrl = 0;
 
-                    if ( link_column == matches[ 1 ] )
-                        $( this ).val( parent_id ).attr( 'id', new_id ).attr( 'name', new_id );
-                    else
-                        $( this ).val( '' ).attr( 'id', new_id ).attr( 'name', new_id );
+                    if ( $( this ).prop( 'type' ) == 'select-one' ) {
+                        if ( link_column == matches[ 1 ] ) {
+                            $( this ).attr( 'id', new_id ).attr( 'name', new_id );
+                            $( this ).filter( function( ) { return $( this ).text( ) == parent_id; } ).prop( 'selectedIndex', true );
+                        } else {
+                            $( this ).prop( 'selectedIndex', 0 ).attr( 'id', new_id ).attr( 'name', new_id );
+                        }
+                    } else {
+                        if ( link_column == matches[ 1 ] )
+                            $( this ).val( parent_id ).attr( 'id', new_id ).attr( 'name', new_id );
+                        else
+                            $( this ).val( '' ).attr( 'id', new_id ).attr( 'name', new_id );
+                    }
 
                     if ( matches[ 1 ] == 'name' ) {
                         td.append( "<input id='" + hidden_id + "' name='" + hidden_id + "' type='hidden' value='new'>" );
-                        if ( old_ctrl )
+                        if ( old_ctrl ) {
                             old_ctrl.val( 'new' ).attr( 'id', 'hidden_row_name_' + row_id ).attr( 'name', 'hidden_row_name_' + row_id );
-                        else
-                            td.append( "<input id='hidden_row_name_" + row_id + "' name='hidden_row_name_" + row_id + "' type='hidden' value='new'>" );
-                    } else {
-                        var input_value = '';
-                        if ( link_column == matches[ 1 ] )
-                            input_value = parent_id;
-
-                        if ( old_ctrl ){
-                            old_ctrl.val( input_value ).attr( 'id', hidden_id ).attr( 'name', hidden_id );
                         } else {
-                            td.append( "<input id='" + hidden_id + "' name='" + hidden_id + "' type='hidden' value='" + input_value + "'>" );
+                            td.append( "<input id='hidden_row_name_" + row_id + "' name='hidden_row_name_" + row_id + "' type='hidden' value='new'>" );
                         }
+                    } else if ( old_ctrl ) {
+                        old_ctrl.val( '' ).attr( 'id', hidden_id ).attr( 'name', hidden_id );
+                    } else {
+                        td.append( "<input id='" + hidden_id + "' name='" + hidden_id + "' type='hidden' value=''>" );
                     }
 
                     var searchbutton = $( td ).find( '.search-button' );
@@ -144,7 +148,9 @@ $( document ).ready( function () {
                     }
 
                     if ( $( this ).hasClass( 'boolean-field' ) ) {
-                        $( this ).click(
+                        td.append( "<input id='bool_" + new_id + "' name='bool_" + new_id + "' type='hidden' value=''>" );
+                        $.fn.changeCheckBox( $( this ) );
+                        $( this ).change(
                             function( ) {
                                 $.fn.changeCheckBox( $( this ) );
                             }

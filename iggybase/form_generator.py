@@ -2,7 +2,7 @@ from flask.ext.wtf import Form
 from types import new_class
 from wtforms import StringField, IntegerField, PasswordField, BooleanField, SelectField, ValidationError, DateField, \
     HiddenField, FileField, TextAreaField, FloatField
-from wtforms.validators import DataRequired, Length, email
+from wtforms.validators import DataRequired, Length, email, Optional
 from iggybase.mod_auth.organization_access_control import OrganizationAccessControl
 from iggybase.mod_auth.role_access_control import RoleAccessControl
 from iggybase import constants
@@ -77,6 +77,8 @@ class FormGenerator():
         validators = []
         if field_data.FieldRole.required == constants.REQUIRED:
             validators.append(DataRequired())
+        else:
+            validators.append(Optional())
 
         if field_data.Field.length is not None and field_data.Field.data_type_id == constants.STRING:
             validators.append(Length(0, field_data.Field.length))
