@@ -8,6 +8,7 @@ from iggybase.mod_core import utilities as util
 from sqlalchemy.orm import aliased
 import re
 import datetime
+import sys
 import logging
 
 
@@ -17,9 +18,10 @@ class OrganizationAccessControl:
     def __init__(self):
         self.org_ids = []
         self.current_org_id = None
+        self.session = db_session()
         if g.user is not None and not g.user.is_anonymous:
             self.user = models.load_user(g.user.id)
-            user_orgs = db_session.query(models.UserOrganization).filter_by(active=1, user_id=self.user.id).all()
+            user_orgs = self.session.query(models.UserOrganization).filter_by(active=1, user_id=self.user.id).all()
 
             for user_org in user_orgs:
                 if user_org.user_organization_id is not None:
@@ -29,9 +31,12 @@ class OrganizationAccessControl:
         else:
             self.user = None
 
+    def __del__ (self):
+        self.session.close()
+
     def get_child_organization(self, parent_organization_id):
         self.org_ids.append(parent_organization_id)
-        child_orgs = db_session.query(models.Organization).filter_by(parent_id=parent_organization_id).all()
+        child_orgs = self.session.query(models.Organization).filter_by(parent_id=parent_organization_id).all()
 
         if child_orgs is None:
             return
@@ -59,12 +64,12 @@ class OrganizationAccessControl:
             for key, value in params.items():
                 criteria.append(getattr(table_object, key) == value)
 
-            results = db_session.query(*columns).filter(*criteria).all()
+            results = self.session.query(*columns).filter(*criteria).all()
 
         return results
 
     def get_foreign_key_data(self, fk_table_id, column_value=None):
-        fk_table_data = db_session.query(models.TableObject).filter_by(id=fk_table_id).first()
+        fk_table_data = self.session.query(models.TableObject).filter_by(id=fk_table_id).first()
         fk_field_data = self.foreign_key(fk_table_id)
 
         results = [(-99, '')]
@@ -148,7 +153,7 @@ class OrganizationAccessControl:
                 columns.append(col.label('DT_RowId'))
             wheres.append(getattr(table_model, 'organization_id').in_(self.org_ids))
         results = (
-            db_session.query(*columns).
+            self.session.query(*columns).
                 join(*joins).
                 outerjoin(*outer_joins).
                 filter(*wheres).all()
@@ -162,7 +167,7 @@ class OrganizationAccessControl:
             filters.append(models.Field.field_name == 'name')
         else:
             filters.append(models.Field.id == display)
-        res = (db_session.query(models.Field, models.TableObject, models.Module).
+        res = (self.session.query(models.Field, models.TableObject, models.Module).
                join(models.TableObject,
                     models.TableObject.id == models.Field.table_object_id
                     ).
@@ -170,9 +175,9 @@ class OrganizationAccessControl:
                join(models.Module).
                filter(*filters).first())
         if res.Module.name == 'mod_admin':
-            fk_session = db_session
+            fk_session = self.session
         else:
-            fk_session = db_session
+            fk_session = self.session
         return {'foreign_key': res.Field.field_name,
                 'module': res.Module.name,
                 'url_prefix': res.Module.url_prefix,
@@ -226,7 +231,7 @@ class OrganizationAccessControl:
     def save_form(self):
         role_access_control = RoleAccessControl()
         table_object = util.get_table(request.form['table_object_0'])
-        table_data = db_session.query(models.TableObject).filter_by(name=table_object.__tablename__).first()
+        table_data = self.session.query(models.TableObject).filter_by(name=table_object.__tablename__).first()
 
         long_text_data = models.TableObject.query.filter_by(name='long_text').first()
 
@@ -255,7 +260,6 @@ class OrganizationAccessControl:
                 fields[key] = data
 
         try:
-            session = db_session()
             for field, data in fields.items():
                 if field.startswith('child_'):
                     prefix = 'child_'
@@ -267,7 +271,7 @@ class OrganizationAccessControl:
                     child_id_field = hidden_fields['table_id_' + str(row_id)]
                     if child_id_field not in child_tables.keys():
                         child_tables[child_id_field] = util.get_table(child_name_field)
-                        child_data[child_id_field] = session.query(models.TableObject).\
+                        child_data[child_id_field] = self.session.query(models.TableObject).\
                             filter_by(name=child_tables[child_id_field].__tablename__).first()
 
                     current_table_object = child_tables[child_id_field]
@@ -293,15 +297,17 @@ class OrganizationAccessControl:
                             if fields[prefix + 'name_' + str(row_id)] == 'new' or \
                                             fields[prefix + 'name_' + str(row_id)] == '':
                                 current_inst_name = current_table_data.get_new_name()
-                                session.add(current_table_data)
-                                session.flush()
+                                self.session.add(current_table_data)
+                                self.session.flush()
                             else:
                                 current_inst_name = fields[prefix + 'name_' + str(row_id)]
+                        else:
+                            current_inst_name = fields[prefix + 'name_' + str(row_id)]
 
-                            fields[prefix + 'name_' + str(row_id)] = current_inst_name
+                        fields[prefix + 'name_' + str(row_id)] = current_inst_name
                     else:
                         current_inst_name = hidden_fields['row_name_' + str(row_id)]
-                        instances[row_id] = session.query(current_table_object). \
+                        instances[row_id] = self.session.query(current_table_object). \
                             filter_by(name=current_inst_name).first()
 
                         if hidden_fields['date_created_' + str(row_id)] == '':
@@ -312,24 +318,24 @@ class OrganizationAccessControl:
                 if field_data.Field.foreign_key_table_object_id == long_text_data.id and data != '':
                     if hidden_fields[field_id] == '':
                         lt = core_models.LongText()
-                        session.add(lt)
-                        session.flush
+                        self.session.add(lt)
+                        self.session.flush
                         lt_id = lt.id
 
                         setattr(lt, 'name', long_text_data.get_new_name())
-                        session.add(long_text_data)
-                        session.flush()
+                        self.session.add(long_text_data)
+                        self.session.flush()
 
                         setattr(lt, 'date_created', datetime.datetime.utcnow())
                         setattr(lt, 'organization_id', self.current_org_id)
                     else:
                         lt_id = hidden_fields[field_id]
-                        lt = session.query(core_models.LongText).filter_by(id=lt_id).first()
+                        lt = self.session.query(core_models.LongText).filter_by(id=lt_id).first()
 
                     setattr(lt, 'last_modified', datetime.datetime.utcnow())
                     setattr(lt, 'long_text', data)
-                    session.add(lt)
-                    session.flush()
+                    self.session.add(lt)
+                    self.session.flush()
                     setattr(instances[row_id], column_name, lt_id)
                 elif field_data.Field.foreign_key_table_object_id is not None:
                     try:
@@ -369,26 +375,25 @@ class OrganizationAccessControl:
                     history_instance.instance_name = current_inst_name
                     history_instance.old_value = hidden_fields[field_id]
                     history_instance.new_value = data
-                    session.add(history_instance)
-                    session.flush
+                    self.session.add(history_instance)
+                    self.session.flush
 
-            session.add(history_data)
-            session.flush()
+            self.session.add(history_data)
+            self.session.flush()
 
             row_names = []
             for row_id, instance in instances.items():
-                session.add(instance)
-                session.flush()
+                self.session.add(instance)
+                self.session.flush()
                 row_names.append([instance.name, instance.__tablename__])
 
-            session.commit()
+            self.session.commit()
             return row_names
-        except IntegrityError as err:
-            session.rollback()
-            return [['error',err]]
         except:
-            session.rollback()
-            raise
+            self.session.rollback()
+            err = sys.exc_info()[0]
+            logging.error(err)
+            return [['error',err]]
 
     def get_row_id(self, table_name, params):
         table_object = util.get_table(table_name)
@@ -398,7 +403,7 @@ class OrganizationAccessControl:
         for key, value in params.items():
             criteria.append(getattr(table_object, key) == value)
 
-        result = db_session.query(table_object).filter(*criteria).first()
+        result = self.session.query(table_object).filter(*criteria).first()
 
         if result:
             return result.id
@@ -406,11 +411,11 @@ class OrganizationAccessControl:
             return None
 
     def get_child_row_names(self, child_table_name, child_link_field_id, parent_id):
-        field = db_session.query(models.Field).filter_by(id=child_link_field_id).first()
+        field = self.session.query(models.Field).filter_by(id=child_link_field_id).first()
 
         child_table = util.get_table(child_table_name)
 
-        rows = db_session.query(child_table).filter(getattr(child_table, field.field_name) == parent_id).all( )
+        rows = self.session.query(child_table).filter(getattr(child_table, field.field_name) == parent_id).all( )
 
         names = []
         for row in rows:
@@ -428,7 +433,7 @@ class OrganizationAccessControl:
             for col, val in updates.items():
                 try:
                     setattr(row, col, val)
-                    db_session.commit()
+                    self.session.commit()
                     row_fields = []
                     for field in message_fields:
                         row_fields.append(str(getattr(row, field)))

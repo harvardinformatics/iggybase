@@ -1,13 +1,9 @@
 from flask import redirect, url_for, request, abort, g
-from iggybase.templating import page_template
 from flask.ext.login import login_required, login_user, logout_user, current_user
-from iggybase.mod_admin.models import User, UserRole
+from iggybase.mod_admin.models import User
 from . import mod_auth
 from iggybase.mod_auth.role_organization import get_roles, get_organizations, get_current_user_role, \
     get_current_user_organization
-from iggybase.database import db_session
-import os
-import socket
 import json
 import logging
 

@@ -11,6 +11,10 @@ import logging, sys, inspect
 class TableFactory:
     def __init__(self, active=1):
         self.active = active
+        self.session = db_session()
+
+    def __del__(self):
+        self.session.close()
 
     def table_object_factory(self, class_name, table_object):
         classattr = {"__tablename__": table_object.name}
@@ -20,12 +24,13 @@ class TableFactory:
         if not table_object_cols:
             return None
 
+
         # logging.info( 'table name: ' + class_name )
         for col in table_object_cols:
             # logging.info( col.field_name )
             if col.foreign_key_table_object_id is not None:
-                foreign_table = db_session.query(TableObject).filter_by(id=col.foreign_key_table_object_id).first()
-                foreign_column = db_session.query(Field).filter_by(id=col.foreign_key_field_id).first()
+                foreign_table =  self.session.query(TableObject).filter_by(id=col.foreign_key_table_object_id).first()
+                foreign_column = self.session.query(Field).filter_by(id=col.foreign_key_field_id).first()
 
                 classattr[col.field_name] = self.create_column(col, foreign_table.name, foreign_column.field_name)
 
@@ -49,7 +54,7 @@ class TableFactory:
         return "".join(x.title() for x in components)
 
     def create_column(self, attributes, foreign_table_name=None, foreign_column_name=None):
-        datatype = db_session.query(DataType).filter_by(id=attributes.data_type_id).filter_by(active=1).first()
+        datatype = self.session.query(DataType).filter_by(id=attributes.data_type_id).filter_by(active=1).first()
 
         dtcname = getattr(sqlalchemy, datatype.name)
         if attributes.data_type_id == 2:
@@ -84,7 +89,7 @@ class TableFactory:
     def table_objects(self, active=1):
         table_objects = []
 
-        res = db_session.query(TableObject).filter(TableObject.active==active). \
+        res = self.session.query(TableObject).filter(TableObject.active==active). \
             filter(TableObject.module_id!=4). \
             order_by(TableObject.order).all()
 
@@ -96,7 +101,7 @@ class TableFactory:
     def fields(self, table_object_id, active=1):
         fields = []
 
-        res = db_session.query(Field). \
+        res = self.session.query(Field). \
             filter_by(table_object_id=table_object_id, active=active).all()
 
         for row in res:

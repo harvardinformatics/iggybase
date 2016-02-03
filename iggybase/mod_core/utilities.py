@@ -10,7 +10,8 @@ def get_column(module, table_name, field_name):
     return getattr(table_model, field_name)
 
 def get_table(table_name):
-    table = db_session.query(TableObject).filter_by(name=table_name).first()
+    session = db_session()
+    table = session.query(TableObject).filter_by(name=table_name).first()
     try:
         if table.module_id == 4:
             module_model = import_module('iggybase.mod_admin.models')
@@ -20,6 +21,9 @@ def get_table(table_name):
     except AttributeError:
         logging.info('abort ' + table_name)
         abort(404)
+    finally:
+        session.close()
+
     return table_object
 
 def get_field_attr(row, attr):

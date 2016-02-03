@@ -93,7 +93,8 @@ def saved_data(module_name, table_name, row_names):
     error = False
     for row_name in row_names:
         if row_name[0] == 'error':
-            msg = 'Error: {0},' . format(row_name[1])
+
+            msg = 'Error: %s,' % str(row_name[1]).replace('<','').replace('>','')
             error = True
         else:
             msg += ' <a href='+request.url_root+module_name+'/detail/'+row_name[1]+'/'+row_name[0]+'>'+row_name[0]+'</a>,'

@@ -12,15 +12,19 @@ import logging
 class RoleAccessControl:
     def __init__(self):
         config = get_config()
+        self.session = db_session()
         # set user and role
         if g.user is not None and not g.user.is_anonymous:
             self.user = models.load_user(g.user.id)
-            self.role = (db_session.query(models.Role)
+            self.role = (self.session.query(models.Role)
                                   .join(models.UserRole)
                                   .filter(models.UserRole.id==self.user.current_user_role_id).first())
         else:
             self.user = None
             self.role = None
+
+    def __del__ (self):
+        self.session.close()
 
     def fields(self, table_object_id, filter=None, active=1):
         filters = [
@@ -37,7 +41,7 @@ class RoleAccessControl:
                 else:
                     filters.append((getattr(models.FieldRole, field_data[1]) == value))
 
-        res = db_session.query(models.Field, models.FieldRole).join(models.FieldRole). \
+        res = self.session.query(models.Field, models.FieldRole).join(models.FieldRole). \
                     filter(*filters). \
                     order_by(models.FieldRole.order, models.FieldRole.id).all()
 
@@ -61,7 +65,7 @@ class RoleAccessControl:
             )
 
         table_queries = (
-            db_session.query(
+            self.session.query(
                 models.TableQueryRender,
                 models.TableQuery
             ).
@@ -120,7 +124,7 @@ class RoleAccessControl:
             filters.append((models.Field.field_name == field_name))
 
         res = (
-            db_session.query(*selects).
+            self.session.query(*selects).
                 join(
                 models.TableObject,
                 models.TableObject.id == models.Field.table_object_id
@@ -132,7 +136,7 @@ class RoleAccessControl:
 
     def table_query_criteria(self, table_query_id):
         criteria = (
-            db_session.query(
+            self.session.query(
                 models.TableQueryCriteria,
                 models.Field,
                 models.TableObject,
@@ -156,14 +160,14 @@ class RoleAccessControl:
         Menus are recursive.
         """
         # TODO: do we need to query for this or can we just use constant
-        navbar_root = db_session.query(models.Menu). \
+        navbar_root = self.session.query(models.Menu). \
             filter_by(name=admin_consts.MENU_NAVBAR_ROOT).first()
         navbar = self.get_menu_items(navbar_root.id, active)
 
         # add facility role change options to navbar
         navbar['Role'] = self.make_role_menu()
 
-        sidebar_root = db_session.query(models.Menu). \
+        sidebar_root = self.session.query(models.Menu). \
             filter_by(name=admin_consts.MENU_SIDEBAR_ROOT).first()
         sidebar = self.get_menu_items(sidebar_root.id, active)
 
@@ -180,11 +184,11 @@ class RoleAccessControl:
     def page_forms(self, active=1):
         page_forms = []
 
-        res = db_session.query(models.PageFormRole). \
+        res = self.session.query(models.PageFormRole). \
             filter_by(role_id=self.role.id).filter_by(active=active). \
             order_by(models.PageFormRole.order, models.PageFormRole.id).all()
         for row in res:
-            page_form = db_session.query(models.PageForm). \
+            page_form = self.session.query(models.PageForm). \
                 filter_by(id=row.page_form_id).filter_by(active=active).first()
             if page_form is not None:
                 page_forms.append(page_form)
@@ -197,11 +201,11 @@ class RoleAccessControl:
         page_form_buttons['top'] = []
         page_form_buttons['bottom'] = []
 
-        res = db_session.query(models.PageFormButtonRole). \
+        res = self.session.query(models.PageFormButtonRole). \
             filter_by(role_id=self.role.id).filter_by(active=active). \
             order_by(models.PageFormButtonRole.order, models.PageFormButtonRole.id).all()
         for row in res:
-            page_form_button = db_session.query(models.PageFormButton).filter_by(id=row.page_form_button_id). \
+            page_form_button = self.session.query(models.PageFormButton).filter_by(id=row.page_form_button_id). \
                 filter_by(page_form_id=page_form_id).filter_by(active=active).first()
             if page_form_button is not None and page_form_button.button_location in ['top', 'bottom']:
                 page_form_buttons[page_form_button.button_location].append(page_form_button)
@@ -210,7 +214,7 @@ class RoleAccessControl:
         return page_form_buttons
 
     def page_form_javascript(self, page_form_id, active=1):
-        res = db_session.query(models.PageFormJavaScript).filter_by(page_form_id=page_form_id). \
+        res = self.session.query(models.PageFormJavaScript).filter_by(page_form_id=page_form_id). \
             filter_by(active=active).order_by(models.PageFormJavaScript.order, models.PageFormJavaScript.id).all()
 
         return res
@@ -227,7 +231,7 @@ class RoleAccessControl:
         for column, value in criteria.items():
             filters.append(getattr(table_object, column) == value)
 
-        rec = (db_session.query(table_object).
+        rec = (self.session.query(table_object).
                join(table_object_role).
                filter(*filters).first())
 
@@ -235,7 +239,7 @@ class RoleAccessControl:
 
     def get_menu_items(self, parent_id, active=1):
         menu = OrderedDict()
-        items = (db_session.query(models.Menu, models.MenuRole).join(models.MenuRole)
+        items = (self.session.query(models.Menu, models.MenuRole).join(models.MenuRole)
             .filter(
                 models.MenuRole.role_id == self.role.id,
                 models.Menu.parent_id == parent_id,
@@ -272,7 +276,7 @@ class RoleAccessControl:
                 role_id, user_id = user.id).first()
         if user_role:
             user.current_user_role_id = user_role.id
-            db_session.commit()
+            self.session.commit()
             return True
         else:
             return False
@@ -281,7 +285,7 @@ class RoleAccessControl:
         child_tables = []
         link_data = []
 
-        res = db_session.query(models.TableObjectChildren). \
+        res = self.session.query(models.TableObjectChildren). \
             filter_by(table_object_id=table_object_id).filter_by(active=active). \
             order_by(models.TableObjectChildren.order, models.TableObjectChildren.child_table_object_id).all()
 
