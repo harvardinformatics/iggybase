@@ -357,7 +357,40 @@ class Action(Base):
     active = Column(Boolean)
     organization_id = Column(Integer)
     order = Column(Integer)
+    action_event_id = Column(Integer, ForeignKey('action_event.id'))
+    action_object_id = Column(Integer, ForeignKey('action_object.id'))
     action_value = Column(String(255))
+
+    action_action_event = relationship("ActionEvent", foreign_keys=[action_event_id])
+    action_action_object = relationship("ActionObject", foreign_keys=[action_object_id])
+
+
+class ActionEvent(Base):
+    __tablename__ = 'action_event'
+    id = Column(Integer, primary_key=True)
+    name = Column(String(100), unique=True)
+    description = Column(String(255))
+    date_created = Column(DateTime, default=datetime.datetime.utcnow)
+    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
+    active = Column(Boolean)
+    organization_id = Column(Integer)
+    order = Column(Integer)
+
+
+class ActionObject(Base):
+    __tablename__ = 'action_object'
+    id = Column(Integer, primary_key=True)
+    name = Column(String(100), unique=True)
+    description = Column(String(255))
+    date_created = Column(DateTime, default=datetime.datetime.utcnow)
+    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
+    active = Column(Boolean)
+    organization_id = Column(Integer)
+    order = Column(Integer)
+    table_object_id = Column(Integer, ForeignKey('table_object.id'))
+    object_name = Column(String(100))
+
+    table_query_render_table_object = relationship("TableObject", foreign_keys=[table_object_id])
 
 
 class TableQuery(Base):
