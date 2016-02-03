@@ -442,6 +442,7 @@ class TableQueryField(Base):
     table_query_id = Column(Integer, ForeignKey('table_query.id'))
     field_id = Column(Integer, ForeignKey('field.id'))
     display_name = Column(String(100))
+    visible = Column(Boolean)
 
     table_query_field_field = relationship("Field", foreign_keys=[field_id])
     table_query_field_table_query = relationship("TableQuery", foreign_keys=[table_query_id])
@@ -464,6 +465,38 @@ class TableQueryCriteria(Base):
 
     table_query_criteria_table_query = relationship("TableQuery", foreign_keys=[table_query_id])
     table_query_criteria_field = relationship("Field", foreign_keys=[field_id])
+
+class TableQueryCalculation(Base):
+    __tablename__ = 'table_query_calculation'
+    id = Column(Integer, primary_key=True)
+    name = Column(String(100), unique=True)
+    description = Column(String(255))
+    date_created = Column(DateTime, default=datetime.datetime.utcnow)
+    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
+    active = Column(Boolean)
+    organization_id = Column(Integer)
+    order = Column(Integer)
+    function = Column(String(100))
+    table_query_field_id = Column(Integer, ForeignKey('table_query_field.id'))
+
+    table_query_calculation_table_query_field = relationship("TableQueryField", foreign_keys=[table_query_field_id])
+
+class TableQueryCalculationField(Base):
+    __tablename__ = 'table_query_calculation_field'
+    id = Column(Integer, primary_key=True)
+    name = Column(String(100), unique=True)
+    description = Column(String(255))
+    date_created = Column(DateTime, default=datetime.datetime.utcnow)
+    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
+    active = Column(Boolean)
+    organization_id = Column(Integer)
+    order = Column(Integer)
+    table_query_calculation_id = Column(Integer,
+            ForeignKey('table_query_calculation.id'))
+    table_query_field_id = Column(Integer, ForeignKey('table_query_field.id'))
+
+    table_query_calculation_field_table_query_calculation = relationship("TableQueryCalculation", foreign_keys=[table_query_calculation_id])
+    table_query_calculation_field_table_query_field = relationship("TableQueryField", foreign_keys=[table_query_field_id])
 
 class Module(Base):
     __tablename__ = 'module'

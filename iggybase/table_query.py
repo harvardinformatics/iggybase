@@ -3,6 +3,8 @@ from flask import request
 from iggybase.mod_auth import organization_access_control as oac
 from iggybase.mod_auth import role_access_control as rac
 from iggybase.mod_core import utilities as util
+from iggybase.mod_core import calculation as calc
+import iggybase.table_query_field as tqf
 import logging
 
 # Retreives and formats data based on table_query
@@ -96,7 +98,10 @@ class TableQuery:
         field_dict = OrderedDict()
         for row in table_fields:
             display_name = util.get_field_attr(row, 'display_name')
-            field_dict[display_name] = row
+            calculation = getattr(row,
+                'TableQueryCalculation', None)
+            field_dict[display_name] = tqf.TableQueryField(row.Field,
+                    row.TableObject, row.Module, calculation)
         return field_dict
 
     def _get_date_fields(self, field_dict):
@@ -119,6 +124,7 @@ class TableQuery:
         # format results as dictionary
         if self.results:
             keys = self.results[0].keys()
+
         # create dictionary for each row and for fk data
         for row in self.results:
             row_dict = OrderedDict()
@@ -128,22 +134,34 @@ class TableQuery:
                     if fk_metadata[2]:
                         table = fk_metadata[2]
                         field = fk_metadata[3]
+                        calculation = self.field_dict[field].is_calculation()
+                        if calculation:
+                            col = self.field_dict[field].calculate(self.module, col, row,
+                                    keys)
                         if for_download:
                             item_value = col
                         else:
                             item_value = {
-                                'text': col,
+                                'text': col
+                            }
+                            if not calculation:
                                 # add link foreign key table summary
-                                'link': self.get_link(
+                                item_value['link'] = self.get_link(
                                     col,
                                     fk_metadata[1],
                                     request.url_root,
                                     'detail',
                                     table
                                 )
-                            }
                         row_dict[field] = item_value
                 else:  # add all other colums to table_rows
+                    # check for calculated field
+                    if keys[i] in self.field_dict:
+                        calculation = self.field_dict[keys[i]].is_calculation()
+                        if calculation:
+                            col = self.field_dict[field].calculate(self.module, col, row,
+                                    keys)
+
                     if for_download:
                         item_value = col
                     else:
@@ -156,7 +174,7 @@ class TableQuery:
                     else:
                         is_title_field = False
                     if (
-                            not for_download and
+                            not for_download and not calculation and
                             (
                                 keys[i] == 'name' or
                                 is_title_field

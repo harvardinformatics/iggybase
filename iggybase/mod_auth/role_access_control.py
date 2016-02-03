@@ -81,6 +81,34 @@ class RoleAccessControl:
         )
         return table_queries
 
+    def calculation_fields(self, table_query_calculation_id, active = 1):
+        filters = [
+            (models.FieldRole.role_id == self.role.id),
+            (models.TableObjectRole.role_id == self.role.id),
+            (models.Field.active == active),
+            (models.FieldRole.active == active),
+            (models.TableObject.active == active),
+            (models.TableQueryCalculationField.table_query_calculation_id == table_query_calculation_id)
+        ]
+        joins = [
+                models.FieldRole,
+                models.TableObjectRole,
+        ]
+
+        res = (
+            self.session.query(models.TableQueryCalculationField,
+                models.TableQueryField, models.Field).
+                join(models.TableQueryField).
+                join(models.Field).
+                join(
+                    models.TableObject,
+                    models.TableObject.id == models.Field.table_object_id
+                ).
+                join(*joins).
+            filter(*filters).order_by(models.TableQueryCalculationField.order).all()
+        )
+        return res
+
     def table_query_fields(self, table_query_id, table_name=None, table_id=None, field_name=None, active=1, visible=1):
         filters = [
             (models.FieldRole.role_id == self.role.id),
@@ -103,13 +131,16 @@ class RoleAccessControl:
         orders= [
             models.Field.order
         ]
+        outerjoins = []
 
         # add filter for the identifier
         if table_query_id:
             filters.append((models.TableQueryField.table_query_id == table_query_id))
             filters.append((models.TableQueryField.active == active))
             selects.append(models.TableQueryField)
+            selects.append(models.TableQueryCalculation)
             joins.append(models.TableQueryField)
+            outerjoins.append(models.TableQueryCalculation)
             orders= [
                 models.TableQueryField.order,
                 models.Field.order
@@ -130,6 +161,7 @@ class RoleAccessControl:
                 models.TableObject.id == models.Field.table_object_id
             ).
             join(*joins).
+            outerjoin(*outerjoins).
             filter(*filters).order_by(*orders).all()
         )
         return res
