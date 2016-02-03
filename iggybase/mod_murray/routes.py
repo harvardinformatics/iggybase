@@ -11,7 +11,7 @@ def before_request():
 
 @mod_murray.route('/')
 def default():
-    return templateing.page_template('index.html')
+    return templating.page_template('index.html')
 
 @mod_murray.route( '/update_ordered/<table_name>/ajax' )
 @login_required
