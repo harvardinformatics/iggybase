@@ -348,10 +348,16 @@ class OrganizationAccessControl:
                         else:
                             setattr(instances[row_id], column_name, None)
                 elif column_name != 'id' and column_name != 'last_modified' and column_name != 'date_created':
-                    if field_data.Field.data_type_id == 1 and data is not None:
-                        setattr(instances[row_id], column_name, int(data))
-                    elif field_data.Field.data_type_id == 8 and data is not None:
-                        setattr(instances[row_id], column_name, float(data))
+                    if field_data.Field.data_type_id == 1:
+                        if data is None or data == '':
+                            setattr(instances[row_id], column_name, None)
+                        else:
+                            setattr(instances[row_id], column_name, int(data))
+                    elif field_data.Field.data_type_id == 8:
+                        if data is None or data == '':
+                            setattr(instances[row_id], column_name, None)
+                        else:
+                            setattr(instances[row_id], column_name, float(data))
                     elif field_data.Field.data_type_id == 3:
                         if data == 'y':
                             setattr(instances[row_id], column_name, 1)
