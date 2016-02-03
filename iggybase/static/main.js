@@ -79,7 +79,7 @@ $( document ).ready( function () {
 		        var id = $(this).attr( 'id' );
 		        var matches = id.match( /child_(\S+)_(\d+)/);
 
-		        if ( matches.length > 1 ) {
+		        if ( matches && matches.length > 1 ) {
 		            row_id = parseInt( matches[ 2 ] )+ 1;
                     td = $( this ).closest( 'td' );
 
@@ -142,7 +142,7 @@ $( document ).ready( function () {
                     if ( $( this ).hasClass( 'lookupfield' ) ) {
                         $( this ).keydown(
                             function ( e ) {
-                                return $.fn.keydownLookupField( e );
+                                return $.fn.keydownLookupField( e, $( this ) );
                             }
                         );
                     }
