@@ -4,7 +4,7 @@ from iggybase.mod_auth import organization_access_control as oac
 from iggybase.mod_auth import role_access_control as rac
 from iggybase.mod_core import utilities as util
 from iggybase.mod_core import calculation as calc
-import iggybase.table_query_field as tqf
+import iggybase.field as f
 import logging
 
 # Retreives and formats data based on table_query
@@ -98,10 +98,10 @@ class TableQuery:
         field_dict = OrderedDict()
         for row in table_fields:
             display_name = util.get_field_attr(row, 'display_name')
-            calculation = getattr(row,
-                'TableQueryCalculation', None)
-            field_dict[display_name] = tqf.TableQueryField(row.Field,
-                    row.TableObject, row.Module, calculation)
+            table_query_field = getattr(row, 'TableQueryField', None)
+            calculation = getattr(row, 'TableQueryCalculation', None)
+            field_dict[display_name] = f.Field(row.Field,
+                    row.TableObject, row.Module, table_query_field, calculation)
         return field_dict
 
     def _get_date_fields(self, field_dict):
@@ -133,60 +133,65 @@ class TableQuery:
                     fk_metadata = keys[i].split('|')
                     if fk_metadata[2]:
                         table = fk_metadata[2]
-                        field = fk_metadata[3]
-                        calculation = self.field_dict[field].is_calculation()
+                        field_name = fk_metadata[3]
+                        field = self.field_dict[field_name]
+                        if field.is_visible():
+                            calculation = field.is_calculation()
+                            if calculation:
+                                col = field.calculate(self.module, col, row,
+                                        keys)
+                            if for_download:
+                                item_value = col
+                            else:
+                                item_value = {
+                                    'text': col
+                                }
+                                if not calculation:
+                                    # add link foreign key table summary
+                                    item_value['link'] = self.get_link(
+                                        col,
+                                        fk_metadata[1],
+                                        request.url_root,
+                                        'detail',
+                                        table
+                                    )
+                            row_dict[field_name] = item_value
+                else:  # add all other colums to table_rows
+                    visible = True
+                    calculation = False
+                    if keys[i] in self.field_dict:
+                        field = self.field_dict[keys[i]]
+                        visible = field.is_visible()
+                        calculation = field.is_calculation()
                         if calculation:
                             col = self.field_dict[field].calculate(self.module, col, row,
                                     keys)
+                    if visible:
                         if for_download:
                             item_value = col
                         else:
-                            item_value = {
-                                'text': col
-                            }
-                            if not calculation:
-                                # add link foreign key table summary
-                                item_value['link'] = self.get_link(
-                                    col,
-                                    fk_metadata[1],
-                                    request.url_root,
-                                    'detail',
-                                    table
+                            item_value = {'text': col}
+                        row_dict[keys[i]] = item_value
+                        # name and table title columns values will link to detail
+                        if keys[i] in self.field_dict:
+                            table_name = self.field_dict[keys[i]].TableObject.name
+                            is_title_field = (keys[i] == table_name)
+                        else:
+                            is_title_field = False
+                        if (
+                                not for_download and not calculation and
+                                (
+                                    keys[i] == 'name' or
+                                    is_title_field
                                 )
-                        row_dict[field] = item_value
-                else:  # add all other colums to table_rows
-                    # check for calculated field
-                    if keys[i] in self.field_dict:
-                        calculation = self.field_dict[keys[i]].is_calculation()
-                        if calculation:
-                            col = self.field_dict[field].calculate(self.module, col, row,
-                                    keys)
-
-                    if for_download:
-                        item_value = col
-                    else:
-                        item_value = {'text': col}
-                    row_dict[keys[i]] = item_value
-                    # name and table title columns values will link to detail
-                    if keys[i] in self.field_dict:
-                        table_name = self.field_dict[keys[i]].TableObject.name
-                        is_title_field = (keys[i] == table_name)
-                    else:
-                        is_title_field = False
-                    if (
-                            not for_download and not calculation and
-                            (
-                                keys[i] == 'name' or
-                                is_title_field
+                            ):
+                            row_dict[keys[i]]['link'] = self.get_link(
+                                col,
+                                self.module_name,
+                                request.url_root,
+                                'detail',
+                                table_name
                             )
-                        ):
-                        row_dict[keys[i]]['link'] = self.get_link(
-                            col,
-                            self.module_name,
-                            request.url_root,
-                            'detail',
-                            table_name
-                        )
             self.table_rows.append(row_dict)
 
     def get_link(self, value, module, url_root, page = None, table = None):

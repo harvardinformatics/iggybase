@@ -3,17 +3,24 @@ from iggybase.mod_core import utilities as util
 from iggybase.mod_core import calculation as calc
 import logging
 
-class TableQueryField:
-    def __init__ (self, field, table_object, module, calculation = None):
+class Field:
+    def __init__ (self, field, table_object, module, table_query_field = None, calculation = None):
         self.Field = field
         self.TableObject = table_object
         self.Module = module
+        self.TableQueryField = table_query_field
         self.TableQueryCalculation = calculation
         self._role_access_control = rac.RoleAccessControl()
         self.calculation_fields = self._get_calculation_fields(calculation)
 
     def is_calculation(self):
         return (self.TableQueryCalculation != None)
+
+    def is_visible(self):
+        visible = True
+        if self.TableQueryField:
+            visible = self.TableQueryField.visible
+        return visible
 
     def _get_calculation_fields(self, calculation):
         calc_fields = {}
