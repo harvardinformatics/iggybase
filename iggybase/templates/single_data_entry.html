@@ -12,7 +12,11 @@
 
     {% block content_title -%}
         <div class="content_title">
-            <h1> {{ page_header }}</h1>
+            {% if table_name is defined %}
+                <h1>{{ table_name.replace( '_',' ' )|title }} {{ page_header.replace( '_',' ' )|title }}</h1>
+            {% else %}
+                <h1>{{ page_header.replace( '_',' ' )|title }}</h1>
+            {% endif %}
         </div>
     {%- endblock content_title %}
 

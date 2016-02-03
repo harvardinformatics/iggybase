@@ -15,10 +15,21 @@ INFO:root:last_modified
 INFO:root:description
 INFO:root:active
 INFO:root:organization_id
-INFO:root:facility_id
-INFO:root:level_id
 INFO:root:order
-ERROR:root:<class 'UnboundLocalError'>
+INFO:root:table_object_id
+INFO:root:role_id
+DEBUG:passlib.utils.compat:loaded lazy attr 'SafeConfigParser': <class 'configparser.ConfigParser'>
+DEBUG:passlib.utils.compat:loaded lazy attr 'NativeStringIO': <class '_io.StringIO'>
+DEBUG:passlib.utils.compat:loaded lazy attr 'BytesIO': <class '_io.BytesIO'>
+DEBUG:passlib.utils.compat:loaded lazy attr 'SafeConfigParser': <class 'configparser.ConfigParser'>
+DEBUG:passlib.utils.compat:loaded lazy attr 'NativeStringIO': <class '_io.StringIO'>
+DEBUG:passlib.utils.compat:loaded lazy attr 'BytesIO': <class '_io.BytesIO'>
+DEBUG:passlib.utils.compat:loaded lazy attr 'SafeConfigParser': <class 'configparser.ConfigParser'>
+DEBUG:passlib.utils.compat:loaded lazy attr 'NativeStringIO': <class '_io.StringIO'>
+DEBUG:passlib.utils.compat:loaded lazy attr 'BytesIO': <class '_io.BytesIO'>
+DEBUG:passlib.utils.compat:loaded lazy attr 'SafeConfigParser': <class 'configparser.ConfigParser'>
+DEBUG:passlib.utils.compat:loaded lazy attr 'NativeStringIO': <class '_io.StringIO'>
+DEBUG:passlib.utils.compat:loaded lazy attr 'BytesIO': <class '_io.BytesIO'>
 DEBUG:passlib.utils.compat:loaded lazy attr 'SafeConfigParser': <class 'configparser.ConfigParser'>
 DEBUG:passlib.utils.compat:loaded lazy attr 'NativeStringIO': <class '_io.StringIO'>
 DEBUG:passlib.utils.compat:loaded lazy attr 'BytesIO': <class '_io.BytesIO'>
@@ -29,19 +40,6 @@ DEBUG:passlib.registry:registered 'pbkdf2_sha512' handler: <class 'passlib.handl
 DEBUG:passlib.registry:registered 'sha256_crypt' handler: <class 'passlib.handlers.sha2_crypt.sha256_crypt'>
 DEBUG:passlib.registry:registered 'sha512_crypt' handler: <class 'passlib.handlers.sha2_crypt.sha512_crypt'>
 DEBUG:passlib.registry:registered 'plaintext' handler: <class 'passlib.handlers.misc.plaintext'>
-INFO:root:id
-INFO:root:name
-INFO:root:date_created
-INFO:root:last_modified
-INFO:root:description
-INFO:root:active
-INFO:root:organization_id
-INFO:root:facility_id
-INFO:root:level_id
-INFO:root:order
-DEBUG:passlib.utils.compat:loaded lazy attr 'SafeConfigParser': <class 'configparser.ConfigParser'>
-DEBUG:passlib.utils.compat:loaded lazy attr 'NativeStringIO': <class '_io.StringIO'>
-DEBUG:passlib.utils.compat:loaded lazy attr 'BytesIO': <class '_io.BytesIO'>
 DEBUG:passlib.registry:registered 'bcrypt' handler: <class 'passlib.handlers.bcrypt.bcrypt'>
 DEBUG:passlib.registry:registered 'des_crypt' handler: <class 'passlib.handlers.des_crypt.des_crypt'>
 DEBUG:passlib.registry:registered 'pbkdf2_sha256' handler: <class 'passlib.handlers.pbkdf2.pbkdf2_sha256'>
@@ -49,19 +47,6 @@ DEBUG:passlib.registry:registered 'pbkdf2_sha512' handler: <class 'passlib.handl
 DEBUG:passlib.registry:registered 'sha256_crypt' handler: <class 'passlib.handlers.sha2_crypt.sha256_crypt'>
 DEBUG:passlib.registry:registered 'sha512_crypt' handler: <class 'passlib.handlers.sha2_crypt.sha512_crypt'>
 DEBUG:passlib.registry:registered 'plaintext' handler: <class 'passlib.handlers.misc.plaintext'>
-INFO:root:id
-INFO:root:name
-INFO:root:date_created
-INFO:root:last_modified
-INFO:root:description
-INFO:root:active
-INFO:root:organization_id
-INFO:root:facility_id
-INFO:root:level_id
-INFO:root:order
-DEBUG:passlib.utils.compat:loaded lazy attr 'SafeConfigParser': <class 'configparser.ConfigParser'>
-DEBUG:passlib.utils.compat:loaded lazy attr 'NativeStringIO': <class '_io.StringIO'>
-DEBUG:passlib.utils.compat:loaded lazy attr 'BytesIO': <class '_io.BytesIO'>
 DEBUG:passlib.registry:registered 'bcrypt' handler: <class 'passlib.handlers.bcrypt.bcrypt'>
 DEBUG:passlib.registry:registered 'des_crypt' handler: <class 'passlib.handlers.des_crypt.des_crypt'>
 DEBUG:passlib.registry:registered 'pbkdf2_sha256' handler: <class 'passlib.handlers.pbkdf2.pbkdf2_sha256'>
@@ -69,9 +54,13 @@ DEBUG:passlib.registry:registered 'pbkdf2_sha512' handler: <class 'passlib.handl
 DEBUG:passlib.registry:registered 'sha256_crypt' handler: <class 'passlib.handlers.sha2_crypt.sha256_crypt'>
 DEBUG:passlib.registry:registered 'sha512_crypt' handler: <class 'passlib.handlers.sha2_crypt.sha512_crypt'>
 DEBUG:passlib.registry:registered 'plaintext' handler: <class 'passlib.handlers.misc.plaintext'>
-DEBUG:passlib.utils.compat:loaded lazy attr 'SafeConfigParser': <class 'configparser.ConfigParser'>
-DEBUG:passlib.utils.compat:loaded lazy attr 'NativeStringIO': <class '_io.StringIO'>
-DEBUG:passlib.utils.compat:loaded lazy attr 'BytesIO': <class '_io.BytesIO'>
+DEBUG:passlib.registry:registered 'bcrypt' handler: <class 'passlib.handlers.bcrypt.bcrypt'>
+DEBUG:passlib.registry:registered 'des_crypt' handler: <class 'passlib.handlers.des_crypt.des_crypt'>
+DEBUG:passlib.registry:registered 'pbkdf2_sha256' handler: <class 'passlib.handlers.pbkdf2.pbkdf2_sha256'>
+DEBUG:passlib.registry:registered 'pbkdf2_sha512' handler: <class 'passlib.handlers.pbkdf2.pbkdf2_sha512'>
+DEBUG:passlib.registry:registered 'sha256_crypt' handler: <class 'passlib.handlers.sha2_crypt.sha256_crypt'>
+DEBUG:passlib.registry:registered 'sha512_crypt' handler: <class 'passlib.handlers.sha2_crypt.sha512_crypt'>
+DEBUG:passlib.registry:registered 'plaintext' handler: <class 'passlib.handlers.misc.plaintext'>
 DEBUG:passlib.registry:registered 'bcrypt' handler: <class 'passlib.handlers.bcrypt.bcrypt'>
 DEBUG:passlib.registry:registered 'des_crypt' handler: <class 'passlib.handlers.des_crypt.des_crypt'>
 DEBUG:passlib.registry:registered 'pbkdf2_sha256' handler: <class 'passlib.handlers.pbkdf2.pbkdf2_sha256'>
@@ -106,6 +95,14 @@ INFO:root:last_modified
 INFO:root:description
 INFO:root:active
 INFO:root:organization_id
-INFO:root:facility_id
-INFO:root:level_id
 INFO:root:order
+INFO:root:ancestor_id
+INFO:root:entry_date
+INFO:root:user_id
+INFO:root:note_id
+INFO:root:notebook
+INFO:root:old_version
+INFO:root:oligo_name
+INFO:root:purpose
+INFO:root:sequence
+INFO:root:status
