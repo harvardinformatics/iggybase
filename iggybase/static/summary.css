@@ -3,3 +3,7 @@ fieldset {
     padding:5px;
     margin:5px 0px;
 }
+th, td {
+    max-width: 250px;
+    word-wrap: break-word;
+}
