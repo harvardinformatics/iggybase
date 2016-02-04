@@ -8,6 +8,7 @@ import iggybase.mod_auth.role_access_control as rac
 import iggybase.table_query_collection as tqc
 import json
 import logging
+import urllib
 
 
 def index():
@@ -97,7 +98,9 @@ def saved_data(module_name, table_name, row_names):
             msg = 'Error: %s,' % str(row_name[1]).replace('<','').replace('>','')
             error = True
         else:
-            msg += ' <a href='+request.url_root+module_name+'/detail/'+row_name[1]+'/'+row_name[0]+'>'+row_name[0]+'</a>,'
+            table = urllib.parse.quote(row_name[1])
+            name = urllib.parse.quote(row_name[0])
+            msg += ' <a href='+request.url_root+module_name+'/detail/'+table+'/'+name+'>'+row_name[0]+'</a>,'
 
     msg = msg[:-1]
     if error:
