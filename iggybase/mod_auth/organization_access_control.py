@@ -32,7 +32,7 @@ class OrganizationAccessControl:
             self.user = None
 
     def __del__ (self):
-        self.session.close()
+        self.session.commit()
 
     def get_child_organization(self, parent_organization_id):
         self.org_ids.append(parent_organization_id)

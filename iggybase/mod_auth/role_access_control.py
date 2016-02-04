@@ -24,7 +24,7 @@ class RoleAccessControl:
             self.role = None
 
     def __del__ (self):
-        self.session.close()
+        self.session.commit()
 
     def fields(self, table_object_id, filter=None, active=1):
         filters = [
@@ -207,9 +207,11 @@ class RoleAccessControl:
 
     def make_role_menu(self):
         role_menu_subs = {}
-        for role in self.user.roles:
-            role_menu_subs[role.name] = {'title':role.name,
-                    'class':'change_role', 'data':{'role_id': role.id}}
+        if self.user is not None:
+            for role in self.user.roles:
+                role_menu_subs[role.name] = {'title':role.name,
+                        'class':'change_role', 'data':{'role_id': role.id}}
+
         return {'title':'Change Role',
             'subs': role_menu_subs}
 
@@ -303,6 +305,9 @@ class RoleAccessControl:
         """updates the user.current_role
         """
         # check that the logged in user has permission for that role
+        if self.user is None:
+            return False
+
         user = models.User.query.filter_by(id=self.user.id).first()
         user_role = models.UserRole.query.filter_by(role_id =
                 role_id, user_id = user.id).first()
