@@ -339,7 +339,12 @@ class OrganizationAccessControl:
                     setattr(instances[row_id], column_name, lt_id)
                 elif field_data.Field.foreign_key_table_object_id is not None:
                     try:
-                        setattr(instances[row_id], column_name, int(data))
+                        # TODO find a better way to deal with no value in a select
+                        # a top row is is added to all selects with an index of -99 (get_foreign_key_data)
+                        if int(data) == -99:
+                            setattr(instances[row_id], column_name, None)
+                        else:
+                            setattr(instances[row_id], column_name, int(data))
                     except ValueError:
                         fk_id = self.get_foreign_key_data(field_data.Field.foreign_key_table_object_id, data)
                         if len(fk_id) > 1:
