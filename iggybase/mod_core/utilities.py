@@ -22,7 +22,7 @@ def get_table(table_name):
         logging.info('abort ' + table_name)
         abort(404)
     finally:
-        session.close()
+        session.commit()
 
     return table_object
 
