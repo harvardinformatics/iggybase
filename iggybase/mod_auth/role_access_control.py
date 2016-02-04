@@ -109,7 +109,7 @@ class RoleAccessControl:
         )
         return res
 
-    def table_query_fields(self, table_query_id, table_name=None, table_id=None, field_name=None, active=1, visible=1):
+    def table_query_fields(self, table_query_id, table_name=None, table_id=None, field_name=None, field_id = None, active=1, visible=1):
         filters = [
             (models.FieldRole.role_id == self.role.id),
             (models.TableObjectRole.role_id == self.role.id),
@@ -153,6 +153,8 @@ class RoleAccessControl:
         # add any field_name filter
         if field_name:
             filters.append((models.Field.field_name == field_name))
+        elif field_id:
+            filters.append((models.Field.id == field_id))
 
         res = (
             self.session.query(*selects).
