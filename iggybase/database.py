@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, exc
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 from config import get_config
@@ -31,3 +31,13 @@ def init_db():
     from iggybase.mod_admin import models
     getattr(__import__('iggybase', fromlist=['models']), 'models')
     Base.metadata.create_all(bind=engine)
+
+
+def ping_connection():
+    try:
+        session = db_session()
+        session.execute('select 1')
+    except:
+        raise exc.DisconnectionError()
+    finally:
+        session.close()

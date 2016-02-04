@@ -12,7 +12,7 @@ from flask.ext.sqlalchemy import SQLAlchemy
 from werkzeug.wsgi import DispatcherMiddleware
 from iggybase.extensions import mail, lm, bootstrap
 from iggybase.mod_admin import models
-from iggybase.database import db, init_db, db_session
+from iggybase.database import db, init_db, db_session, ping_connection
 import logging
 
 __all__ = [ 'create_app' ]
@@ -77,6 +77,7 @@ def add_base_routes( app, conf, security, user_datastore ):
 
     @app.before_request
     def before_request( ):
+        ping_connection()
         modules = [x[0] for x in conf.BLUEPRINTS]
 
     @app.after_request
