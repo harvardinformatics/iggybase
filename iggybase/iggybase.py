@@ -77,7 +77,6 @@ def add_base_routes( app, conf, security, user_datastore ):
 
     @app.before_request
     def before_request( ):
-        ping_connection()
         modules = [x[0] for x in conf.BLUEPRINTS]
 
     @app.after_request
