@@ -12,7 +12,7 @@ from flask.ext.sqlalchemy import SQLAlchemy
 from werkzeug.wsgi import DispatcherMiddleware
 from iggybase.extensions import mail, lm, bootstrap
 from iggybase.mod_admin import models
-from iggybase.database import db, init_db, db_session, ping_connection
+from iggybase.database import db, init_db, db_session
 import logging
 
 __all__ = [ 'create_app' ]

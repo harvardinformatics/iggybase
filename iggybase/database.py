@@ -21,7 +21,7 @@ class DB_Factory:
         self.app = None
 
 
-engine = create_engine(conf.SQLALCHEMY_DATABASE_URI + conf.DATA_DB_NAME)
+engine = create_engine(conf.SQLALCHEMY_DATABASE_URI + conf.DATA_DB_NAME, pool_recycle=3600)
 db_session = scoped_session(sessionmaker(autocommit=False, autoflush=False, bind=engine))
 Base = declarative_base()
 Base.query = db_session.query_property()
@@ -29,17 +29,5 @@ db = DB_Factory(Base.query, db_session)
 
 
 def init_db():
-    from iggybase.mod_admin import models
     getattr(__import__('iggybase', fromlist=['models']), 'models')
     Base.metadata.create_all(bind=engine)
-
-
-@event.listens_for(Pool, "checkout")
-def ping_connection(dbapi_connection, connection_record, connection_proxy):
-    cursor = dbapi_connection.cursor()
-    try:
-        cursor.execute("SELECT 1")
-    except:
-        raise exc.DisconnectionError()
-
-    cursor.close()

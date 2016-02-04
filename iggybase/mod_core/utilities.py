@@ -22,17 +22,15 @@ def get_table(table_name):
         logging.info('abort ' + table_name)
         abort(404)
     finally:
-        session.close()
+        session.commit()
 
     return table_object
 
-def get_field_attr(row, attr):
-    table_query_field_obj =  getattr(row, 'TableQueryField', None)
-    field_obj = getattr(row, 'Field', None)
-    if table_query_field_obj and getattr(table_query_field_obj, attr):
-        value = getattr(table_query_field_obj, attr)
+def get_field_attr(field, table_query_field, attr):
+    if table_query_field and getattr(table_query_field, attr):
+        value = getattr(table_query_field, attr)
     else:
         if attr == 'display_name':
             attr = 'field_name'
-        value = getattr(field_obj, attr)
+        value = getattr(field, attr)
     return value

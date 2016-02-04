@@ -37,7 +37,7 @@ class TableQuery:
         self.criteria = self._add_table_query_criteria(self.criteria)
         organization_access_control = oac.OrganizationAccessControl()
         self.results = organization_access_control.get_table_query_data(
-                self.table_fields,
+                self.field_dict,
                 self.criteria,
                 self.row_id
         )
@@ -69,20 +69,8 @@ class TableQuery:
         for key, val in filters.items():
             if key in self.field_dict:
                 field = self.field_dict[key]
-                if field.Field.foreign_key_table_object_id:
-                    filter_fields = self._role_access_control.table_query_fields(
-                        None,
-                        None,
-                        field.Field.foreign_key_table_object_id,
-                        'name' # if fk then we want the human readable name
-                    )
-                    if filter_fields:
-                        filter_field = filter_fields[0]
-                        criteria_key = (filter_field.TableObject.name, filter_field.Field.field_name)
-                        criteria[criteria_key] = val
-                else:
-                    criteria_key = (field.TableObject.name, field.Field.field_name)
-                    criteria[criteria_key] = val
+                criteria_key = (field.TableObject.name, field.Field.field_name)
+                criteria[criteria_key] = val
         # add criteria from db
         res = self._role_access_control.table_query_criteria(
             self.id
@@ -97,20 +85,19 @@ class TableQuery:
     def _get_field_dict(self, table_fields):
         field_dict = OrderedDict()
         for row in table_fields:
-            display_name = util.get_field_attr(row, 'display_name')
             table_query_field = getattr(row, 'TableQueryField', None)
             calculation = getattr(row, 'TableQueryCalculation', None)
-            field_dict[display_name] = f.Field(row.Field,
-                    row.TableObject, row.Module, table_query_field, calculation)
+            field = f.Field(row.Field,
+                    row.TableObject, row.Module, table_query_field,
+                    calculation)
+            field_dict[field.display_name] = field
         return field_dict
 
     def _get_date_fields(self, field_dict):
         date_fields = {}
-        index = 0
-        for name, field in field_dict.items():
-            if field.Field.data_type_id == 4:
-                date_fields[name] =  index
-            index += 1
+        for i, field in enumerate(field_dict.values()):
+            if field.type == 4:# TODO: user constant
+                date_fields[field.display_name] = i
         return date_fields
 
     def format_results(self, for_download = False):
@@ -129,70 +116,42 @@ class TableQuery:
         for row in self.results:
             row_dict = OrderedDict()
             for i, col in enumerate(row):
-                if 'fk|' in keys[i]:
-                    fk_metadata = keys[i].split('|')
-                    if fk_metadata[2]:
-                        table = fk_metadata[2]
-                        field_name = fk_metadata[3]
-                        field = self.field_dict[field_name]
-                        if field.is_visible():
-                            calculation = field.is_calculation()
-                            if calculation:
-                                col = field.calculate(self.module, col, row,
-                                        keys)
-                            if for_download:
-                                item_value = col
-                            else:
-                                item_value = {
-                                    'text': col
-                                }
-                                if not calculation:
-                                    # add link foreign key table summary
-                                    item_value['link'] = self.get_link(
-                                        col,
-                                        fk_metadata[1],
-                                        request.url_root,
-                                        'detail',
-                                        table
-                                    )
-                            row_dict[field_name] = item_value
-                else:  # add all other colums to table_rows
-                    visible = True
-                    calculation = False
-                    if keys[i] in self.field_dict:
-                        field = self.field_dict[keys[i]]
-                        visible = field.is_visible()
-                        calculation = field.is_calculation()
-                        if calculation:
-                            col = self.field_dict[field].calculate(self.module, col, row,
-                                    keys)
-                    if visible:
-                        if for_download:
-                            item_value = col
-                        else:
-                            item_value = {'text': col}
-                        row_dict[keys[i]] = item_value
-                        # name and table title columns values will link to detail
-                        if keys[i] in self.field_dict:
-                            table_name = self.field_dict[keys[i]].TableObject.name
-                            is_title_field = (keys[i] == table_name)
-                        else:
-                            is_title_field = False
-                        if (
-                                not for_download and not calculation and
-                                (
-                                    keys[i] == 'name' or
-                                    is_title_field
-                                )
-                            ):
-                            row_dict[keys[i]]['link'] = self.get_link(
-                                col,
-                                self.module_name,
-                                request.url_root,
-                                'detail',
-                                table_name
-                            )
+                visible = True
+                if keys[i] in self.field_dict:
+                    field = self.field_dict[keys[i]]
+                    visible = field.is_visible()
+                    calculation = field.is_calculation()
+                    if calculation:
+                        col = field.calculate(self.module, col, row,
+                                keys)
+                if visible:
+                    if for_download:
+                        item_value = col
+                    else:
+                        item_value = {'text': col}
+                    row_dict[keys[i]] = item_value
+                    # name and table title columns values will link to detail
+                    if (not for_download and self.link_visible(field)):
+                        row_dict[keys[i]]['link'] = self.get_link(
+                            col,
+                            self.module_name,
+                            request.url_root,
+                            'detail',
+                            field.TableObject.name
+                        )
             self.table_rows.append(row_dict)
+
+    def link_visible(self, field):
+        return (not field.is_calculation() and
+                (
+                    field.Field.field_name == 'name' or
+                    field.is_title_field or
+                    (
+                        field.is_foreign_key and
+                        field.TableObject.name != 'long_text'
+                    )
+                )
+            )
 
     def get_link(self, value, module, url_root, page = None, table = None):
         link = url_root + module

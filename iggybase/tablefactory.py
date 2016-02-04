@@ -14,7 +14,7 @@ class TableFactory:
         self.session = db_session()
 
     def __del__(self):
-        self.session.close()
+        self.session.commit()
 
     def table_object_factory(self, class_name, table_object):
         classattr = {"__tablename__": table_object.name}
