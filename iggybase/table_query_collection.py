@@ -1,5 +1,6 @@
 import operator
 from iggybase.mod_auth import role_access_control as rac
+from iggybase.mod_core import utilities as util
 import iggybase.table_query as tq
 import logging
 
@@ -21,7 +22,11 @@ class TableQueryCollection:
 
     def get_fields(self):
         if self.role_access_control.has_access('Module', {'name': self.module}):
-            table_queries_info = self.role_access_control.table_queries(self.page_form, self.table_name)
+            filters = util.get_filters()
+            table_queries_info = []
+            if not 'all' in filters:
+                table_queries_info = self.role_access_control.table_queries(self.page_form, self.table_name)
+
             if table_queries_info:
                 for query in table_queries_info:
                     order = query.TableQuery.order

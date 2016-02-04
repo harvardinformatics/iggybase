@@ -1,4 +1,4 @@
-from flask import abort
+from flask import abort, request
 from importlib import import_module
 from iggybase.tablefactory import TableFactory
 from iggybase.mod_admin.models import TableObject
@@ -34,3 +34,21 @@ def get_field_attr(field, table_query_field, attr):
             attr = 'field_name'
         value = getattr(field, attr)
     return value
+
+def get_filters():
+    req = dict(request.args)
+    filters = {}
+    if 'search' in req:
+        search = dict(request.args)['search'][0].replace('?', '')
+        if search:
+            search = search.split('&')
+            for param in search:
+                pair = param.split('=')
+                if len(pair) > 1:
+                    val = pair[1]
+                else:
+                    val = True
+                filters[pair[0]] = val
+    filters.update(req)
+    return filters
+

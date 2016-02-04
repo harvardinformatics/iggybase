@@ -50,22 +50,10 @@ class TableQuery:
         )
         return table_query_fields
 
-    def _get_filters(self):
-        req = dict(request.args)
-        filters = {}
-        if 'search' in req:
-            search = dict(request.args)['search'][0].replace('?', '')
-            if search:
-                search = search.split('&')
-                for param in search:
-                    pair = param.split('=')
-                    filters[pair[0]] = pair[1]
-        return filters
-
     def _add_table_query_criteria(self, orig_criteria):
         criteria = {}
         # add criteria from get params
-        filters = self._get_filters()
+        filters = util.get_filters()
         for key, val in filters.items():
             if key in self.field_dict:
                 field = self.field_dict[key]
