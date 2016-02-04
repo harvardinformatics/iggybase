@@ -1,8 +1,6 @@
 DEBUG:passlib.utils.compat:loaded lazy attr 'SafeConfigParser': <class 'configparser.ConfigParser'>
 DEBUG:passlib.utils.compat:loaded lazy attr 'NativeStringIO': <class '_io.StringIO'>
 DEBUG:passlib.utils.compat:loaded lazy attr 'BytesIO': <class '_io.BytesIO'>
-INFO:root:checkout
-INFO:root:checkout
 DEBUG:passlib.registry:registered 'bcrypt' handler: <class 'passlib.handlers.bcrypt.bcrypt'>
 DEBUG:passlib.registry:registered 'des_crypt' handler: <class 'passlib.handlers.des_crypt.des_crypt'>
 DEBUG:passlib.registry:registered 'pbkdf2_sha256' handler: <class 'passlib.handlers.pbkdf2.pbkdf2_sha256'>
@@ -13,8 +11,6 @@ DEBUG:passlib.registry:registered 'plaintext' handler: <class 'passlib.handlers.
 DEBUG:passlib.utils.compat:loaded lazy attr 'SafeConfigParser': <class 'configparser.ConfigParser'>
 DEBUG:passlib.utils.compat:loaded lazy attr 'NativeStringIO': <class '_io.StringIO'>
 DEBUG:passlib.utils.compat:loaded lazy attr 'BytesIO': <class '_io.BytesIO'>
-INFO:root:checkout
-INFO:root:checkout
 DEBUG:passlib.registry:registered 'bcrypt' handler: <class 'passlib.handlers.bcrypt.bcrypt'>
 DEBUG:passlib.registry:registered 'des_crypt' handler: <class 'passlib.handlers.des_crypt.des_crypt'>
 DEBUG:passlib.registry:registered 'pbkdf2_sha256' handler: <class 'passlib.handlers.pbkdf2.pbkdf2_sha256'>
@@ -40,33 +36,6 @@ DEBUG:passlib.utils.compat:loaded lazy attr 'BytesIO': <class '_io.BytesIO'>
 DEBUG:passlib.utils.compat:loaded lazy attr 'SafeConfigParser': <class 'configparser.ConfigParser'>
 DEBUG:passlib.utils.compat:loaded lazy attr 'NativeStringIO': <class '_io.StringIO'>
 DEBUG:passlib.utils.compat:loaded lazy attr 'BytesIO': <class '_io.BytesIO'>
-INFO:root:checkout
-INFO:root:checkout
-INFO:root:checkout
-INFO:root:checkout
-INFO:root:checkout
-INFO:root:checkout
-INFO:root:checkout
-INFO:root:checkout
-INFO:root:checkout
-DEBUG:passlib.registry:registered 'bcrypt' handler: <class 'passlib.handlers.bcrypt.bcrypt'>
-DEBUG:passlib.registry:registered 'des_crypt' handler: <class 'passlib.handlers.des_crypt.des_crypt'>
-DEBUG:passlib.registry:registered 'pbkdf2_sha256' handler: <class 'passlib.handlers.pbkdf2.pbkdf2_sha256'>
-DEBUG:passlib.registry:registered 'pbkdf2_sha512' handler: <class 'passlib.handlers.pbkdf2.pbkdf2_sha512'>
-DEBUG:passlib.registry:registered 'sha256_crypt' handler: <class 'passlib.handlers.sha2_crypt.sha256_crypt'>
-DEBUG:passlib.registry:registered 'sha512_crypt' handler: <class 'passlib.handlers.sha2_crypt.sha512_crypt'>
-DEBUG:passlib.registry:registered 'plaintext' handler: <class 'passlib.handlers.misc.plaintext'>
-INFO:root:checkout
-INFO:root:checkout
-INFO:root:checkout
-DEBUG:passlib.registry:registered 'bcrypt' handler: <class 'passlib.handlers.bcrypt.bcrypt'>
-DEBUG:passlib.registry:registered 'des_crypt' handler: <class 'passlib.handlers.des_crypt.des_crypt'>
-DEBUG:passlib.registry:registered 'pbkdf2_sha256' handler: <class 'passlib.handlers.pbkdf2.pbkdf2_sha256'>
-DEBUG:passlib.registry:registered 'pbkdf2_sha512' handler: <class 'passlib.handlers.pbkdf2.pbkdf2_sha512'>
-DEBUG:passlib.registry:registered 'sha256_crypt' handler: <class 'passlib.handlers.sha2_crypt.sha256_crypt'>
-DEBUG:passlib.registry:registered 'sha512_crypt' handler: <class 'passlib.handlers.sha2_crypt.sha512_crypt'>
-DEBUG:passlib.registry:registered 'plaintext' handler: <class 'passlib.handlers.misc.plaintext'>
-INFO:root:checkout
 DEBUG:passlib.registry:registered 'bcrypt' handler: <class 'passlib.handlers.bcrypt.bcrypt'>
 DEBUG:passlib.registry:registered 'des_crypt' handler: <class 'passlib.handlers.des_crypt.des_crypt'>
 DEBUG:passlib.registry:registered 'pbkdf2_sha256' handler: <class 'passlib.handlers.pbkdf2.pbkdf2_sha256'>
@@ -81,7 +50,13 @@ DEBUG:passlib.registry:registered 'pbkdf2_sha512' handler: <class 'passlib.handl
 DEBUG:passlib.registry:registered 'sha256_crypt' handler: <class 'passlib.handlers.sha2_crypt.sha256_crypt'>
 DEBUG:passlib.registry:registered 'sha512_crypt' handler: <class 'passlib.handlers.sha2_crypt.sha512_crypt'>
 DEBUG:passlib.registry:registered 'plaintext' handler: <class 'passlib.handlers.misc.plaintext'>
-INFO:root:checkout
+DEBUG:passlib.registry:registered 'bcrypt' handler: <class 'passlib.handlers.bcrypt.bcrypt'>
+DEBUG:passlib.registry:registered 'des_crypt' handler: <class 'passlib.handlers.des_crypt.des_crypt'>
+DEBUG:passlib.registry:registered 'pbkdf2_sha256' handler: <class 'passlib.handlers.pbkdf2.pbkdf2_sha256'>
+DEBUG:passlib.registry:registered 'pbkdf2_sha512' handler: <class 'passlib.handlers.pbkdf2.pbkdf2_sha512'>
+DEBUG:passlib.registry:registered 'sha256_crypt' handler: <class 'passlib.handlers.sha2_crypt.sha256_crypt'>
+DEBUG:passlib.registry:registered 'sha512_crypt' handler: <class 'passlib.handlers.sha2_crypt.sha512_crypt'>
+DEBUG:passlib.registry:registered 'plaintext' handler: <class 'passlib.handlers.misc.plaintext'>
 DEBUG:passlib.registry:registered 'bcrypt' handler: <class 'passlib.handlers.bcrypt.bcrypt'>
 DEBUG:passlib.registry:registered 'des_crypt' handler: <class 'passlib.handlers.des_crypt.des_crypt'>
 DEBUG:passlib.registry:registered 'pbkdf2_sha256' handler: <class 'passlib.handlers.pbkdf2.pbkdf2_sha256'>
@@ -99,17 +74,19 @@ DEBUG:passlib.registry:registered 'plaintext' handler: <class 'passlib.handlers.
 DEBUG:passlib.utils.compat:loaded lazy attr 'SafeConfigParser': <class 'configparser.ConfigParser'>
 DEBUG:passlib.utils.compat:loaded lazy attr 'NativeStringIO': <class '_io.StringIO'>
 DEBUG:passlib.utils.compat:loaded lazy attr 'BytesIO': <class '_io.BytesIO'>
-INFO:root:checkout
+DEBUG:passlib.registry:registered 'bcrypt' handler: <class 'passlib.handlers.bcrypt.bcrypt'>
+DEBUG:passlib.registry:registered 'des_crypt' handler: <class 'passlib.handlers.des_crypt.des_crypt'>
+DEBUG:passlib.registry:registered 'pbkdf2_sha256' handler: <class 'passlib.handlers.pbkdf2.pbkdf2_sha256'>
+DEBUG:passlib.registry:registered 'pbkdf2_sha512' handler: <class 'passlib.handlers.pbkdf2.pbkdf2_sha512'>
+DEBUG:passlib.registry:registered 'sha256_crypt' handler: <class 'passlib.handlers.sha2_crypt.sha256_crypt'>
+DEBUG:passlib.registry:registered 'sha512_crypt' handler: <class 'passlib.handlers.sha2_crypt.sha512_crypt'>
+DEBUG:passlib.registry:registered 'plaintext' handler: <class 'passlib.handlers.misc.plaintext'>
 DEBUG:passlib.utils.compat:loaded lazy attr 'SafeConfigParser': <class 'configparser.ConfigParser'>
 DEBUG:passlib.utils.compat:loaded lazy attr 'NativeStringIO': <class '_io.StringIO'>
 DEBUG:passlib.utils.compat:loaded lazy attr 'BytesIO': <class '_io.BytesIO'>
 DEBUG:passlib.utils.compat:loaded lazy attr 'SafeConfigParser': <class 'configparser.ConfigParser'>
 DEBUG:passlib.utils.compat:loaded lazy attr 'NativeStringIO': <class '_io.StringIO'>
 DEBUG:passlib.utils.compat:loaded lazy attr 'BytesIO': <class '_io.BytesIO'>
-INFO:root:checkout
-INFO:root:checkout
-INFO:root:checkout
-INFO:root:checkout
 DEBUG:passlib.registry:registered 'bcrypt' handler: <class 'passlib.handlers.bcrypt.bcrypt'>
 DEBUG:passlib.registry:registered 'des_crypt' handler: <class 'passlib.handlers.des_crypt.des_crypt'>
 DEBUG:passlib.registry:registered 'pbkdf2_sha256' handler: <class 'passlib.handlers.pbkdf2.pbkdf2_sha256'>
@@ -117,7 +94,6 @@ DEBUG:passlib.registry:registered 'pbkdf2_sha512' handler: <class 'passlib.handl
 DEBUG:passlib.registry:registered 'sha256_crypt' handler: <class 'passlib.handlers.sha2_crypt.sha256_crypt'>
 DEBUG:passlib.registry:registered 'sha512_crypt' handler: <class 'passlib.handlers.sha2_crypt.sha512_crypt'>
 DEBUG:passlib.registry:registered 'plaintext' handler: <class 'passlib.handlers.misc.plaintext'>
-INFO:root:checkout
 DEBUG:passlib.registry:registered 'bcrypt' handler: <class 'passlib.handlers.bcrypt.bcrypt'>
 DEBUG:passlib.registry:registered 'des_crypt' handler: <class 'passlib.handlers.des_crypt.des_crypt'>
 DEBUG:passlib.registry:registered 'pbkdf2_sha256' handler: <class 'passlib.handlers.pbkdf2.pbkdf2_sha256'>
@@ -125,7 +101,6 @@ DEBUG:passlib.registry:registered 'pbkdf2_sha512' handler: <class 'passlib.handl
 DEBUG:passlib.registry:registered 'sha256_crypt' handler: <class 'passlib.handlers.sha2_crypt.sha256_crypt'>
 DEBUG:passlib.registry:registered 'sha512_crypt' handler: <class 'passlib.handlers.sha2_crypt.sha512_crypt'>
 DEBUG:passlib.registry:registered 'plaintext' handler: <class 'passlib.handlers.misc.plaintext'>
-INFO:root:checkout
 DEBUG:passlib.registry:registered 'bcrypt' handler: <class 'passlib.handlers.bcrypt.bcrypt'>
 DEBUG:passlib.registry:registered 'des_crypt' handler: <class 'passlib.handlers.des_crypt.des_crypt'>
 DEBUG:passlib.registry:registered 'pbkdf2_sha256' handler: <class 'passlib.handlers.pbkdf2.pbkdf2_sha256'>
@@ -133,44 +108,3 @@ DEBUG:passlib.registry:registered 'pbkdf2_sha512' handler: <class 'passlib.handl
 DEBUG:passlib.registry:registered 'sha256_crypt' handler: <class 'passlib.handlers.sha2_crypt.sha256_crypt'>
 DEBUG:passlib.registry:registered 'sha512_crypt' handler: <class 'passlib.handlers.sha2_crypt.sha512_crypt'>
 DEBUG:passlib.registry:registered 'plaintext' handler: <class 'passlib.handlers.misc.plaintext'>
-INFO:root:checkout
-INFO:root:checkout
-INFO:root:checkout
-INFO:root:checkout
-INFO:root:checkout
-INFO:root:checkout
-INFO:root:checkout
-INFO:root:checkout
-INFO:root:checkout
-INFO:root:checkout
-INFO:root:checkout
-INFO:root:checkout
-INFO:root:checkout
-INFO:root:checkout
-INFO:root:checkout
-INFO:root:checkout
-INFO:root:checkout
-INFO:root:checkout
-INFO:root:checkout
-INFO:root:checkout
-INFO:root:checkout
-INFO:root:checkout
-INFO:root:checkout
-INFO:root:checkout
-INFO:root:checkout
-INFO:root:checkout
-INFO:root:checkout
-INFO:root:checkout
-INFO:root:checkout
-INFO:root:checkout
-INFO:root:checkout
-INFO:root:checkout
-INFO:root:checkout
-INFO:root:checkout
-INFO:root:checkout
-INFO:root:checkout
-INFO:root:checkout
-INFO:root:checkout
-INFO:root:checkout
-INFO:root:checkout
-INFO:root:checkout
