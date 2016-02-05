@@ -339,7 +339,8 @@ class OrganizationAccessControl:
                             data = fk_id[1][0]
                         else:
                             setattr(instances[row_id], column_name, None)
-                elif column_name != 'id' and column_name != 'last_modified' and column_name != 'date_created':
+                elif column_name != 'id' and column_name != 'last_modified' and column_name != 'date_created' and
+                    column_name != 'organization_id':
                     if field_data.Field.data_type_id == 1:
                         if data is None or data == '':
                             setattr(instances[row_id], column_name, None)
