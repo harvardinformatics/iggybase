@@ -139,7 +139,7 @@ class PageForm(Base):
     page_template = Column(String(100))
 
 
-class PageFormJavaScript(Base):
+class PageFormJavascript(Base):
     __tablename__ = 'page_form_javascript'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True)

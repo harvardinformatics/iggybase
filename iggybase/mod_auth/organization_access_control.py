@@ -26,7 +26,7 @@ class OrganizationAccessControl:
             for user_org in user_orgs:
                 if user_org.user_organization_id is not None:
                     self.get_child_organization(user_org.user_organization_id)
-                    if user_org.default_organization:
+                    if user_org.default_organization == 1:
                         self.current_org_id = user_org.user_organization_id
         else:
             self.user = None

@@ -250,8 +250,8 @@ class RoleAccessControl:
         return page_form_buttons
 
     def page_form_javascript(self, page_form_id, active=1):
-        res = self.session.query(models.PageFormJavaScript).filter_by(page_form_id=page_form_id). \
-            filter_by(active=active).order_by(models.PageFormJavaScript.order, models.PageFormJavaScript.id).all()
+        res = self.session.query(models.PageFormJavascript).filter_by(page_form_id=page_form_id). \
+            filter_by(active=active).order_by(models.PageFormJavascript.order, models.PageFormJavascript.id).all()
 
         return res
 
