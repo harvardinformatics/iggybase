@@ -31,7 +31,7 @@ class TableQueryCollection:
                 for query in table_queries_info:
                     order = query.TableQuery.order
                     # TODO: constant for pages that need row_id?
-                    row_id = (self.page_form in ['action_summary'])
+                    row_id = (self.page_form in ['action_summary', 'update'])
                     self.populate_query(
                         query.TableQuery.id,
                         order,

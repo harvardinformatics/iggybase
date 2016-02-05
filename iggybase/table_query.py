@@ -99,7 +99,6 @@ class TableQuery:
         # format results as dictionary
         if self.results:
             keys = self.results[0].keys()
-
         # create dictionary for each row and for fk data
         for row in self.results:
             row_dict = OrderedDict()
