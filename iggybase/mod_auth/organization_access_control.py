@@ -279,7 +279,6 @@ class OrganizationAccessControl:
                         name_field = fields[prefix + 'name_' + str(row_id)]
                         instances[row_id] = current_table_object()
                         setattr(instances[row_id], 'date_created', datetime.datetime.utcnow())
-                        setattr(instances[row_id], 'organization_id', self.current_org_id)
                         if current_table_data.new_name_prefix is not None and current_table_data.new_name_prefix != "":
                             if fields[prefix + 'name_' + str(row_id)] == 'new' or \
                                             fields[prefix + 'name_' + str(row_id)] == '':
@@ -292,6 +291,7 @@ class OrganizationAccessControl:
                             current_inst_name = fields[prefix + 'name_' + str(row_id)]
 
                         fields[prefix + 'name_' + str(row_id)] = current_inst_name
+                        fields[prefix + 'organization_id_' + str(row_id)] = self.current_org_id
                     else:
                         current_inst_name = hidden_fields['row_name_' + str(row_id)]
                         instances[row_id] = self.session.query(current_table_object). \
@@ -339,8 +339,7 @@ class OrganizationAccessControl:
                             data = fk_id[1][0]
                         else:
                             setattr(instances[row_id], column_name, None)
-                elif column_name != 'id' and column_name != 'last_modified' and column_name != 'date_created' and \
-                                column_name != 'organization_id':
+                elif column_name != 'id' and column_name != 'last_modified' and column_name != 'date_created':
                     if field_data.Field.data_type_id == 1:
                         if data is None or data == '':
                             setattr(instances[row_id], column_name, None)

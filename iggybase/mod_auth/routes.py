@@ -1,5 +1,8 @@
 from flask import redirect, url_for, request, abort, g
-from flask.ext.login import login_required, login_user, logout_user, current_user
+from flask.ext.security import LoginForm
+from flask_security.utils import login_user, logout_user
+from flask_security.decorators import login_required
+from flask_security.core import current_user
 from iggybase.mod_admin.models import User
 from . import mod_auth
 from iggybase.mod_auth.role_organization import get_roles, get_organizations, get_current_user_role, \
@@ -26,7 +29,6 @@ def home():
 @mod_auth.route( '/logout' )
 def logout():
     logout_user()
-    return redirect( url_for( 'mod_auth.login' ) )
 
 
 @mod_auth.route( '/getrole', methods = [ 'POST' ] )
