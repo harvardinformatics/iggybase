@@ -101,6 +101,7 @@ class FormGenerator():
         if "email" in field_data.Field.field_name:
             validators.append(email())
 
+        kwargs = {'validators': validators}
         if field_data.FieldRole.visible != constants.VISIBLE:
             if value is not None:
                 wtf_field = HiddenField(field_data.FieldRole.display_name, default=value)
@@ -119,7 +120,6 @@ class FormGenerator():
                         else:
                             wtf_field = TextAreaField(field_data.FieldRole.display_name, validators)
                     else:
-                        kwargs = {'validators': validators}
                         choices = self.organization_access_control. \
                             get_foreign_key_data(field_data.Field.foreign_key_table_object_id)
 
@@ -138,7 +138,6 @@ class FormGenerator():
 
                             wtf_field = SelectField(field_data.FieldRole.display_name, **kwargs)
                 else:
-                    kwargs = {'validators': validators}
                     if value is not None:
                         kwargs['default'] = value
 
@@ -162,41 +161,39 @@ class FormGenerator():
                     else:
                         wtf_field = StringField(field_data.FieldRole.display_name, **kwargs)
             else:
-                kwargs = {'validators': validators}
+                if value is not None:
+                    if isinstance(value, datetime):
+                        kwargs['default'] = value.strftime('%Y-%m-%d')
+                    else:
+                        kwargs['default'] = value
+
                 if field_data.Field.foreign_key_table_object_id is not None:
                     long_text = self.role_access_control.has_access("TableObject", {'name': 'long_text'})
                     if long_text.id == field_data.Field.foreign_key_table_object_id:
                         if value is not None:
                             lt_row = self.organization_access_control.get_long_text(value)
-                            value = lt_row.long_text
+                            kwargs['default'] = lt_row.long_text
 
-                        wtf_class = TextAreaField
+                        wtf_field = TextAreaField(field_data.FieldRole.display_name, **kwargs)
                     else:
                         if value is not None:
                             choices = self.organization_access_control. \
                                 get_foreign_key_data(field_data.Field.foreign_key_table_object_id)
-                            value = [item[1] for item in choices if item[0] == value]
+                            kwargs['default'] = [item[1] for item in choices if item[0] == value]
 
-                        wtf_class = ReadonlyStringField
+                        wtf_field = ReadonlyStringField(field_data.FieldRole.display_name, **kwargs)
                 elif field_data.Field.data_type_id == constants.INTEGER:
-                    wtf_class = ReadonlyIntegerField
+                    wtf_field = ReadonlyIntegerField(field_data.FieldRole.display_name, **kwargs)
                 elif field_data.Field.data_type_id == constants.FLOAT:
-                    wtf_class = ReadonlyFloatField
+                    wtf_field = ReadonlyFloatField(field_data.FieldRole.display_name, **kwargs)
                 elif field_data.Field.data_type_id == constants.BOOLEAN:
-                    wtf_class = ReadonlyBooleanField
+                    wtf_field = ReadonlyBooleanField(field_data.FieldRole.display_name, **kwargs)
                 elif field_data.Field.data_type_id == constants.DATE:
-                    wtf_class = ReadonlyStringField
-                    if isinstance(value, datetime):
-                        value = value.strftime('%Y-%m-%d')
+                    wtf_field = ReadonlyStringField(field_data.FieldRole.display_name, **kwargs)
                 elif field_data.Field.data_type_id == constants.TEXT_AREA:
-                    wtf_class = ReadonlyTextAreaField
+                    wtf_field = ReadonlyTextAreaField(field_data.FieldRole.display_name, **kwargs)
                 else:
-                    wtf_class = ReadonlyStringField
-
-                if value is not None:
-                    kwargs['default'] = value
-
-                wtf_field = wtf_class(field_data.FieldRole.display_name, **kwargs)
+                    wtf_field = ReadonlyStringField(field_data.FieldRole.display_name, **kwargs)
 
         return wtf_field
 

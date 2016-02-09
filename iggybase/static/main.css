@@ -21,9 +21,18 @@
 .close_modal {
     float: right ! important;
 }
-.form-control-lookup {
+.form-control-lookup.data-control {
   display: inline-block ! important ;
   width: calc(100% - 18px) ! important ;
+  float:left;
+}
+.form-control-lookup.table-control {
+  display: inline-block ! important ;
+  width: calc(90% - 18px) ! important ;
+  float:left;
+}
+.search-button {
+  display: inline-block ! important ;
 }
 .datepicker-field {
     max-width:100px!important;

@@ -205,8 +205,7 @@ $( document ).ready( function () {
 
     $.fn.addLookup = function ( ele ) {
         var spancls = "ui-icon ui-icon-search search-button"
-        var spanstl = "display: inline-block;float:right;"
-        $('<span class="'+spancls+'" style="'+spanstl+'" luid="'+ele.attr('id')+'"/>').appendTo(ele.parent());
+        $('<span class="'+spancls+'" luid="'+ele.attr('id')+'"/>').appendTo(ele.parent());
     }
 
     $.fn.keydownLookupField = function ( e, ele ) {
