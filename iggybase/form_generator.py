@@ -7,6 +7,7 @@ from iggybase.mod_auth.organization_access_control import OrganizationAccessCont
 from iggybase.mod_auth.role_access_control import RoleAccessControl
 from iggybase import constants
 from datetime import datetime, date
+from json import dumps
 import logging
 
 
@@ -267,6 +268,8 @@ class FormGenerator():
             self.classattr['hidden_startchildtable_'+str(child_table.id)]=\
                 HiddenField('hidden_startchildtable_'+str(child_table.id), default=child_table.name)
 
+            self.classattr['hidden_headers_'+str(child_table.id)]=\
+                HiddenField('hidden_headers_'+str(child_table.id), default=dumps(self.get_field_headers(fields)))
 
             for child_row_name in child_row_names:
                 #   needed to prevent oevrlapping row ids if rows are added dynamically
@@ -331,3 +334,11 @@ class FormGenerator():
 
         self.classattr['hidden_endrow_'+str(row_counter)]=\
             HiddenField('hidden_endrow_'+str(row_counter))
+
+    def get_field_headers(self, fields):
+        headers = ''
+        for field in fields:
+            if field.FieldRole.visible == 1:
+                headers += field.FieldRole.display_name + '|'
+
+        return headers[:-1]

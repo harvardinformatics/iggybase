@@ -54,6 +54,14 @@
                     <table id="{{ table_name }}" class="table table-striped"><tr>
                     {% set maintable = 0 %}
                     {% set endrow = 1 %}
+                {% elif "hidden_headers_" in field.id -%}
+                    {% set data = field.data|replace("\"", "")|safe %}
+                    {% set headers = data.split('|') %}
+                    <tr>
+                    {% for header in headers %}
+                        <th>{{ header }}</th>
+                    {% endfor %}
+                    </tr>
                 {% endif %}
 
                 {% if maintable == 1 -%}
@@ -61,7 +69,6 @@
                         {{ macros.render_field( field ) }}
                     {% endif %}
                 {% else -%}
-
                     {% if field.id|truncate(14, True, '') == 'hidden_endrow_' %}
                         </tr>
                         {% set endrow = 1 %}
