@@ -83,15 +83,11 @@ $( document ).ready( function () {
 		            row_id = parseInt( matches[ 2 ] )+ 1;
                     td = $( this ).closest( 'td' );
 
-                    var old_id = "hidden_" + matches[ 1 ] + "_" + ( matches[ 2 ] );
+                    //clear old hidden fields if more than 1 row was added
+                    $( td ).find( 'input[type=hidden]' ).remove( );
+
                     var new_id = "child_" + matches[ 1 ] + "_" + ( row_id );
                     var hidden_id = "hidden_" + matches[ 1 ] + "_" + ( row_id );
-
-		            var old_ctrl;
-                    if ( td.find( '#' + old_id ).length )
-                        old_ctrl = td.find( '#' + old_id );
-                    else
-                        old_ctrl = 0;
 
                     if ( $( this ).prop( 'type' ) == 'select-one' ) {
                         if ( link_column == matches[ 1 ] ) {
@@ -109,13 +105,7 @@ $( document ).ready( function () {
 
                     if ( matches[ 1 ] == 'name' ) {
                         td.append( "<input id='" + hidden_id + "' name='" + hidden_id + "' type='hidden' value='new'>" );
-                        if ( old_ctrl ) {
-                            old_ctrl.val( 'new' ).attr( 'id', 'hidden_row_name_' + row_id ).attr( 'name', 'hidden_row_name_' + row_id );
-                        } else {
-                            td.append( "<input id='hidden_row_name_" + row_id + "' name='hidden_row_name_" + row_id + "' type='hidden' value='new'>" );
-                        }
-                    } else if ( old_ctrl ) {
-                        old_ctrl.val( '' ).attr( 'id', hidden_id ).attr( 'name', hidden_id );
+                        td.append( "<input id='hidden_row_name_" + row_id + "' name='hidden_row_name_" + row_id + "' type='hidden' value='new'>" );
                     } else {
                         td.append( "<input id='" + hidden_id + "' name='" + hidden_id + "' type='hidden' value=''>" );
                     }
@@ -148,8 +138,12 @@ $( document ).ready( function () {
                     }
 
                     if ( $( this ).hasClass( 'boolean-field' ) ) {
-                        td.append( "<input id='bool_" + new_id + "' name='bool_" + new_id + "' type='hidden' value=''>" );
-                        $.fn.changeCheckBox( $( this ) );
+                        new_bool_id = 'bool_' + new_id;
+                        if ( $( this ).is(':checked') )
+                            td.append( "<input id='" + new_bool_id + "' name='" + new_bool_id + "' type='hidden' value='y' disabled='disabled'>" );
+                        else
+                            td.append( "<input id='" + new_bool_id + "' name='" + new_bool_id + "' type='hidden' value='n'>" );
+
                         $( this ).change(
                             function( ) {
                                 $.fn.changeCheckBox( $( this ) );
@@ -201,13 +195,11 @@ $( document ).ready( function () {
     }
 
     $.fn.changeCheckBox = function ( ele ) {
-        hidden_id = 'bool_' + ele.attr( 'id' );
+        bool_id = 'bool_' + ele.attr( 'id' );
         if ( ele.is(':checked') ) {
-            $( "#" + hidden_id ).attr( 'disabled', 'disabled' );
-            $( "#" + hidden_id ).val( 'y' )
+            $( "#" + bool_id ).val( 'y' ).attr( 'disabled', 'disabled' );
         } else {
-            $( "#" + hidden_id ).removeAttr( 'disabled' );
-            $( "#" + hidden_id ).val( 'n' )
+            $( "#" + bool_id ).val( 'n' ).removeAttr( 'disabled' );
         }
     }
 

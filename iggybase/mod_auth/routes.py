@@ -1,8 +1,5 @@
 from flask import redirect, url_for, request, abort, g
-from flask.ext.security import LoginForm
-from flask_security.utils import login_user, logout_user
 from flask_security.decorators import login_required
-from flask_security.core import current_user
 from iggybase.mod_admin.models import User
 from . import mod_auth
 from iggybase.mod_auth.role_organization import get_roles, get_organizations, get_current_user_role, \
@@ -14,7 +11,7 @@ import logging
 @mod_auth.route('/home', methods=['GET'])
 @login_required
 def home():
-    """redirects to user home page.
+    """redirects to user home page
     """
     if not g.user:
         abort( 403 )
@@ -24,11 +21,6 @@ def home():
         home_page = '/auth/detail/user/' + g.user.name
         module_name = request.path.split('/')[1]
     return redirect( home_page )
-
-
-@mod_auth.route( '/logout' )
-def logout():
-    logout_user()
 
 
 @mod_auth.route( '/getrole', methods = [ 'POST' ] )

@@ -77,4 +77,11 @@
 textarea.data-control {
     height: 68px! important;
 }
-
+input[type=checkbox].table-control {
+    margin-top: -8px!important;
+    margin-left: 0px!important;
+}
+input[type=checkbox].data-control {
+    margin-top: -5px!important;
+    margin-left: 0px!important;
+}

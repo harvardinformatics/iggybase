@@ -28,12 +28,6 @@ class ReadonlyFloatField(FloatField):
         return super(ReadonlyFloatField, self).__call__(*args, **kwargs)
 
 
-class IggybaseBooleanField(BooleanField):
-    def __call__(self, *args, **kwargs):
-        kwargs['class'] = 'form-control boolean-field'
-        return super(IggybaseBooleanField, self).__call__(*args, **kwargs)
-
-
 class ReadonlyBooleanField(BooleanField):
     def __call__(self, *args, **kwargs):
         kwargs.setdefault('readonly', True)
@@ -46,22 +40,43 @@ class ReadonlyTextAreaField(TextAreaField):
         return super(ReadonlyTextAreaField, self).__call__(*args, **kwargs)
 
 
-class DateFieldClass(DateField):
-    def __call__(self, *args, **kwargs):
-        kwargs['class'] = 'data-control datepicker-field'
-        return super(DateFieldClass, self).__call__(*args, **kwargs)
-
-
 class ReadonlyDateField(DateField):
     def __call__(self, *args, **kwargs):
         kwargs.setdefault('readonly', True)
         return super(ReadonlyDateField, self).__call__(*args, **kwargs)
 
 
-class LookUpField(StringField):
+class DateFieldClass(DateField):
+    def __init__(self, *args, **kwargs):
+        self.iggybase_class = kwargs['iggybase_class']
+        del kwargs['iggybase_class']
+        super(DateFieldClass, self).__init__(*args, **kwargs)
+
     def __call__(self, *args, **kwargs):
-        kwargs['class'] = 'data-control lookupfield form-control-lookup'
+        kwargs['class'] = 'datepicker-field ' + self.iggybase_class
+        return super(DateFieldClass, self).__call__(*args, **kwargs)
+
+
+class LookUpField(StringField):
+    def __init__(self, *args, **kwargs):
+        self.iggybase_class = kwargs['iggybase_class']
+        del kwargs['iggybase_class']
+        super(LookUpField, self).__init__(*args, **kwargs)
+
+    def __call__(self, *args, **kwargs):
+        kwargs['class'] = 'lookupfield form-control-lookup ' + self.iggybase_class
         return super(LookUpField, self).__call__(*args, **kwargs)
+
+
+class IggybaseBooleanField(BooleanField):
+    def __init__(self, *args, **kwargs):
+        self.iggybase_class = kwargs['iggybase_class']
+        del kwargs['iggybase_class']
+        super(IggybaseBooleanField, self).__init__(*args, **kwargs)
+
+    def __call__(self, *args, **kwargs):
+        kwargs['class'] = 'boolean-field ' + self.iggybase_class
+        return super(IggybaseBooleanField, self).__call__(*args, **kwargs)
 
 
 class FormGenerator():
@@ -73,7 +88,7 @@ class FormGenerator():
         self.classattr = {}
         self.table_data = None
 
-    def input_field(self, field_data, control_id, value=None):
+    def input_field(self, field_data, control_id, control_type, value=None):
         validators = []
         if field_data.FieldRole.required == constants.REQUIRED:
             validators.append(DataRequired())
@@ -104,46 +119,48 @@ class FormGenerator():
                         else:
                             wtf_field = TextAreaField(field_data.FieldRole.display_name, validators)
                     else:
+                        kwargs = {'validators': validators}
                         choices = self.organization_access_control. \
                             get_foreign_key_data(field_data.Field.foreign_key_table_object_id)
 
                         if len(choices) > 25:
+                            kwargs['iggybase_class'] = control_type
                             if value is not None:
-                                wtf_field = LookUpField(field_data.FieldRole.display_name, validators,
-                                                        default=[item[1] for item in choices if item[0] == value][0])
-                            else:
-                                wtf_field = LookUpField(field_data.FieldRole.display_name, validators)
+                                kwargs['default'] = [item[1] for item in choices if item[0] == value][0]
+
+                            wtf_field = LookUpField(field_data.FieldRole.display_name, **kwargs)
                         else:
+                            kwargs['coerce'] = int
+                            kwargs['choices'] = choices
+
                             if value is not None:
-                                wtf_field = SelectField(field_data.FieldRole.display_name, validators, coerce=int, \
-                                                        choices=choices, default=value)
-                            else:
-                                wtf_field = SelectField(field_data.FieldRole.display_name, validators, coerce=int, \
-                                                        choices=choices)
+                                kwargs['default'] = value
+
+                            wtf_field = SelectField(field_data.FieldRole.display_name, **kwargs)
                 else:
                     kwargs = {'validators': validators}
-                    if field_data.Field.data_type_id == constants.INTEGER:
-                        wtf_class = IntegerField
-                    elif field_data.Field.data_type_id == constants.FLOAT:
-                        wtf_class = FloatField
-                    elif field_data.Field.data_type_id == constants.BOOLEAN:
-                        wtf_class = IggybaseBooleanField
-                        self.classattr['bool_' + control_id]=HiddenField('bool_' + control_id, default=value)
-                    elif field_data.Field.data_type_id == constants.DATE:
-                        wtf_class = DateFieldClass
-                    elif field_data.Field.data_type_id == constants.PASSWORD:
-                        wtf_class = PasswordField
-                    elif field_data.Field.data_type_id == constants.FILE:
-                        wtf_class = FileField
-                    elif field_data.Field.data_type_id == constants.TEXT_AREA:
-                        wtf_class = TextAreaField
-                    else:
-                        wtf_class = StringField
-
                     if value is not None:
                         kwargs['default'] = value
 
-                    wtf_field = wtf_class(field_data.FieldRole.display_name, **kwargs)
+                    if field_data.Field.data_type_id == constants.INTEGER:
+                        wtf_field = IntegerField(field_data.FieldRole.display_name, **kwargs)
+                    elif field_data.Field.data_type_id == constants.FLOAT:
+                        wtf_field = FloatField(field_data.FieldRole.display_name, **kwargs)
+                    elif field_data.Field.data_type_id == constants.BOOLEAN:
+                        kwargs['iggybase_class'] = control_type
+                        wtf_field = IggybaseBooleanField(field_data.FieldRole.display_name, **kwargs)
+                        self.classattr['bool_' + control_id]=HiddenField('bool_' + control_id, default=value)
+                    elif field_data.Field.data_type_id == constants.DATE:
+                        kwargs['iggybase_class'] = control_type
+                        wtf_field = DateField(field_data.FieldRole.display_name, **kwargs)
+                    elif field_data.Field.data_type_id == constants.PASSWORD:
+                        wtf_field = PasswordField(field_data.FieldRole.display_name, **kwargs)
+                    elif field_data.Field.data_type_id == constants.FILE:
+                        wtf_field = FileField(field_data.FieldRole.display_name, **kwargs)
+                    elif field_data.Field.data_type_id == constants.TEXT_AREA:
+                        wtf_field = TextAreaField(field_data.FieldRole.display_name, **kwargs)
+                    else:
+                        wtf_field = StringField(field_data.FieldRole.display_name, **kwargs)
             else:
                 kwargs = {'validators': validators}
                 if field_data.Field.foreign_key_table_object_id is not None:
@@ -213,7 +230,7 @@ class FormGenerator():
         row_counter = 1
         for row_name in row_names:
             self.classattr.update(self.row_fields(row_counter, row_name))
-            self.get_row(fields, row_name, row_counter)
+            self.get_row(fields, row_name, row_counter, 'table-control')
             row_counter += 1
 
         newclass = new_class('DynamicForm', (Form,), {}, lambda ns: ns.update(self.classattr))
@@ -259,7 +276,7 @@ class FormGenerator():
                 child_row = (child_index * 1000) + row_counter
 
                 self.classattr.update(self.row_fields(child_row, child_row_name, 'child_'))
-                self.get_row(fields, child_row_name, child_row, 'child_')
+                self.get_row(fields, child_row_name, child_row, 'table-control', 'child_')
                 row_counter += 1
 
             self.classattr['hidden_endchildtable_'+str(child_table.id)]=\
@@ -287,7 +304,7 @@ class FormGenerator():
                 'hidden_table_name_'+str(row_count): table_name_field,
                 'hidden_table_id_'+str(row_count): table_id_field}
 
-    def get_row(self, fields, row_name, row_counter, prefix = ''):
+    def get_row(self, fields, row_name, row_counter, control_type='data-control', prefix = ''):
         id = None
 
         if row_name != 'new':
@@ -313,7 +330,7 @@ class FormGenerator():
                     HiddenField('hidden_'+field.Field.field_name+"_"+str(row_counter), default=value)
 
             control_id = prefix + field.Field.field_name+"_"+str(row_counter)
-            self.classattr[control_id] = self.input_field(field, control_id, value)
+            self.classattr[control_id] = self.input_field(field, control_id, control_type, value)
 
         self.classattr['hidden_endrow_'+str(row_counter)]=\
             HiddenField('hidden_endrow_'+str(row_counter))
