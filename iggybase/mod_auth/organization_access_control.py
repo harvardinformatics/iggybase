@@ -209,6 +209,11 @@ class OrganizationAccessControl:
         filters = []
         for key, value in params.items():
             filters.append((getattr(table, key)).like('%' + value + '%'))
+
+        # only return organizations the user belongs to
+        if table_name == 'Organization':
+            filters.append((getattr(table, 'id')).in_(self.org_ids))
+
         return table.query.filter(*filters).order_by(getattr(table, 'name'))
 
     def get_long_text(self, lt_id):
@@ -225,13 +230,20 @@ class OrganizationAccessControl:
 
         history_data = models.TableObject.query.filter_by(name='history').first()
 
+        # fields contain the data that was displayed on the form and possibly edited
         fields = {}
+        # hidden fields contain the old values
         hidden_fields = {}
+        # keeps track of the tables that store the child data
         child_tables = {}
+        # keeps track of the table object data for tables that store the child data
         child_data = {}
-        last_row_id = 0
+        # all the data to be saved
         instances = {}
+        # identifying child or main data fields
         prefix = ''
+
+        # used to identify fields that contain data that needs to be saved
         field_pattern = re.compile('(\S+)_(\d+)')
 
         for key in request.form:
@@ -275,7 +287,7 @@ class OrganizationAccessControl:
                 field_data = role_access_control.fields(int(hidden_fields['table_id_' + str(row_id)]),
                                                         {'field.field_name': column_name})[0]
 
-                if last_row_id != row_id and row_id not in instances:
+                if row_id not in instances:
                     if hidden_fields['row_name_' + str(row_id)] == 'new':
                         name_field = fields[prefix + 'name_' + str(row_id)]
                         instances[row_id] = current_table_object()

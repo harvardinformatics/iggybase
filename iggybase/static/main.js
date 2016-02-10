@@ -278,7 +278,6 @@ $( document ).ready( function () {
             search_vals[$(this).attr('id')] = $(this).val();
         });
 
-
         var formurl = $URL_ROOT + "core/search_results?search_vals=" + JSON.stringify(search_vals);
 
         $.fn.showModalDialog( formurl, {}, $.fn.searchLinks );
