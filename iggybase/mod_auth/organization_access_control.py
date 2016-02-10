@@ -305,6 +305,8 @@ class OrganizationAccessControl:
 
                         fields[prefix + 'name_' + str(row_id)] = current_inst_name
                         fields[prefix + 'organization_id_' + str(row_id)] = self.current_org_id
+                        if column_name == 'organization_id':
+                            data = self.current_org_id
                     else:
                         current_inst_name = hidden_fields['row_name_' + str(row_id)]
                         instances[row_id] = self.session.query(current_table_object). \
