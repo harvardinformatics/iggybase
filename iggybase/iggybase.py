@@ -51,9 +51,8 @@ def configure_extensions( app, db ):
 
     # configure Flask Security
     user_datastore = SQLAlchemyUserDatastore(db, models.User, models.Role)
-    security = Security(app, user_datastore, register_form = ExtendedRegisterForm)
-    #security = Security(app, user_datastore, login_form = ExtendedLoginForm,
-    #        register_form = ExtendedRegisterForm)
+    security = Security(app, user_datastore, login_form = ExtendedLoginForm,
+            register_form = ExtendedRegisterForm)
 
     return security, user_datastore
 
@@ -183,8 +182,8 @@ def configure_error_handlers( app ):
 
 
 
-'''class ExtendedLoginForm(LoginForm):
-    email = TextField('Username:', [Required()])'''
+class ExtendedLoginForm(LoginForm):
+    email = TextField('Username:', [Required()])
 
 class ExtendedRegisterForm(RegisterForm):
     name = TextField('Username:', [Required()])
