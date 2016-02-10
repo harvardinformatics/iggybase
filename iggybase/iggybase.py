@@ -183,7 +183,7 @@ def configure_error_handlers( app ):
 
 
 class ExtendedLoginForm(LoginForm):
-    email = TextField('Username:', [Required()])
+    email = TextField('Username or email:')
 
 class ExtendedRegisterForm(RegisterForm):
     name = TextField('Username:', [Required()])
