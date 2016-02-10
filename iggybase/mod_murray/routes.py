@@ -28,7 +28,7 @@ def update_ordered(table_name):
     table_queries.get_fields()
     first_table_query = table_queries.get_first()
     hidden_fields = {}
-    hidden_fields['column_defaults'] = '{"status":1}'
+    hidden_fields['column_defaults'] = '{"status":1, "received":"now"}'
     # TODO if we can sort out foreign keys for the update then
     # we don't need to pass in button text
     hidden_fields['button_text'] = 'Receive Selected Oligos'
@@ -58,7 +58,7 @@ def update_requested(table_name):
     table_queries.get_fields()
     first_table_query = table_queries.get_first()
     hidden_fields = {}
-    hidden_fields['column_defaults'] = '{"status":2}'
+    hidden_fields['column_defaults'] = '{"status":2, "ordered":"now"}'
     hidden_fields['button_text'] = 'Order Selected Oligos'
     hidden_fields['message_fields'] = '["name", "sequence"]'
     # if nothing to display then page not found

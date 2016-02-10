@@ -1,5 +1,6 @@
 from flask import g, request
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy import DateTime, func
 from iggybase.mod_auth.role_access_control import RoleAccessControl
 from iggybase.database import db_session
 from iggybase.mod_admin import models
@@ -422,20 +423,23 @@ class OrganizationAccessControl:
         return names
 
     def update_table_rows(self, table, updates, ids, message_fields):
-        # TODO: make this deal with foreign keys
-        # for now i'm just going to pass in the numeric value
         table_model = util.get_table(table)
         rows = table_model.query.filter(table_model.id.in_(ids), getattr(table_model, 'organization_id').in_(self.org_ids)).all()
         updated = []
+        row_fields = []
         for row in rows:
             for col, val in updates.items():
                 try:
+                    col_obj = getattr(table_model, col)
+                    if (isinstance(col_obj.type, DateTime) and val == 'now'):
+                        val = func.now()
                     setattr(row, col, val)
                     self.session.commit()
                     row_fields = []
                     for field in message_fields:
                         row_fields.append(str(getattr(row, field)))
-                    updated.append(', '.join(row_fields))
                 except AttributeError:
                     pass
+            if row_fields:
+                updated.append(', '.join(row_fields))
         return updated
