@@ -271,6 +271,9 @@ class FormGenerator():
             self.classattr['hidden_headers_'+str(child_table.id)]=\
                 HiddenField('hidden_headers_'+str(child_table.id), default=dumps(self.get_field_headers(fields)))
 
+            if len(child_row_names) == 0:
+                child_row_names.append('new')
+
             for child_row_name in child_row_names:
                 #   needed to prevent oevrlapping row ids if rows are added dynamically
                 child_row = (child_index * 1000) + row_counter
