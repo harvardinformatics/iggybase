@@ -26,7 +26,7 @@ def input_role(where):
 
 def do_you_want_message(from_role, to_role, role_models):
     print()
-    msg = """Records for %s from the following tables will be duped 
+    msg = """Records from %s from the following tables will be duped 
 to the role %s:""" \
         % (from_role.name, to_role.name)
     print(msg)
@@ -80,8 +80,7 @@ for model in role_mods:
     initials = ''.join([c for c in model if c.isupper()]) # prepended to rec name.
     # The base number must guarantee uniqueness
     sequence  = sess.query(func.max(eval(model).id)).one()[0] + 3001
-    import pdb
-    pdb.set_trace()
+
     for indx, rec  in enumerate(recs):
         new_name = '%s%08d' % (initials, sequence+indx)
         if new_name == rec.name:    
@@ -90,7 +89,16 @@ for model in role_mods:
         for k,v in new_record(model, rec, name=new_name).items():
             setattr(new_rec, k, v)  # Loading the new instance.
         sess.add(new_rec) # New object pending commit.
-    sess.commit()   # Commit new records by model.
+
+    print()
+    print("%d records were created for %s" % (recs.count(), model))
+    ans = input("Do you want to commit them? (y or n)? ")
+    if ans == 'y':
+        sess.commit()   # Commit new records by model.
+    else:
+        sess.rollback()
+        print("The records for %s were not committed" % (model))
+    
         
 
 
