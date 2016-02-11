@@ -236,9 +236,9 @@ class OrganizationAccessControl:
         hidden_fields = {}
         # keeps track of the tables that store the child data
         child_tables = {}
-        # keeps track of the table object data for tables that store the child data
+        # keeps track of the table object data for tables that store the child data used for generating the auto IDs
         child_data = {}
-        # all the data to be saved
+        # all the data to be saved as an instance of the sqlalchemy table
         instances = {}
         # identifying child or main data fields
         prefix = ''
