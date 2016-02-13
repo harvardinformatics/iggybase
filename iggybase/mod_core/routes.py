@@ -96,7 +96,7 @@ def search_results():
                 if field!='name':
                     res = getattr(row,field)
                     if res is not None:
-                        modal_html += '<td><label>' + res + '</label></td>'
+                        modal_html += '<td><label>' + format(res) + '</label></td>'
                     else:
                         modal_html += '<td></td>'
 

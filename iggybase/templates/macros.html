@@ -73,11 +73,11 @@
     </td>
     <td class="col-md-8">
     {{ field(class_='data-control', **kwargs) }}
-    {% if field.errors %}
-        {% for e in field.errors %}
+    {% if field.errors -%}
+        {% for e in field.errors -%}
             <p class="help-block">{{ e }}</p>
-        {% endfor %}
-    {% endif %}
+        {% endfor -%}
+    {% endif -%}
     </td></tr>
 {%- endmacro %}
 
@@ -155,30 +155,30 @@
 
 
 {% macro render_buttons( buttons ) -%}
-    {% for button in buttons %}
+    {% for button in buttons -%}
         <input {{ button|safe }}>
-    {% endfor %}
+    {% endfor -%}
 {%- endmacro %}
 
 
 {% macro render_scripts( scripts ) -%}
-    {% for script in scripts %}
+    {% for script in scripts -%}
         <script type="text/javascript" src="{{ url_for('static', filename='' ) }}{{ script }}"></script>
-    {% endfor %}
+    {% endfor -%}
 {%- endmacro %}
 
 {% macro table_field(field,
                     form_type="basic",
                     horizontal_columns=('lg', 2, 10),
-                    button_map={}) %}
+                    button_map={}) -%}
 
 {# this is a workaround hack for the more straightforward-code of just passing required=required parameter. older versions of wtforms do not have
 the necessary fix for required=False attributes, but will also not set the required flag in the first place. we skirt the issue using the code below #}
-{% if field.flags.required and not required in kwargs %}
-{% set kwargs = dict(required=True, **kwargs) %}
-{% endif %}
+{% if field.flags.required and not required in kwargs -%}
+{% set kwargs = dict(required=True, **kwargs) -%}
+{% endif -%}
 
-{% if field.widget.input_type == 'checkbox' %}
+{% if field.widget.input_type == 'checkbox' -%}
     <div class="checkbox">
         {{field()|safe}}
     </div>
@@ -191,7 +191,7 @@ the necessary fix for required=False attributes, but will also not set the requi
           {{item|safe}} {{item.label.text|safe}}
         </label>
       </div>
-    {% endfor %}
+    {% endfor -%}
 {%- elif field.type == 'FormField' -%}
 {# note: FormFields are tricky to get right and complex setups requiring
    these are probably beyond the scope of what this macro tries to do.
@@ -212,18 +212,18 @@ the necessary fix for required=False attributes, but will also not set the requi
                          {%- if field.flags.required %} required{% endif -%}
   ">
       {%- if form_type == "inline" %}
-        {% if field.type == 'FileField' %}
+        {%- if field.type == 'FileField' %}
           {{field(**kwargs)|safe}}
-        {% else %}
+        {%- else %}
           {{field(class="table-control", **kwargs)|safe}}
-        {% endif %}
-      {% elif form_type == "horizontal" %}
+        {%- endif %}
+      {%- elif form_type == "horizontal" %}
         <div class=" col-{{horizontal_columns[0]}}-{{horizontal_columns[2]}}">
-          {% if field.type == 'FileField' %}
+          {%- if field.type == 'FileField' %}
             {{field(**kwargs)|safe}}
-          {% else %}
+          {%- else %}
             {{field(class="table-control", **kwargs)|safe}}
-          {% endif %}
+          {%- endif %}
         </div>
         {%- if field.errors %}
           {%- for error in field.errors %}
@@ -244,5 +244,5 @@ the necessary fix for required=False attributes, but will also not set the requi
         {%- endif %}
       {%- endif %}
   </div>
-{% endif %}
-{% endmacro %}
+{%- endif %}
+{%- endmacro %}

@@ -40,58 +40,57 @@
             {%- for field in form %}
                 {% if "hidden_startmaintable_" in field.id -%}
                     <div class="col-md-4">
-                    {% set table_name = field.data %}
+                    {% set table_name = field.data -%}
                     <table id="{{ table_name }}" class="table">
-                    {% set maintable = 1 %}
+                    {% set maintable = 1 -%}
                 {% elif "hidden_startchildtable_" in field.id -%}
-                    {% set html_id = field.id.split("_") %}
-                    {% set table_id = html_id[2] %}
+                    {% set html_id = field.id.split("_") -%}
+                    {% set table_id = html_id[2] -%}
                     </table></div><br><br><div class="col-md-12">
-                    {% set table_title = field.data|replace("_", " ")|title %}
+                    {% set table_title = field.data|replace("_", " ")|title -%}
                     <h3>{{ table_title }}</h3>
-                    {% set table_name = field.data %}
+                    {% set table_name = field.data -%}
                     <input type="button" class="add_new_child_item" target_table="{{ table_name}}" table_object_id="{{ table_id }}" value="Add {{ field.data }}">
                     <table id="{{ table_name }}" class="table table-striped"><tr>
-                    {% set maintable = 0 %}
-                    {% set endrow = 1 %}
+                    {% set maintable = 0 -%}
+                    {% set endrow = 1 -%}
                 {% elif "hidden_headers_" in field.id -%}
-                    {% set data = field.data|replace("\"", "")|safe %}
-                    {% set headers = data.split('|') %}
+                    {% set data = field.data|replace("\"", "")|safe -%}
+                    {% set headers = data.split('|') -%}
                     <tr>
-                    {% for header in headers %}
+                    {% for header in headers -%}
                         <th>{{ header }}</th>
-                    {% endfor %}
+                    {% endfor -%}
                     </tr>
-                {% endif %}
+                {% endif -%}
 
                 {% if maintable == 1 -%}
                     {% if not bootstrap_is_hidden_field( field ) -%}
                         {{ macros.render_field( field ) }}
-                    {% endif %}
+                    {% endif -%}
                 {% else -%}
-                    {% if field.id|truncate(14, True, '') == 'hidden_endrow_' %}
+                    {% if field.id|truncate(14, True, '') == 'hidden_endrow_' -%}
                         </tr>
-                        {% set endrow = 1 %}
-                    {% endif %}
+                        {% set endrow = 1 -%}
+                    {% endif -%}
 
                     {% if not bootstrap_is_hidden_field( field ) -%}
                         {% if endrow == 1 -%}
                             <tr table_object_name="{{ table_name }}">
-                            {% set endrow = 0 %}
-                        {% endif %}
+                            {% set endrow = 0 -%}
+                        {% endif -%}
 
                         <td>{{ macros.table_field( field ) }}</td>
-                    {% endif %}
-                {%- endif %}
-            {%- endfor %}
-
+                    {% endif -%}
+                {%- endif -%}
+            {%- endfor -%}
             </table>
             </div>
         </div>
         {% endblock page_content -%}
     {% endif -%}
 
-    {% block bottombuttonbar %}
+    {% block bottombuttonbar -%}
         <div class="bottom_buttons">
         {{ macros.render_buttons( bottom_buttons ) }}
         </div>
