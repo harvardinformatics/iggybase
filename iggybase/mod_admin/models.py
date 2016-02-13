@@ -288,6 +288,7 @@ class Field(Base):
     primary_key = Column(Boolean)
     length = Column(Integer)
     default = Column(String(255))
+    field_class = Column(String(100))
     foreign_key_table_object_id = Column(Integer, ForeignKey('table_object.id'))
     foreign_key_field_id = Column(Integer, ForeignKey('field.id'))
     foreign_key_display = Column(Integer, ForeignKey('field.id'))

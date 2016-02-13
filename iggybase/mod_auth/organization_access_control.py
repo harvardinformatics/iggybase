@@ -251,13 +251,16 @@ class OrganizationAccessControl:
             if key.startswith('bool_'):
                 key = key[key.index('_') + 1:]
 
-            if key.endswith('_token') or key.endswith('_0'):
-                continue
-            elif key.startswith('hidden_'):
-                field_id = key[key.index('_') + 1:]
-                hidden_fields[field_id] = data
-            elif field_pattern.match(key):
-                fields[key] = data
+            if key.find('organization_id') >= 0 and (data == '' or data == -99):
+                data = self.current_org_id
+            else:
+                if key.endswith('_token') or key.endswith('_0'):
+                    continue
+                elif key.startswith('hidden_'):
+                    field_id = key[key.index('_') + 1:]
+                    hidden_fields[field_id] = data
+                elif field_pattern.match(key):
+                    fields[key] = data
 
         try:
             for field, data in fields.items():
@@ -304,9 +307,6 @@ class OrganizationAccessControl:
                             current_inst_name = fields[prefix + 'name_' + str(row_id)]
 
                         fields[prefix + 'name_' + str(row_id)] = current_inst_name
-                        fields[prefix + 'organization_id_' + str(row_id)] = self.current_org_id
-                        if column_name == 'organization_id':
-                            data = self.current_org_id
                     else:
                         current_inst_name = hidden_fields['row_name_' + str(row_id)]
                         instances[row_id] = self.session.query(current_table_object). \
