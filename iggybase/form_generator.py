@@ -1,7 +1,8 @@
 from flask.ext.wtf import Form
 from types import new_class
-from wtforms import StringField, IntegerField, PasswordField, BooleanField, SelectField, ValidationError, DateField, \
-    HiddenField, FileField, TextAreaField, FloatField
+from iggybase.iggybase_form_fields import IggybaseBooleanField, IggybaseDateField, IggybaseFloatField, \
+    IggybaseIntegerField, IggybaseLookUpField, IggybaseStringField, IggybaseTextAreaField, IggybaseSelectField
+from wtforms import PasswordField, ValidationError, HiddenField, FileField
 from wtforms.validators import DataRequired, Length, email, Optional
 from iggybase.mod_auth.organization_access_control import OrganizationAccessControl
 from iggybase.mod_auth.role_access_control import RoleAccessControl
@@ -9,75 +10,6 @@ from iggybase import constants
 from datetime import datetime, date
 from json import dumps
 import logging
-
-
-class ReadonlyStringField(StringField):
-    def __call__(self, *args, **kwargs):
-        kwargs.setdefault('readonly', True)
-        return super(ReadonlyStringField, self).__call__(*args, **kwargs)
-
-
-class ReadonlyIntegerField(IntegerField):
-    def __call__(self, *args, **kwargs):
-        kwargs.setdefault('readonly', True)
-        return super(ReadonlyIntegerField, self).__call__(*args, **kwargs)
-
-
-class ReadonlyFloatField(FloatField):
-    def __call__(self, *args, **kwargs):
-        kwargs.setdefault('readonly', True)
-        return super(ReadonlyFloatField, self).__call__(*args, **kwargs)
-
-
-class ReadonlyBooleanField(BooleanField):
-    def __call__(self, *args, **kwargs):
-        kwargs.setdefault('readonly', True)
-        return super(ReadonlyBooleanField, self).__call__(*args, **kwargs)
-
-
-class ReadonlyTextAreaField(TextAreaField):
-    def __call__(self, *args, **kwargs):
-        kwargs.setdefault('readonly', True)
-        return super(ReadonlyTextAreaField, self).__call__(*args, **kwargs)
-
-
-class ReadonlyDateField(DateField):
-    def __call__(self, *args, **kwargs):
-        kwargs.setdefault('readonly', True)
-        return super(ReadonlyDateField, self).__call__(*args, **kwargs)
-
-
-class DateFieldClass(DateField):
-    def __init__(self, *args, **kwargs):
-        self.iggybase_class = kwargs['iggybase_class']
-        del kwargs['iggybase_class']
-        super(DateFieldClass, self).__init__(*args, **kwargs)
-
-    def __call__(self, *args, **kwargs):
-        kwargs['class'] = 'datepicker-field ' + self.iggybase_class
-        return super(DateFieldClass, self).__call__(*args, **kwargs)
-
-
-class LookUpField(StringField):
-    def __init__(self, *args, **kwargs):
-        self.iggybase_class = kwargs['iggybase_class']
-        del kwargs['iggybase_class']
-        super(LookUpField, self).__init__(*args, **kwargs)
-
-    def __call__(self, *args, **kwargs):
-        kwargs['class'] = 'lookupfield form-control-lookup ' + self.iggybase_class
-        return super(LookUpField, self).__call__(*args, **kwargs)
-
-
-class IggybaseBooleanField(BooleanField):
-    def __init__(self, *args, **kwargs):
-        self.iggybase_class = kwargs['iggybase_class']
-        del kwargs['iggybase_class']
-        super(IggybaseBooleanField, self).__init__(*args, **kwargs)
-
-    def __call__(self, *args, **kwargs):
-        kwargs['class'] = 'boolean-field ' + self.iggybase_class
-        return super(IggybaseBooleanField, self).__call__(*args, **kwargs)
 
 
 class FormGenerator():
@@ -90,7 +22,16 @@ class FormGenerator():
         self.table_data = None
 
     def input_field(self, field_data, control_id, control_type, value=None):
+        kwargs = {}
         validators = []
+
+        if value is not None:
+            kwargs['default'] = value
+
+        # no validators or classes attached to hidden fields, as it could cause issues
+        if field_data.FieldRole.visible != constants.VISIBLE:
+            return HiddenField(field_data.FieldRole.display_name, **kwargs)
+
         if field_data.FieldRole.required == constants.REQUIRED:
             validators.append(DataRequired())
         else:
@@ -102,101 +43,59 @@ class FormGenerator():
         if "email" in field_data.Field.field_name:
             validators.append(email())
 
-        kwargs = {'validators': validators}
-        if field_data.FieldRole.visible != constants.VISIBLE:
-            if value is not None:
-                wtf_field = HiddenField(field_data.FieldRole.display_name, default=value)
-            else:
-                wtf_field = HiddenField(field_data.FieldRole.display_name)
+        kwargs['validators'] = validators
+
+        if field_data.Field.field_class is not None:
+            kwargs['iggybase_class'] = control_type + ' ' + field_data.Field.field_class
         else:
-            if field_data.FieldRole.permission_id == constants.READ_WRITE:
-                if field_data.Field.foreign_key_table_object_id is not None:
-                    long_text = self.role_access_control.has_access("TableObject", {'name': 'long_text'})
-                    if long_text.id == field_data.Field.foreign_key_table_object_id:
-                        if value is not None:
-                            lt_row = self.organization_access_control.get_long_text(value)
-                            value = lt_row.long_text
+            kwargs['iggybase_class'] = control_type
 
-                            wtf_field = TextAreaField(field_data.FieldRole.display_name, validators, default=value)
-                        else:
-                            wtf_field = TextAreaField(field_data.FieldRole.display_name, validators)
-                    else:
-                        choices = self.organization_access_control. \
-                            get_foreign_key_data(field_data.Field.foreign_key_table_object_id)
+        if field_data.FieldRole.permission_id == constants.READ_ONLY:
+            kwargs['readonly'] = True
 
-                        if len(choices) > 25:
-                            kwargs['iggybase_class'] = control_type
-                            if value is not None:
-                                kwargs['default'] = [item[1] for item in choices if item[0] == value][0]
+        if field_data.Field.foreign_key_table_object_id is not None:
+            long_text = self.role_access_control.has_access("TableObject", {'name': 'long_text'})
+            if long_text.id == field_data.Field.foreign_key_table_object_id:
+                if value is not None:
+                    lt_row = self.organization_access_control.get_long_text(value)
+                    kwargs['default'] = lt_row.long_text
 
-                            wtf_field = LookUpField(field_data.FieldRole.display_name, **kwargs)
-                        else:
-                            kwargs['coerce'] = int
-                            kwargs['choices'] = choices
+                return IggybaseTextAreaField(field_data.FieldRole.display_name, **kwargs)
+            else:
+                choices = self.organization_access_control.\
+                    get_foreign_key_data(field_data.Field.foreign_key_table_object_id)
 
-                            if value is not None:
-                                kwargs['default'] = value
+                if len(choices) > 25:
+                    kwargs['iggybase_class'] = control_type
+                    if value is not None:
+                        kwargs['default'] = [item[1] for item in choices if item[0] == value][0]
 
-                            wtf_field = SelectField(field_data.FieldRole.display_name, **kwargs)
+                    return IggybaseLookUpField(field_data.FieldRole.display_name, **kwargs)
                 else:
+                    kwargs['coerce'] = int
+                    kwargs['choices'] = choices
+
                     if value is not None:
                         kwargs['default'] = value
 
-                    if field_data.Field.data_type_id == constants.INTEGER:
-                        wtf_field = IntegerField(field_data.FieldRole.display_name, **kwargs)
-                    elif field_data.Field.data_type_id == constants.FLOAT:
-                        wtf_field = FloatField(field_data.FieldRole.display_name, **kwargs)
-                    elif field_data.Field.data_type_id == constants.BOOLEAN:
-                        kwargs['iggybase_class'] = control_type
-                        wtf_field = IggybaseBooleanField(field_data.FieldRole.display_name, **kwargs)
-                        self.classattr['bool_' + control_id]=HiddenField('bool_' + control_id, default=value)
-                    elif field_data.Field.data_type_id == constants.DATE:
-                        kwargs['iggybase_class'] = control_type
-                        wtf_field = DateField(field_data.FieldRole.display_name, **kwargs)
-                    elif field_data.Field.data_type_id == constants.PASSWORD:
-                        wtf_field = PasswordField(field_data.FieldRole.display_name, **kwargs)
-                    elif field_data.Field.data_type_id == constants.FILE:
-                        wtf_field = FileField(field_data.FieldRole.display_name, **kwargs)
-                    elif field_data.Field.data_type_id == constants.TEXT_AREA:
-                        wtf_field = TextAreaField(field_data.FieldRole.display_name, **kwargs)
-                    else:
-                        wtf_field = StringField(field_data.FieldRole.display_name, **kwargs)
-            else:
-                if value is not None:
-                    if isinstance(value, datetime):
-                        kwargs['default'] = value.strftime('%Y-%m-%d')
-                    else:
-                        kwargs['default'] = value
-
-                if field_data.Field.foreign_key_table_object_id is not None:
-                    long_text = self.role_access_control.has_access("TableObject", {'name': 'long_text'})
-                    if long_text.id == field_data.Field.foreign_key_table_object_id:
-                        if value is not None:
-                            lt_row = self.organization_access_control.get_long_text(value)
-                            kwargs['default'] = lt_row.long_text
-
-                        wtf_field = TextAreaField(field_data.FieldRole.display_name, **kwargs)
-                    else:
-                        if value is not None:
-                            choices = self.organization_access_control. \
-                                get_foreign_key_data(field_data.Field.foreign_key_table_object_id)
-                            kwargs['default'] = [item[1] for item in choices if item[0] == value]
-
-                        wtf_field = ReadonlyStringField(field_data.FieldRole.display_name, **kwargs)
-                elif field_data.Field.data_type_id == constants.INTEGER:
-                    wtf_field = ReadonlyIntegerField(field_data.FieldRole.display_name, **kwargs)
-                elif field_data.Field.data_type_id == constants.FLOAT:
-                    wtf_field = ReadonlyFloatField(field_data.FieldRole.display_name, **kwargs)
-                elif field_data.Field.data_type_id == constants.BOOLEAN:
-                    wtf_field = ReadonlyBooleanField(field_data.FieldRole.display_name, **kwargs)
-                elif field_data.Field.data_type_id == constants.DATE:
-                    wtf_field = ReadonlyStringField(field_data.FieldRole.display_name, **kwargs)
-                elif field_data.Field.data_type_id == constants.TEXT_AREA:
-                    wtf_field = ReadonlyTextAreaField(field_data.FieldRole.display_name, **kwargs)
-                else:
-                    wtf_field = ReadonlyStringField(field_data.FieldRole.display_name, **kwargs)
-
-        return wtf_field
+                    return IggybaseSelectField(field_data.FieldRole.display_name, **kwargs)
+        elif field_data.Field.data_type_id == constants.INTEGER:
+            return IggybaseIntegerField(field_data.FieldRole.display_name, **kwargs)
+        elif field_data.Field.data_type_id == constants.FLOAT:
+            return IggybaseFloatField(field_data.FieldRole.display_name, **kwargs)
+        elif field_data.Field.data_type_id == constants.BOOLEAN:
+            self.classattr['bool_' + control_id]=HiddenField('bool_' + control_id, default=value)
+            return IggybaseBooleanField(field_data.FieldRole.display_name, **kwargs)
+        elif field_data.Field.data_type_id == constants.DATE:
+            return IggybaseDateField(field_data.FieldRole.display_name, **kwargs)
+        elif field_data.Field.data_type_id == constants.PASSWORD:
+            return PasswordField(field_data.FieldRole.display_name, **kwargs)
+        elif field_data.Field.data_type_id == constants.FILE:
+            return FileField(field_data.FieldRole.display_name, **kwargs)
+        elif field_data.Field.data_type_id == constants.TEXT_AREA:
+            return IggybaseTextAreaField(field_data.FieldRole.display_name, **kwargs)
+        else:
+            return IggybaseStringField(field_data.FieldRole.display_name, **kwargs)
 
     def default_single_entry_form(self, table_data, row_name='new'):
         self.table_data = table_data
