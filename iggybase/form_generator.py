@@ -80,9 +80,6 @@ class FormGenerator():
                     kwargs['coerce'] = int
                     kwargs['choices'] = choices
 
-                    if value is not None:
-                        kwargs['default'] = value
-
                     return IggybaseSelectField(field_data.FieldRole.display_name, **kwargs)
         elif field_data.Field.data_type_id == constants.INTEGER:
             return IggybaseIntegerField(field_data.FieldRole.display_name, **kwargs)
@@ -173,7 +170,7 @@ class FormGenerator():
                 HiddenField('hidden_startchildtable_'+str(child_table.id), default=child_table.name)
 
             self.classattr['hidden_headers_'+str(child_table.id)]=\
-                HiddenField('hidden_headers_'+str(child_table.id), default=dumps(self.get_field_headers(fields)))
+                HiddenField('hidden_headers_'+str(child_table.id), default=self.get_field_headers(fields))
 
             if len(child_row_names) == 0:
                 child_row_names.append('new')
@@ -248,4 +245,4 @@ class FormGenerator():
             if field.FieldRole.visible == 1:
                 headers += field.FieldRole.display_name + '|'
 
-        return headers[:-1]
+        return dumps(headers[:-1])
