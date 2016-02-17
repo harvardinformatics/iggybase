@@ -8,7 +8,6 @@ from wtforms.validators import DataRequired, Length, email, Optional
 from iggybase.mod_auth.organization_access_control import OrganizationAccessControl
 from iggybase.mod_auth.role_access_control import RoleAccessControl
 from iggybase import constants
-from datetime import datetime, date
 from json import dumps
 import logging
 
@@ -22,7 +21,7 @@ class FormGenerator():
         self.classattr = {}
         self.table_data = None
 
-    def input_field(self, field_data, control_id, control_type, value=None):
+    def input_field(self, field_data, row_name, control_id, control_type, value=None):
         kwargs = {}
         validators = []
 
@@ -30,6 +29,7 @@ class FormGenerator():
             kwargs['default'] = value
 
         # no validators or classes attached to hidden fields, as it could cause issues
+        # e.g. an empty hidden required field
         if field_data.FieldRole.visible != constants.VISIBLE:
             return HiddenField(field_data.FieldRole.display_name, **kwargs)
 
@@ -51,7 +51,11 @@ class FormGenerator():
         else:
             kwargs['iggybase_class'] = control_type
 
-        if field_data.FieldRole.permission_id == constants.READ_ONLY:
+        if field_data.FieldRole.permission_id != constants.DEFAULTED and row_name == 'new':
+            kwargs['readonly'] = True
+        elif field_data.FieldRole.permission_id != constants.IMMUTABLE and row_name != 'new':
+            kwargs['readonly'] = True
+        elif field_data.FieldRole.permission_id != constants.READ_WRITE:
             kwargs['readonly'] = True
 
         if field_data.Field.foreign_key_table_object_id is not None:
@@ -233,7 +237,7 @@ class FormGenerator():
                     HiddenField('hidden_'+field.Field.field_name+"_"+str(row_counter), default=value)
 
             control_id = prefix + field.Field.field_name+"_"+str(row_counter)
-            self.classattr[control_id] = self.input_field(field, control_id, control_type, value)
+            self.classattr[control_id] = self.input_field(field, row_name, control_id, control_type, value)
 
         self.classattr['hidden_endrow_'+str(row_counter)]=\
             HiddenField('hidden_endrow_'+str(row_counter))
