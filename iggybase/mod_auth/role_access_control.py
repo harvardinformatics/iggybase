@@ -7,7 +7,7 @@ from config import get_config
 import logging
 
 
-# Controls access to system based on Role (USER) and Facility (config)
+# Controls access to system based on oole (USER) and Facility (config)
 # Uses the permissions stored in the admin db
 class RoleAccessControl:
     def __init__(self):
@@ -211,11 +211,16 @@ class RoleAccessControl:
         role_menu_subs = {}
         if self.user is not None:
             for role in self.user.roles:
-                role_menu_subs[role.name] = {'title':role.name,
-                        'class':'change_role', 'data':{'role_id': role.id}}
+                if role != self.role:
+                    role_menu_subs[role.name] = {'title':role.name,
+                            'class':'change_role', 'data':{'role_id': role.id}}
 
-        return {'title':'Change Role',
-            'subs': role_menu_subs}
+        if role_menu_subs:
+            subs = {'title':'Change Role',
+                'subs': role_menu_subs}
+        else:
+            subs = {}
+        return subs
 
     def page_forms(self, active=1):
         page_forms = []
