@@ -1,6 +1,6 @@
 import os
 from collections import OrderedDict
-from flask import Flask, g, send_from_directory, abort
+from flask import Flask, g, send_from_directory, abort, url_for
 from wtforms import TextField, SelectField
 from wtforms.validators import Required
 from config import config, get_config
@@ -111,8 +111,8 @@ def add_base_routes( app, conf, security, user_datastore ):
 
     @security.context_processor
     def security_context_processor():
-        navbar = OrderedDict([('Login', {'title': 'Login', 'url':'/login'}), ('Register', {'title':'Register', 'url':'/register'}),
-            ('Reset Password', {'title':'Reset Password', 'url':'/reset'}), ('Logout', {'title':'Logout', 'url':'/logout'})])
+        navbar = OrderedDict([('Login', {'title': 'Login', 'url':url_for('security.login')}), ('Register', {'title':'Register', 'url':url_for('security.register')}),
+            ('Reset Password', {'title':'Reset Password', 'url':url_for('security.forgot_password')}), ('Logout', {'title':'Logout', 'url':url_for('security.logout')})])
         return dict(navbar = navbar)
 
     @app.route( '/<module_name>/<page_form>/<table_name>/' )
