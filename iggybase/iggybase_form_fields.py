@@ -1,4 +1,5 @@
-from wtforms import StringField, IntegerField, BooleanField, DateField, TextAreaField, FloatField, SelectField
+from wtforms import StringField, IntegerField, BooleanField, DateField, TextAreaField, FloatField, SelectField,\
+    FileField, PasswordField
 
 
 class IggybaseLookUpField(StringField):
@@ -206,5 +207,57 @@ class IggybaseStringField(StringField):
             kwargs.setdefault('readonly', True)
 
         return super(IggybaseStringField, self).__call__(*args, **kwargs)
+
+
+class IggybaseFileField(FileField):
+    def __init__(self, *args, **kwargs):
+        if 'iggybase_class' in kwargs:
+            self.iggybase_class = kwargs['iggybase_class']
+            del kwargs['iggybase_class']
+        else:
+            self.iggybase_class = None
+
+        if 'readonly' in kwargs:
+            self.readonly = kwargs['readonly']
+            del kwargs['readonly']
+        else:
+            self.readonly = False
+
+        super(IggybaseFileField, self).__init__(*args, **kwargs)
+
+    def __call__(self, *args, **kwargs):
+        if self.iggybase_class is not None:
+            kwargs['class'] = self.iggybase_class
+
+        if self.readonly:
+            kwargs.setdefault('readonly', True)
+
+        return super(IggybaseFileField, self).__call__(*args, **kwargs)
+
+
+class IggybasePasswordField(PasswordField):
+    def __init__(self, *args, **kwargs):
+        if 'iggybase_class' in kwargs:
+            self.iggybase_class = kwargs['iggybase_class']
+            del kwargs['iggybase_class']
+        else:
+            self.iggybase_class = None
+
+        if 'readonly' in kwargs:
+            self.readonly = kwargs['readonly']
+            del kwargs['readonly']
+        else:
+            self.readonly = False
+
+        super(IggybasePasswordField, self).__init__(*args, **kwargs)
+
+    def __call__(self, *args, **kwargs):
+        if self.iggybase_class is not None:
+            kwargs['class'] = self.iggybase_class
+
+        if self.readonly:
+            kwargs.setdefault('readonly', True)
+
+        return super(IggybasePasswordField, self).__call__(*args, **kwargs)
 
 

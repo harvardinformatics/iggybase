@@ -1,8 +1,9 @@
 from flask.ext.wtf import Form
 from types import new_class
-from iggybase.iggybase_form_fields import IggybaseBooleanField, IggybaseDateField, IggybaseFloatField, \
-    IggybaseIntegerField, IggybaseLookUpField, IggybaseStringField, IggybaseTextAreaField, IggybaseSelectField
-from wtforms import PasswordField, ValidationError, HiddenField, FileField
+from iggybase.iggybase_form_fields import IggybaseBooleanField, IggybaseDateField, IggybaseFloatField,\
+    IggybaseIntegerField, IggybaseLookUpField, IggybaseStringField, IggybaseTextAreaField, IggybaseSelectField,\
+    IggybaseFileField, IggybasePasswordField
+from wtforms import HiddenField
 from wtforms.validators import DataRequired, Length, email, Optional
 from iggybase.mod_auth.organization_access_control import OrganizationAccessControl
 from iggybase.mod_auth.role_access_control import RoleAccessControl
@@ -89,9 +90,9 @@ class FormGenerator():
         elif field_data.Field.data_type_id == constants.DATE:
             return IggybaseDateField(field_data.FieldRole.display_name, **kwargs)
         elif field_data.Field.data_type_id == constants.PASSWORD:
-            return PasswordField(field_data.FieldRole.display_name, **kwargs)
+            return IggybasePasswordField(field_data.FieldRole.display_name, **kwargs)
         elif field_data.Field.data_type_id == constants.FILE:
-            return FileField(field_data.FieldRole.display_name, **kwargs)
+            return IggybaseFileField(field_data.FieldRole.display_name, **kwargs)
         elif field_data.Field.data_type_id == constants.TEXT_AREA:
             return IggybaseTextAreaField(field_data.FieldRole.display_name, **kwargs)
         else:
