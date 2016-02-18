@@ -220,12 +220,12 @@ class TableObject(Base):
     active = Column(Boolean)
     organization_id = Column(Integer)
     order = Column(Integer)
-    module_id = Column(Integer, ForeignKey('module.id'))
+    facility_id = Column(Integer, ForeignKey('facility.id'))
     new_name_prefix = Column(String(10))
     new_name_id = Column(Integer)
     id_length = Column(Integer)
 
-    table_object_role_module = relationship("Module", foreign_keys=[module_id])
+    table_object_facility = relationship("Facility", foreign_keys=[facility_id])
 
     def get_new_name(self):
         new_name = self.new_name_prefix + str(self.new_name_id).zfill(self.id_length)
