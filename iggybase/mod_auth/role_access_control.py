@@ -7,7 +7,7 @@ from config import get_config
 import logging
 
 
-# Controls access to system based on oole (USER) and Facility (config)
+# Controls access to system based on oole (USER) and Facility
 # Uses the permissions stored in the admin db
 class RoleAccessControl:
     def __init__(self):
