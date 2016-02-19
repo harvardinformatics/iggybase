@@ -220,12 +220,12 @@ class TableObject(Base):
     active = Column(Boolean)
     organization_id = Column(Integer)
     order = Column(Integer)
-    facility_id = Column(Integer, ForeignKey('facility.id'))
+    module_id = Column(Integer, ForeignKey('module.id'))
     new_name_prefix = Column(String(10))
     new_name_id = Column(Integer)
     id_length = Column(Integer)
 
-    table_object_facility = relationship("Facility", foreign_keys=[facility_id])
+    table_object_facility = relationship("Module", foreign_keys=[module_id])
 
     def get_new_name(self):
         new_name = self.new_name_prefix + str(self.new_name_id).zfill(self.id_length)
@@ -512,8 +512,8 @@ class Module(Base):
     url_prefix = Column(String(50))
 
 
-class ModuleRole(Base):
-    __tablename__ = 'module_role'
+class ModuleFacility(Base):
+    __tablename__ = 'module_facility'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True)
     description = Column(String(255))
@@ -522,10 +522,10 @@ class ModuleRole(Base):
     active = Column(Boolean)
     organization_id = Column(Integer)
     order = Column(Integer)
-    role_id = Column(Integer, ForeignKey('role.id'))
+    facility_id = Column(Integer, ForeignKey('facility.id'))
     module_id = Column(Integer, ForeignKey('module.id'))
 
-    module_role_role = relationship("Role", foreign_keys=[role_id])
+    module_role_role = relationship("Facility", foreign_keys=[facility_id])
     module_role_module = relationship("Module", foreign_keys=[module_id])
 
 

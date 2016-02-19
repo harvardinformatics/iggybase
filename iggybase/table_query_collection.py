@@ -21,30 +21,29 @@ class TableQueryCollection:
             self.results.append(query)
 
     def get_fields(self):
-        if self.role_access_control.has_access('Module', {'name': self.module}):
-            filters = util.get_filters()
-            table_queries_info = []
-            if not 'all' in filters:
-                table_queries_info = self.role_access_control.table_queries(self.page_form, self.table_name)
+        filters = util.get_filters()
+        table_queries_info = []
+        if not 'all' in filters:
+            table_queries_info = self.role_access_control.table_queries(self.page_form, self.table_name)
 
-            if table_queries_info:
-                for query in table_queries_info:
-                    order = query.TableQuery.order
-                    # TODO: constant for pages that need row_id?
-                    row_id = (self.page_form in ['action_summary', 'update'])
-                    self.populate_query(
-                        query.TableQuery.id,
-                        order,
-                        query.TableQuery.display_name,
-                        None,
-                        self.criteria,
-                        row_id
-                    )
-            elif self.table_name:
-                self.populate_query(None, 1, self.table_name, self.table_name,
-                        self.criteria)
-            # sort queries by their order
-            self.results.sort(key=operator.attrgetter('order'))
+        if table_queries_info:
+            for query in table_queries_info:
+                order = query.TableQuery.order
+                # TODO: constant for pages that need row_id?
+                row_id = (self.page_form in ['action_summary', 'update'])
+                self.populate_query(
+                    query.TableQuery.id,
+                    order,
+                    query.TableQuery.display_name,
+                    None,
+                    self.criteria,
+                    row_id
+                )
+        elif self.table_name:
+            self.populate_query(None, 1, self.table_name, self.table_name,
+                    self.criteria)
+        # sort queries by their order
+        self.results.sort(key=operator.attrgetter('order'))
 
     def populate_query(self, id, order, query_name, table_name = None, criteria
             = {}, row_id = False):
