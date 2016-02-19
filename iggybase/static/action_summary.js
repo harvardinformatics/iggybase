@@ -47,7 +47,8 @@ $(document).ready(function(){
             var table_name = hidden_fields.find('input[name=table]').val();
             var message_fields = hidden_fields.find('input[name=message_fields]').val();
             $.ajax({
-                url:$URL_ROOT + 'ajax/update_table_rows/' + table_name,
+                // TODO: put facility in hidden fields and access dynamically
+                url:$URL_ROOT + 'murray/core/ajax/update_table_rows/' + table_name,
                 data: JSON.stringify({
                     'updates': JSON.parse(column_defaults),
                     'ids': ids,

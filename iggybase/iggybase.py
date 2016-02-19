@@ -90,20 +90,12 @@ def add_base_routes( app, conf, security, user_datastore ):
     def change_role():
         return base_routes.change_role()
 
-    @app.route( '/ajax/update_table_rows/<table_name>', methods=['GET', 'POST'] )
-    @login_required
-    def update_table_rows(table_name):
-        return base_routes.update_table_rows(table_name)
 
     @app.route('/favicon.ico')
     def favicon():
         return send_from_directory(os.path.join(app.root_path, 'static'),
         'favicon.ico')
 
-    @app.route( '/<module_name>/' )
-    @login_required
-    def default(module_name):
-        return base_routes.default()
 
     @security.context_processor
     def security_context_processor():
@@ -111,34 +103,7 @@ def add_base_routes( app, conf, security, user_datastore ):
             ('Reset Password', {'title':'Reset Password', 'url':url_for('security.forgot_password')}), ('Logout', {'title':'Logout', 'url':url_for('security.logout')})])
         return dict(navbar = navbar)
 
-    @app.route( '/<module_name>/<page_form>/<table_name>/' )
-    @login_required
-    def module_page_table_function(module_name, page_form, table_name):
-        try:
-            base_function = getattr(base_routes, page_form)
-        except AttributeError:
-            abort(404)
-        return base_function( module_name, table_name )
 
-
-    @app.route( '/<module_name>/<page_form>/<table_name>/ajax' )
-    @login_required
-    def module_page_table_function_ajax(module_name, page_form, table_name):
-        try:
-            base_function = getattr(base_routes, (page_form + '_ajax'))
-        except AttributeError:
-            abort(404)
-        return base_function(module_name, table_name)
-
-    @app.route( '/<module_name>/summary/<table_name>/download/' )
-    @login_required
-    def summary_download( module_name, table_name ):
-        return base_routes.summary_download( module_name, table_name )
-
-    @app.route( '/<module_name>/detail/<table_name>/<row_name>/' )
-    @login_required
-    def detail( module_name, table_name, row_name ):
-        return base_routes.detail( module_name, table_name, row_name )
 
     @app.route( '/<module_name>/data_entry/<table_name>/<row_name>/', methods=['GET', 'POST'] )
     @login_required

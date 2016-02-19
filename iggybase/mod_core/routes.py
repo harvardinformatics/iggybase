@@ -1,8 +1,70 @@
-from flask import request
-from json import loads
+from flask import request, jsonify, abort
+from flask.ext.security import login_required
+from flask.ext import excel
+import json
 from . import mod_core
+import iggybase.templating as templating
 from iggybase.mod_auth.organization_access_control import OrganizationAccessControl
+import iggybase.mod_auth.organization_access_control as oac
+import iggybase.mod_auth.role_access_control as rac
+import iggybase.table_query_collection as tqc
 import logging
+
+@mod_core.route( '/' )
+@login_required
+def default(facility_name):
+    print('test')
+    return templating.page_template('index.html')
+
+@mod_core.route( '/<page_form>/<table_name>/' )
+@login_required
+def module_page_table_function(facility_name, page_form, table_name):
+    try:
+        base_function = globals()[page_form]
+    except AttributeError:
+        abort(404)
+    return base_function( facility_name, 'core', table_name )
+
+@mod_core.route( '/<page_form>/<table_name>/<row_name>' )
+@login_required
+def module_page_table_row_function(facility_name, page_form, table_name, row_name):
+    try:
+        base_function = globals()[page_form]
+    except AttributeError:
+        abort(404)
+    return base_function(facility_name, table_name, row_name)
+
+@mod_core.route( '/<page_form>/<table_name>/ajax' )
+@login_required
+def module_page_table_function_ajax(facility_name, page_form, table_name):
+    try:
+        base_function = globals()[(page_form + '_ajax')]
+    except AttributeError:
+        abort(404)
+    return base_function(facility_name, 'core', table_name)
+
+@mod_core.route( '/summary/<table_name>/download/' )
+@login_required
+def summary_download( facility_name, table_name ):
+    page_form = 'summary'
+    for_download = True
+    table_queries = tqc.TableQueryCollection(facility_name, 'core', page_form, table_name)
+    table_queries.get_fields()
+    table_queries.get_results()
+    table_queries.format_results(for_download)
+    table_rows = table_queries.get_first().table_rows
+    csv = excel.make_response_from_records(table_rows, 'csv')
+    return csv
+
+@mod_core.route( '/ajax/update_table_rows/<table_name>', methods=['GET', 'POST'] )
+@login_required
+def update_table_rows(facility_name, table_name):
+    updates = request.json['updates']
+    message_fields = request.json['message_fields']
+    ids = request.json['ids']
+    organizational_access_control = oac.OrganizationAccessControl()
+    updated = organizational_access_control.update_table_rows(table_name, updates, ids, message_fields)
+    return json.dumps({'updated': updated})
 
 @mod_core.route('/search', methods=['GET', 'POST'])
 def search():
@@ -42,7 +104,7 @@ def search():
 
 @mod_core.route('/search_results', methods=['GET', 'POST'])
 def search_results():
-    search_vals = loads(request.args.get('search_vals'))
+    search_vals = json.loads(request.args.get('search_vals'))
 
     oac = OrganizationAccessControl()
 
@@ -108,3 +170,69 @@ def search_results():
     modal_html += '</div>'
 
     return modal_html
+
+def summary(facility_name, module_name, table_name):
+    role_access = rac.RoleAccessControl()
+    #if role_access.check_url1('mod_' + module_name,'system',table_name):
+    #if role_access.check_url2('system',table_name):
+    #    abort(404)
+
+    page_form = 'summary'
+    table_queries = tqc.TableQueryCollection(facility_name, module_name, page_form, table_name)
+    table_queries.get_fields()
+    first_table_query = table_queries.get_first()
+    # if nothing to display then page not found
+    if not first_table_query.table_fields:
+        abort(404)
+    return templating.page_template('summary',
+            module_name = module_name,
+            table_name = table_name,
+            table_query = first_table_query)
+
+def summary_ajax(facility_name, module_name, table_name, page_form = 'summary', criteria = {}):
+    table_queries = tqc.TableQueryCollection(facility_name, module_name, page_form, table_name,
+            criteria)
+    table_queries.get_fields()
+    table_queries.get_results()
+    table_queries.format_results()
+    table_query = table_queries.get_first()
+    json_rows = table_query.get_json()
+    return jsonify({'data':json_rows})
+
+def action_summary(facility_name, module_name, table_name = None):
+    page_form = 'summary'
+    table_queries = tqc.TableQueryCollection(facility_name, module_name, page_form, table_name)
+    table_queries.get_fields()
+    first_table_query = table_queries.get_first()
+    # if nothing to display then page not found
+    if not first_table_query.table_fields:
+        abort(404)
+    return templating.page_template('action_summary',
+            module_name = module_name,
+            table_name = table_name,
+            table_query = first_table_query)
+
+def action_summary_ajax(facility_name, module_name, table_name = None):
+    return summary_ajax(facility_name, module_name, table_name)
+
+def detail(facility_name, table_name, row_name):
+
+    page_form = 'detail'
+    criteria = {(table_name, 'name'): row_name}
+    table_queries = tqc.TableQueryCollection(facility_name, 'core', page_form,
+            table_name, criteria)
+    table_queries.get_fields()
+    table_queries.get_results()
+    table_queries.format_results()
+    hidden_fields = {'table': table_name, 'row_name': row_name}
+    return templating.page_template(
+        'detail',
+        module_name='core',
+        table_name=table_name,
+        row_name=row_name,
+        table_queries=table_queries,
+        hidden_fields=hidden_fields
+    )
+
+
+

@@ -9,10 +9,11 @@ import logging
 
 # Retreives and formats data based on table_query
 class TableQuery:
-    def __init__ (self, id, order, display_name, module_name, table_name = None, criteria = {}, row_id = False):
+    def __init__ (self, id, order, display_name, facility_name, module_name, table_name = None, criteria = {}, row_id = False):
         self.id = id
         self.order = order
         self.display_name = display_name
+        self.facility_name = facility_name
         self.module_name = module_name
         self.module = 'mod_' + module_name
         self.table_name = table_name
@@ -121,6 +122,7 @@ class TableQuery:
                     if (not for_download and self.link_visible(field)):
                         row_dict[keys[i]]['link'] = self.get_link(
                             col,
+                            self.facility_name,
                             self.module_name,
                             request.url_root,
                             'detail',
@@ -140,8 +142,8 @@ class TableQuery:
                 )
             )
 
-    def get_link(self, value, module, url_root, page = None, table = None):
-        link = url_root + module
+    def get_link(self, value, facility, module, url_root, page = None, table = None):
+        link = url_root + facility + '/core'
         if page:
             link += '/' + page
         if table:

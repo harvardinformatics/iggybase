@@ -1,5 +1,5 @@
 from flask import g, abort
-from iggybase import base_routes, templating
+from iggybase import mod_core, templating
 from flask.ext.security import login_required, current_user
 from iggybase.mod_murray import mod_murray
 import iggybase.table_query_collection as tqc
@@ -15,15 +15,15 @@ def default():
 
 @mod_murray.route( '/update_ordered/<table_name>/ajax' )
 @login_required
-def update_ordered_ajax(table_name):
-    return base_routes.summary_ajax('murray', table_name, 'update', {('status', 'name'):'ordered'})
+def update_ordered_ajax(facility_name, table_name):
+    return mod_core.routes.summary_ajax(facility_name, 'murray', table_name, 'update', {('status', 'name'):'ordered'})
 
 @mod_murray.route( '/update_ordered/<table_name>/' )
 @login_required
-def update_ordered(table_name):
+def update_ordered(facility_name, table_name):
     # update ordered to received
     page_form = 'update'
-    table_queries = tqc.TableQueryCollection('murray', page_form, table_name,
+    table_queries = tqc.TableQueryCollection(facility_name, 'murray', page_form, table_name,
             {('status', 'name'):'ordered'})
     table_queries.get_fields()
     first_table_query = table_queries.get_first()
@@ -44,16 +44,16 @@ def update_ordered(table_name):
 
 @mod_murray.route( '/update_requested/<table_name>/ajax' )
 @login_required
-def update_requested_ajax(table_name):
+def update_requested_ajax(facility_name, table_name):
     # TODO: we should really get rid of module name being passed around
-    return base_routes.summary_ajax('murray', table_name, 'update', {('status', 'name'):'requested'})
+    return mod_core.routes.summary_ajax(facility_name, 'murray', table_name, 'update', {('status', 'name'):'requested'})
 
 @mod_murray.route( '/update_requested/<table_name>/' )
 @login_required
-def update_requested(table_name):
+def update_requested(facility_name, table_name):
     # update requested to ordered
     page_form = 'update'
-    table_queries = tqc.TableQueryCollection('murray', page_form, table_name,
+    table_queries = tqc.TableQueryCollection(facility_name, 'murray', page_form, table_name,
             {('name', 'status'):'requested'})
     table_queries.get_fields()
     first_table_query = table_queries.get_first()
@@ -72,15 +72,15 @@ def update_requested(table_name):
 
 @mod_murray.route( '/cancel/<table_name>/ajax' )
 @login_required
-def cancel_ajax(table_name):
-    return base_routes.summary_ajax('murray', table_name, 'update', {('status', 'name'):['ordered', 'requested']})
+def cancel_ajax(facility_name, table_name):
+    return mod_core.routes.summary_ajax(facility_name, 'murray', table_name, 'update', {('status', 'name'):['ordered', 'requested']})
 
 @mod_murray.route( '/cancel/<table_name>/' )
 @login_required
-def cancel(table_name):
+def cancel(facility_name, table_name):
     # update ordered to received
     page_form = 'update'
-    table_queries = tqc.TableQueryCollection('murray', page_form, table_name,
+    table_queries = tqc.TableQueryCollection(facility_name, 'murray', page_form, table_name,
             {('status', 'name'):['ordered', 'requested']})
     table_queries.get_fields()
     first_table_query = table_queries.get_first()
@@ -97,4 +97,3 @@ def cancel(table_name):
             module_name = 'murray',
             table_name = table_name,
             table_query = first_table_query, hidden_fields = hidden_fields)
-

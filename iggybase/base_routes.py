@@ -1,6 +1,5 @@
 import json
 from flask import request, jsonify, abort
-from flask.ext import excel
 import iggybase.templating as templating
 import iggybase.form_generator as form_generator
 import iggybase.mod_auth.organization_access_control as oac
@@ -19,81 +18,6 @@ def default():
 
 def message(page_temp, page_msg):
     return templating.page_template(page_temp, page_msg=page_msg)
-
-def summary(module_name, table_name):
-    role_access = rac.RoleAccessControl()
-    #if role_access.check_url1('mod_' + module_name,'system',table_name):
-    if role_access.check_url2('system',table_name):
-        abort(404)
-
-    page_form = 'summary'
-    table_queries = tqc.TableQueryCollection(module_name, page_form, table_name)
-    table_queries.get_fields()
-    first_table_query = table_queries.get_first()
-    # if nothing to display then page not found
-    if not first_table_query.table_fields:
-        abort(404)
-    return templating.page_template('summary',
-            module_name = module_name,
-            table_name = table_name,
-            table_query = first_table_query)
-
-def summary_ajax(module_name, table_name, page_form = 'summary', criteria = {}):
-    table_queries = tqc.TableQueryCollection(module_name, page_form, table_name,
-            criteria)
-    table_queries.get_fields()
-    table_queries.get_results()
-    table_queries.format_results()
-    table_query = table_queries.get_first()
-    json_rows = table_query.get_json()
-    return jsonify({'data':json_rows})
-
-def summary_download(module_name, table_name):
-    page_form = 'summary'
-    for_download = True
-    table_queries = tqc.TableQueryCollection(module_name, page_form, table_name)
-    table_queries.get_fields()
-    table_queries.get_results()
-    table_queries.format_results(for_download)
-    table_rows = table_queries.get_first().table_rows
-    csv = excel.make_response_from_records(table_rows, 'csv')
-    return csv
-
-def action_summary(module_name, table_name = None):
-    page_form = 'summary'
-    table_queries = tqc.TableQueryCollection(module_name, page_form, table_name)
-    table_queries.get_fields()
-    first_table_query = table_queries.get_first()
-    # if nothing to display then page not found
-    if not first_table_query.table_fields:
-        abort(404)
-    return templating.page_template('action_summary',
-            module_name = module_name,
-            table_name = table_name,
-            table_query = first_table_query)
-
-def action_summary_ajax(module_name, table_name = None):
-    return summary_ajax(module_name, table_name)
-
-def detail(module_name, table_name, row_name):
-
-    page_form = 'detail'
-    criteria = {(table_name, 'name'): row_name}
-    table_queries = tqc.TableQueryCollection(module_name, page_form,
-            table_name, criteria)
-    table_queries.get_fields()
-    table_queries.get_results()
-    table_queries.format_results()
-    hidden_fields = {'table': table_name, 'row_name': row_name}
-    return templating.page_template(
-        'detail',
-        module_name=module_name,
-        table_name=table_name,
-        row_name=row_name,
-        table_queries=table_queries,
-        hidden_fields=hidden_fields
-    )
-
 
 def saved_data(module_name, table_name, row_names):
     msg = 'Saved: '
@@ -157,14 +81,6 @@ def change_role():
     role_access_control = rac.RoleAccessControl()
     success = role_access_control.change_role(role_id)
     return json.dumps({'success':success})
-
-def update_table_rows(table_name):
-    updates = request.json['updates']
-    message_fields = request.json['message_fields']
-    ids = request.json['ids']
-    organizational_access_control = oac.OrganizationAccessControl()
-    updated = organizational_access_control.update_table_rows(table_name, updates, ids, message_fields)
-    return json.dumps({'updated': updated})
 
 def forbidden():
     return templating.page_template('forbidden')
