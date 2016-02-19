@@ -340,3 +340,19 @@ class RoleAccessControl:
                 link_data.append(row)
 
         return link_data, child_tables
+
+    def check_url(self, module, facility, table_name, active=1):
+        rec = (self.session.query(models.TableObject).
+               join(models.Module).
+               join(models.ModuleFacility).
+               join(models.Facility).
+               filter(models.TableObject.active==active).
+               filter(models.Module.active==active).
+               filter(models.Facility.active==active).
+               filter(models.ModuleFacility.active==active).
+               filter(models.Facility.id==self.role.facility_id).
+               filter(models.Facility.name==facility).
+               filter(models.Module.name==module).
+               filter(models.TableObject.name==table_name).first())
+
+        return rec is None

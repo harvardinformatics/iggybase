@@ -75,10 +75,6 @@ def add_base_routes( app, conf, security, user_datastore ):
         logout_user()
         return render_template( 'registration_sucess.html')
 
-    @app.before_request
-    def before_request( ):
-        modules = [x[0] for x in conf.BLUEPRINTS]
-
     @app.after_request
     def remove_session(resp):
         db_session.remove()

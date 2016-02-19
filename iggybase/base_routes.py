@@ -21,6 +21,10 @@ def message(page_temp, page_msg):
     return templating.page_template(page_temp, page_msg=page_msg)
 
 def summary(module_name, table_name):
+    role_access = rac.RoleAccessControl()
+    if role_access.check_url('mod_' + module_name,'system',table_name):
+        abort(404)
+
     page_form = 'summary'
     table_queries = tqc.TableQueryCollection(module_name, page_form, table_name)
     table_queries.get_fields()
@@ -71,6 +75,7 @@ def action_summary_ajax(module_name, table_name = None):
     return summary_ajax(module_name, table_name)
 
 def detail(module_name, table_name, row_name):
+
     page_form = 'detail'
     criteria = {(table_name, 'name'): row_name}
     table_queries = tqc.TableQueryCollection(module_name, page_form,

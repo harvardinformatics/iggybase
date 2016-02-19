@@ -12,6 +12,7 @@ def get_column(module, table_name, field_name):
 def get_table(table_name):
     session = db_session()
     table = session.query(TableObject).filter_by(name=table_name).first()
+
     try:
         if table.module_id == 4:
             module_model = import_module('iggybase.mod_admin.models')
