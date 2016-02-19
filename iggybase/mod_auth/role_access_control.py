@@ -368,7 +368,7 @@ class RoleAccessControl:
                filter(models.Facility.active==active).
                filter(models.Facility.id==self.role.facility_id).
                filter(models.Facility.name==facility).
-               filter(models.TableObjectRole.id==self.role.id).
+               filter(models.TableObjectRole.role_id==self.role.id).
                filter(models.TableObject.name==table_name).first())
 
         return rec is None
