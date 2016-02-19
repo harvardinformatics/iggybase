@@ -341,7 +341,7 @@ class RoleAccessControl:
 
         return link_data, child_tables
 
-    def check_url(self, module, facility, table_name, active=1):
+    def check_url1(self, module, facility, table_name, active=1):
         rec = (self.session.query(models.TableObject).
                join(models.Module).
                join(models.ModuleFacility).
@@ -353,6 +353,22 @@ class RoleAccessControl:
                filter(models.Facility.id==self.role.facility_id).
                filter(models.Facility.name==facility).
                filter(models.Module.name==module).
+               filter(models.TableObject.name==table_name).first())
+
+        return rec is None
+
+    def check_url2(self, facility, table_name, active=1):
+        rec = (self.session.query(models.TableObject).
+               join(models.TableObjectRole).
+               join(models.Role).
+               join(models.Facility).
+               filter(models.TableObject.active==active).
+               filter(models.TableObjectRole.active==active).
+               filter(models.Role.active==active).
+               filter(models.Facility.active==active).
+               filter(models.Facility.id==self.role.facility_id).
+               filter(models.Facility.name==facility).
+               filter(models.TableObjectRole.id==self.role.id).
                filter(models.TableObject.name==table_name).first())
 
         return rec is None

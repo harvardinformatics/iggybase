@@ -22,7 +22,8 @@ def message(page_temp, page_msg):
 
 def summary(module_name, table_name):
     role_access = rac.RoleAccessControl()
-    if role_access.check_url('mod_' + module_name,'system',table_name):
+    #if role_access.check_url1('mod_' + module_name,'system',table_name):
+    if role_access.check_url2('system',table_name):
         abort(404)
 
     page_form = 'summary'
