@@ -1,6 +1,6 @@
 import os
 from collections import OrderedDict
-from flask import Flask, g, send_from_directory, abort, url_for
+from flask import Flask, g, send_from_directory, abort, url_for, request
 from wtforms import TextField, SelectField
 from wtforms.validators import Required
 from config import config, get_config
@@ -13,6 +13,7 @@ from werkzeug.wsgi import DispatcherMiddleware
 from iggybase.extensions import mail, lm, bootstrap
 from iggybase.mod_admin import models
 from iggybase.database import db, init_db, db_session
+import iggybase.mod_auth.role_access_control as rac
 import logging
 
 __all__ = [ 'create_app' ]
@@ -33,8 +34,8 @@ def create_app( config_name = None, app_name = None ):
 
     configure_blueprints( iggybase, conf.BLUEPRINTS )
     security, user_datastore = configure_extensions( iggybase, db )
-    configure_hook( iggybase )
     configure_error_handlers( iggybase )
+    configure_hook( iggybase )
 
     add_base_routes( iggybase, conf, security, user_datastore )
 
@@ -58,6 +59,9 @@ def configure_extensions( app, db ):
 
 def add_base_routes( app, conf, security, user_datastore ):
     from iggybase import base_routes
+
+
+
 
     @user_registered.connect_via(app)
     def user_registered_sighandler(sender, **extra):
@@ -90,20 +94,16 @@ def add_base_routes( app, conf, security, user_datastore ):
     def change_role():
         return base_routes.change_role()
 
-
     @app.route('/favicon.ico')
     def favicon():
         return send_from_directory(os.path.join(app.root_path, 'static'),
         'favicon.ico')
-
 
     @security.context_processor
     def security_context_processor():
         navbar = OrderedDict([('Login', {'title': 'Login', 'url':url_for('security.login')}), ('Register', {'title':'Register', 'url':url_for('security.register')}),
             ('Reset Password', {'title':'Reset Password', 'url':url_for('security.forgot_password')}), ('Logout', {'title':'Logout', 'url':url_for('security.logout')})])
         return dict(navbar = navbar)
-
-
 
     @app.route( '/<module_name>/data_entry/<table_name>/<row_name>/', methods=['GET', 'POST'] )
     @login_required
@@ -124,6 +124,12 @@ def configure_hook( app ):
     @app.before_request
     def before_request():
         g.user = current_user
+        # TODO: consider caching this for the session
+        if (current_user.is_authenticated and request.path):
+            role_access = rac.RoleAccessControl()
+            access = role_access.has_facility_access(request.path.split('/')[1])
+            if not access:
+                abort(404)
 
 def configure_error_handlers( app ):
     from iggybase import base_routes

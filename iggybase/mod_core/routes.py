@@ -172,10 +172,7 @@ def search_results():
     return modal_html
 
 def summary(facility_name, module_name, table_name):
-    role_access = rac.RoleAccessControl()
-    #if role_access.check_url1('mod_' + module_name,'system',table_name):
-    #if role_access.check_url2('system',table_name):
-    #    abort(404)
+
 
     page_form = 'summary'
     table_queries = tqc.TableQueryCollection(facility_name, module_name, page_form, table_name)

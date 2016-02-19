@@ -372,3 +372,21 @@ class RoleAccessControl:
                filter(models.TableObject.name==table_name).first())
 
         return rec is None
+
+    def check_url3(self, facility, module, active=1):
+        rec = (self.session.query(models.Facility).
+               join(models.Module).
+               join(models.ModuleFacility).
+               filter(models.Module.active==active).
+               filter(models.Facility.active==active).
+               filter(models.ModuleFacility.active==active).
+               filter(models.Facility.id==self.role.facility_id).
+               filter(models.Facility.name==facility).
+               filter(models.Module.name==module).first())
+
+        return rec is None
+
+    def has_facility_access(self, facility, active=1):
+        if self.role.role_facility.name in ['system', facility]:
+            return True
+        return False
