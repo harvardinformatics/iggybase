@@ -18,8 +18,7 @@ def home():
     if g.user.home_page:
         home_page = g.user.home_page
     else:
-        home_page = '/auth/detail/user/' + g.user.name
-        module_name = request.path.split('/')[1]
+        home_page = '/core/detail/user/' + g.user.name
     return redirect( home_page )
 
 

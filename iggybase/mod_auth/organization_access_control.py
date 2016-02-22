@@ -158,16 +158,14 @@ class OrganizationAccessControl:
             filters.append(models.Field.field_name == 'name')
         else:
             filters.append(models.Field.id == display)
-        res = (self.session.query(models.Field, models.TableObject, models.Module).
+        res = (self.session.query(models.Field, models.TableObject).
                join(models.TableObject,
                     models.TableObject.id == models.Field.table_object_id
                     ).
                join(models.TableObjectRole).
-               join(models.Module).
                filter(*filters).first())
         fk_session = self.session
         return {'foreign_key': res.Field.field_name,
-                'module': res.Module.name,
                 'url_prefix': res.Module.url_prefix,
                 'name': res.TableObject.name,
                 'fk_session': fk_session
@@ -183,7 +181,7 @@ class OrganizationAccessControl:
 
         return field_data
 
-    def get_search_field_data(self, module, table_name, search_field_name):
+    def get_search_field_data(self, table_name, search_field_name):
         role_access_control = RoleAccessControl()
         table_data = role_access_control.has_access('TableObject', {'name': table_name})
 
@@ -200,11 +198,11 @@ class OrganizationAccessControl:
                     search_field_data = role_access_control.fields(search_table.id,
                                                                    {'field_role.search_field': 1})
 
-                    return search_table_data['module'], search_table_data['name'], search_field_data
+                    return search_table_data['name'], search_field_data
 
         return None, None, None
 
-    def get_search_results(self, module, table_name, params):
+    def get_search_results(self, table_name, params):
         table = util.get_table(table_name)
         filters = []
         for key, value in params.items():

@@ -77,7 +77,7 @@ class TableQuery:
             table_query_field = getattr(row, 'TableQueryField', None)
             calculation = getattr(row, 'TableQueryCalculation', None)
             field = f.Field(row.Field,
-                    row.TableObject, row.Module, table_query_field,
+                    row.TableObject, table_query_field,
                     calculation)
             field_dict[field.display_name] = field
         return field_dict

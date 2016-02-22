@@ -120,13 +120,11 @@ class RoleAccessControl:
         ]
         selects = [
             models.Field,
-            models.TableObject,
-            models.Module
+            models.TableObject
         ]
         joins = [
             models.FieldRole,
-            models.TableObjectRole,
-            models.Module
+            models.TableObjectRole
         ]
         orders= [
             models.Field.order
@@ -173,16 +171,14 @@ class RoleAccessControl:
             self.session.query(
                 models.TableQueryCriteria,
                 models.Field,
-                models.TableObject,
-                models.Module
+                models.TableObject
             ).join(
                 models.Field
             ).join(
                 (models.TableObject, models.Field.table_object_id ==
                  models.TableObject.id)
             ).join(
-                models.TableObjectRole,
-                models.Module
+                models.TableObjectRole
             ).
                 filter(models.TableQueryCriteria.table_query_id == table_query_id).all()
         )
@@ -341,23 +337,28 @@ class RoleAccessControl:
 
         return link_data, child_tables
 
-    def check_url1(self, module, facility, table_name, active=1):
+    def check_facility_module(self, facility, module, table_name, active=1):
         rec = (self.session.query(models.TableObject).
-               join(models.Module).
-               join(models.ModuleFacility).
-               join(models.Facility).
+               join(models.TableObjectRole, models.TableObject.id==models.TableObjectRole.table_object_id).
+               join(models.Role, models.TableObjectRole.role_id==models.Role.id).
+               join(models.Facility, models.Role.facility_id==models.Facility.id).
+               join(models.ModuleFacility, models.Facility.id==models.ModuleFacility.facility_id).
+               join(models.Module, models.ModuleFacility.module_id==models.Module.id).
                filter(models.TableObject.active==active).
+               filter(models.TableObjectRole.active==active).
+               filter(models.Role.active==active).
                filter(models.Module.active==active).
                filter(models.Facility.active==active).
                filter(models.ModuleFacility.active==active).
+               filter(models.TableObject.name==table_name).
+               filter(models.TableObjectRole.role_id==self.role.id).
                filter(models.Facility.id==self.role.facility_id).
                filter(models.Facility.name==facility).
-               filter(models.Module.name==module).
-               filter(models.TableObject.name==table_name).first())
+               filter(models.Module.name==module).first())
 
         return rec is None
 
-    def check_url2(self, facility, table_name, active=1):
+    def check_facility(self, facility, table_name, active=1):
         rec = (self.session.query(models.TableObject).
                join(models.TableObjectRole).
                join(models.Role).

@@ -224,7 +224,6 @@ $( document ).ready( function () {
                 table_object = $( '#table_object_0' ).val( );
             }
 
-            var module = $( '#module_0' ).val( );
             var field_name = matches[ 1 ];
             var search_vals = {};
 
@@ -232,9 +231,7 @@ $( document ).ready( function () {
             search_vals['modal_input_id'] = input_id;
             search_vals['modal_table_object'] = table_object;
             search_vals['modal_field_name'] = field_name;
-            search_vals['modal_module'] = module;
             search_vals['modal_search_table'] = '';
-            search_vals['modal_search_module'] = '';
 
             var formurl = $URL_ROOT + "core/search_results?search_vals=" + JSON.stringify(search_vals);
 
@@ -260,7 +257,7 @@ $( document ).ready( function () {
         var field_name = matches[ 1 ];
         var module = $( '#module_0' ).val( );
 
-        var formurl = $URL_ROOT + "core/search?table_object=" + table_object + "&input_id=" + input_id + "&field_name=" + field_name + "&module=" + module;
+        var formurl = $URL_ROOT + "core/search?table_object=" + table_object + "&input_id=" + input_id + "&field_name=" + field_name;
 
         var buttons = {};
         buttons[ "Search" ] = $.fn.searchResults;

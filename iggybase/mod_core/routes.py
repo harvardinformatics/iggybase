@@ -71,11 +71,10 @@ def search():
     table_object = request.args.get('table_object')
     field_name = request.args.get('field_name')
     input_id = request.args.get('input_id')
-    module = request.args.get('module')
     table_name = table_object.replace("_", " ").title()
 
     oac = OrganizationAccessControl()
-    search_module, search_table, search_fields = oac.get_search_field_data(module, table_object, field_name)
+    search_table, search_fields = oac.get_search_field_data(table_object, field_name)
 
     modal_html = '<div class="modal-header">'
     modal_html += '<button type="button" class="close_modal">&times;</button>'
@@ -86,8 +85,6 @@ def search():
     modal_html += '<input id="modal_table_object" value="' + table_object + '" type="hidden">'
     modal_html += '<input id="modal_search_table" value="' + search_table + '" type="hidden">'
     modal_html += '<input id="modal_field_name" value="' + field_name + '" type="hidden">'
-    modal_html += '<input id="modal_module" value="' + module + '" type="hidden">'
-    modal_html += '<input id="modal_search_module" value="' + search_module + '" type="hidden">'
     modal_html += '<p>All search inputs can use partial values</p>'
     modal_html += '<table>'
     if search_fields:
@@ -111,9 +108,7 @@ def search_results():
     input_id = search_vals['modal_input_id']
     table_object = search_vals['modal_table_object']
     field_name = search_vals['modal_field_name']
-    module = search_vals['modal_module']
     search_table = search_vals['modal_search_table']
-    search_module = search_vals['modal_search_module']
 
     search_params = {}
     fields = []
@@ -124,7 +119,7 @@ def search_results():
                 search_params[key[7:]] = value
 
     if search_table == '':
-        search_module, search_table, search_fields = oac.get_search_field_data(module, table_object, field_name)
+        search_table, search_fields = oac.get_search_field_data(table_object, field_name)
 
         for row in search_fields:
             if row.Field.field_name not in fields:
@@ -140,8 +135,6 @@ def search_results():
     modal_html += '<input id="modal_input_id" value="' + input_id + '" type="hidden">'
     modal_html += '<input id="modal_table_object" value="' + table_object + '" type="hidden">'
     modal_html += '<input id="modal_field_name" value="' + field_name + '" type="hidden">'
-    modal_html += '<input id="modal_module" value="' + module + '" type="hidden">'
-    modal_html += '<input id="modal_search_module" value="' + search_module + '" type="hidden">'
     modal_html += '<input id="modal_search_table" value="' + search_table + '" type="hidden">'
     modal_html += '<table class="table-sm table-striped"><tr><td>Name</td>'
 
@@ -173,9 +166,8 @@ def search_results():
 
 def summary(facility_name, module_name, table_name):
     role_access = rac.RoleAccessControl()
-    #if role_access.check_url1('mod_' + module_name,'system',table_name):
-    #if role_access.check_url2('system',table_name):
-    #    abort(404)
+    if role_access.check_facility_module(facility_name, 'mod_' + module_name, table_name):
+        abort(404)
 
     page_form = 'summary'
     table_queries = tqc.TableQueryCollection(facility_name, module_name, page_form, table_name)

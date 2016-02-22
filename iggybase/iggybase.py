@@ -38,8 +38,6 @@ def create_app( config_name = None, app_name = None ):
 
     add_base_routes( iggybase, conf, security, user_datastore )
 
-
-
     return iggybase
 
 
@@ -47,7 +45,6 @@ def configure_extensions( app, db ):
     bootstrap.init_app( app )
     lm.init_app( app )
     mail.init_app( app )
-
 
     # configure Flask Security
     user_datastore = SQLAlchemyUserDatastore(db, models.User, models.Role)

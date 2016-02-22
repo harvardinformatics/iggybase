@@ -220,12 +220,10 @@ class TableObject(Base):
     active = Column(Boolean)
     organization_id = Column(Integer)
     order = Column(Integer)
-    module_id = Column(Integer, ForeignKey('module.id'))
+    admin_table = Column(Boolean)
     new_name_prefix = Column(String(10))
     new_name_id = Column(Integer)
     id_length = Column(Integer)
-
-    table_object_facility = relationship("Module", foreign_keys=[module_id])
 
     def get_new_name(self):
         new_name = self.new_name_prefix + str(self.new_name_id).zfill(self.id_length)
@@ -525,8 +523,8 @@ class ModuleFacility(Base):
     facility_id = Column(Integer, ForeignKey('facility.id'))
     module_id = Column(Integer, ForeignKey('module.id'))
 
-    module_role_role = relationship("Facility", foreign_keys=[facility_id])
-    module_role_module = relationship("Module", foreign_keys=[module_id])
+    module_facility_facility = relationship("Facility", foreign_keys=[facility_id])
+    module_facility_module = relationship("Module", foreign_keys=[module_id])
 
 
 class UserRole(Base):
