@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from flask import request
+from flask import request, g
 from iggybase.mod_auth import organization_access_control as oac
 from iggybase.mod_auth import role_access_control as rac
 from iggybase.mod_core import utilities as util
@@ -9,13 +9,11 @@ import logging
 
 # Retreives and formats data based on table_query
 class TableQuery:
-    def __init__ (self, id, order, display_name, facility_name, module_name, table_name = None, criteria = {}, row_id = False):
+    def __init__ (self, id, order, display_name, facility_name, table_name = None, criteria = {}, row_id = False):
         self.id = id
         self.order = order
         self.display_name = display_name
         self.facility_name = facility_name
-        self.module_name = module_name
-        self.module = 'mod_' + module_name
         self.table_name = table_name
         self.table_rows = []
         self.field_dict = OrderedDict()
@@ -110,7 +108,7 @@ class TableQuery:
                     visible = field.is_visible()
                     calculation = field.is_calculation()
                     if calculation:
-                        col = field.calculate(self.module, col, row,
+                        col = field.calculate(col, row,
                                 keys)
                 if visible:
                     if for_download:
@@ -123,7 +121,7 @@ class TableQuery:
                         row_dict[keys[i]]['link'] = self.get_link(
                             col,
                             self.facility_name,
-                            self.module_name,
+                            g.module,
                             request.url_root,
                             'detail',
                             field.TableObject.name
@@ -143,7 +141,7 @@ class TableQuery:
             )
 
     def get_link(self, value, facility, module, url_root, page = None, table = None):
-        link = url_root + facility + '/core'
+        link = url_root + facility + '/' + module
         if page:
             link += '/' + page
         if table:

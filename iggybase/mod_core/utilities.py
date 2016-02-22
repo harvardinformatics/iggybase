@@ -14,7 +14,7 @@ def get_table(table_name):
     table = session.query(TableObject).filter_by(name=table_name).first()
 
     try:
-        if table.module_id == 4:
+        if table.admin_table == 1:
             module_model = import_module('iggybase.mod_admin.models')
         else:
             module_model = import_module('iggybase.models')

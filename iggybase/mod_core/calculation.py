@@ -1,6 +1,8 @@
-def get_calculation(module, func, cols):
+from flask import g
+
+def get_calculation(func, cols):
     try:
-        mod_class = __import__('iggybase.' + module + '.calculation',
+        mod_class = __import__('iggybase.' + g.module + '.calculation',
                 fromlist=[func])
         function = getattr(mod_class, func)
         calculation = function(cols)

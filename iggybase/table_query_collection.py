@@ -5,10 +5,8 @@ import iggybase.table_query as tq
 import logging
 
 class TableQueryCollection:
-    def __init__ (self, facility_name, module_name, page_form, table_name = None, criteria = {}):
+    def __init__ (self, facility_name, page_form, table_name = None, criteria = {}):
         self.facility_name = facility_name
-        self.module_name = module_name
-        self.module = 'mod_' + self.module_name
         self.table_name = table_name
         self.page_form = page_form
         self.criteria = criteria
@@ -53,7 +51,6 @@ class TableQueryCollection:
             order,
             query_name,
             self.facility_name,
-            self.module_name,
             table_name,
             criteria,
             row_id

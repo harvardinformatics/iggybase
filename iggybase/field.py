@@ -4,10 +4,9 @@ from iggybase.mod_core import calculation as calc
 import logging
 
 class Field:
-    def __init__ (self, field, table_object, module, table_query_field = None, calculation = None):
+    def __init__ (self, field, table_object, table_query_field = None, calculation = None):
         self.Field = field
         self.TableObject = table_object
-        self.Module = module
         self.TableQueryField = table_query_field
         self.TableQueryCalculation = calculation
         self.display_name = util.get_field_attr(self.Field, self.TableQueryField, 'display_name')
@@ -50,7 +49,6 @@ class Field:
                 self.fk_table = self.TableObject
                 self.Field = fk_field[0].Field
                 self.TableObject = fk_field[0].TableObject
-                self.Module = fk_field[0].Module
                 is_fk = True
         return is_fk
 
@@ -69,12 +67,11 @@ class Field:
                 calc_fields[self.display_name] = row
         return calc_fields
 
-    def calculate(self, module, col, row, keys):
+    def calculate(self, col, row, keys):
         cols = [col]
         func = self.TableQueryCalculation.function
         for name, field in self.calculation_fields.items():
             if name in keys:
                 cols.append(row[keys.index(name)])
-        col = calc.get_calculation(module,
-            func, cols)
+        col = calc.get_calculation(func, cols)
         return col

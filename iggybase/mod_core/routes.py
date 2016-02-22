@@ -44,7 +44,7 @@ def action_summary_ajax(facility_name, table_name):
 def detail(facility_name, table_name, row_name):
     page_form = template = 'detail'
     criteria = {(table_name, 'name'): row_name}
-    tqc = TableQueryCollection(facility_name, MODULE_NAME, page_form,
+    tqc = TableQueryCollection(facility_name, page_form,
             table_name, criteria)
     tqc.get_fields()
     tqc.get_results()
@@ -64,7 +64,7 @@ def detail(facility_name, table_name, row_name):
 def summary_download( facility_name, table_name ):
     page_form = 'summary'
     for_download = True
-    tqc = TableQueryCollection(facility_name, MODULE_NAME, page_form, table_name)
+    tqc = TableQueryCollection(facility_name, page_form, table_name)
     tqc.get_fields()
     tqc.get_results()
     tqc.format_results(for_download)
@@ -180,22 +180,10 @@ def search_results():
 
     return modal_html
 
-<<<<<<< HEAD
-def summary(facility_name, module_name, table_name):
-    role_access = rac.RoleAccessControl()
-    if role_access.check_facility_module(facility_name, 'mod_' + module_name, table_name):
-        abort(404)
-
-    page_form = 'summary'
-    table_queries = tqc.TableQueryCollection(facility_name, module_name, page_form, table_name)
-    table_queries.get_fields()
-    first_table_query = table_queries.get_first()
-=======
 def build_summary(facility_name, page_form, table_name, template):
-    tqc = TableQueryCollection(facility_name, MODULE_NAME, page_form, table_name)
+    tqc = TableQueryCollection(facility_name, page_form, table_name)
     tqc.get_fields()
     first_table_query = tqc.get_first()
->>>>>>> b17e977c93b89a3f5531967093cbde54342605ab
     # if nothing to display then page not found
     if not first_table_query.table_fields:
         abort(404)
@@ -205,7 +193,7 @@ def build_summary(facility_name, page_form, table_name, template):
             table_query = first_table_query)
 
 def build_summary_ajax(facility_name, page_form, table_name):
-    tqc = TableQueryCollection(facility_name, MODULE_NAME, page_form, table_name)
+    tqc = TableQueryCollection(facility_name, page_form, table_name)
     tqc.get_fields()
     tqc.get_results()
     tqc.format_results()
