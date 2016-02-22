@@ -3,7 +3,9 @@ from flask.ext.security import login_required
 from flask.ext import excel
 import json
 from . import mod_core
+import iggybase.form_generator as form_generator
 import iggybase.templating as templating
+from iggybase.mod_auth.role_access_control import RoleAccessControl
 from iggybase.mod_auth.organization_access_control import OrganizationAccessControl
 from iggybase.table_query_collection import TableQueryCollection
 
@@ -180,6 +182,60 @@ def search_results():
 
     return modal_html
 
+@mod_core.route( '/ajax/change_role', methods=['POST'] )
+@login_required
+def change_role(facility_name):
+    role_id = request.json['role_id']
+    rac = RoleAccessControl()
+    success = rac.change_role(role_id)
+    return json.dumps({'success':success})
+
+@mod_core.route('/data_entry/<table_name>/<row_name>/', methods=['GET', 'POST'])
+@login_required
+def data_entry(facility_name, table_name, row_name):
+    module_name = MODULE_NAME
+    rac = RoleAccessControl()
+    table_data = rac.has_access('TableObject', {'name': table_name})
+
+    link_data, child_tables = rac.get_child_tables(table_data.id)
+
+    fg = form_generator.FormGenerator('mod_' + module_name, table_name)
+    if row_name == 'new' or not child_tables:
+        form = fg.default_single_entry_form(table_data, row_name)
+    else:
+        form = fg.default_parent_child_form(table_data, child_tables, link_data, row_name)
+
+    if form.validate_on_submit() and len(form.errors) == 0:
+        oac = OrganizationAccessControl()
+        row_names = oac.save_form()
+
+        return saved_data(module_name, table_name, row_names)
+
+    return templating.page_template('single_data_entry',
+            module_name=module_name, form=form, table_name=table_name)
+
+@mod_core.route( '/multiple_entry/<table_name>/', methods=['GET', 'POST'] )
+@login_required
+def multiple_entry( module_name, table_name ):
+    module_name = MODULE_NAME
+    row_names =  json.loads(request.args.get('row_names'))
+    fg = form_generator.FormGenerator('mod_' + module_name, table_name)
+    form = fg.default_multiple_entry_form(row_names)
+
+    if form.validate_on_submit() and len(form.errors) == 0:
+        oac = OrganizationAccessControl()
+        row_names = oac.save_form()
+
+        form = fg.default_multiple_entry_form(row_names)
+
+        return saved_data(module_name, table_name, row_names)
+
+    return templating.page_template('multiple_data_entry', module_name=module_name, form=form, table_name=table_name)
+
+
+
+""" helper functions start """
+
 def build_summary(facility_name, page_form, table_name, template):
     tqc = TableQueryCollection(facility_name, page_form, table_name)
     tqc.get_fields()
@@ -200,3 +256,24 @@ def build_summary_ajax(facility_name, page_form, table_name):
     table_query = tqc.get_first()
     json_rows = table_query.get_json()
     return jsonify({'data':json_rows})
+
+def saved_data(module_name, table_name, row_names):
+    msg = 'Saved: '
+    error = False
+    for row_name in row_names:
+        if row_name[0] == 'error':
+
+            msg = 'Error: %s,' % str(row_name[1]).replace('<','').replace('>','')
+            error = True
+        else:
+            table = urllib.parse.quote(row_name[1])
+            name = urllib.parse.quote(row_name[0])
+            msg += ' <a href='+request.url_root+module_name+'/detail/'+table+'/'+name+'>'+row_name[0]+'</a>,'
+
+    msg = msg[:-1]
+    if error:
+        return templating.page_template('error_message', module_name=module_name, table_name=table_name, page_msg=msg)
+    else:
+        return templating.page_template('save_message', module_name=module_name, table_name=table_name, page_msg=msg)
+
+

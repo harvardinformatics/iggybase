@@ -39,7 +39,8 @@ $( document ).ready( function () {
 
     $('.change_role').click(function(){
         $.ajax({
-            url:$URL_ROOT + 'ajax/change_role',
+            // TODO: don't hardcode facility
+            url:$URL_ROOT + 'murray/core/ajax/change_role',
             data: JSON.stringify({
                 'role_id': $(this).data('role_id')
             }),

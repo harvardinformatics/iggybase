@@ -166,7 +166,6 @@ class OrganizationAccessControl:
                filter(*filters).first())
         fk_session = self.session
         return {'foreign_key': res.Field.field_name,
-                'url_prefix': res.Module.url_prefix,
                 'name': res.TableObject.name,
                 'fk_session': fk_session
                 }

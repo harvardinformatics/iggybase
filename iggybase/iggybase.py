@@ -57,9 +57,6 @@ def configure_extensions( app, db ):
 def add_base_routes( app, conf, security, user_datastore ):
     from iggybase import base_routes
 
-
-
-
     @user_registered.connect_via(app)
     def user_registered_sighandler(sender, **extra):
         # TODO: we should dynamically enter facility based on what's in user
@@ -86,11 +83,6 @@ def add_base_routes( app, conf, security, user_datastore ):
     def index():
         return base_routes.index()
 
-    @app.route( '/ajax/change_role', methods=['POST'] )
-    @login_required
-    def change_role():
-        return base_routes.change_role()
-
     @app.route('/favicon.ico')
     def favicon():
         return send_from_directory(os.path.join(app.root_path, 'static'),
@@ -101,16 +93,6 @@ def add_base_routes( app, conf, security, user_datastore ):
         navbar = OrderedDict([('Login', {'title': 'Login', 'url':url_for('security.login')}), ('Register', {'title':'Register', 'url':url_for('security.register')}),
             ('Reset Password', {'title':'Reset Password', 'url':url_for('security.forgot_password')}), ('Logout', {'title':'Logout', 'url':url_for('security.logout')})])
         return dict(navbar = navbar)
-
-    @app.route( '/<module_name>/data_entry/<table_name>/<row_name>/', methods=['GET', 'POST'] )
-    @login_required
-    def data_entry( module_name, table_name, row_name ):
-        return base_routes.data_entry( module_name, table_name, row_name )
-
-    @app.route( '/<module_name>/multiple_entry/<table_name>/', methods=['GET', 'POST'] )
-    @login_required
-    def multiple_entry( module_name, table_name ):
-        return base_routes.multiple_entry( module_name, table_name )
 
 def configure_blueprints( app, blueprints ):
     for i,(module, blueprint) in enumerate(blueprints):
