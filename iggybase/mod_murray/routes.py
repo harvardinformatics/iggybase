@@ -1,13 +1,14 @@
 from flask import g, abort
 from iggybase import mod_core, templating
-from flask.ext.security import login_required, current_user
+from flask.ext.security import login_required
 from iggybase.mod_murray import mod_murray
 import iggybase.table_query_collection as tqc
 
 @mod_murray.before_request
-@login_required
 def before_request():
-    g.user = current_user
+    role_access = rac.RoleAccessControl()
+    if role_access.check_url3(facility_name, module_name):
+        abort(404)
 
 @mod_murray.route('/')
 def default():
