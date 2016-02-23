@@ -1,6 +1,6 @@
-from iggybase.mod_auth import role_access_control as rac
-from iggybase.mod_core import utilities as util
-from iggybase.mod_core import calculation as calc
+from iggybase.auth import role_access_control as rac
+from iggybase import utilities as util
+from .calculation import get_calculation
 import logging
 
 class Field:
@@ -73,5 +73,5 @@ class Field:
         for name, field in self.calculation_fields.items():
             if name in keys:
                 cols.append(row[keys.index(name)])
-        col = calc.get_calculation(func, cols)
+        col = get_calculation(func, cols)
         return col

@@ -1,6 +1,6 @@
 import operator
-from iggybase.mod_auth import role_access_control as rac
-from .utilities import get_filters
+from iggybase.auth import role_access_control as rac
+from iggybase import utilities as util
 from .table_query import TableQuery
 import logging
 
@@ -20,7 +20,7 @@ class TableQueryCollection:
             self.results.append(query)
 
     def get_fields(self):
-        filters = get_filters()
+        filters = util.get_filters()
         table_queries_info = []
         if not 'all' in filters:
             table_queries_info = self.role_access_control.table_queries(self.page_form, self.table_name)

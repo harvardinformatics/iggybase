@@ -1,5 +1,5 @@
 from flask import render_template, abort, request
-from iggybase.mod_auth.role_access_control import RoleAccessControl
+from iggybase.auth.role_access_control import RoleAccessControl
 import logging
 
 def page_template( page_form_name, **context ):

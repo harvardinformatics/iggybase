@@ -5,8 +5,8 @@ from iggybase.iggybase_form_fields import IggybaseBooleanField, IggybaseDateFiel
     IggybaseFileField, IggybasePasswordField
 from wtforms import HiddenField
 from wtforms.validators import DataRequired, Length, email, Optional
-from iggybase.mod_auth.organization_access_control import OrganizationAccessControl
-from iggybase.mod_auth.role_access_control import RoleAccessControl
+from iggybase.auth.organization_access_control import OrganizationAccessControl
+from iggybase.auth.role_access_control import RoleAccessControl
 from iggybase import constants
 from json import dumps
 import logging

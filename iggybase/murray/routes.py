@@ -1,25 +1,25 @@
 from flask import g, abort
-from iggybase import mod_core, templating
+from iggybase import core, templating
 from flask.ext.security import login_required
-from iggybase.mod_murray import mod_murray
-import iggybase.mod_core.table_query_collection as tqc
+from . import murray
+import iggybase.core.table_query_collection as tqc
 
-@mod_murray.before_request
+@murray.before_request
 def before_request():
     role_access = rac.RoleAccessControl()
     if role_access.check_url3(facility_name, module_name):
         abort(404)
 
-@mod_murray.route('/')
+@murray.route('/')
 def default():
     return templating.page_template('index.html')
 
-@mod_murray.route( '/update_ordered/<table_name>/ajax' )
+@murray.route( '/update_ordered/<table_name>/ajax' )
 @login_required
 def update_ordered_ajax(facility_name, table_name):
-    return mod_core.routes.summary_ajax(facility_name, 'murray', table_name, 'update', {('status', 'name'):'ordered'})
+    return core.routes.summary_ajax(facility_name, 'murray', table_name, 'update', {('status', 'name'):'ordered'})
 
-@mod_murray.route( '/update_ordered/<table_name>/' )
+@murray.route( '/update_ordered/<table_name>/' )
 @login_required
 def update_ordered(facility_name, table_name):
     # update ordered to received
@@ -43,13 +43,13 @@ def update_ordered(facility_name, table_name):
             table_name = table_name,
             table_query = first_table_query, hidden_fields = hidden_fields)
 
-@mod_murray.route( '/update_requested/<table_name>/ajax' )
+@murray.route( '/update_requested/<table_name>/ajax' )
 @login_required
 def update_requested_ajax(facility_name, table_name):
     # TODO: we should really get rid of module name being passed around
-    return mod_core.routes.summary_ajax(facility_name, 'murray', table_name, 'update', {('status', 'name'):'requested'})
+    return core.routes.summary_ajax(facility_name, 'murray', table_name, 'update', {('status', 'name'):'requested'})
 
-@mod_murray.route( '/update_requested/<table_name>/' )
+@murray.route( '/update_requested/<table_name>/' )
 @login_required
 def update_requested(facility_name, table_name):
     # update requested to ordered
@@ -71,12 +71,12 @@ def update_requested(facility_name, table_name):
             table_name = table_name,
             table_query = first_table_query, hidden_fields = hidden_fields)
 
-@mod_murray.route( '/cancel/<table_name>/ajax' )
+@murray.route( '/cancel/<table_name>/ajax' )
 @login_required
 def cancel_ajax(facility_name, table_name):
-    return mod_core.routes.summary_ajax(facility_name, 'murray', table_name, 'update', {('status', 'name'):['ordered', 'requested']})
+    return core.routes.summary_ajax(facility_name, 'murray', table_name, 'update', {('status', 'name'):['ordered', 'requested']})
 
-@mod_murray.route( '/cancel/<table_name>/' )
+@murray.route( '/cancel/<table_name>/' )
 @login_required
 def cancel(facility_name, table_name):
     # update ordered to received

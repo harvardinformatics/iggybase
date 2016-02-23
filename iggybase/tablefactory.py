@@ -1,4 +1,4 @@
-from iggybase.mod_admin.models import DataType, TableObject, Field
+from iggybase.admin.models import DataType, TableObject, Field
 from sqlalchemy.orm import relationship
 from sqlalchemy import Column, ForeignKey, UniqueConstraint
 import sqlalchemy

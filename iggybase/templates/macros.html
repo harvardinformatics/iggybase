@@ -31,7 +31,7 @@
 {% macro render_nav_menu(items, first_level = False) -%}
     {% if first_level%}
         <ul class="nav navbar-nav nav-tabs">
-            <li><a href="{{ url_for('mod_auth.home') }}">Home</a></li>
+            <li><a href="{{ url_for('auth.home') }}">Home</a></li>
     {% else %}
         <ul class="dropdown-menu">
     {% endif %}

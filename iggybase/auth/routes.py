@@ -1,14 +1,14 @@
 from flask import redirect, url_for, request, abort, g
 from flask_security.decorators import login_required
-from iggybase.mod_admin.models import User
-from . import mod_auth
-from iggybase.mod_auth.role_organization import get_roles, get_organizations, get_current_user_role, \
+from iggybase.admin.models import User
+from . import auth
+from iggybase.auth.role_organization import get_roles, get_organizations, get_current_user_role, \
     get_current_user_organization
 import json
 import logging
 
 
-@mod_auth.route('/home', methods=['GET'])
+@auth.route('/home', methods=['GET'])
 @login_required
 def home():
     """redirects to user home page
@@ -22,7 +22,7 @@ def home():
     return redirect( home_page )
 
 
-@mod_auth.route( '/getrole', methods = [ 'POST' ] )
+@auth.route( '/getrole', methods = [ 'POST' ] )
 def getrole( ):
     user_name =  request.json[ 'user' ]
 
@@ -46,7 +46,7 @@ def getrole( ):
                              'current_organization': current_user_org} )
 
 
-@mod_auth.route( '/getorganization', methods = [ 'POST' ] )
+@auth.route( '/getorganization', methods = [ 'POST' ] )
 def getorganization( ):
     user_name =  request.json[ 'user' ]
     role_id =  request.json[ 'role' ]

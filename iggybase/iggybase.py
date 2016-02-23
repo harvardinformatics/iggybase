@@ -11,9 +11,9 @@ user_registered, logout_user
 from flask.ext.sqlalchemy import SQLAlchemy
 from werkzeug.wsgi import DispatcherMiddleware
 from iggybase.extensions import mail, lm, bootstrap
-from iggybase.mod_admin import models
+from iggybase.admin import models
 from iggybase.database import db, init_db, db_session
-import iggybase.mod_auth.role_access_control as rac
+import iggybase.auth.role_access_control as rac
 import logging
 
 __all__ = [ 'create_app' ]
@@ -32,7 +32,7 @@ def create_app( config_name = None, app_name = None ):
 
     init_db( )
 
-    configure_blueprints( iggybase, conf.BLUEPRINTS )
+    configure_blueprints(iggybase, conf.BLUEPRINTS)
     security, user_datastore = configure_extensions( iggybase, db )
     configure_error_handlers( iggybase )
     configure_hook( iggybase )
@@ -94,10 +94,10 @@ def add_base_routes( app, conf, security, user_datastore ):
             ('Reset Password', {'title':'Reset Password', 'url':url_for('security.forgot_password')}), ('Logout', {'title':'Logout', 'url':url_for('security.logout')})])
         return dict(navbar = navbar)
 
-def configure_blueprints( app, blueprints ):
-    for i,(module, blueprint) in enumerate(blueprints):
+def configure_blueprints(app, blueprints):
+    for module in blueprints:
         bp = getattr(__import__('iggybase.'+module, fromlist=[module]),module)
-        app.register_blueprint( bp )
+        app.register_blueprint(bp)
 
 def configure_hook( app ):
     @app.before_request

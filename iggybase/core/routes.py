@@ -2,32 +2,32 @@ from flask import request, jsonify, abort
 from flask.ext.security import login_required
 from flask.ext import excel
 import json
-from . import mod_core
+from . import core
 import iggybase.form_generator as form_generator
 import iggybase.templating as templating
-from iggybase.mod_auth.role_access_control import RoleAccessControl
-from iggybase.mod_auth.organization_access_control import OrganizationAccessControl
+from iggybase.auth.role_access_control import RoleAccessControl
+from iggybase.auth.organization_access_control import OrganizationAccessControl
 from .table_query_collection import TableQueryCollection
 
 MODULE_NAME = 'core'
 
-@mod_core.route( '/' )
+@core.route( '/' )
 @login_required
 def default(facility_name):
     return templating.page_template('index.html')
 
-@mod_core.route( '/summary/<table_name>/' )
+@core.route( '/summary/<table_name>/' )
 @login_required
 def summary(facility_name, table_name):
     page_form = template = 'summary'
     return build_summary(facility_name, page_form, table_name, template)
 
-@mod_core.route( '/summary/<table_name>/ajax' )
+@core.route( '/summary/<table_name>/ajax' )
 @login_required
 def summary_ajax(facility_name, table_name):
     return build_summary_ajax(facility_name, 'summary', table_name)
 
-@mod_core.route( '/action_summary/<table_name>/' )
+@core.route( '/action_summary/<table_name>/' )
 @login_required
 def action_summary(facility_name, table_name):
     page_form = 'summary'
@@ -35,13 +35,13 @@ def action_summary(facility_name, table_name):
     return build_summary(facility_name, page_form, table_name,
     template)
 
-@mod_core.route( '/action_summary/<table_name>/ajax' )
+@core.route( '/action_summary/<table_name>/ajax' )
 @login_required
 def action_summary_ajax(facility_name, table_name):
     page_form = 'summary'
     return build_summary_ajax(facility_name, page_form, table_name)
 
-@mod_core.route( '/detail/<table_name>/<row_name>' )
+@core.route( '/detail/<table_name>/<row_name>' )
 @login_required
 def detail(facility_name, table_name, row_name):
     page_form = template = 'detail'
@@ -61,7 +61,7 @@ def detail(facility_name, table_name, row_name):
         hidden_fields=hidden_fields
     )
 
-@mod_core.route( '/summary/<table_name>/download/' )
+@core.route( '/summary/<table_name>/download/' )
 @login_required
 def summary_download( facility_name, table_name ):
     page_form = 'summary'
@@ -74,7 +74,7 @@ def summary_download( facility_name, table_name ):
     csv = excel.make_response_from_records(table_rows, 'csv')
     return csv
 
-@mod_core.route( '/ajax/update_table_rows/<table_name>', methods=['GET', 'POST'] )
+@core.route( '/ajax/update_table_rows/<table_name>', methods=['GET', 'POST'] )
 @login_required
 def update_table_rows(facility_name, table_name):
     updates = request.json['updates']
@@ -84,7 +84,7 @@ def update_table_rows(facility_name, table_name):
     updated = oac.update_table_rows(table_name, updates, ids, message_fields)
     return json.dumps({'updated': updated})
 
-@mod_core.route('/search', methods=['GET', 'POST'])
+@core.route('/search', methods=['GET', 'POST'])
 def search():
     table_object = request.args.get('table_object')
     field_name = request.args.get('field_name')
@@ -117,7 +117,7 @@ def search():
 
     return modal_html
 
-@mod_core.route('/search_results', methods=['GET', 'POST'])
+@core.route('/search_results', methods=['GET', 'POST'])
 def search_results():
     search_vals = json.loads(request.args.get('search_vals'))
 
@@ -182,7 +182,7 @@ def search_results():
 
     return modal_html
 
-@mod_core.route( '/ajax/change_role', methods=['POST'] )
+@core.route( '/ajax/change_role', methods=['POST'] )
 @login_required
 def change_role(facility_name):
     role_id = request.json['role_id']
@@ -190,7 +190,7 @@ def change_role(facility_name):
     success = rac.change_role(role_id)
     return json.dumps({'success':success})
 
-@mod_core.route('/data_entry/<table_name>/<row_name>/', methods=['GET', 'POST'])
+@core.route('/data_entry/<table_name>/<row_name>/', methods=['GET', 'POST'])
 @login_required
 def data_entry(facility_name, table_name, row_name):
     module_name = MODULE_NAME
@@ -214,7 +214,7 @@ def data_entry(facility_name, table_name, row_name):
     return templating.page_template('single_data_entry',
             module_name=module_name, form=form, table_name=table_name)
 
-@mod_core.route( '/multiple_entry/<table_name>/', methods=['GET', 'POST'] )
+@core.route( '/multiple_entry/<table_name>/', methods=['GET', 'POST'] )
 @login_required
 def multiple_entry( module_name, table_name ):
     module_name = MODULE_NAME
