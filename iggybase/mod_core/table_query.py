@@ -2,10 +2,8 @@ from collections import OrderedDict
 from flask import request, g
 from iggybase.mod_auth import organization_access_control as oac
 from iggybase.mod_auth import role_access_control as rac
-from iggybase.mod_core import utilities as util
-from iggybase.mod_core import calculation as calc
-import iggybase.field as f
-import logging
+from .utilities import get_filters
+from .field import Field as field_class
 
 # Retreives and formats data based on table_query
 class TableQuery:
@@ -52,7 +50,7 @@ class TableQuery:
     def _add_table_query_criteria(self, orig_criteria):
         criteria = {}
         # add criteria from get params
-        filters = util.get_filters()
+        filters = get_filters()
         for key, val in filters.items():
             if key in self.field_dict:
                 field = self.field_dict[key]
@@ -74,7 +72,7 @@ class TableQuery:
         for row in table_fields:
             table_query_field = getattr(row, 'TableQueryField', None)
             calculation = getattr(row, 'TableQueryCalculation', None)
-            field = f.Field(row.Field,
+            field = field_class(row.Field,
                     row.TableObject, table_query_field,
                     calculation)
             field_dict[field.display_name] = field

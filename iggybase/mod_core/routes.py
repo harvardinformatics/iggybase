@@ -7,7 +7,7 @@ import iggybase.form_generator as form_generator
 import iggybase.templating as templating
 from iggybase.mod_auth.role_access_control import RoleAccessControl
 from iggybase.mod_auth.organization_access_control import OrganizationAccessControl
-from iggybase.table_query_collection import TableQueryCollection
+from .table_query_collection import TableQueryCollection
 
 MODULE_NAME = 'core'
 

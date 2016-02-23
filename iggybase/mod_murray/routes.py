@@ -2,7 +2,7 @@ from flask import g, abort
 from iggybase import mod_core, templating
 from flask.ext.security import login_required
 from iggybase.mod_murray import mod_murray
-import iggybase.table_query_collection as tqc
+import iggybase.mod_core.table_query_collection as tqc
 
 @mod_murray.before_request
 def before_request():
