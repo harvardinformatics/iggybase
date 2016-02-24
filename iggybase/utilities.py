@@ -53,3 +53,11 @@ def get_filters():
     filters.update(req)
     return filters
 
+def to_camel_case(snake_str):
+    components = snake_str.split('_')
+
+    return "".join(x.title() for x in components)
+
+class DictObject(dict):
+    def __init__(self, dict):
+        self.__dict__ = dict

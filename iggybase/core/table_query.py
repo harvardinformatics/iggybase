@@ -4,6 +4,7 @@ from iggybase.auth import organization_access_control as oac
 from iggybase.auth import role_access_control as rac
 from iggybase import utilities as util
 from .field import Field as field_class
+from iggybase.admin import models as admin_models
 
 # Retreives and formats data based on table_query
 class TableQuery:
@@ -45,6 +46,16 @@ class TableQuery:
             self.id,
             self.table_name
         )
+        if not table_query_fields:
+            # TODO: determine if we want to go this way and then sort out type
+            # and fk info
+            table = getattr(admin_models, util.to_camel_case(self.table_name))
+            table_query_fields = []
+            for col in table.__table__.columns:
+                field = util.DictObject({'name': col.name, 'field_name':col.name, 'data_type_id':1, 'foreign_key_table_object_id':None})
+                table = util.DictObject({'name': self.table_name})
+                obj = util.DictObject({'Field': field, 'TableObject': table})
+                table_query_fields.append(obj)
         return table_query_fields
 
     def _add_table_query_criteria(self, orig_criteria):
