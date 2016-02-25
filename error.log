@@ -1,4 +1,24 @@
-[Thu Feb 25 11:55:12 2016] [error] [client 10.255.12.9] Target WSGI script not found or unable to stat: /var/www/html/iggybase/iggybase.wsgi
-[Thu Feb 25 11:55:13 2016] [error] [client 10.255.12.9] Target WSGI script not found or unable to stat: /var/www/html/iggybase/iggybase.wsgi
-[Thu Feb 25 11:55:23 2016] [error] [client 10.255.12.9] Target WSGI script not found or unable to stat: /var/www/html/iggybase/iggybase.wsgi
-[Thu Feb 25 11:55:34 2016] [error] [client 10.255.12.9] Target WSGI script not found or unable to stat: /var/www/html/iggybase/iggybase.wsgi
+[Thu Feb 25 11:59:23 2016] [error] [client 10.255.12.9] mod_wsgi (pid=22938): Target WSGI script '/var/www/html/iggybase/iggybase.wsgi' cannot be loaded as Python module.
+[Thu Feb 25 11:59:23 2016] [error] [client 10.255.12.9] mod_wsgi (pid=22938): Exception occurred processing WSGI script '/var/www/html/iggybase/iggybase.wsgi'.
+[Thu Feb 25 11:59:23 2016] [error] [client 10.255.12.9] Traceback (most recent call last):
+[Thu Feb 25 11:59:23 2016] [error] [client 10.255.12.9]   File "/var/www/html/iggybase/iggybase.wsgi", line 16, in <module>
+[Thu Feb 25 11:59:23 2016] [error] [client 10.255.12.9]     logging.basicConfig( filename=os.path.join( os.path.dirname( os.path.realpath( __file__ ) ), 'iggybase.log' ),level=logging.DEBUG )
+[Thu Feb 25 11:59:23 2016] [error] [client 10.255.12.9]   File "/usr/local/lib/python3.4/logging/__init__.py", line 1732, in basicConfig
+[Thu Feb 25 11:59:23 2016] [error] [client 10.255.12.9]     h = FileHandler(filename, mode)
+[Thu Feb 25 11:59:23 2016] [error] [client 10.255.12.9]   File "/usr/local/lib/python3.4/logging/__init__.py", line 999, in __init__
+[Thu Feb 25 11:59:23 2016] [error] [client 10.255.12.9]     StreamHandler.__init__(self, self._open())
+[Thu Feb 25 11:59:23 2016] [error] [client 10.255.12.9]   File "/usr/local/lib/python3.4/logging/__init__.py", line 1023, in _open
+[Thu Feb 25 11:59:23 2016] [error] [client 10.255.12.9]     return open(self.baseFilename, self.mode, encoding=self.encoding)
+[Thu Feb 25 11:59:23 2016] [error] [client 10.255.12.9] PermissionError: [Errno 13] Permission denied: '/n/informatics/iggybase/dev/iggybase/iggybase.log'
+[Thu Feb 25 11:59:27 2016] [error] [client 10.255.12.9] mod_wsgi (pid=22938): Target WSGI script '/var/www/html/iggybase/iggybase.wsgi' cannot be loaded as Python module.
+[Thu Feb 25 11:59:27 2016] [error] [client 10.255.12.9] mod_wsgi (pid=22938): Exception occurred processing WSGI script '/var/www/html/iggybase/iggybase.wsgi'.
+[Thu Feb 25 11:59:27 2016] [error] [client 10.255.12.9] Traceback (most recent call last):
+[Thu Feb 25 11:59:27 2016] [error] [client 10.255.12.9]   File "/var/www/html/iggybase/iggybase.wsgi", line 16, in <module>
+[Thu Feb 25 11:59:27 2016] [error] [client 10.255.12.9]     logging.basicConfig( filename=os.path.join( os.path.dirname( os.path.realpath( __file__ ) ), 'iggybase.log' ),level=logging.DEBUG )
+[Thu Feb 25 11:59:27 2016] [error] [client 10.255.12.9]   File "/usr/local/lib/python3.4/logging/__init__.py", line 1732, in basicConfig
+[Thu Feb 25 11:59:27 2016] [error] [client 10.255.12.9]     h = FileHandler(filename, mode)
+[Thu Feb 25 11:59:27 2016] [error] [client 10.255.12.9]   File "/usr/local/lib/python3.4/logging/__init__.py", line 999, in __init__
+[Thu Feb 25 11:59:27 2016] [error] [client 10.255.12.9]     StreamHandler.__init__(self, self._open())
+[Thu Feb 25 11:59:27 2016] [error] [client 10.255.12.9]   File "/usr/local/lib/python3.4/logging/__init__.py", line 1023, in _open
+[Thu Feb 25 11:59:27 2016] [error] [client 10.255.12.9]     return open(self.baseFilename, self.mode, encoding=self.encoding)
+[Thu Feb 25 11:59:27 2016] [error] [client 10.255.12.9] PermissionError: [Errno 13] Permission denied: '/n/informatics/iggybase/dev/iggybase/iggybase.log'
