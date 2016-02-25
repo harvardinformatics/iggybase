@@ -46,7 +46,7 @@ class TableQuery:
             self.id,
             self.table_name
         )
-        if not table_query_fields:
+        '''if not table_query_fields:
             # TODO: determine if we want to go this way and then sort out type
             # and fk info
             table = getattr(admin_models, util.to_camel_case(self.table_name))
@@ -55,7 +55,7 @@ class TableQuery:
                 field = util.DictObject({'name': col.name, 'field_name':col.name, 'data_type_id':1, 'foreign_key_table_object_id':None})
                 table = util.DictObject({'name': self.table_name})
                 obj = util.DictObject({'Field': field, 'TableObject': table})
-                table_query_fields.append(obj)
+                table_query_fields.append(obj)'''
         return table_query_fields
 
     def _add_table_query_criteria(self, orig_criteria):

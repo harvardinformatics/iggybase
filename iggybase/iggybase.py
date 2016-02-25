@@ -116,6 +116,7 @@ def configure_hook( app ):
                     role_access.change_role(role_access.facilities[path[1]])
                 else:
                     abort(404)
+            g.facility = path[1]
 
 def configure_error_handlers( app ):
     from iggybase import base_routes

@@ -128,8 +128,7 @@ class RoleAccessControl:
             (models.FieldRole.visible == visible),
             (models.Field.active == active),
             (models.FieldRole.active == active),
-            (models.TableObject.active == active),
-            (models.TableObject.admin_table == 0)
+            (models.TableObject.active == active)
         ]
         selects = [
             models.Field,

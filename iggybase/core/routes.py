@@ -21,26 +21,26 @@ def default(facility_name):
 @login_required
 def summary(facility_name, table_name):
     page_form = template = 'summary'
-    return build_summary(facility_name, page_form, table_name, template)
+    return build_summary(facility_name, table_name, page_form, template)
 
 @core.route( '/summary/<table_name>/ajax' )
 @login_required
-def summary_ajax(facility_name, table_name):
-    return build_summary_ajax(facility_name, 'summary', table_name)
+def summary_ajax(facility_name, table_name, page_form = 'summary', criteria = {}):
+    return build_summary_ajax(facility_name, table_name, page_form, criteria)
 
 @core.route( '/action_summary/<table_name>/' )
 @login_required
 def action_summary(facility_name, table_name):
     page_form = 'summary'
     template = 'action_summary'
-    return build_summary(facility_name, page_form, table_name,
+    return build_summary(facility_name, table_name, page_form,
     template)
 
 @core.route( '/action_summary/<table_name>/ajax' )
 @login_required
-def action_summary_ajax(facility_name, table_name):
-    page_form = 'summary'
-    return build_summary_ajax(facility_name, page_form, table_name)
+def action_summary_ajax(facility_name, table_name, page_form = 'summary',
+        criteria = {}):
+    return build_summary_ajax(facility_name, table_name, page_form, criteria)
 
 @core.route( '/detail/<table_name>/<row_name>' )
 @login_required
@@ -237,7 +237,7 @@ def multiple_entry( facility_name, table_name ):
 
 """ helper functions start """
 
-def build_summary(facility_name, page_form, table_name, template):
+def build_summary(facility_name, table_name, page_form, template):
     tqc = TableQueryCollection(facility_name, page_form, table_name)
     tqc.get_fields()
     first_table_query = tqc.get_first()
@@ -249,8 +249,8 @@ def build_summary(facility_name, page_form, table_name, template):
             table_name = table_name,
             table_query = first_table_query)
 
-def build_summary_ajax(facility_name, page_form, table_name):
-    tqc = TableQueryCollection(facility_name, page_form, table_name)
+def build_summary_ajax(facility_name, table_name, page_form, criteria):
+    tqc = TableQueryCollection(facility_name, page_form, table_name, criteria)
     tqc.get_fields()
     tqc.get_results()
     tqc.format_results()

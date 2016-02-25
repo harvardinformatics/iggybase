@@ -1,4 +1,4 @@
-from flask import render_template, abort, request
+from flask import render_template, abort, request, g
 from iggybase.auth.role_access_control import RoleAccessControl
 import logging
 
@@ -32,6 +32,9 @@ def page_template( page_form_name, **context ):
         context['hidden_fields'] = {}
     context['hidden_fields'].update({
         'url_root': context['url_root']
+    })
+    context['hidden_fields'].update({
+        'facility': g.facility
     })
     if 'module_name' in context:
         context['hidden_fields'].update({
