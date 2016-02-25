@@ -86,7 +86,7 @@ def update_table_rows(facility_name, table_name):
     return json.dumps({'updated': updated})
 
 @core.route('/search', methods=['GET', 'POST'])
-def search():
+def search(facility_name):
     table_object = request.args.get('table_object')
     field_name = request.args.get('field_name')
     input_id = request.args.get('input_id')
@@ -119,7 +119,7 @@ def search():
     return modal_html
 
 @core.route('/search_results', methods=['GET', 'POST'])
-def search_results():
+def search_results(facility_name):
     search_vals = json.loads(request.args.get('search_vals'))
 
     oac = OrganizationAccessControl()

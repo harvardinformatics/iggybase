@@ -234,7 +234,7 @@ $( document ).ready( function () {
             search_vals['modal_field_name'] = field_name;
             search_vals['modal_search_table'] = '';
 
-            var formurl = $URL_ROOT + "core/search_results?search_vals=" + JSON.stringify(search_vals);
+            var formurl = $URL_ROOT + "system/core/search_results?search_vals=" + JSON.stringify(search_vals);
 
             $.fn.showModalDialog( formurl, {}, $.fn.searchLinks );
 
@@ -258,7 +258,7 @@ $( document ).ready( function () {
         var field_name = matches[ 1 ];
         var module = $( '#module_0' ).val( );
 
-        var formurl = $URL_ROOT + "core/search?table_object=" + table_object + "&input_id=" + input_id + "&field_name=" + field_name;
+        var formurl = $URL_ROOT + "system/core/search?table_object=" + table_object + "&input_id=" + input_id + "&field_name=" + field_name;
 
         var buttons = {};
         buttons[ "Search" ] = $.fn.searchResults;
@@ -276,7 +276,7 @@ $( document ).ready( function () {
             search_vals[$(this).attr('id')] = $(this).val();
         });
 
-        var formurl = $URL_ROOT + "core/search_results?search_vals=" + JSON.stringify(search_vals);
+        var formurl = $URL_ROOT + "system/core/search_results?search_vals=" + JSON.stringify(search_vals);
 
         $.fn.showModalDialog( formurl, {}, $.fn.searchLinks );
     }
