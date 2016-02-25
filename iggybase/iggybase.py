@@ -108,11 +108,14 @@ def configure_hook( app ):
         if len(path) > 2:
             g.module = path[2]
         # TODO: consider caching this for the session
-        if (current_user.is_authenticated and path):
+        if (current_user.is_authenticated and path and path[1] != 'static'):
             role_access = rac.RoleAccessControl()
             access = role_access.has_facility_access(path[1])
             if not access:
-                abort(404)
+                if path[1] in role_access.facilities:
+                    role_access.change_role(role_access.facilities[path[1]])
+                else:
+                    abort(404)
 
 def configure_error_handlers( app ):
     from iggybase import base_routes

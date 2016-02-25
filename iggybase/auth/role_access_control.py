@@ -19,6 +19,18 @@ class RoleAccessControl:
             self.role = (self.session.query(models.Role)
                                   .join(models.UserRole)
                                   .filter(models.UserRole.id==self.user.current_user_role_id).first())
+            facility_res = (self.session.query(models.Facility, models.Role,
+                models.Level)
+                                  .join(models.Role, models.UserRole,
+                                      models.Level)
+                                  .filter(models.UserRole.user_id ==
+                                      self.user.id).order_by(models.Facility.id,
+                                          models.Level.order).all())
+
+            self.facilities = {}
+            for fac in facility_res:
+                if fac.Facility.name not in self.facilities:
+                    self.facilities[fac.Facility.name] = fac.Role.id
         else:
             self.user = None
             self.role = None
@@ -388,7 +400,7 @@ class RoleAccessControl:
 
         return rec is None
 
-    def has_facility_access(self, facility, active=1):
-        if self.role.role_facility.name in ['system', facility]:
+    def has_facility_access(self, facility):
+        if self.role.role_facility.name == facility:
             return True
         return False
