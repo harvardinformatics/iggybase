@@ -51,11 +51,11 @@ class FormGenerator():
         else:
             kwargs['iggybase_class'] = control_type
 
-        if field_data.FieldRole.permission_id != constants.DEFAULTED and row_name == 'new':
-            kwargs['readonly'] = True
-        elif field_data.FieldRole.permission_id != constants.IMMUTABLE and row_name != 'new':
-            kwargs['readonly'] = True
-        elif field_data.FieldRole.permission_id != constants.READ_WRITE:
+        if ((field_data.FieldRole.permission_id == constants.DEFAULTED and row_name != 'new') or
+                (field_data.FieldRole.permission_id == constants.IMMUTABLE and row_name == 'new') or
+                (field_data.FieldRole.permission_id == constants.READ_WRITE)):
+            kwargs['readonly'] = False
+        else:
             kwargs['readonly'] = True
 
         if field_data.Field.foreign_key_table_object_id is not None:

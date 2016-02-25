@@ -11,13 +11,10 @@ class IggybaseLookUpField(StringField):
         else:
             self.iggybase_class = 'lookupfield form-control-lookup'
 
-        if 'readonly' in kwargs:
-            self.readonly = kwargs['readonly']
-            del kwargs['readonly']
-            # remove lookup for readonly
+        if kwargs['readonly']:
             self.iggybase_class = temp_class
-        else:
-            self.readonly = False
+
+        del kwargs['readonly']
 
         super(IggybaseLookUpField, self).__init__(*args, **kwargs)
 
@@ -34,11 +31,8 @@ class IggybaseSelectField(SelectField):
         else:
             self.iggybase_class = None
 
-        if 'readonly' in kwargs:
-            self.readonly = kwargs['readonly']
-            del kwargs['readonly']
-        else:
-            self.readonly = False
+        self.readonly = kwargs['readonly']
+        del kwargs['readonly']
 
         super(IggybaseSelectField, self).__init__(*args, **kwargs)
 
@@ -60,11 +54,8 @@ class IggybaseBooleanField(BooleanField):
         else:
             self.iggybase_class = 'boolean-field'
 
-        if 'readonly' in kwargs:
-            self.readonly = kwargs['readonly']
-            del kwargs['readonly']
-        else:
-            self.readonly = False
+        self.readonly = kwargs['readonly']
+        del kwargs['readonly']
 
         super(IggybaseBooleanField, self).__init__(*args, **kwargs)
 
@@ -87,12 +78,11 @@ class IggybaseDateField(DateField):
             self.iggybase_class = 'datepicker-field'
 
         if 'readonly' in kwargs:
-            self.readonly = kwargs['readonly']
-            del kwargs['readonly']
             # remove datepicker for readonly
             self.iggybase_class = temp_class
-        else:
-            self.readonly = False
+
+        self.readonly = kwargs['readonly']
+        del kwargs['readonly']
 
         super(IggybaseDateField, self).__init__(*args, **kwargs)
 
@@ -113,11 +103,8 @@ class IggybaseTextAreaField(TextAreaField):
         else:
             self.iggybase_class = None
 
-        if 'readonly' in kwargs:
-            self.readonly = kwargs['readonly']
-            del kwargs['readonly']
-        else:
-            self.readonly = False
+        self.readonly = kwargs['readonly']
+        del kwargs['readonly']
 
         super(IggybaseTextAreaField, self).__init__(*args, **kwargs)
 
@@ -139,11 +126,8 @@ class IggybaseFloatField(FloatField):
         else:
             self.iggybase_class = None
 
-        if 'readonly' in kwargs:
-            self.readonly = kwargs['readonly']
-            del kwargs['readonly']
-        else:
-            self.readonly = False
+        self.readonly = kwargs['readonly']
+        del kwargs['readonly']
 
         super(IggybaseFloatField, self).__init__(*args, **kwargs)
 
@@ -165,11 +149,8 @@ class IggybaseIntegerField(IntegerField):
         else:
             self.iggybase_class = None
 
-        if 'readonly' in kwargs:
-            self.readonly = kwargs['readonly']
-            del kwargs['readonly']
-        else:
-            self.readonly = False
+        self.readonly = kwargs['readonly']
+        del kwargs['readonly']
 
         super(IggybaseIntegerField, self).__init__(*args, **kwargs)
 
@@ -191,11 +172,8 @@ class IggybaseStringField(StringField):
         else:
             self.iggybase_class = None
 
-        if 'readonly' in kwargs:
-            self.readonly = kwargs['readonly']
-            del kwargs['readonly']
-        else:
-            self.readonly = False
+        self.readonly = kwargs['readonly']
+        del kwargs['readonly']
 
         super(IggybaseStringField, self).__init__(*args, **kwargs)
 
@@ -217,11 +195,8 @@ class IggybaseFileField(FileField):
         else:
             self.iggybase_class = None
 
-        if 'readonly' in kwargs:
-            self.readonly = kwargs['readonly']
-            del kwargs['readonly']
-        else:
-            self.readonly = False
+        self.readonly = kwargs['readonly']
+        del kwargs['readonly']
 
         super(IggybaseFileField, self).__init__(*args, **kwargs)
 
@@ -243,11 +218,8 @@ class IggybasePasswordField(PasswordField):
         else:
             self.iggybase_class = None
 
-        if 'readonly' in kwargs:
-            self.readonly = kwargs['readonly']
-            del kwargs['readonly']
-        else:
-            self.readonly = False
+        self.readonly = kwargs['readonly']
+        del kwargs['readonly']
 
         super(IggybasePasswordField, self).__init__(*args, **kwargs)
 
