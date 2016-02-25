@@ -1,5 +1,6 @@
 *.pyc
 *.py~
+*.log
 *~
 __pycache__
 iggybase_env/
