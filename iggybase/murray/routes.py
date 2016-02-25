@@ -3,10 +3,11 @@ from iggybase import core, templating
 from flask.ext.security import login_required
 from . import murray
 import iggybase.core.table_query_collection as tqc
+from iggybase.auth.role_access_control import RoleAccessControl
 
 @murray.before_request
-def before_request():
-    role_access = rac.RoleAccessControl()
+def before_request(facility_name, module_name):
+    role_access = RoleAccessControl()
     if role_access.check_url3(facility_name, module_name):
         abort(404)
 

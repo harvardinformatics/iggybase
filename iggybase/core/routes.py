@@ -2,6 +2,7 @@ from flask import request, jsonify, abort
 from flask.ext.security import login_required
 from flask.ext import excel
 import json
+import urllib
 from . import core
 import iggybase.form_generator as form_generator
 import iggybase.templating as templating
@@ -143,7 +144,7 @@ def search_results():
             if row.Field.field_name not in fields:
                 fields.append(row.Field.field_name)
 
-    search_results = oac.get_search_results(search_module, search_table, search_params)
+    search_results = oac.get_search_results(search_table, search_params)
 
     modal_html = '<div class="modal-header">'
     modal_html += '<button type="button" class="close_modal">&times;</button>'
@@ -209,14 +210,14 @@ def data_entry(facility_name, table_name, row_name):
         oac = OrganizationAccessControl()
         row_names = oac.save_form()
 
-        return saved_data(module_name, table_name, row_names)
+        return saved_data(facility_name, module_name, table_name, row_names)
 
     return templating.page_template('single_data_entry',
             module_name=module_name, form=form, table_name=table_name)
 
 @core.route( '/multiple_entry/<table_name>/', methods=['GET', 'POST'] )
 @login_required
-def multiple_entry( module_name, table_name ):
+def multiple_entry( facility_name, table_name ):
     module_name = MODULE_NAME
     row_names =  json.loads(request.args.get('row_names'))
     fg = form_generator.FormGenerator('mod_' + module_name, table_name)
@@ -228,7 +229,7 @@ def multiple_entry( module_name, table_name ):
 
         form = fg.default_multiple_entry_form(row_names)
 
-        return saved_data(module_name, table_name, row_names)
+        return saved_data(facility_name, module_name, table_name, row_names)
 
     return templating.page_template('multiple_data_entry', module_name=module_name, form=form, table_name=table_name)
 
@@ -257,7 +258,7 @@ def build_summary_ajax(facility_name, page_form, table_name):
     json_rows = table_query.get_json()
     return jsonify({'data':json_rows})
 
-def saved_data(module_name, table_name, row_names):
+def saved_data(facility_name, module_name, table_name, row_names):
     msg = 'Saved: '
     error = False
     for row_name in row_names:
@@ -268,7 +269,8 @@ def saved_data(module_name, table_name, row_names):
         else:
             table = urllib.parse.quote(row_name[1])
             name = urllib.parse.quote(row_name[0])
-            msg += ' <a href='+request.url_root+module_name+'/detail/'+table+'/'+name+'>'+row_name[0]+'</a>,'
+            msg += ' <a href='+request.url_root+facility_name+'/'+module_name+'/detail/'+table+'/'+name+'>'+\
+                   row_name[0]+'</a>,'
 
     msg = msg[:-1]
     if error:

@@ -23,6 +23,7 @@ $(document).ready(function(){
 ( function( $ ) {
     $.fn.editSelected = function (table) {
         var names = $.map(table.rows('.selected').data(), function (i) { return $(i[1]).text() });
+        alert(names);
         if (names.length > 0) {
             var hidden_fields = $("#hidden_fields");
             var url = $URL_ROOT;
