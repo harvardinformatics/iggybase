@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 cd /n/informatics/iggybase/dev/iggybase
+=======
+cd /n/informatics/iggybase/
+>>>>>>> 94ec884986bbbb52fc01f7bca36e5f2edb79b77b
 
 git merge master
 

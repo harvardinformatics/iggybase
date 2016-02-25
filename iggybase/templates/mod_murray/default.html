@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+{% import 'macros.html' as macros %}
+
+{% block title %}Iggybase Home{% endblock %}
+
+{% block page_content %}
+    <h1>Iggybase</h1>
+    <div class="row">
+        <div class="col-md-4">
+            {{ wtf.quick_form( form ) }}
+        </div>
+    </div>
+{% endblock %}
