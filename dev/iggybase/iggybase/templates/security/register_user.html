@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+{% from "security/_macros.html" import render_field_with_errors, render_field %}
+{% block title %}Register{% endblock %}
+{% block page_content %}
+{% include "security/_messages.html" %}
+<h1>Register</h1>
+<form action="{{ url_for_security('register') }}" method="POST" name="register_user_form">
+  {{ register_user_form.hidden_tag() }}
+  {{ render_field_with_errors(register_user_form.name) }}
+  {{ render_field_with_errors(register_user_form.first_name) }}
+  {{ render_field_with_errors(register_user_form.last_name) }}
+  {{ render_field_with_errors(register_user_form.email) }}
+  {{ render_field_with_errors(register_user_form.address1) }}
+  {{ render_field_with_errors(register_user_form.address2) }}
+  {{ render_field_with_errors(register_user_form.city) }}
+  {{ render_field_with_errors(register_user_form.state) }}
+  {{ render_field_with_errors(register_user_form.zipcode) }}
+  {{ render_field_with_errors(register_user_form.phone) }}
+  {{ render_field_with_errors(register_user_form.organization) }}
+  {{ render_field_with_errors(register_user_form.facility) }}
+  {{ render_field_with_errors(register_user_form.password) }}
+  {% if register_user_form.password_confirm %}
+    {{ render_field_with_errors(register_user_form.password_confirm) }}
+  {% endif %}
+  {{ render_field(register_user_form.submit) }}
+</form>
+{% endblock %}

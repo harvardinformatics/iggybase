@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+{% block styles %}
+    {{ super() }}
+    <link href="{{ url_for('static', filename='jquery/DataTables/media/css/jquery.dataTables.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='summary.css') }}" rel="stylesheet">
+{%- endblock styles %}
+{% block title %}Iggybase - {{ table_name.replace( '_',' ' ) }}{% endblock %}
+{% block content %}
+    <h1>{{ table_query.display_name.replace( '_', ' ' )|title }} {{page_header}}</h1>
+    {% block topbuttonbar %}
+        {{ super() }}
+        {{ macros.render_buttons(top_buttons)}}
+    {%- endblock topbuttonbar %}
+    {% block page_content %}
+        <div>
+            {% if table_query.date_fields: %}
+            <form>
+                <fieldset>
+                {{ macros.render_select(table_query.date_fields, 'date_field_select')}}
+                Min Date:<input type="text" class="datepicker" id="min_date">
+                Max Date:<input type="text" class="datepicker" id="max_date">
+                </fieldset>
+            </form>
+            {% endif %}
+        </div>
+        <div class={{ table_name ~ "_table" }}>
+            {{ macros.render_table_headers( table_query ) }}
+        </div>
+    {%- endblock page_content %}
+    {% block bottombuttonbar %}
+            {{ super() }}
+            {{ macros.render_buttons(bottom_buttons)}}
+        {%- endblock bottombuttonbar %}
+    {%- endblock content %}
+{% block scripts %}
+    {{ super() }}
+    <script type="text/javascript"
+        src="{{ url_for('static', filename='jquery/DataTables/media/js/jquery.dataTables.min.js')}}"></script>
+{%- endblock scripts %}
