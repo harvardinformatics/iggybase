@@ -28,9 +28,12 @@ class RoleAccessControl:
                                           models.Level.order).all())
 
             self.facilities = {}
+            self.facility = ''
             for fac in facility_res:
                 if fac.Facility.name not in self.facilities:
                     self.facilities[fac.Facility.name] = fac.Role.id
+                if fac.Role.id == self.role.id:
+                    self.facility = fac.Facility.name
         else:
             self.user = None
             self.role = None
@@ -297,9 +300,12 @@ class RoleAccessControl:
             ).order_by(models.MenuRole.order, models.MenuRole.description).all())
 
         for item in items:
-            url = ''
             if item.Menu.url_path and item.Menu.url_path != '':
-                url = item.Menu.url_path
+                if self.facility != '':
+                    url = self.facility + '/' + item.Menu.url_path
+                else:
+                    url = item.Menu.url_path
+
                 if url and item.Menu.url_params:
                     url += item.Menu.url_params
 
@@ -307,7 +313,9 @@ class RoleAccessControl:
                     url = request.url_root + url
                 else:
                     url = '#'
-
+            else:
+                url = ''
+                
             menu[item.Menu.name] = {
                     'url': url,
                     'title': item.MenuRole.description,
