@@ -315,7 +315,7 @@ class RoleAccessControl:
                     url = '#'
             else:
                 url = ''
-                
+
             menu[item.Menu.name] = {
                     'url': url,
                     'title': item.MenuRole.description,
