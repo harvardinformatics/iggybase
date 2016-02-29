@@ -1,8 +1,8 @@
 import os
 from collections import OrderedDict
 from flask import Flask, g, send_from_directory, abort, url_for, request
-from wtforms import TextField, SelectField
-from wtforms.validators import Required
+from wtforms import StringField, SelectField
+from wtforms.validators import DataRequired
 from config import config, get_config
 from flask import render_template
 from flask.ext.security import Security, SQLAlchemyUserDatastore, UserMixin, \
@@ -137,20 +137,20 @@ def configure_error_handlers( app ):
 
 
 class ExtendedLoginForm(LoginForm):
-    email = TextField('Username or email:')
+    email = StringField('Username or email:')
 
 class ExtendedRegisterForm(RegisterForm):
-    name = TextField('Username:', [Required()])
-    first_name = TextField('First Name:', [Required()])
-    last_name = TextField('Last Name:', [Required()])
-    email = TextField('Email:', [Required()])
-    organization = TextField('Organization:', [Required()])
-    address1 = TextField('Address 1:', [Required()])
-    address2 = TextField('Address 2:', [Required()])
-    city = TextField('City:', [Required()])
-    state = TextField('State:', [Required()])
-    zipcode = TextField('Zipcode:', [Required()])
-    phone = TextField('Phone:', [Required()])
+    name = StringField('Username:', [DataRequired()])
+    first_name = StringField('First Name:', [DataRequired()])
+    last_name = StringField('Last Name:', [DataRequired()])
+    email = StringField('Email:', [DataRequired()])
+    organization = StringField('Organization:', [DataRequired()])
+    address1 = StringField('Address 1:', [DataRequired()])
+    address2 = StringField('Address 2:', [DataRequired()])
+    city = StringField('City:', [DataRequired()])
+    state = StringField('State:', [DataRequired()])
+    zipcode = StringField('Zipcode:', [DataRequired()])
+    phone = StringField('Phone:', [DataRequired()])
     organization = SelectField('Organization:', coerce=int)
     facility = SelectField('Service:', coerce=int)
 

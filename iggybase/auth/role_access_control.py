@@ -15,7 +15,7 @@ class RoleAccessControl:
         self.session = db_session()
         # set user and role
         if g.user is not None and not g.user.is_anonymous:
-            self.user = models.load_user(g.user.id)
+            self.user = self.session.query(models.User).filter_by(id=g.user.id).first()
             self.role = (self.session.query(models.Role)
                                   .join(models.UserRole)
                                   .filter(models.UserRole.id==self.user.current_user_role_id).first())
@@ -324,18 +324,17 @@ class RoleAccessControl:
             }
         return menu
 
-    def change_role(self, role_id):
+    def change_iggybase_role(self, role_id):
         """updates the user.current_role
         """
         # check that the logged in user has permission for that role
         if self.user is None:
             return False
 
-        user = models.User.query.filter_by(id=self.user.id).first()
-        user_role = models.UserRole.query.filter_by(role_id =
-                role_id, user_id = user.id).first()
+        user_role = self.session.query(models.UserRole).filter_by(role_id =
+                role_id, user_id = self.user.id).first()
         if user_role:
-            user.current_user_role_id = user_role.id
+            self.user.current_user_role_id = role_id
             self.session.commit()
             return True
         else:

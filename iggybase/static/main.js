@@ -39,10 +39,8 @@ $( document ).ready( function () {
 
     $('.change_role').click(function(){
         currenturl = $.fn.parseURL(document.URL);
-        alert(currenturl.pathname);
         paths = currenturl.pathname.split("/");
         //pathname starts with / facility in index 1
-        alert($(this).data('role_id'));
         $.ajax({
             url:$URL_ROOT + paths[1] + '/core/ajax/change_role',
             data: JSON.stringify({
