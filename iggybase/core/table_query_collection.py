@@ -28,15 +28,12 @@ class TableQueryCollection:
         if table_queries_info:
             for query in table_queries_info:
                 order = query.TableQuery.order
-                # TODO: constant for pages that need row_id?
-                row_id = (self.page_form in ['action_summary', 'update'])
                 self.populate_query(
                     query.TableQuery.id,
                     order,
                     query.TableQuery.display_name,
                     None,
-                    self.criteria,
-                    row_id
+                    self.criteria
                 )
         elif self.table_name:
             self.populate_query(None, 1, self.table_name, self.table_name,
@@ -45,15 +42,14 @@ class TableQueryCollection:
         self.results.sort(key=operator.attrgetter('order'))
 
     def populate_query(self, id, order, query_name, table_name = None, criteria
-            = {}, row_id = False):
+            = {}):
         tq = TableQuery(
             id,
             order,
             query_name,
             self.facility_name,
             table_name,
-            criteria,
-            row_id
+            criteria
         )
         tq.get_fields()
         self.queries.append(tq)

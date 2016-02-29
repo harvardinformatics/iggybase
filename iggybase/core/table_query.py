@@ -8,19 +8,18 @@ from iggybase.admin import models as admin_models
 
 # Retreives and formats data based on table_query
 class TableQuery:
-    def __init__ (self, id, order, display_name, facility_name, table_name = None, criteria = {}, row_id = False):
+    def __init__ (self, id, order, display_name, facility_name, table_name = None, criteria = {}):
         self.id = id
         self.order = order
         self.display_name = display_name
         self.facility_name = facility_name
         self.table_name = table_name
-        self.table_rows = []
+        self.table_rows = OrderedDict()
         self.field_dict = OrderedDict()
         self._role_access_control = rac.RoleAccessControl()
         self.criteria = criteria
         self.date_fields = {}
         self.table_fields = []
-        self.row_id = row_id
 
     def get_fields(self):
         self.table_fields = self._get_table_query_fields()
@@ -36,8 +35,7 @@ class TableQuery:
         organization_access_control = oac.OrganizationAccessControl()
         self.results = organization_access_control.get_table_query_data(
                 self.field_dict,
-                self.criteria,
-                self.row_id
+                self.criteria
         )
         return self.results
 
@@ -103,12 +101,11 @@ class TableQuery:
         - formats FK data and link
         - formats name link which goes to detail template
         """
-        self.table_rows = []
         # format results as dictionary
         if self.results:
             keys = self.results[0].keys()
         # create dictionary for each row and for fk data
-        for row in self.results:
+        for i, row in enumerate(self.results):
             row_dict = OrderedDict()
             for i, col in enumerate(row):
                 visible = True
@@ -119,8 +116,11 @@ class TableQuery:
                     if calculation:
                         col = field.calculate(col, row,
                                 keys)
+                elif keys[i] == 'DT_RowId':
+                    dt_row_id = col
+
                 if visible:
-                    if for_download:
+                    if for_download or keys[i] == 'DT_RowId':
                         item_value = col
                     else:
                         item_value = {'text': col}
@@ -135,7 +135,7 @@ class TableQuery:
                             'detail',
                             field.TableObject.name
                         )
-            self.table_rows.append(row_dict)
+            self.table_rows[dt_row_id] = row_dict
 
     def link_visible(self, field):
         return (not field.is_calculation() and
@@ -167,19 +167,19 @@ class TableQuery:
 
     def get_json(self):
         list_rows = []
-        for row in self.table_rows:
+        for row in self.table_rows.values():
             list_row = OrderedDict()
             col_num = 0
             for key, val in row.items():
                 formatted_val = ''
-                if 'text' in val:
+                if isinstance(val, dict):
                     if 'link' in val:
                         formatted_val = ('<a href="' + str(val['link']) + '">' +
                             str(val['text']) + '</a>')
                     else:
                         formatted_val = str(val['text'])
                 if (key == 'DT_RowId'):
-                    list_row[key] = formatted_val
+                    list_row[key] = val
                 else:
                     list_row[str(col_num)] = formatted_val
                     col_num += 1
