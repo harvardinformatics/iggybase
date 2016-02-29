@@ -38,9 +38,13 @@ $( document ).ready( function () {
     );
 
     $('.change_role').click(function(){
+        currenturl = $.fn.parseURL(document.URL);
+        alert(currenturl.pathname);
+        paths = currenturl.pathname.split("/");
+        //pathname starts with / facility in index 1
+        alert($(this).data('role_id'));
         $.ajax({
-            // TODO: don't hardcode facility
-            url:$URL_ROOT + 'murray/core/ajax/change_role',
+            url:$URL_ROOT + paths[1] + '/core/ajax/change_role',
             data: JSON.stringify({
                 'role_id': $(this).data('role_id')
             }),
@@ -296,5 +300,29 @@ $( document ).ready( function () {
         $("#dialog").modal( "hide" );
         $('body').removeClass('modal-open');
         $('.modal-backdrop').remove();
+    }
+
+    $.fn.parseURL = function (url) {
+        var parser = document.createElement('a'),
+            searchObject = {},
+            queries, split, i;
+        // Let the browser do the work
+        parser.href = url;
+        // Convert query string to object
+        queries = parser.search.replace(/^\?/, '').split('&');
+        for( i = 0; i < queries.length; i++ ) {
+            split = queries[i].split('=');
+            searchObject[split[0]] = split[1];
+        }
+        return {
+            protocol: parser.protocol,
+            host: parser.host,
+            hostname: parser.hostname,
+            port: parser.port,
+            pathname: parser.pathname,
+            search: parser.search,
+            searchObject: searchObject,
+            hash: parser.hash
+        };
     }
 } ) ( jQuery );

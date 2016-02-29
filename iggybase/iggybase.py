@@ -104,11 +104,11 @@ def configure_hook( app ):
     def before_request():
         g.user = current_user
         path = request.path.split('/')
-        # set module in g
-        if len(path) > 2:
-            g.module = path[2]
         # TODO: consider caching this for the session
-        if (current_user.is_authenticated and path and path[1] != 'static'):
+        if (current_user.is_authenticated and path and path[1] != 'static' and path[0] != 'login'):
+            # set module in g
+            if len(path) > 2:
+                g.module = path[2]
             role_access = rac.RoleAccessControl()
             access = role_access.has_facility_access(path[1])
             if not access:
