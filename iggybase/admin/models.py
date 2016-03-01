@@ -612,6 +612,19 @@ class UserOrganization(Base):
     user_organization_organization = relationship('Organization', foreign_keys=[user_organization_id])
     user_organization_user = relationship('User', foreign_keys=[user_id])
 
+class Institution(Base):
+    __tablename__ = 'institution'
+    __table_args__ = {'mysql_engine': 'InnoDB'}
+    id = Column(Integer, primary_key=True)
+    name = Column(String(50), unique=True)
+    description = Column(String(255))
+    date_created = Column(DateTime, default=datetime.datetime.utcnow)
+    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
+    active = Column(Boolean)
+    organization_id = Column(Integer)
+    order = Column(Integer)
+
+
 class Department(Base):
     __tablename__ = 'department'
     __table_args__ = {'mysql_engine': 'InnoDB'}
@@ -623,6 +636,10 @@ class Department(Base):
     active = Column(Boolean)
     organization_id = Column(Integer)
     order = Column(Integer)
+    institution_id = Column(Integer, ForeignKey('institution.id'))
+
+    department_institution = relationship("Institution",
+            foreign_keys=[institution_id])
 
 
 class Organization(Base):
