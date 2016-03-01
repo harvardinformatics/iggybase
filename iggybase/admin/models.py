@@ -50,7 +50,7 @@ class Role(Base, RoleMixin):
     facility_id = Column(Integer, ForeignKey('facility.id'))
     level_id = Column(Integer, ForeignKey('level.id'))
 
-    role_facility = relationship("Facility", foreign_keys=[facility_id])
+     = relationship("Facility", foreign_keys=[facility_id])
     role_level = relationship("Level", foreign_keys=[level_id])
     role_unq = UniqueConstraint('facility_id', 'level_id')
 
