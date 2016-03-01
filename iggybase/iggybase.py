@@ -103,7 +103,14 @@ def configure_hook( app ):
     @app.before_request
     def before_request():
         g.user = current_user
-        path = request.path.split('/')
+        g.facility = ""
+        if 'next' in request.args:
+            logging.info('request.args[next]: '+  request.args['next'])
+            path =request.args['next'].split('/')
+        else:
+            logging.info('request.path.split(/): '+  request.path)
+            path = request.path.split('/')
+
         # TODO: consider caching this for the session
         if (current_user.is_authenticated and path and path[1] != 'static' and path[0] != 'login'):
             # set module in g
@@ -111,8 +118,12 @@ def configure_hook( app ):
                 g.module = path[2]
             role_access = rac.RoleAccessControl()
             access = role_access.has_facility_access(path[1])
+            logging.info('configure_hook: '+  path[1])
+            for key,value in role_access.facilities.items():
+                logging.info(key + ": " + str(value))
             if not access:
                 if path[1] in role_access.facilities:
+                    logging.info( 'path[1] in role_access.facilities: '+ str( role_access.facilities[ path[ 1 ] ] ) )
                     role_access.change_role(role_access.facilities[path[1]])
                 else:
                     abort(404)

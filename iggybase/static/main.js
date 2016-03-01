@@ -38,26 +38,19 @@ $( document ).ready( function () {
     );
 
     $('.change_role').click(function(){
-        currenturl = $.fn.parseURL(document.URL);
-        paths = currenturl.pathname.split("/");
-        //pathname starts with / facility in index 1
-        $.ajax({
-            url:$URL_ROOT + paths[1] + '/core/ajax/change_role',
-            data: JSON.stringify({
-                'role_id': $(this).data('role_id')
-            }),
-            contentType: 'application/json;charset=UTF-8',
-            type: 'POST',
-            success: function(response) {
-                response = JSON.parse(response);
-                if(response.success) {
-                    alert('role changed');
-                } else {
-                    alert('role not changed, user may not have permission for that role, contact an administrator');
-                }
-            }
-        });
+        var currenturl = $.fn.parseURL(document.URL);
+        var paths = currenturl.pathname.split("/");
+        var newpath = currenturl.protocol+"//"+currenturl.hostname+"/"+$(this).data('facility')+"/";
 
+        //pathname starts with / facility in index 1
+        for (var i=2;i<paths.length;i++)
+            if (paths[i] != '')
+                newpath += paths[i]+"/";
+
+        window.location.href = newpath.slice(0, -1)+currenturl.search;
+
+        //will not work without this
+        return false;
     });
 } );
 

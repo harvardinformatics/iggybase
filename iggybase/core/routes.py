@@ -189,7 +189,7 @@ def search_results(facility_name):
 def change_role(facility_name):
     role_id = request.json['role_id']
     rac = RoleAccessControl()
-    success = rac.change_iggybase_role(role_id)
+    success = rac.change_role(role_id)
     return json.dumps({'success':success})
 
 @core.route('/data_entry/<table_name>/<row_name>/', methods=['GET', 'POST'])

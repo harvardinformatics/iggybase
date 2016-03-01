@@ -571,7 +571,7 @@ class User(Base, UserMixin):
     user_user_role = relationship("UserRole", foreign_keys=[current_user_role_id])
     user_organization = relationship("Organization", foreign_keys=[organization_id])
     roles = relationship('Role', secondary='user_role', primaryjoin='user_role.c.user_id == User.id',
-                         secondaryjoin='user_role.c.role_id == Role.id',
+                         secondaryjoin='user_role.c.role_id == Role.id', order_by='Role.name',
                          backref=backref('users', lazy='dynamic'))
 
     def get_id(self):

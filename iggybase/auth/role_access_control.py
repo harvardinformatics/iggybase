@@ -219,12 +219,13 @@ class RoleAccessControl:
         return navbar, sidebar
 
     def make_role_menu(self):
-        role_menu_subs = {}
+        role_menu_subs = OrderedDict({})
         if self.user is not None:
             for role in self.user.roles:
                 if role != self.role:
+                    facility = self.session.query(models.Facility).filter_by(id = role.facility_id).first()
                     role_menu_subs[role.name] = {'title':role.name,
-                            'class':'change_role', 'data':{'role_id': role.id}}
+                            'class':'change_role', 'data':{'role_id': role.id, 'facility':facility.name}}
 
         if role_menu_subs:
             subs = {'title':'Change Role',
@@ -324,19 +325,22 @@ class RoleAccessControl:
             }
         return menu
 
-    def change_iggybase_role(self, role_id):
+    def change_role(self, role_id):
         """updates the user.current_role
         """
         # check that the logged in user has permission for that role
         if self.user is None:
             return False
 
-        user_role = self.session.query(models.UserRole).filter_by(role_id =
-                role_id, user_id = self.user.id).first()
-        if user_role:
+        user_role = self.session.query(models.UserRole,models.Role).\
+            join(models.Role).\
+            filter(models.UserRole.role_id==role_id).\
+            filter(models.UserRole.user_id==self.user.id).first()
+        if user_role.UserRole:
+            facility = self.session.query(models.Facility).filter_by(id = user_role.Role.facility_id).first()
             self.user.current_user_role_id = role_id
             self.session.commit()
-            return True
+            return facility.name
         else:
             return False
 
