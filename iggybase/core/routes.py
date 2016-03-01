@@ -199,6 +199,9 @@ def data_entry(facility_name, table_name, row_name):
     rac = RoleAccessControl()
     table_data = rac.has_access('TableObject', {'name': table_name})
 
+    if not table_data:
+        abort(403)
+
     link_data, child_tables = rac.get_child_tables(table_data.id)
 
     fg = form_generator.FormGenerator('mod_' + module_name, table_name)
@@ -220,6 +223,12 @@ def data_entry(facility_name, table_name, row_name):
 @login_required
 def multiple_entry( facility_name, table_name ):
     module_name = MODULE_NAME
+    rac = RoleAccessControl()
+    table_data = rac.has_access('TableObject', {'name': table_name})
+
+    if not table_data:
+        abort(403)
+
     row_names =  json.loads(request.args.get('row_names'))
     fg = form_generator.FormGenerator('mod_' + module_name, table_name)
     form = fg.default_multiple_entry_form(row_names)
