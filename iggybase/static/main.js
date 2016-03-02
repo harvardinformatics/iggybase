@@ -48,7 +48,25 @@ $( document ).ready( function () {
                 newpath += paths[i]+"/";
 
         window.location.href = newpath.slice(0, -1)+currenturl.search;
+        alert($(this).data('role_id'));
 
+        $.ajax({
+            // TODO: don't hardcode facility
+            url:$URL_ROOT + 'murray/core/ajax/change_role',
+            data: JSON.stringify({
+                'role_id': $(this).data('role_id')
+            }),
+            contentType: 'application/json;charset=UTF-8',
+            type: 'POST',
+            success: function(response) {
+                response = JSON.parse(response);
+                if(response.success) {
+                    alert('role changed');
+                } else {
+                    alert('role not changed, user may not have permission for that role, contact an administrator');
+                }
+            }
+        });
         //will not work without this
         return false;
     });

@@ -212,7 +212,7 @@ class FormGenerator():
         id = None
 
         if row_name != 'new':
-            data = self.organization_access_control.get_entry_data(self.table_data.name, {'name': row_name})
+            data = self.organization_access_control.get_entry_data(self.table_data.name, {'name': str(row_name)})
             if data:
                 data = data[0]
 
@@ -221,6 +221,7 @@ class FormGenerator():
                     row_name = 'new'
 
         for field in fields:
+            #logging.info(str(field.Field.id) + " " + field.Field.field_name +': ' + field.FieldRole.display_name)
             value = None
             if row_name != 'new' and data is not None:
                 if  field.FieldRole.display_name in data.keys():

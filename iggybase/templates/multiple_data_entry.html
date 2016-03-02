@@ -4,7 +4,7 @@
 {% block title %}{{ page_title }}{% endblock %}
 
 {% block content %}
-    <form action class="form form-horizontal form-group form-inline" method="post" role="form">
+    <form action class="form form-horizontal" method="post" role="form">
     {{ form.hidden_tag() }}
     {{ wtf.form_errors(form, hiddens='only') }}
 
@@ -27,6 +27,7 @@
         <p>{{ page_msg|safe }}</p>
     </div>
 
+    <div   class="col-md-12">
     {% block page_content -%}
         <table class="table table-striped">
             <tr>
@@ -44,12 +45,13 @@
                         </tr><tr>
                     {% endif %}
                     {% if not bootstrap_is_hidden_field( field ) -%}
-                        <td><div  class="col-md-12">{{ macros.table_field( field ) }}</div></td>
+                        <td>{{ macros.table_field( field ) }}</td>
                     {% endif %}
                 {% endfor %}
             </tr>
         </table>
     {% endblock page_content -%}
+    </div>
 
     {% block bottombuttonbar %}
         {{ super() }}

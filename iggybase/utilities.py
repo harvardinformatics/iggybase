@@ -21,7 +21,7 @@ def get_table(table_name):
         table_object = getattr(module_model, TableFactory.to_camel_case(table_name))
     except AttributeError:
         logging.info('abort ' + table_name)
-        abort(404)
+        abort(403)
     finally:
         session.commit()
 

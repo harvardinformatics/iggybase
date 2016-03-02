@@ -11,3 +11,6 @@ def message(page_temp, page_msg):
 
 def forbidden():
     return templating.page_template('forbidden')
+
+def page_not_found():
+    return templating.page_template('not_authorized')
