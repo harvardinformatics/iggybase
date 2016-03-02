@@ -22,7 +22,10 @@ class OrganizationAccessControl:
         self.current_org_id = None
         self.session = db_session()
         if g.user is not None and not g.user.is_anonymous:
-            self.user = models.load_user(g.user.id)
+            self.user =  self.session.query(models.User).filter_by(id=g.user.id).first()
+            query = self.session.query(models.Organization.parent_id.distinct().label('parent_id'))
+            self.parent_orgs = [row.parent_id for row in query.all()]
+
             user_orgs = self.session.query(models.UserOrganization).filter_by(active=1, user_id=self.user.id).all()
 
             for user_org in user_orgs:
@@ -44,7 +47,10 @@ class OrganizationAccessControl:
             return
 
         for child_org in child_orgs:
-            self.get_child_organization(child_org.id)
+            if child_org.id in self.parent_orgs:
+                self.get_child_organization(child_org.id)
+            else:
+                self.org_ids.append(child_org.id)
 
         return
 
@@ -443,12 +449,12 @@ class OrganizationAccessControl:
 
         # set up a table query so we have the fk fields available for the
         # message_fields
-        if message_fields:
-            tq = TableQuery(None, 1, table, g.facility, table, {(table,
-                'id'):ids})
-            tq.get_fields()
-            tq.get_results()
-            tq.format_results(True)
+        #if message_fields:
+        #    tq = TableQuery(None, 1, table, g.facility, table, {(table,
+        #        'id'):ids})
+        #    tq.get_fields()
+        #    tq.get_results()
+        #    tq.format_results(True)
 
         updated = []
         for i, row in enumerate(rows):

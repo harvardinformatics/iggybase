@@ -217,7 +217,7 @@ $( document ).ready( function () {
     }
 
     $.fn.addLookup = function ( ele ) {
-        var spancls = "ui-icon ui-icon-search search-button"
+        var spancls = "ui-icon ui-icon-search search-button";
         $('<span class="'+spancls+'" luid="'+ele.attr('id')+'"/>').appendTo(ele.parent());
     }
 
