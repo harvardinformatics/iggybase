@@ -17,6 +17,7 @@ class TableQuery:
         self.table_rows = OrderedDict()
         self.field_dict = OrderedDict()
         self._role_access_control = rac.RoleAccessControl()
+        self._org_access_control = oac.OrganizationAccessControl()
         self.criteria = criteria
         self.date_fields = {}
         self.table_fields = []
@@ -32,8 +33,7 @@ class TableQuery:
         """
         results = []
         self.criteria = self._add_table_query_criteria(self.criteria)
-        organization_access_control = oac.OrganizationAccessControl()
-        self.results = organization_access_control.get_table_query_data(
+        self.results = self._org_access_control.get_table_query_data(
                 self.field_dict,
                 self.criteria
         )
@@ -185,3 +185,16 @@ class TableQuery:
                     col_num += 1
             list_rows.append(list_row)
         return list_rows
+
+    def update_and_get_message(self, updates, ids, message_fields):
+        updated = self._org_access_control.update_table_rows(updates, ids, self.table_name)
+        updated_info = []
+        for i in updated:
+            # for each row grab any message_fields, to inform the user about the
+            # update
+            row_fields = []
+            for field in message_fields:
+                row_fields.append(str(self.table_rows[i][field]))
+            if row_fields:
+                updated_info.append(', '.join(row_fields))
+        return updated_info
