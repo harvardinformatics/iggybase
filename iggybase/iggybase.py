@@ -117,7 +117,6 @@ def configure_hook( app ):
 
             if not access:
                 if path[1] in role_access.facilities:
-                    logging.info( 'path[1] in role_access.facilities: '+ str( role_access.facilities[ path[ 1 ] ] ) )
                     role_access.change_role(role_access.facilities[path[1]])
                 else:
                     abort(404)

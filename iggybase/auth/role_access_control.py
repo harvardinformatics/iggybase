@@ -331,8 +331,6 @@ class RoleAccessControl:
         if self.user is None:
             return False
 
-        logging.info('role_id: '+str(role_id))
-        logging.info('self.user.current_user_role_id: '+str(self.user.current_user_role_id))
         user_role = self.session.query(models.UserRole,models.Role).\
             join(models.Role).\
             filter(models.UserRole.role_id==role_id).\

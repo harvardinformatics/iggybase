@@ -48,7 +48,6 @@ $( document ).ready( function () {
                 newpath += paths[i]+"/";
 
         window.location.href = newpath.slice(0, -1)+currenturl.search;
-        alert($(this).data('role_id'));
 
         $.ajax({
             // TODO: don't hardcode facility
