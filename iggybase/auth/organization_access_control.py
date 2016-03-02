@@ -4,7 +4,6 @@ from sqlalchemy import DateTime, func
 from iggybase.auth.role_access_control import RoleAccessControl
 from iggybase.database import db_session
 from iggybase.admin import models
-from iggybase.core.table_query import TableQuery
 from iggybase import models as core_models
 from iggybase import utilities as util
 from sqlalchemy.orm import aliased
@@ -445,30 +444,9 @@ class OrganizationAccessControl:
         table_model = util.get_table(table)
         rows = table_model.query.filter(table_model.id.in_(ids), getattr(table_model, 'organization_id').in_(self.org_ids)).order_by('id').all()
 
-<<<<<<< HEAD
-        # set up a table query so we have the fk fields available for the
-        # message_fields
-        #if message_fields:
-        #    tq = TableQuery(None, 1, table, g.facility, table, {(table,
-        #        'id'):ids})
-        #    tq.get_fields()
-        #    tq.get_results()
-        #    tq.format_results(True)
-
-=======
->>>>>>> 442b90e76f982fef77cf594e227b8ba301b9a7f1
         updated = []
         for i, row in enumerate(rows):
             row_updates = []
-            for col, val in updates.items():
-                try:
-                    col_obj = getattr(table_model, col)
-                    if (isinstance(col_obj.type, DateTime) and val == 'now'):
-                        val = func.now()
-                    setattr(row, col, val)
-                    row_updates.append(col)
-                except AttributeError:
-                    pass
             # commit if we were able to make all updates for the row
             if len(updates) == len(row_updates):
                 self.session.commit()
