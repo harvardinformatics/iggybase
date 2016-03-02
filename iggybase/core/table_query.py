@@ -14,7 +14,7 @@ class TableQuery:
         self.display_name = display_name
         self.facility_name = facility_name
         self.table_name = table_name
-        self.table_rows = OrderedDict()
+        self.table_rows = {}
         self.field_dict = OrderedDict()
         self._role_access_control = rac.RoleAccessControl()
         self._org_access_control = oac.OrganizationAccessControl()
@@ -26,11 +26,11 @@ class TableQuery:
         self.table_fields = self._get_table_query_fields()
         # get display names and set results as an ordered dict
         self.field_dict = self._get_field_dict(self.table_fields)
-        self.date_fields = self._get_date_fields(self.field_dict)
 
     def get_results(self):
         """ calls several class functions and returns results
         """
+        self._set_fk_fields(self.field_dict)
         results = []
         self.criteria = self._add_table_query_criteria(self.criteria)
         self.results = self._org_access_control.get_table_query_data(
@@ -44,16 +44,6 @@ class TableQuery:
             self.id,
             self.table_name
         )
-        '''if not table_query_fields:
-            # TODO: determine if we want to go this way and then sort out type
-            # and fk info
-            table = getattr(admin_models, util.to_camel_case(self.table_name))
-            table_query_fields = []
-            for col in table.__table__.columns:
-                field = util.DictObject({'name': col.name, 'field_name':col.name, 'data_type_id':1, 'foreign_key_table_object_id':None})
-                table = util.DictObject({'name': self.table_name})
-                obj = util.DictObject({'Field': field, 'TableObject': table})
-                table_query_fields.append(obj)'''
         return table_query_fields
 
     def _add_table_query_criteria(self, orig_criteria):
@@ -78,21 +68,31 @@ class TableQuery:
 
     def _get_field_dict(self, table_fields):
         field_dict = OrderedDict()
-        for row in table_fields:
+        for order, row in enumerate(table_fields):
             table_query_field = getattr(row, 'TableQueryField', None)
             calculation = getattr(row, 'TableQueryCalculation', None)
             field = field_class(row.Field,
-                    row.TableObject, table_query_field,
+                    row.TableObject, order, table_query_field,
                     calculation)
             field_dict[field.display_name] = field
+
+            if field.type == 4:
+                self.date_fields[field.display_name] = order
         return field_dict
 
-    def _get_date_fields(self, field_dict):
-        date_fields = {}
-        for i, field in enumerate(field_dict.values()):
-            if field.type == 4:# TODO: user constant
-                date_fields[field.display_name] = i
-        return date_fields
+    def _set_fk_fields(self, field_dict):
+        fields_by_id = {}
+        for field_name, field in field_dict.items():
+            if field.is_foreign_key:
+                if (field.Field.foreign_key_table_object_id, field.Field.foreign_key_display) in fields_by_id:
+                    field.set_fk_field(fields_by_id[(field.Field.foreign_key_table_object_id, field.Field.foreign_key_display)])
+                else:
+                    field.set_fk_field()
+            if field.Field.field_name == 'name':
+                field_id_or_name = 'name'
+            else:
+                field_id_or_name = field.Field.id
+            fields_by_id[(field.TableObject.id, field_id_or_name)] = field
 
     def format_results(self, for_download = False):
         """Formats data for summary or detail
@@ -101,40 +101,48 @@ class TableQuery:
         - formats FK data and link
         - formats name link which goes to detail template
         """
+        url_root = request.url_root
         # format results as dictionary
         if self.results:
             keys = self.results[0].keys()
+        link_fields = []
+        calc_fields = []
+        col_names = {}
+        for field_name, field in self.field_dict.items():
+            if self.link_visible(field):
+                link_fields.append(field_name)
+            if field.is_calculation():
+                calc_fields.append(field_name)
+            col_names[field_name] = str(field.order)
+            col_names['DT_RowId'] = 'DT_RowId'
+
         # create dictionary for each row and for fk data
         for i, row in enumerate(self.results):
-            row_dict = OrderedDict()
+            row_dict = {}
             for i, col in enumerate(row):
-                visible = True
-                if keys[i] in self.field_dict:
-                    field = self.field_dict[keys[i]]
-                    visible = field.is_visible()
-                    calculation = field.is_calculation()
-                    if calculation:
-                        col = field.calculate(col, row,
-                                keys)
-                elif keys[i] == 'DT_RowId':
+                name = keys[i]
+                if name == 'DT_RowId':
                     dt_row_id = col
-
-                if visible:
-                    if for_download or keys[i] == 'DT_RowId':
-                        item_value = col
-                    else:
-                        item_value = {'text': col}
-                    row_dict[keys[i]] = item_value
+                else:
+                    if name in calc_fields:
+                        col = self.field_dict[name].calculate(col, row,
+                                keys)
+                if name in link_fields and col:
                     # name and table title columns values will link to detail
-                    if (not for_download and self.link_visible(field)):
-                        row_dict[keys[i]]['link'] = self.get_link(
-                            col,
-                            self.facility_name,
-                            g.module,
-                            request.url_root,
-                            'detail',
-                            field.TableObject.name
-                        )
+                    link = self.get_link(
+                        col,
+                        self.facility_name,
+                        g.module,
+                        url_root,
+                        'detail',
+                        self.field_dict[name].TableObject.name
+                    )
+                    item_value = ('<a href="' + str(link) + '">' +
+                            str(col) + '</a>')
+                else:
+                    item_value = col
+                row_dict[col_names[name]] = item_value
+
             self.table_rows[dt_row_id] = row_dict
 
     def link_visible(self, field):
@@ -164,27 +172,6 @@ class TableQuery:
         except:
             first = {}
         return first
-
-    def get_json(self):
-        list_rows = []
-        for row in self.table_rows.values():
-            list_row = OrderedDict()
-            col_num = 0
-            for key, val in row.items():
-                formatted_val = ''
-                if isinstance(val, dict):
-                    if 'link' in val:
-                        formatted_val = ('<a href="' + str(val['link']) + '">' +
-                            str(val['text']) + '</a>')
-                    else:
-                        formatted_val = str(val['text'])
-                if (key == 'DT_RowId'):
-                    list_row[key] = val
-                else:
-                    list_row[str(col_num)] = formatted_val
-                    col_num += 1
-            list_rows.append(list_row)
-        return list_rows
 
     def update_and_get_message(self, updates, ids, message_fields):
         updated = self._org_access_control.update_table_rows(updates, ids, self.table_name)

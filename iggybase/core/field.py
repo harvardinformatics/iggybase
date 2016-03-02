@@ -4,7 +4,7 @@ from .calculation import get_calculation
 import logging
 
 class Field:
-    def __init__ (self, field, table_object, table_query_field = None, calculation = None):
+    def __init__ (self, field, table_object, order, table_query_field = None, calculation = None):
         self.Field = field
         self.TableObject = table_object
         self.TableQueryField = table_query_field
@@ -13,8 +13,9 @@ class Field:
         self._role_access_control = rac.RoleAccessControl()
         self.calculation_fields = self._get_calculation_fields(calculation)
         self.type = self._get_type()
-        self.is_foreign_key = self._get_foreign_key_field()
+        self.is_foreign_key = (self.Field.foreign_key_table_object_id != None)
         self.is_title_field = (self.TableObject.name == self.display_name)
+        self.order = order
 
     def is_calculation(self):
         return (self.TableQueryCalculation != None)
@@ -25,32 +26,31 @@ class Field:
             visible = self.TableQueryField.visible
         return visible
 
-    def _get_foreign_key_field(self):
-        is_fk = False
-        fk_to = self.Field.foreign_key_table_object_id
-        if fk_to:
-            if self.Field.foreign_key_display:
-                fk_field = self._role_access_control.table_query_fields(
-                        None,
-                        None,
-                        fk_to,
-                        None,
-                        self.Field.foreign_key_display
-                    )
-            else:
-                fk_field = self._role_access_control.table_query_fields(
-                        None,
-                        None,
-                        fk_to,
-                        'name' # if fk then we want the human readable name
-                    )
-            if fk_field:
-                self.fk_field = self.Field # field to which this is fk
-                self.fk_table = self.TableObject
-                self.Field = fk_field[0].Field
-                self.TableObject = fk_field[0].TableObject
-                is_fk = True
-        return is_fk
+    def set_fk_field(self, fk_field = None):
+        if not fk_field:
+            fk_to = self.Field.foreign_key_table_object_id
+            if fk_to:
+                if self.Field.foreign_key_display:
+                    fk_field = self._role_access_control.table_query_fields(
+                            None,
+                            None,
+                            fk_to,
+                            None,
+                            self.Field.foreign_key_display
+                        )
+                else:
+                    fk_field = self._role_access_control.table_query_fields(
+                            None,
+                            None,
+                            fk_to,
+                            'name' # if fk then we want the human readable name
+                        )
+                fk_field = fk_field[0]
+        if fk_field:
+            self.fk_field = self.Field # field to which this is fk
+            self.fk_table = self.TableObject
+            self.Field = fk_field.Field
+            self.TableObject = fk_field.TableObject
 
     def _get_type(self):
         # TODO: get some constants and caching working and return a constant

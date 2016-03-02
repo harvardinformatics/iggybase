@@ -149,6 +149,7 @@ class RoleAccessControl:
         if table_query_id:
             filters.append((models.TableQueryField.table_query_id == table_query_id))
             filters.append((models.TableQueryField.active == active))
+            filters.append((models.TableQueryField.visible == visible))
             selects.append(models.TableQueryField)
             selects.append(models.TableQueryCalculation)
             joins.append(models.TableQueryField)

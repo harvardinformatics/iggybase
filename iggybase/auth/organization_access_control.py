@@ -41,16 +41,11 @@ class OrganizationAccessControl:
     def get_child_organization(self, parent_organization_id):
         self.org_ids.append(parent_organization_id)
         child_orgs = self.session.query(models.Organization).filter_by(parent_id=parent_organization_id).all()
-
-        if child_orgs is None:
-            return
-
         for child_org in child_orgs:
             if child_org.id in self.parent_orgs:
                 self.get_child_organization(child_org.id)
             else:
                 self.org_ids.append(child_org.id)
-
         return
 
     def get_entry_data(self, table_name, params):
@@ -100,6 +95,7 @@ class OrganizationAccessControl:
     def get_table_query_data(self, field_dict, criteria={}):
         results = []
         tables = set([])
+        table_models = {}
         joins = set([])
         outer_joins = []
         columns = []
@@ -108,9 +104,17 @@ class OrganizationAccessControl:
         wheres = []
         first_table_named = None  # set to first table name, dont add to joins
         for field in field_dict.values():
-            table_model = util.get_table(field.TableObject.name)
+            if field.TableObject.name in table_models:
+                table_model = table_models[field.TableObject.name]
+            else:
+                table_model = util.get_table(field.TableObject.name)
+                table_models[field.TableObject.name] = table_model
             if field.is_foreign_key:
-                fk_table_model = util.get_table(field.fk_table.name)
+                if field.fk_table.name in table_models:
+                    fk_table_model = table_models[field.fk_table.name]
+                else:
+                    fk_table_model = util.get_table(field.fk_table.name)
+                    table_models[field.fk_table.name] = fk_table_model
                 # create alias to the fk table
                 # solves the case of more than one join to same table
                 alias_name = field.fk_field.field_name + '_' + field.TableObject.name + '_' + field.Field.field_name
@@ -141,7 +145,6 @@ class OrganizationAccessControl:
                     wheres.append(col.in_(criteria[criteria_key]))
                 else:
                     wheres.append(col == criteria[criteria_key])
-
         # add organization id checks on all tables, does not include fk tables
         for table_model in tables:
             # add a row id that is the id of the first table named

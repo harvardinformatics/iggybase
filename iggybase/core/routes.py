@@ -3,6 +3,7 @@ from flask.ext.security import login_required
 from flask.ext import excel
 import json
 import urllib
+import time
 from . import core
 import iggybase.form_generator as form_generator
 import iggybase.templating as templating
@@ -265,12 +266,25 @@ def build_summary(facility_name, table_name, page_form, template):
             table_query = first_table_query)
 
 def build_summary_ajax(facility_name, table_name, page_form, criteria):
+    start = time.time()
     tqc = TableQueryCollection(facility_name, page_form, table_name, criteria)
+    current = time.time()
+    print(str(current - start))
     tqc.get_fields()
+    current = time.time()
+    print(str(current - start))
     tqc.get_results()
+    current = time.time()
+    print(str(current - start))
     tqc.format_results()
+    current = time.time()
+    print(str(current - start))
     table_query = tqc.get_first()
-    json_rows = table_query.get_json()
+    current = time.time()
+    print(str(current - start))
+    json_rows = list(table_query.table_rows.values())
+    current = time.time()
+    print(str(current - start))
     return jsonify({'data':json_rows})
 
 def saved_data(facility_name, module_name, table_name, row_names):
