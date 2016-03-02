@@ -1,4 +1,4 @@
-from flask import request, jsonify, abort
+from flask import request, jsonify, abort, g
 from flask.ext.security import login_required
 from flask.ext import excel
 import json
@@ -9,6 +9,7 @@ import iggybase.templating as templating
 from iggybase.auth.role_access_control import RoleAccessControl
 from iggybase.auth.organization_access_control import OrganizationAccessControl
 from .table_query_collection import TableQueryCollection
+from .table_query import TableQuery
 import logging
 
 MODULE_NAME = 'core'
@@ -82,8 +83,12 @@ def update_table_rows(facility_name, table_name):
     updates = request.json['updates']
     message_fields = request.json['message_fields']
     ids = request.json['ids']
-    oac = OrganizationAccessControl()
-    updated = oac.update_table_rows(table_name, updates, ids, message_fields)
+    tq = TableQuery(None, 1, table_name, g.facility, table_name, {(table_name,
+                'id'):ids})
+    tq.get_fields()
+    tq.get_results()
+    tq.format_results(True)
+    updated = tq.update_and_get_message(updates, ids, message_fields)
     return json.dumps({'updated': updated})
 
 @core.route('/search', methods=['GET', 'POST'])

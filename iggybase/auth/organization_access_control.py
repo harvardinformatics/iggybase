@@ -440,13 +440,12 @@ class OrganizationAccessControl:
 
         return names
 
-    def update_table_rows(self, table, updates, ids, message_fields):
-        # get rows in order of ids so we can user tablequery to get values for
-        # fk fields
+    def update_table_rows(self, updates, ids, table):
         ids.sort()
         table_model = util.get_table(table)
         rows = table_model.query.filter(table_model.id.in_(ids), getattr(table_model, 'organization_id').in_(self.org_ids)).order_by('id').all()
 
+<<<<<<< HEAD
         # set up a table query so we have the fk fields available for the
         # message_fields
         #if message_fields:
@@ -456,6 +455,8 @@ class OrganizationAccessControl:
         #    tq.get_results()
         #    tq.format_results(True)
 
+=======
+>>>>>>> 442b90e76f982fef77cf594e227b8ba301b9a7f1
         updated = []
         for i, row in enumerate(rows):
             row_updates = []
@@ -471,13 +472,7 @@ class OrganizationAccessControl:
             # commit if we were able to make all updates for the row
             if len(updates) == len(row_updates):
                 self.session.commit()
-                # for each row grab any message_fields, to inform the user about the
-                # update
-                row_fields = []
-                for field in message_fields:
-                    row_fields.append(str(tq.table_rows[ids[i]][field]))
-                if row_fields:
-                    updated.append(', '.join(row_fields))
+                updated.append(ids[i])
             else:
                 self.session.rollback()
         return updated
