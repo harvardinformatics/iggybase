@@ -1,61 +1,44 @@
 import operator
-from iggybase.auth import role_access_control as rac
 from iggybase import utilities as util
 from .table_query import TableQuery
 import logging
 
 class TableQueryCollection:
-    def __init__ (self, facility_name, page_form, table_name = None, criteria = {}):
-        self.facility_name = facility_name
+    def __init__ (self, page_form, table_name = None, criteria = {}):
         self.table_name = table_name
         self.page_form = page_form
         self.criteria = criteria
-        self.role_access_control = rac.RoleAccessControl()
-        self.queries = []
-        self.results = []
+        self.role_access_control = util.get_role_access_control()
+        self.queries = self._get_queries()
 
     def get_results(self):
         for query in self.queries:
             query.get_results()
-            self.results.append(query)
 
-    def get_fields(self):
+    def _get_queries(self):
         filters = util.get_filters()
         table_queries_info = []
         if not 'all' in filters:
             table_queries_info = self.role_access_control.table_queries(self.page_form, self.table_name)
-
+        queries = []
         if table_queries_info:
             for query in table_queries_info:
-                order = query.TableQuery.order
-                self.populate_query(
+                query = TableQuery(
                     query.TableQuery.id,
-                    order,
+                    query.TableQuery.order,
                     query.TableQuery.display_name,
                     None,
                     self.criteria
                 )
+                queries.append(query)
         elif self.table_name:
-            self.populate_query(None, 1, self.table_name, self.table_name,
+            query = TableQuery(None, 1, self.table_name, self.table_name,
                     self.criteria)
-        # sort queries by their order
-        self.results.sort(key=operator.attrgetter('order'))
-
-    def populate_query(self, id, order, query_name, table_name = None, criteria
-            = {}):
-        tq = TableQuery(
-            id,
-            order,
-            query_name,
-            self.facility_name,
-            table_name,
-            criteria
-        )
-        tq.get_fields()
-        self.queries.append(tq)
+            queries.append(query)
+        return queries
 
     def format_results(self, for_download = False):
-        for query in self.results:
+        for query in self.queries:
             query.format_results(for_download)
 
     def get_first(self):

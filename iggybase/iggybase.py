@@ -113,6 +113,7 @@ def configure_hook( app ):
             if len(path) > 2:
                 g.module = path[2]
             role_access = rac.RoleAccessControl()
+            g.rac = role_access
             access = role_access.has_facility_access(path[1])
 
             if not access:

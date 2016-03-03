@@ -1,9 +1,9 @@
 from flask import render_template, abort, request, g
-from iggybase.auth.role_access_control import RoleAccessControl
+from iggybase import utilities as util
 import logging
 
 def page_template( page_form_name, **context ):
-    access_ctrl = RoleAccessControl( )
+    access_ctrl = util.get_role_access_control()
 
     context['page_form_name'] = page_form_name
     context[ 'url_root' ] = request.url_root

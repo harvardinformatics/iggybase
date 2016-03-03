@@ -6,11 +6,10 @@ import urllib
 import time
 from . import core
 import iggybase.form_generator as form_generator
+from iggybase import utilities as util
 import iggybase.templating as templating
-from iggybase.auth.role_access_control import RoleAccessControl
 from iggybase.auth.organization_access_control import OrganizationAccessControl
 from .table_query_collection import TableQueryCollection
-from .table_query import TableQuery
 import logging
 
 MODULE_NAME = 'core'
@@ -24,35 +23,34 @@ def default(facility_name):
 @login_required
 def summary(facility_name, table_name):
     page_form = template = 'summary'
-    return build_summary(facility_name, table_name, page_form, template)
+    return build_summary(table_name, page_form, template)
 
 @core.route( '/summary/<table_name>/ajax' )
 @login_required
 def summary_ajax(facility_name, table_name, page_form = 'summary', criteria = {}):
-    return build_summary_ajax(facility_name, table_name, page_form, criteria)
+    return build_summary_ajax(table_name, page_form, criteria)
 
 @core.route( '/action_summary/<table_name>/' )
 @login_required
 def action_summary(facility_name, table_name):
     page_form = 'summary'
     template = 'action_summary'
-    return build_summary(facility_name, table_name, page_form,
+    return build_summary(table_name, page_form,
     template)
 
 @core.route( '/action_summary/<table_name>/ajax' )
 @login_required
 def action_summary_ajax(facility_name, table_name, page_form = 'summary',
         criteria = {}):
-    return build_summary_ajax(facility_name, table_name, page_form, criteria)
+    return build_summary_ajax(table_name, page_form, criteria)
 
 @core.route( '/detail/<table_name>/<row_name>' )
 @login_required
 def detail(facility_name, table_name, row_name):
     page_form = template = 'detail'
     criteria = {(table_name, 'name'): row_name}
-    tqc = TableQueryCollection(facility_name, page_form,
+    tqc = TableQueryCollection(page_form,
             table_name, criteria)
-    tqc.get_fields()
     tqc.get_results()
     tqc.format_results()
     hidden_fields = {'table': table_name, 'row_name': row_name}
@@ -70,8 +68,7 @@ def detail(facility_name, table_name, row_name):
 def summary_download( facility_name, table_name ):
     page_form = 'summary'
     for_download = True
-    tqc = TableQueryCollection(facility_name, page_form, table_name)
-    tqc.get_fields()
+    tqc = TableQueryCollection(page_form, table_name)
     tqc.get_results()
     tqc.format_results(for_download)
     table_rows = tqc.get_first().table_rows
@@ -84,11 +81,12 @@ def update_table_rows(facility_name, table_name):
     updates = request.json['updates']
     message_fields = request.json['message_fields']
     ids = request.json['ids']
-    tq = TableQuery(None, 1, table_name, g.facility, table_name, {(table_name,
-                'id'):ids})
-    tq.get_fields()
-    tq.get_results()
-    tq.format_results(True)
+
+    tqc = TableQueryCollection('update', table_name,
+            {(table_name, 'id'):ids})
+    tqc.get_results()
+    tqc.format_results(True)
+    tq = tqc.get_first()
     updated = tq.update_and_get_message(updates, ids, message_fields)
     return json.dumps({'updated': updated})
 
@@ -194,7 +192,7 @@ def search_results(facility_name):
 @login_required
 def change_role(facility_name):
     role_id = request.json['role_id']
-    rac = RoleAccessControl()
+    rac = util.get_role_access_control()
     success = rac.change_role(role_id)
     return json.dumps({'success':success})
 
@@ -202,7 +200,7 @@ def change_role(facility_name):
 @login_required
 def data_entry(facility_name, table_name, row_name):
     module_name = MODULE_NAME
-    rac = RoleAccessControl()
+    rac = util.get_role_access_control()
     table_data = rac.has_access('TableObject', {'name': table_name})
 
     if not table_data:
@@ -229,7 +227,7 @@ def data_entry(facility_name, table_name, row_name):
 @login_required
 def multiple_entry( facility_name, table_name ):
     module_name = MODULE_NAME
-    rac = RoleAccessControl()
+    rac = util.get_role_access_control()
     table_data = rac.has_access('TableObject', {'name': table_name})
 
     if not table_data:
@@ -253,24 +251,20 @@ def multiple_entry( facility_name, table_name ):
 
 """ helper functions start """
 
-def build_summary(facility_name, table_name, page_form, template):
-    tqc = TableQueryCollection(facility_name, page_form, table_name)
-    tqc.get_fields()
+def build_summary(table_name, page_form, template):
+    tqc = TableQueryCollection(page_form, table_name)
     first_table_query = tqc.get_first()
     # if nothing to display then page not found
-    if not first_table_query.table_fields:
+    if not first_table_query.fields.fields:
         abort(404)
     return templating.page_template(template,
             module_name = MODULE_NAME,
             table_name = table_name,
             table_query = first_table_query)
 
-def build_summary_ajax(facility_name, table_name, page_form, criteria):
+def build_summary_ajax(table_name, page_form, criteria):
     start = time.time()
-    tqc = TableQueryCollection(facility_name, page_form, table_name, criteria)
-    current = time.time()
-    print(str(current - start))
-    tqc.get_fields()
+    tqc = TableQueryCollection(page_form, table_name, criteria)
     current = time.time()
     print(str(current - start))
     tqc.get_results()

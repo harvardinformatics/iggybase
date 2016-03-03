@@ -1,4 +1,3 @@
-from iggybase.auth import role_access_control as rac
 from iggybase import utilities as util
 from .calculation import get_calculation
 import logging
@@ -10,7 +9,7 @@ class Field:
         self.TableQueryField = table_query_field
         self.TableQueryCalculation = calculation
         self.display_name = util.get_field_attr(self.Field, self.TableQueryField, 'display_name')
-        self._role_access_control = rac.RoleAccessControl()
+        self._role_access_control = util.get_role_access_control()
         self.calculation_fields = self._get_calculation_fields(calculation)
         self.type = self._get_type()
         self.is_foreign_key = (self.Field.foreign_key_table_object_id != None)
@@ -45,12 +44,15 @@ class Field:
                             fk_to,
                             'name' # if fk then we want the human readable name
                         )
-                fk_field = fk_field[0]
+                if fk_field:
+                    fk_field = fk_field[0]
         if fk_field:
             self.fk_field = self.Field # field to which this is fk
             self.fk_table = self.TableObject
             self.Field = fk_field.Field
             self.TableObject = fk_field.TableObject
+        else:
+            self.is_foreign_key = False # could be no role access
 
     def _get_type(self):
         # TODO: get some constants and caching working and return a constant
@@ -75,3 +77,5 @@ class Field:
                 cols.append(row[keys.index(name)])
         col = get_calculation(func, cols)
         return col
+
+

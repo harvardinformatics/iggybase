@@ -11,6 +11,7 @@ import re
 import datetime
 import sys
 import logging
+import time
 
 
 # Controls access to the data db data based on organization
@@ -153,12 +154,14 @@ class OrganizationAccessControl:
                 col = getattr(table_model, 'id')
                 columns.append(col.label('DT_RowId'))
             wheres.append(getattr(table_model, 'organization_id').in_(self.org_ids))
+        start = time.time()
         results = (
             self.session.query(*columns).
                 join(*joins).
                 outerjoin(*outer_joins).
                 filter(*wheres).all()
         )
+        print('query: ' + str(time.time() - start))
         return results
 
     def foreign_key(self, table_object_id, display = None):
@@ -447,6 +450,15 @@ class OrganizationAccessControl:
         updated = []
         for i, row in enumerate(rows):
             row_updates = []
+            for col, val in updates.items():
+                try:
+                    col_obj = getattr(table_model, col)
+                    if isinstance(col_obj.type, DateTime) and val == 'now':
+                        val = func.now()
+                    setattr(row, col, val)
+                    row_updates.append(col)
+                except AttributeError:
+                    pass
             # commit if we were able to make all updates for the row
             if len(updates) == len(row_updates):
                 self.session.commit()

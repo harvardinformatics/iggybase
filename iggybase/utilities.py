@@ -1,9 +1,15 @@
-from flask import abort, request
+from flask import abort, request, g
 from importlib import import_module
 from iggybase.tablefactory import TableFactory
 from iggybase.admin.models import TableObject
 from iggybase.database import db_session
+from iggybase.auth.role_access_control import RoleAccessControl
 import logging
+
+def get_role_access_control():
+    if 'role_access' not in g:
+        g.role_access = RoleAccessControl()
+    return g.role_access
 
 def get_column(module, table_name, field_name):
     table_model = get_table(table_name)

@@ -18,12 +18,12 @@
         {{ macros.render_buttons( top_buttons ) }}
     {%- endblock topbuttonbar %}
     {% block page_content %}
-        {% if table_queries.results[0] %}
-            {{ macros.render_detail( table_queries.results[0].get_first() ) }}
+        {% if table_queries.queries[0] %}
+            {{ macros.render_detail( table_queries.queries[0].get_first() ) }}
         {% endif %}
 
-        {% if table_queries.results[1] %}
-            {% for table_query in table_queries.results[1:]: %}
+        {% if table_queries.queries[1] %}
+            {% for table_query in table_queries.queries[1:]: %}
         <div class={{ table_query.display_name ~ "_table_div" }}>
             <h1>{{table_query.display_name|title}}</h1>
             {{ macros.render_table( table_query ) }}
