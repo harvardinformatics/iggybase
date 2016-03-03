@@ -75,17 +75,16 @@ class OrganizationAccessControl:
         fk_field_data = self.foreign_key(fk_table_id)
 
         results = [(-99, '')]
-
         if fk_field_data is not None:
             fk_table_object = util.get_table(fk_table_data.name)
 
             if column_value is None:
-                rows = fk_field_data['fk_session'].query(getattr(fk_table_object, 'id'),
+                rows = self.session.query(getattr(fk_table_object, 'id'),
                                                          getattr(fk_table_object, 'name')).all()
             else:
-                rows = fk_field_data['fk_session'].query(getattr(fk_table_object, 'id'),
+                rows = self.session.query(getattr(fk_table_object, 'id'),
                                                          getattr(fk_table_object, 'name')). \
-                    filter(getattr(fk_table_object, 'name') == column_value).all()
+                    filter(getattr(fk_table_object, 'id') == column_value).all()
 
             for row in rows:
                 results.append((row.id, row.name))
@@ -168,15 +167,11 @@ class OrganizationAccessControl:
         else:
             filters.append(models.Field.id == display)
         res = (self.session.query(models.Field, models.TableObject).
-               join(models.TableObject,
-                    models.TableObject.id == models.Field.table_object_id
-                    ).
-               join(models.TableObjectRole).
+               join(models.TableObject, models.TableObject.id == models.Field.table_object_id).
+               join(models.TableObjectRole, models.TableObject.id == models.TableObjectRole.table_object_id).
                filter(*filters).first())
-        fk_session = self.session
         return {'foreign_key': res.Field.field_name,
-                'name': res.TableObject.name,
-                'fk_session': fk_session
+                'name': res.TableObject.name
                 }
 
     def get_field_data(self, table_name):

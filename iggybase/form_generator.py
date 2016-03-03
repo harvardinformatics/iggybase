@@ -1,4 +1,5 @@
 from flask.ext.wtf import Form
+from flask import g
 from types import new_class
 from iggybase.iggybase_form_fields import IggybaseBooleanField, IggybaseDateField, IggybaseFloatField,\
     IggybaseIntegerField, IggybaseLookUpField, IggybaseStringField, IggybaseTextAreaField, IggybaseSelectField,\
@@ -9,6 +10,7 @@ from iggybase.auth.organization_access_control import OrganizationAccessControl
 from iggybase.auth.role_access_control import RoleAccessControl
 from iggybase import constants
 from json import dumps
+from time import time
 import logging
 
 
@@ -72,8 +74,8 @@ class FormGenerator():
 
                 if len(choices) > 25:
                     kwargs['iggybase_class'] = control_type
-                    if value is not None:
-                        kwargs['default'] = [item[1] for item in choices if item[0] == value][0]
+                    kwargs['default'] = self.organization_access_control.\
+                        get_foreign_key_data(field_data.Field.foreign_key_table_object_id, value)
 
                     return IggybaseLookUpField(field_data.FieldRole.display_name, **kwargs)
                 else:
@@ -226,6 +228,19 @@ class FormGenerator():
             if row_name != 'new' and data is not None:
                 if  field.FieldRole.display_name in data.keys():
                     value = data[data.keys().index(field.FieldRole.display_name)]
+
+            logging.info(field.Field.field_name)
+            if value is None and row_name == 'new' and (field.Field.default is not None and field.Field.default != ''):
+                if field.Field.default == 'now':
+                    #logging.info('default now: ' + str(time()))
+                    #value = time()
+                    pass
+                elif field.Field.default == 'user':
+                    logging.info('default user: ' + str(g.user.id))
+                    value = g.user.id
+                elif field.Field.default is not None:
+                    logging.info('default value: ' + field.Field.default)
+                    value = field.Field.default
 
             if value is None:
                 self.classattr['hidden_'+field.Field.field_name+"_"+str(row_counter)]=\
