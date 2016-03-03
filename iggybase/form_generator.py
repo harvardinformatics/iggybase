@@ -74,8 +74,11 @@ class FormGenerator():
 
                 if len(choices) > 25:
                     kwargs['iggybase_class'] = control_type
-                    kwargs['default'] = self.organization_access_control.\
-                        get_foreign_key_data(field_data.Field.foreign_key_table_object_id, value)
+
+                    if value is not None:
+                        value = self.organization_access_control.\
+                            get_foreign_key_data(field_data.Field.foreign_key_table_object_id, value)
+                        kwargs['default'] = value[0][1]
 
                     return IggybaseLookUpField(field_data.FieldRole.display_name, **kwargs)
                 else:
@@ -232,9 +235,8 @@ class FormGenerator():
             logging.info(field.Field.field_name)
             if value is None and row_name == 'new' and (field.Field.default is not None and field.Field.default != ''):
                 if field.Field.default == 'now':
-                    #logging.info('default now: ' + str(time()))
-                    #value = time()
-                    pass
+                    logging.info('default now: ' + str(time()))
+                    value = time()
                 elif field.Field.default == 'user':
                     logging.info('default user: ' + str(g.user.id))
                     value = g.user.id

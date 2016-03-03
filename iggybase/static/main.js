@@ -38,17 +38,6 @@ $( document ).ready( function () {
     );
 
     $('.change_role').click(function(){
-        var currenturl = $.fn.parseURL(document.URL);
-        var paths = currenturl.pathname.split("/");
-        var newpath = currenturl.protocol+"//"+currenturl.hostname+"/"+$(this).data('facility')+"/";
-
-        //pathname starts with / facility in index 1
-        for (var i=2;i<paths.length;i++)
-            if (paths[i] != '')
-                newpath += paths[i]+"/";
-
-        window.location.href = newpath.slice(0, -1)+currenturl.search;
-
         $.ajax({
             // TODO: don't hardcode facility
             url:$URL_ROOT + 'murray/core/ajax/change_role',
@@ -66,6 +55,18 @@ $( document ).ready( function () {
                 }
             }
         });
+
+        var currenturl = $.fn.parseURL(document.URL);
+        var paths = currenturl.pathname.split("/");
+        var newpath = currenturl.protocol+"//"+currenturl.hostname+"/"+$(this).data('facility')+"/";
+
+        //pathname starts with / facility in index 1
+        for (var i=2;i<paths.length;i++)
+            if (paths[i] != '')
+                newpath += paths[i]+"/";
+
+        window.location.href = newpath.slice(0, -1)+currenturl.search;
+
         //will not work without this
         return false;
     });

@@ -86,6 +86,8 @@ class OrganizationAccessControl:
                                                          getattr(fk_table_object, 'name')). \
                     filter(getattr(fk_table_object, 'id') == column_value).all()
 
+                results = []
+
             for row in rows:
                 results.append((row.id, row.name))
 
