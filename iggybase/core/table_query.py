@@ -65,7 +65,7 @@ class TableQuery:
         url_root = request.url_root
         col_names = {}
         for field_name, field in self.fields.fields.items():
-            if self.link_visible(field):
+            if self.link_visible(field) and not for_download:
                 link_fields[field_name] = self.get_link(url_root, 'detail', field.TableObject.name)
             if field.is_calculation():
                 calc_fields.append(field_name)
@@ -73,7 +73,7 @@ class TableQuery:
         col_names['DT_RowId'] = 'DT_RowId'
         # create dictionary for each row and for fk data
         for i, row in enumerate(self.results):
-            row_dict = {}
+            row_dict = OrderedDict()
             for i, col in enumerate(row):
                 name = keys[i]
                 if name == 'DT_RowId':

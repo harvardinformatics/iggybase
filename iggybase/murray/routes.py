@@ -34,7 +34,7 @@ def update_ordered(facility_name, table_name):
     hidden_fields['button_text'] = 'Receive Selected Oligos'
     hidden_fields['message_fields'] = '["oligo_name"]'
     # if nothing to display then page not found
-    if not first_table_query or not first_table_query.table_fields:
+    if not first_table_query or not first_table_query.fields:
         abort(403)
 
     return templating.page_template('update',

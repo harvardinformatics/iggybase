@@ -71,8 +71,16 @@ def summary_download( facility_name, table_name ):
     tqc = TableQueryCollection(page_form, table_name)
     tqc.get_results()
     tqc.format_results(for_download)
-    table_rows = tqc.get_first().table_rows
-    csv = excel.make_response_from_records(table_rows, 'csv')
+    tq = tqc.get_first()
+
+    row_list = []
+    labels = list(tq.get_first().keys())
+    labels.append('id')
+    row_list.append(labels)
+    table_rows = list(tq.table_rows.values())
+    for row in table_rows:
+        row_list.append(list(row.values()))
+    csv = excel.make_response_from_array(row_list, 'csv')
     return csv
 
 @core.route( '/ajax/update_table_rows/<table_name>', methods=['GET', 'POST'] )
