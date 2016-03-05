@@ -69,7 +69,7 @@
                         {{ macros.render_field( field ) }}
                     {% endif -%}
                 {% else -%}
-                    {% if field.id|truncate(14, True, '') == 'hidden_endrow_' -%}
+                    {% if field.id|truncate(14, True, '') == 'endrow_' -%}
                         </tr>
                         {% set endrow = 1 -%}
                     {% endif -%}

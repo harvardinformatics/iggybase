@@ -232,6 +232,13 @@ class FormGenerator():
                 if  field.FieldRole.display_name in data.keys():
                     value = data[data.keys().index(field.FieldRole.display_name)]
 
+            if value is None:
+                self.classattr['oldvalue_'+field.Field.field_name+"_"+str(row_counter)]=\
+                    HiddenField('oldvalue_'+field.Field.field_name+"_"+str(row_counter))
+            else:
+                self.classattr['old_value_'+field.Field.field_name+"_"+str(row_counter)]=\
+                    HiddenField('old_value_'+field.Field.field_name+"_"+str(row_counter), default=value)
+
             logging.info(field.Field.field_name)
             if value is None and row_name == 'new' and (field.Field.default is not None and field.Field.default != ''):
                 if field.Field.default == 'now':
@@ -244,18 +251,11 @@ class FormGenerator():
                     logging.info('default value: ' + field.Field.default)
                     value = field.Field.default
 
-            if value is None:
-                self.classattr['hidden_'+field.Field.field_name+"_"+str(row_counter)]=\
-                    HiddenField('hidden_'+field.Field.field_name+"_"+str(row_counter))
-            else:
-                self.classattr['hidden_'+field.Field.field_name+"_"+str(row_counter)]=\
-                    HiddenField('hidden_'+field.Field.field_name+"_"+str(row_counter), default=value)
-
             control_id = prefix + field.Field.field_name+"_"+str(row_counter)
             self.classattr[control_id] = self.input_field(field, row_name, control_id, control_type, value)
 
-        self.classattr['hidden_endrow_'+str(row_counter)]=\
-            HiddenField('hidden_endrow_'+str(row_counter))
+        self.classattr['endrow_'+str(row_counter)]=\
+            HiddenField('endrow_'+str(row_counter))
 
     def get_field_headers(self, fields):
         headers = ''

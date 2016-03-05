@@ -262,7 +262,7 @@ class OrganizationAccessControl:
             else:
                 if key.endswith('_token') or key.endswith('_0'):
                     continue
-                elif key.startswith('hidden_'):
+                elif key.startswith('oldvalue_'):
                     field_id = key[key.index('_') + 1:]
                     hidden_fields[field_id] = data
                 elif field_pattern.match(key):
