@@ -38,12 +38,12 @@
         {% block page_content -%}
         <div class="page_content">
             {%- for field in form %}
-                {% if "hidden_startmaintable_" in field.id -%}
+                {% if "startmaintable_" in field.id -%}
                     <div class="col-md-4">
                     {% set table_name = field.data -%}
                     <table id="{{ table_name }}" class="table">
                     {% set maintable = 1 -%}
-                {% elif "hidden_startchildtable_" in field.id -%}
+                {% elif "startchildtable_" in field.id -%}
                     {% set html_id = field.id.split("_") -%}
                     {% set table_id = html_id[2] -%}
                     </table></div><br><br><div class="col-md-12">
@@ -54,7 +54,7 @@
                     <table id="{{ table_name }}" class="table table-striped"><tr>
                     {% set maintable = 0 -%}
                     {% set endrow = 1 -%}
-                {% elif "hidden_headers_" in field.id -%}
+                {% elif "headers_" in field.id -%}
                     {% set data = field.data|replace("\"", "")|safe -%}
                     {% set headers = data.split('|') -%}
                     <tr>
@@ -69,7 +69,7 @@
                         {{ macros.render_field( field ) }}
                     {% endif -%}
                 {% else -%}
-                    {% if field.id|truncate(14, True, '') == 'endrow_' -%}
+                    {% if field.id|truncate(7, True, '') == 'endrow_' -%}
                         </tr>
                         {% set endrow = 1 -%}
                     {% endif -%}

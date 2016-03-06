@@ -33,7 +33,7 @@
             <tr>
                 {% set firstrow = 1 %}
                 {%- for field in form if firstrow == 1 %}
-                    {% if field.id|truncate(14, True, '') == 'endrow_' %}{% set firstrow = 0 %}{% endif %}
+                    {% if field.id|truncate(7, True, '') == 'endrow_' %}{% set firstrow = 0 %}{% endif %}
                     {% if not bootstrap_is_hidden_field( field ) %}
                         <th>{{ field.label }}</th>
                     {% endif %}
@@ -41,7 +41,7 @@
             </tr>
             <tr>
                 {%- for field in form %}
-                    {% if field.id|truncate(14, True, '') == 'endrow_' %}
+                    {% if field.id|truncate(7, True, '') == 'endrow_' %}
                         </tr><tr>
                     {% endif %}
                     {% if not bootstrap_is_hidden_field( field ) -%}

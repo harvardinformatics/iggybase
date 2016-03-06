@@ -10,7 +10,7 @@ from iggybase.auth.organization_access_control import OrganizationAccessControl
 from iggybase.auth.role_access_control import RoleAccessControl
 from iggybase import constants
 from json import dumps
-from time import time
+import datetime
 import logging
 
 
@@ -77,8 +77,8 @@ class FormGenerator():
 
                     if value is not None:
                         value = self.organization_access_control.\
-                            get_foreign_key_data(field_data.Field.foreign_key_table_object_id, value)
-                        kwargs['default'] = value[0][1]
+                            get_foreign_key_data(field_data.Field.foreign_key_table_object_id, {'id': value})
+                        kwargs['default'] = value[1][1]
 
                     return IggybaseLookUpField(field_data.FieldRole.display_name, **kwargs)
                 else:
@@ -107,13 +107,12 @@ class FormGenerator():
     def default_single_entry_form(self, table_data, row_name='new'):
         self.table_data = table_data
 
-        self.classattr = self.hidden_fields('single')
-        self.classattr.update(self.row_fields(1, row_name))
+        self.classattr = self.row_fields(1, row_name)
 
         fields = self.role_access_control.fields(self.table_data.id)
 
-        self.classattr['hidden_startmaintable_'+str(self.table_data.id)]=\
-            HiddenField('hidden_startmaintable_'+str(self.table_data.id), default=self.table_data.name)
+        self.classattr['startmaintable_'+str(self.table_data.id)]=\
+            HiddenField('startmaintable_'+str(self.table_data.id), default=self.table_data.name)
 
         self.get_row(fields, row_name, 1)
 
@@ -126,10 +125,8 @@ class FormGenerator():
 
         fields = self.role_access_control.fields(self.table_data.id)
 
-        self.classattr = self.hidden_fields('multiple')
-
-        self.classattr['hidden_startmaintable_'+str(self.table_data.id)]=\
-            HiddenField('hidden_startmaintable_'+str(self.table_data.id), default=self.table_data.name)
+        self.classattr['startmaintable_'+str(self.table_data.id)]=\
+            HiddenField('startmaintable_'+str(self.table_data.id), default=self.table_data.name)
 
         row_counter = 1
         for row_name in row_names:
@@ -144,11 +141,10 @@ class FormGenerator():
     def default_parent_child_form(self, table_data, child_tables, link_data, row_name='new'):
         self.table_data = table_data
 
-        self.classattr = self.hidden_fields('parent_child')
-        self.classattr.update(self.row_fields(1, row_name))
+        self.classattr = self.row_fields(1, row_name)
 
-        self.classattr['hidden_startmaintable_'+str(self.table_data.id)]=\
-            HiddenField('hidden_startmaintable_'+str(self.table_data.id), default=self.table_data.name)
+        self.classattr['startmaintable_'+str(self.table_data.id)]=\
+            HiddenField('startmaintable_'+str(self.table_data.id), default=self.table_data.name)
 
         fields = self.role_access_control.fields(self.table_data.id)
         self.get_row(fields, row_name, 1)
@@ -168,14 +164,14 @@ class FormGenerator():
             link_field = self.role_access_control.has_access('Field',
                                                              {'id': link_data[child_index].child_link_field_id})
 
-            self.classattr['hidden_linkcolumn_'+str(child_table.id)]=\
-                HiddenField('hidden_linkcolumn_'+str(child_table.id), default=link_field.field_name)
+            self.classattr['linkcolumn_'+str(child_table.id)]=\
+                HiddenField('linkcolumn_'+str(child_table.id), default=link_field.field_name)
 
-            self.classattr['hidden_startchildtable_'+str(child_table.id)]=\
-                HiddenField('hidden_startchildtable_'+str(child_table.id), default=child_table.name)
+            self.classattr['startchildtable_'+str(child_table.id)]=\
+                HiddenField('startchildtable_'+str(child_table.id), default=child_table.name)
 
-            self.classattr['hidden_headers_'+str(child_table.id)]=\
-                HiddenField('hidden_headers_'+str(child_table.id), default=self.get_field_headers(fields))
+            self.classattr['headers_'+str(child_table.id)]=\
+                HiddenField('headers_'+str(child_table.id), default=self.get_field_headers(fields))
 
             if len(child_row_names) == 0:
                 child_row_names.append('new')
@@ -184,12 +180,12 @@ class FormGenerator():
                 #   needed to prevent oevrlapping row ids if rows are added dynamically
                 child_row = (child_index * 1000) + row_counter
 
-                self.classattr.update(self.row_fields(child_row, child_row_name, 'child_'))
-                self.get_row(fields, child_row_name, child_row, 'table-control', 'child_')
+                self.classattr.update(self.row_fields(child_row, child_row_name))
+                self.get_row(fields, child_row_name, child_row, 'table-control')
                 row_counter += 1
 
-            self.classattr['hidden_endchildtable_'+str(child_table.id)]=\
-                HiddenField('hidden_endchildtable_'+str(child_table.id))
+            self.classattr['endchildtable_'+str(child_table.id)]=\
+                HiddenField('endchildtable_'+str(child_table.id))
 
             child_index += 1
 
@@ -197,23 +193,16 @@ class FormGenerator():
 
         return newclass()
 
-    def hidden_fields(self, form_type):
-        module_field = HiddenField('module_0', default=self.module)
-        table_field = HiddenField('table_object_0', default=self.table_object)
-        entry_field = HiddenField('entry_0', default=form_type)
+    def row_fields(self, row_count, row_name):
+        table_id_field = HiddenField('table_id_'+str(row_count), default=self.table_data.id)
+        table_name_field = HiddenField('table_name_'+str(row_count), default=self.table_data.name)
+        row_field = HiddenField('row_name_'+str(row_count), default=row_name)
 
-        return {'module_0': module_field, 'table_object_0': table_field, 'entry_0': entry_field}
+        return {'record_data_row_name_'+str(row_count): row_field,
+                'record_data_table_name_'+str(row_count): table_name_field,
+                'record_data_table_id_'+str(row_count): table_id_field}
 
-    def row_fields(self, row_count, row_name, prefix = ''):
-        table_id_field = HiddenField(prefix + 'table_id_'+str(row_count), default=self.table_data.id)
-        table_name_field = HiddenField(prefix + 'table_name_'+str(row_count), default=self.table_data.name)
-        row_field = HiddenField(prefix + 'row_name_'+str(row_count), default=row_name)
-
-        return {'hidden_row_name_'+str(row_count): row_field,
-                'hidden_table_name_'+str(row_count): table_name_field,
-                'hidden_table_id_'+str(row_count): table_id_field}
-
-    def get_row(self, fields, row_name, row_counter, control_type='data-control', prefix = ''):
+    def get_row(self, fields, row_name, row_counter, control_type='data-control'):
         id = None
 
         if row_name != 'new':
@@ -233,25 +222,21 @@ class FormGenerator():
                     value = data[data.keys().index(field.FieldRole.display_name)]
 
             if value is None:
-                self.classattr['oldvalue_'+field.Field.field_name+"_"+str(row_counter)]=\
-                    HiddenField('oldvalue_'+field.Field.field_name+"_"+str(row_counter))
+                self.classattr['old_value_'+field.Field.field_name+"_"+str(row_counter)]=\
+                    HiddenField('old_value_'+field.Field.field_name+"_"+str(row_counter))
             else:
                 self.classattr['old_value_'+field.Field.field_name+"_"+str(row_counter)]=\
                     HiddenField('old_value_'+field.Field.field_name+"_"+str(row_counter), default=value)
 
-            logging.info(field.Field.field_name)
             if value is None and row_name == 'new' and (field.Field.default is not None and field.Field.default != ''):
                 if field.Field.default == 'now':
-                    logging.info('default now: ' + str(time()))
-                    value = time()
+                    value = datetime.datetime.utcnow()
                 elif field.Field.default == 'user':
-                    logging.info('default user: ' + str(g.user.id))
                     value = g.user.id
                 elif field.Field.default is not None:
-                    logging.info('default value: ' + field.Field.default)
                     value = field.Field.default
 
-            control_id = prefix + field.Field.field_name+"_"+str(row_counter)
+            control_id = 'data_entry_' + field.Field.field_name+"_"+str(row_counter)
             self.classattr[control_id] = self.input_field(field, row_name, control_id, control_type, value)
 
         self.classattr['endrow_'+str(row_counter)]=\
