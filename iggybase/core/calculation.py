@@ -27,3 +27,11 @@ def multiply(cols):
 
 def divide(cols):
     return (cols[0] / cols[1])
+
+def chars(cols):
+    if cols[0]:
+        chars = len(str(cols[0]))
+    else:
+        chars = 0
+    return chars
+

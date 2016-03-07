@@ -254,7 +254,6 @@ class OrganizationAccessControl:
 
         # used to identify fields that contain data that needs to be saved
         field_pattern = re.compile('(\S+)_(\d+)')
-
         for key in request.form:
             data = request.form.get(key)
             if key.startswith('bool_'):
@@ -347,14 +346,7 @@ class OrganizationAccessControl:
                                 data != '':
                     if old_fields[field_id] == '':
                         lt = core_models.LongText()
-                        self.session.add(lt)
-                        self.session.flush
-                        lt_id = lt.id
-
                         setattr(lt, 'name', long_text_data.get_new_name())
-                        self.session.add(long_text_data)
-                        self.session.flush()
-
                         setattr(lt, 'date_created', datetime.datetime.utcnow())
                     else:
                         lt_id = old_fields[field_id]
@@ -365,6 +357,7 @@ class OrganizationAccessControl:
                     setattr(lt, 'long_text', data)
                     self.session.add(lt)
                     self.session.flush()
+                    lt_id = lt.id
                     setattr(instances[row_id], column_name, lt_id)
                 elif field_data[table_id_field][column_name].Field.foreign_key_table_object_id is not None:
                     try:
