@@ -441,7 +441,6 @@ class OrganizationAccessControl:
             return row_names
         except:
             self.session.rollback()
-            raise
             err = sys.exc_info()[0]
             logging.error(err)
             return [['error',err]]
