@@ -76,7 +76,7 @@ $( document ).ready( function () {
     $.fn.addChildTableRow = function( ele ) {
         var target = ele.attr( "target_table" );
         var table_object_id = ele.attr( "table_object_id" );
-        var link_column = $( "#hidden_linkcolumn_" + table_object_id ).val( );
+        var link_column = $( "#linkcolumn_" + table_object_id ).val( );
         var new_id;
         var parser = location;
         var parent_id;
@@ -91,7 +91,7 @@ $( document ).ready( function () {
         $( "#" + target + " tr:last" ).clone( ).find( "input, select" ).each(
             function() {
 		        var id = $(this).attr( 'id' );
-		        var matches = id.match( /child_(\S+)_(\d+)/);
+		        var matches = id.match( /(\S+)_(\d+)/);
 
 		        if ( matches && matches.length > 1 ) {
 		            row_id = parseInt( matches[ 2 ] )+ 1;
@@ -100,8 +100,8 @@ $( document ).ready( function () {
                     //clear old hidden fields if more than 1 row was added
                     $( td ).find( 'input[type=hidden]' ).remove( );
 
-                    var new_id = "child_" + matches[ 1 ] + "_" + ( row_id );
-                    var hidden_id = "hidden_" + matches[ 1 ] + "_" + ( row_id );
+                    var new_id = "data_entry_" + matches[ 1 ] + "_" + ( row_id );
+                    var hidden_id = "old_value_" + matches[ 1 ] + "_" + ( row_id );
 
                     if ( $( this ).prop( 'type' ) == 'select-one' ) {
                         if ( link_column == matches[ 1 ] ) {
@@ -119,7 +119,9 @@ $( document ).ready( function () {
 
                     if ( matches[ 1 ] == 'name' ) {
                         td.append( "<input id='" + hidden_id + "' name='" + hidden_id + "' type='hidden' value='new'>" );
-                        td.append( "<input id='hidden_row_name_" + row_id + "' name='hidden_row_name_" + row_id + "' type='hidden' value='new'>" );
+                        td.append( "<input id='record_data_row_name_" + row_id + "' name='record_data_row_name_" + row_id + "' type='hidden' value='new'>" );
+                        td.append( "<input id='record_data_table_name_" + row_id +"' name='record_data_table_name_" + row_id +"' type='hidden' value='" + target + "'>" );
+                        td.append( "<input id='record_data_table_id_" + row_id +"' name='record_data_table_id_" + row_id +"' type='hidden' value='" + table_object_id + "'>" );
                     } else {
                         td.append( "<input id='" + hidden_id + "' name='" + hidden_id + "' type='hidden' value=''>" );
                     }
@@ -167,8 +169,6 @@ $( document ).ready( function () {
                 }
             }
         ).end( ).appendTo( "#" + target );
-        td.append( "<input id='hidden_table_name_" + row_id +"' name='hidden_table_name_" + row_id +"' type='hidden' value='" + target + "'>" );
-        td.append( "<input id='hidden_table_id_" + row_id +"' name='hidden_table_id_" + row_id +"' type='hidden' value='" + table_object_id + "'>" );
     }
 
     $.fn.showModalDialog = function ( url, buttons, callback ) {
@@ -227,16 +227,9 @@ $( document ).ready( function () {
         if(key == 13)  // the enter key code
         {
             var input_id = ele.attr( 'id' );
-            var matches;
-            var table_object;
 
-            if ( input_id.substring( 0, 5 ) == 'child' ) {
-                matches = input_id.match( /child_(\S+)_(\d+)/);
-                table_object = ele.closest( 'tr' ).attr( 'table_object_name' );
-            } else {
-                matches = input_id.match( /(\S+)_(\d+)/);
-                table_object = $( '#table_object_0' ).val( );
-            }
+            var matches = input_id.match( /data_entry_(\S+)_(\d+)/);
+            var table_object = $( '#record_data_table_name_' + matches[2] ).val( );
 
             var field_name = matches[ 1 ];
             var search_vals = {};
@@ -257,19 +250,11 @@ $( document ).ready( function () {
 
     $.fn.searchClick = function ( ele ) {
         var input_id = ele.attr( 'luid' );
-        var matches;
-        var table_object;
 
-        if ( input_id.substring( 0, 5 ) == 'child' ) {
-            matches = input_id.match( /child_(\S+)_(\d+)/);
-            table_object = ele.closest( 'tr' ).attr( 'table_object_name' );
-        } else {
-            matches = input_id.match( /(\S+)_(\d+)/);
-            table_object = $( '#table_object_0' ).val( );
-        }
+        var matches = input_id.match( /data_entry_(\S+)_(\d+)/);
+        var table_object = $( '#record_data_table_name_' + matches[2] ).val( );
 
         var field_name = matches[ 1 ];
-        var module = $( '#module_0' ).val( );
 
         var formurl = $URL_ROOT + "system/core/search?table_object=" + table_object + "&input_id=" + input_id + "&field_name=" + field_name;
 

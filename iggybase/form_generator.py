@@ -203,8 +203,6 @@ class FormGenerator():
                 'record_data_table_id_'+str(row_count): table_id_field}
 
     def get_row(self, fields, row_name, row_counter, control_type='data-control'):
-        id = None
-
         if row_name != 'new':
             data = self.organization_access_control.get_entry_data(self.table_data.name, {'name': str(row_name)})
             if data:
@@ -215,7 +213,7 @@ class FormGenerator():
                     row_name = 'new'
 
         for field in fields:
-            #logging.info(str(field.Field.id) + " " + field.Field.field_name +': ' + field.FieldRole.display_name)
+            # logging.info(str(field.Field.id) + " " + field.Field.field_name +': ' + field.FieldRole.display_name)
             value = None
             if row_name != 'new' and data is not None:
                 if  field.FieldRole.display_name in data.keys():
