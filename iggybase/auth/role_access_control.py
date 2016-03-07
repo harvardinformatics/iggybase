@@ -124,18 +124,19 @@ class RoleAccessControl:
         )
         return res
 
-    def table_query_fields(self, table_query_id, table_name=None, table_id=None, field_name=None, field_id = None, active=1, visible=1):
+    def table_query_fields(self, table_query_id, table_name=None, table_id=None, field_name=None, field_id = None, active=1):
         filters = [
             (models.FieldRole.role_id == self.user.current_user_role_id),
             (models.TableObjectRole.role_id == self.user.current_user_role_id),
-            (models.FieldRole.visible == visible),
             (models.Field.active == active),
             (models.FieldRole.active == active),
             (models.TableObject.active == active)
         ]
         selects = [
             models.Field,
-            models.TableObject
+            models.TableObject,
+            models.FieldRole,
+            models.TableObjectRole
         ]
         joins = [
             models.FieldRole,
@@ -150,7 +151,6 @@ class RoleAccessControl:
         if table_query_id:
             filters.append((models.TableQueryField.table_query_id == table_query_id))
             filters.append((models.TableQueryField.active == active))
-            filters.append((models.TableQueryField.visible == visible))
             selects.append(models.TableQueryField)
             selects.append(models.TableQueryCalculation)
             joins.append(models.TableQueryField)

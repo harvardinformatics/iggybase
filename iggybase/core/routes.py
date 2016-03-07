@@ -52,7 +52,12 @@ def detail(facility_name, table_name, row_name):
     tqc = TableQueryCollection(page_form,
             table_name, criteria)
     tqc.get_results()
-    tqc.format_results()
+    add_row_id = False
+    tqc.format_results(add_row_id)
+    if not tqc.get_first().fields.fields:
+        abort(404)
+    if not tqc.get_first().table_rows:
+        abort(403)
     hidden_fields = {'table': table_name, 'row_name': row_name}
     return templating.page_template(
         template,
@@ -67,20 +72,22 @@ def detail(facility_name, table_name, row_name):
 @login_required
 def summary_download( facility_name, table_name ):
     page_form = 'summary'
-    for_download = True
+    add_row_id = False
+    allow_links = False
     tqc = TableQueryCollection(page_form, table_name)
     tqc.get_results()
-    tqc.format_results(for_download)
+    tqc.format_results(add_row_id, allow_links)
     tq = tqc.get_first()
 
     row_list = []
-    labels = list(tq.get_first().keys())
+    '''labels = list(tq.get_first().keys())
     labels.append('id')
     row_list.append(labels)
     table_rows = list(tq.table_rows.values())
     for row in table_rows:
-        row_list.append(list(row.values()))
-    csv = excel.make_response_from_array(row_list, 'csv')
+        row_list.append(list(row.values()))'''
+    row_list = tq.table_dict
+    csv = excel.make_response_from_records(row_list, 'csv')
     return csv
 
 @core.route( '/ajax/update_table_rows/<table_name>', methods=['GET', 'POST'] )

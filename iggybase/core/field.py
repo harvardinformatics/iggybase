@@ -3,9 +3,11 @@ from .calculation import get_calculation
 import logging
 
 class Field:
-    def __init__ (self, field, table_object, order, table_query_field = None, calculation = None):
+    def __init__ (self, field, table_object, field_role, table_object_role, order, table_query_field = None, calculation = None):
         self.Field = field
         self.TableObject = table_object
+        self.FieldRole = field_role
+        self.TableObjectRole = table_object_role
         self.TableQueryField = table_query_field
         self.TableQueryCalculation = calculation
         self.display_name = util.get_field_attr(self.Field, self.TableQueryField, 'display_name')
@@ -15,6 +17,7 @@ class Field:
         self.is_foreign_key = (self.Field.foreign_key_table_object_id != None)
         self.is_title_field = (self.TableObject.name == self.display_name)
         self.order = order
+        self.visible = self.is_visible()
 
     def is_calculation(self):
         return (self.TableQueryCalculation != None)
@@ -23,6 +26,7 @@ class Field:
         visible = True
         if self.TableQueryField:
             visible = self.TableQueryField.visible
+        visible = visible and self.FieldRole.visible
         return visible
 
     def set_fk_field(self, fk_field = None):
@@ -51,8 +55,10 @@ class Field:
             self.fk_table = self.TableObject
             self.Field = fk_field.Field
             self.TableObject = fk_field.TableObject
+            self.FieldRole = fk_field.FieldRole
+            self.TableObjectRole = fk_field.TableObjectRole
         else:
-            self.is_foreign_key = False # could be no role access
+            self.is_foreign_key = False # maybe no role access
 
     def _get_type(self):
         # TODO: get some constants and caching working and return a constant
@@ -78,4 +84,15 @@ class Field:
         col = get_calculation(func, cols)
         return col
 
-
+    def link_visible(self):
+        return (not self.is_calculation() and
+                (
+                    (self.Field.field_name == 'name' and not self.is_foreign_key) or
+                    self.is_title_field or
+                    (
+                        self.is_foreign_key and
+                        self.TableObject.name != 'long_text' and
+                        self.is_visible()
+                    )
+                )
+            )

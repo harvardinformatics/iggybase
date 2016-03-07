@@ -13,6 +13,7 @@ class TableQuery:
         self.display_name = display_name
         self.table_name = table_name
         self.table_rows = {}
+        self.table_dict = []
         self.criteria = criteria
         self.rac = util.get_role_access_control()
         self.fields = FieldCollection(id, table_name)
@@ -50,7 +51,7 @@ class TableQuery:
         criteria.update(orig_criteria)
         return criteria
 
-    def format_results(self, for_download = False):
+    def format_results(self, add_row_id = True, allow_links = True):
         """Formats data for summary or detail
         - transforms into dictionary
         - removes model objects sqlalchemy puts in
@@ -62,22 +63,30 @@ class TableQuery:
             keys = self.results[0].keys()
         link_fields = {}
         calc_fields = []
+        invisible_fields = []
         url_root = request.url_root
         col_names = {}
         for field_name, field in self.fields.fields.items():
-            if self.link_visible(field) and not for_download:
+            if field.link_visible() and allow_links:
                 link_fields[field_name] = self.get_link(url_root, 'detail', field.TableObject.name)
             if field.is_calculation():
                 calc_fields.append(field_name)
+            if not field.visible:
+                invisible_fields.append(field_name)
             col_names[field_name] = str(field.order)
         col_names['DT_RowId'] = 'DT_RowId'
         # create dictionary for each row and for fk data
         for i, row in enumerate(self.results):
             row_dict = OrderedDict()
+            row_by_order = {}
             for i, col in enumerate(row):
                 name = keys[i]
                 if name == 'DT_RowId':
                     dt_row_id = col
+                    if not add_row_id:
+                        continue
+                elif name in invisible_fields:
+                    continue
                 else:
                     if name in calc_fields:
                         col = self.fields.fields[name].calculate(col, row,
@@ -88,21 +97,11 @@ class TableQuery:
                             col_str + '</a>')
                 else:
                     item_value = col
-                row_dict[col_names[name]] = item_value
-
-            self.table_rows[dt_row_id] = row_dict
-
-    def link_visible(self, field):
-        return (not field.is_calculation() and
-                (
-                    field.Field.field_name == 'name' or
-                    field.is_title_field or
-                    (
-                        field.is_foreign_key and
-                        field.TableObject.name != 'long_text'
-                    )
-                )
-            )
+                row_by_order[col_names[name]] = item_value
+                row_dict[name] = item_value
+            if row_by_order:
+                self.table_rows[dt_row_id] = row_by_order
+                self.table_dict.append(row_dict)
 
     def get_link(self, url_root, page = None, table = None):
         link = url_root + g.facility + '/' + g.module
@@ -113,13 +112,14 @@ class TableQuery:
         return link
 
     def get_first(self):
-        first = OrderedDict()
+        '''first = OrderedDict()
         try:
             vals = list(self.table_rows.values())[0]
             for field_name, field in self.fields.fields.items():
                 first[field_name] = vals[str(field.order)]
         except:
-            first = {}
+            first = {}'''
+        first = self.table_dict[0]
         return first
 
     def update_and_get_message(self, updates, ids, message_fields):

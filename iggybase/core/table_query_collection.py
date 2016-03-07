@@ -37,9 +37,9 @@ class TableQueryCollection:
             queries.append(query)
         return queries
 
-    def format_results(self, for_download = False):
+    def format_results(self, add_row_id = True, allow_links = True):
         for query in self.queries:
-            query.format_results(for_download)
+            query.format_results(add_row_id, allow_links)
 
     def get_first(self):
         first = []

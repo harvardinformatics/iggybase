@@ -27,7 +27,11 @@ class FieldCollection:
             table_query_field = getattr(row, 'TableQueryField', None)
             calculation = getattr(row, 'TableQueryCalculation', None)
             field = Field(row.Field,
-                    row.TableObject, order, table_query_field,
+                    row.TableObject,
+                    row.FieldRole,
+                    row.TableObjectRole,
+                    order,
+                    table_query_field,
                     calculation)
             field_dict[field.display_name] = field
 
