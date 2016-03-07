@@ -7,21 +7,6 @@ from iggybase.auth.role_organization import get_roles, get_organizations, get_cu
 import json
 import logging
 
-
-@auth.route('/home', methods=['GET'])
-@login_required
-def home():
-    """redirects to user home page
-    """
-    if not g.user:
-        abort( 403 )
-    if g.user.home_page:
-        home_page = g.user.home_page
-    else:
-        home_page = '/core/detail/user/' + g.user.name
-    return redirect( home_page )
-
-
 @auth.route( '/getrole', methods = [ 'POST' ] )
 def getrole( ):
     user_name =  request.json[ 'user' ]

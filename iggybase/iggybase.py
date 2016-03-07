@@ -83,6 +83,11 @@ def add_base_routes( app, conf, security, user_datastore ):
     def index():
         return base_routes.index()
 
+    @app.route( '/home' )
+    @login_required
+    def home():
+        return base_routes.home()
+
     @app.route('/favicon.ico')
     def favicon():
         return send_from_directory(os.path.join(app.root_path, 'static'),
@@ -108,7 +113,9 @@ def configure_hook( app ):
         path = request.path.split('/')
 
         # TODO: consider caching this for the session
-        if (current_user.is_authenticated and path and path[1] != 'static' and path[0] != 'login'):
+        ignore_facility = ['static', 'logout', 'home']
+        if (current_user.is_authenticated and path and path[1] not in
+                ignore_facility):
             # set module in g
             if len(path) > 2:
                 g.module = path[2]
