@@ -38,6 +38,10 @@ $( document ).ready( function () {
     );
 
     $('.change_role').click(function(){
+        var currenturl = $.fn.parseURL(document.URL);
+        var paths = currenturl.pathname.split("/");
+        var newpath = currenturl.protocol+"//"+currenturl.hostname+"/"+$(this).data('facility')+"/";
+
         $.ajax({
             // TODO: don't hardcode facility
             url:$URL_ROOT + $(this).data('facility') + '/core/ajax/change_role',
@@ -50,22 +54,18 @@ $( document ).ready( function () {
                 response = JSON.parse(response);
                 if(response.success) {
                     alert('role changed');
+
+                    //pathname starts with / facility in index 1
+                    for (var i=2;i<paths.length;i++)
+                        if (paths[i] != '')
+                            newpath += paths[i]+"/";
+
+                    window.location.href = newpath.slice(0, -1)+currenturl.search;
                 } else {
                     alert('role not changed, user may not have permission for that role, contact an administrator');
                 }
             }
         });
-
-        var currenturl = $.fn.parseURL(document.URL);
-        var paths = currenturl.pathname.split("/");
-        var newpath = currenturl.protocol+"//"+currenturl.hostname+"/"+$(this).data('facility')+"/";
-
-        //pathname starts with / facility in index 1
-        for (var i=2;i<paths.length;i++)
-            if (paths[i] != '')
-                newpath += paths[i]+"/";
-
-        window.location.href = newpath.slice(0, -1)+currenturl.search;
 
         //will not work without this
         return false;

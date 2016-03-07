@@ -59,7 +59,7 @@ class RoleAccessControl:
 
         res = self.session.query(models.Field, models.FieldRole).join(models.FieldRole). \
                     filter(*filters). \
-                    order_by(models.FieldRole.order, models.FieldRole.id).all()
+                    order_by(models.FieldRole.order, models.FieldRole.display_name).all()
 
         if res is None:
             return []
