@@ -435,6 +435,7 @@ class OrganizationAccessControl:
         except:
             self.session.rollback()
             err = sys.exc_info()[0]
+            raise
             logging.error(err)
             return [['error',err]]
 
