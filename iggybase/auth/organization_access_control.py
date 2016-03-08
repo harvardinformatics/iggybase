@@ -301,8 +301,8 @@ class OrganizationAccessControl:
                         float(fields['organization_id_' + str(row_id)])
                         row_org_id[row_id] = fields['organization_id_' + str(row_id)]
                     except ValueError:
-                        if fields['organization_id_' + str(row_id)] != '' and
-                            fields['organization_id_' + str(row_id)] is not None:
+                        if fields['organization_id_' + str(row_id)] != '' and\
+                                        fields['organization_id_' + str(row_id)] is not None:
                             if field_data[table_id_field]['organization_id'].Field.foreign_key_display is None:
                                 org_display = 'name'
                             else:
