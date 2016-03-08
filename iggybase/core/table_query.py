@@ -66,6 +66,7 @@ class TableQuery:
         invisible_fields = []
         url_root = request.url_root
         col_names = {}
+        col_count = 0
         for field_name, field in self.fields.fields.items():
             if field.link_visible() and allow_links:
                 link_fields[field_name] = self.get_link(url_root, 'detail', field.TableObject.name)
@@ -73,7 +74,9 @@ class TableQuery:
                 calc_fields.append(field_name)
             if not field.visible:
                 invisible_fields.append(field_name)
-            col_names[field_name] = str(field.order)
+            else:
+                col_names[field_name] = str(col_count)
+                col_count += 1
         col_names['DT_RowId'] = 'DT_RowId'
         # create dictionary for each row and for fk data
         for i, row in enumerate(self.results):
