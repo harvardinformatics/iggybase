@@ -1,11 +1,16 @@
 $(document).ready(function(){
+    var columns = [];
+    $('th').each(function(){
+        columns.push({data: $(this).data('name')});
+    });
     var table = $('.summary_table').DataTable({
-        'deferRender':true,
-        'scrollX':true,
-        'ajax':{
-            'url':'ajax',
-            'data': function(d) { d.search = window.location.search;}
-        }
+        deferRender:true,
+        scrollX:true,
+        ajax:{
+            url:'ajax',
+            data: function(d) { d.search = window.location.search;}
+        },
+        columns: columns
     });
     $('.datepicker').datepicker();
 

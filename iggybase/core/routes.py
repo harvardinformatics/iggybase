@@ -54,9 +54,9 @@ def detail(facility_name, table_name, row_name):
     tqc.get_results()
     add_row_id = False
     tqc.format_results(add_row_id)
-    if not tqc.get_first().fields.fields:
+    if not tqc.get_first().fc.fields:
         abort(404)
-    if not tqc.get_first().table_rows:
+    if not tqc.get_first().table_dict:
         abort(403)
     hidden_fields = {'table': table_name, 'row_name': row_name}
     return templating.page_template(
@@ -78,16 +78,7 @@ def summary_download( facility_name, table_name ):
     tqc.get_results()
     tqc.format_results(add_row_id, allow_links)
     tq = tqc.get_first()
-
-    row_list = []
-    '''labels = list(tq.get_first().keys())
-    labels.append('id')
-    row_list.append(labels)
-    table_rows = list(tq.table_rows.values())
-    for row in table_rows:
-        row_list.append(list(row.values()))'''
-    row_list = tq.table_dict
-    csv = excel.make_response_from_records(row_list, 'csv')
+    csv = excel.make_response_from_array(tq.get_list_of_list(), 'csv')
     return csv
 
 @core.route( '/ajax/update_table_rows/<table_name>', methods=['GET', 'POST'] )
@@ -268,14 +259,14 @@ def multiple_entry( facility_name, table_name ):
 
 def build_summary(table_name, page_form, template):
     tqc = TableQueryCollection(page_form, table_name)
-    first_table_query = tqc.get_first()
+    tq = tqc.get_first()
     # if nothing to display then page not found
-    if not first_table_query.fields.fields:
+    if not tq.fc.fields:
         abort(404)
     return templating.page_template(template,
             module_name = MODULE_NAME,
             table_name = table_name,
-            table_query = first_table_query)
+            table_query = tq)
 
 def build_summary_ajax(table_name, page_form, criteria):
     start = time.time()
@@ -291,7 +282,7 @@ def build_summary_ajax(table_name, page_form, criteria):
     table_query = tqc.get_first()
     current = time.time()
     print(str(current - start))
-    json_rows = list(table_query.table_rows.values())
+    json_rows = table_query.get_row_list()
     current = time.time()
     print(str(current - start))
     return jsonify({'data':json_rows})

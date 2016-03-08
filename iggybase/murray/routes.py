@@ -26,21 +26,21 @@ def update_ordered(facility_name, table_name):
     page_form = 'update'
     table_queries = tqc.TableQueryCollection(page_form, table_name,
             {('status', 'name'):'ordered'})
-    first_table_query = table_queries.get_first()
+    tq = table_queries.get_first()
     hidden_fields = {}
     hidden_fields['column_defaults'] = '{"status":1, "received":"now"}'
     # TODO if we can sort out foreign keys for the update then
     # we don't need to pass in button text
     hidden_fields['button_text'] = 'Receive Selected Oligos'
-    hidden_fields['message_fields'] = '["oligo_name"]'
+    hidden_fields['message_fields'] = '["oligo name"]'
     # if nothing to display then page not found
-    if not first_table_query or not first_table_query.fields:
+    if not tq.fc.fields:
         abort(403)
 
     return templating.page_template('update',
             module_name = 'murray',
             table_name = table_name,
-            table_query = first_table_query, hidden_fields = hidden_fields)
+            table_query = tq, hidden_fields = hidden_fields)
 
 @murray.route( '/update_requested/<table_name>/ajax' )
 @login_required
@@ -55,19 +55,19 @@ def update_requested(facility_name, table_name):
     page_form = 'update'
     table_queries = tqc.TableQueryCollection(page_form, table_name,
             {('name', 'status'):'requested'})
-    first_table_query = table_queries.get_first()
+    tq = table_queries.get_first()
     hidden_fields = {}
     hidden_fields['column_defaults'] = '{"status":2, "ordered":"now"}'
     hidden_fields['button_text'] = 'Order Selected Oligos'
-    hidden_fields['message_fields'] = '["oligo_name", "sequence"]'
+    hidden_fields['message_fields'] = '["oligo name", "sequence"]'
     # if nothing to display then page not found
-    if not first_table_query or not first_table_query.fields:
+    if not tq.fc.fields:
         abort(403)
 
     return templating.page_template('update',
             module_name = 'murray',
             table_name = table_name,
-            table_query = first_table_query, hidden_fields = hidden_fields)
+            table_query = tq, hidden_fields = hidden_fields)
 
 @murray.route( '/cancel/<table_name>/ajax' )
 @login_required
@@ -81,17 +81,17 @@ def cancel(facility_name, table_name):
     page_form = 'update'
     table_queries = tqc.TableQueryCollection(page_form, table_name,
             {('status', 'name'):['ordered', 'requested']})
-    first_table_query = table_queries.get_first()
+    tq = table_queries.get_first()
     hidden_fields = {}
     hidden_fields['column_defaults'] = '{"status":3}'
     # TODO if we can sort out foreign keys for the update then
     # we don't need to pass in button text
     hidden_fields['button_text'] = 'Cancel Selected Oligos'
-    hidden_fields['message_fields'] = '["oligo_name"]'
+    hidden_fields['message_fields'] = '["oligo name"]'
     # if nothing to display then page not found
-    if not first_table_query or not first_table_query.fields:
+    if not tq.fc.fields:
         abort(403)
     return templating.page_template('update',
             module_name = 'murray',
             table_name = table_name,
-            table_query = first_table_query, hidden_fields = hidden_fields)
+            table_query = tq, hidden_fields = hidden_fields)

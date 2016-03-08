@@ -3,20 +3,24 @@ from .calculation import get_calculation
 import logging
 
 class Field:
-    def __init__ (self, field, table_object, field_role, table_object_role, order, table_query_field = None, calculation = None):
+    def __init__ (self, field, table_object, field_role, order, table_query_field = None, calculation = None):
         self.Field = field
         self.TableObject = table_object
         self.FieldRole = field_role
-        self.TableObjectRole = table_object_role
+
+        # None if table_query by table_name rather than id
         self.TableQueryField = table_query_field
         self.TableQueryCalculation = calculation
+
         self.display_name = util.get_field_attr(self.Field, self.TableQueryField, 'display_name')
-        self._role_access_control = util.get_role_access_control()
+        self.rac = util.get_role_access_control()
         self.calculation_fields = self._get_calculation_fields(calculation)
         self.type = self._get_type()
         self.is_foreign_key = (self.Field.foreign_key_table_object_id != None)
         self.is_title_field = (self.TableObject.name == self.display_name)
         self.order = order
+
+        # base visibility on original field, do not change if fk field
         self.visible = self.is_visible()
 
     def is_calculation(self):
@@ -30,11 +34,13 @@ class Field:
         return visible
 
     def set_fk_field(self, fk_field = None):
+        # if field instance exists it will be passed in,
+        # otherwise we create one and return it
         if not fk_field:
             fk_to = self.Field.foreign_key_table_object_id
             if fk_to:
                 if self.Field.foreign_key_display:
-                    fk_field = self._role_access_control.table_query_fields(
+                    fk_field = self.rac.table_query_fields(
                             None,
                             None,
                             fk_to,
@@ -42,7 +48,7 @@ class Field:
                             self.Field.foreign_key_display
                         )
                 else:
-                    fk_field = self._role_access_control.table_query_fields(
+                    fk_field = self.rac.table_query_fields(
                             None,
                             None,
                             fk_to,
@@ -56,7 +62,6 @@ class Field:
             self.Field = fk_field.Field
             self.TableObject = fk_field.TableObject
             self.FieldRole = fk_field.FieldRole
-            self.TableObjectRole = fk_field.TableObjectRole
         else:
             self.is_foreign_key = False # maybe no role access
 
@@ -68,7 +73,7 @@ class Field:
     def _get_calculation_fields(self, calculation):
         calc_fields = {}
         if calculation:
-            res = self._role_access_control.calculation_fields(
+            res = self.rac.calculation_fields(
                     calculation.id
             )
             for row in res:

@@ -82,7 +82,7 @@
 {%- endmacro %}
 
 {% macro render_table_headers( table_query, page_form_name = None ) -%}
-    {% if table_query.fields.fields %}
+    {% if table_query.fc.fields %}
         <table id="{{ table_query.display_name }}_summary_table" class="summary_table display">
             <thead><tr>
                 {% if page_form_name == 'action_summary' %}
@@ -90,9 +90,9 @@
                         <input type="button" id="select_all" value="Select All/ None">
                     </th>
                 {% endif %}
-                {% for name, field in table_query.fields.fields.items() %}
-                    {% if field.is_visible() %}
-                        <th>{{ name.replace('_', ' ')|title }}</th>
+                {% for name, field in table_query.fc.fields.items() %}
+                    {% if field.visible %}
+                    <th data-name="{{name}}">{{ name.replace('_', ' ')|title }}</th>
                     {% endif %}
                 {% endfor %}
         </tr></thead>
@@ -101,7 +101,7 @@
 {%- endmacro %}
 
 {% macro render_table( table_query, page_form_name = None ) -%}
-    {% if table_query.table_rows %}
+    {% if table_query.table_dict %}
         <table id="{{ table_query.display_name }}_summary_table" class="summary_table display">
             <thead><tr>
                 {% if page_form_name == 'action_summary' %}
@@ -109,25 +109,19 @@
                         <input type="button" id="select_all" value="Select All/ None">
                     </th>
                 {% endif %}
-                {% for key in table_query.table_rows[0].keys() %}
+                {% for key in table_query.get_first().keys() %}
                     <th>{{ key.replace('_', ' ')|title }}</th>
                 {% endfor %}
             </tr></thead>
             <tbody>
-                {% for row in table_query.table_rows %}
+                {% for row in table_query.table_dict %}
                     <tr>
                     {% if page_form_name == 'action_summary' %}
                         <td><input type="checkbox" class="action_checkbox"></td>
                     {% endif %}
                     {% for value in row.values() %}
                         <td>
-                        {% if value['text'] %}
-                            {% if value['link'] %}
-                                <a href="{{ value['link'] }}">{{ value['text'] }}</a>
-                            {% else %}
-                                {{ value['text'] }}
-                            {% endif %}
-                        {% endif %}
+                            {{ value }}
                         </td>
                     {% endfor %}
                     </tr>

@@ -1,4 +1,3 @@
-import operator
 from iggybase import utilities as util
 from .table_query import TableQuery
 import logging
@@ -8,7 +7,7 @@ class TableQueryCollection:
         self.table_name = table_name
         self.page_form = page_form
         self.criteria = criteria
-        self.role_access_control = util.get_role_access_control()
+        self.rac = util.get_role_access_control()
         self.queries = self._get_queries()
 
     def get_results(self):
@@ -18,11 +17,11 @@ class TableQueryCollection:
     def _get_queries(self):
         filters = util.get_filters()
         table_queries_info = []
-        if not 'all' in filters:
-            table_queries_info = self.role_access_control.table_queries(self.page_form, self.table_name)
+        if not 'all' in filters: # all overrides table_query, shows all fields
+            table_queries_info = self.rac.table_queries(self.page_form, self.table_name)
         queries = []
-        if table_queries_info:
-            for query in table_queries_info:
+        if table_queries_info: # if table_query defined, use id
+            for query in table_queries_info: # page can have multiple
                 query = TableQuery(
                     query.TableQuery.id,
                     query.TableQuery.order,
@@ -31,7 +30,7 @@ class TableQueryCollection:
                     self.criteria
                 )
                 queries.append(query)
-        elif self.table_name:
+        elif self.table_name: # use table_name, show all fields, one table_query
             query = TableQuery(None, 1, self.table_name, self.table_name,
                     self.criteria)
             queries.append(query)

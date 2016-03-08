@@ -1,4 +1,8 @@
 $(document).ready(function(){
+    var columns = [];
+    $('th').each(function(){
+        columns.push({data: $(this).data('name')});
+    });
     var table = $('.summary_table').DataTable({
         deferRender:true,
         scrollX:true,
@@ -6,6 +10,7 @@ $(document).ready(function(){
             'url':'ajax',
             'data': function(d) { d.search = window.location.search;}
         },
+        columns: columns,
         dom:'Bfrtip',
         buttons:[
             'selectAll',
@@ -62,7 +67,7 @@ $(document).ready(function(){
                     response = JSON.parse(response);
                     var message = '';
                     if(response.updated.length > 0) {
-                        message = 'Successfully Updated:<br>' + response.updated.join('<br>');
+                        message = 'Successfully Updated:<br>' + response.updated.join(',');
                         this.table.ajax.reload();
                     } else {
                         message = 'Unable to update any rows.';

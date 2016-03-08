@@ -1,4 +1,3 @@
-import operator
 from collections import OrderedDict
 from iggybase import utilities as util
 from .field import Field
@@ -11,7 +10,7 @@ class FieldCollection:
         self.date_fields = {}
         self.rac = util.get_role_access_control()
         self.fields = self._populate_fields()
-        self.fields_by_id = {}
+        self.fields_by_id = {} # for setting fk_field
 
     def _get_fields(self):
         field_res = self.rac.table_query_fields(
@@ -29,7 +28,6 @@ class FieldCollection:
             field = Field(row.Field,
                     row.TableObject,
                     row.FieldRole,
-                    row.TableObjectRole,
                     order,
                     table_query_field,
                     calculation)
@@ -44,12 +42,8 @@ class FieldCollection:
             if field.is_foreign_key:
                 # when possible reuse the same field to avoid extra queries, this is great when a query has
                 # many long text for example
+                field_obj = None
                 if (field.Field.foreign_key_table_object_id, field.Field.foreign_key_display) in self.fields_by_id:
-                    field.set_fk_field(self.fields_by_id[(field.Field.foreign_key_table_object_id, field.Field.foreign_key_display)])
-                else:
-                    field.set_fk_field()
-            if field.Field.field_name == 'name':
-                field_id_or_name = 'name'
-            else:
-                field_id_or_name = field.Field.id
-            self.fields_by_id[(field.TableObject.id, field_id_or_name)] = field
+                    field_obj = self.fields_by_id[(field.Field.foreign_key_table_object_id, field.Field.foreign_key_display)]
+                field.set_fk_field(field_obj)
+            self.fields_by_id[(field.TableObject.id, field.Field.id)] = field

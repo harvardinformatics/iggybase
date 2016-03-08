@@ -3,7 +3,6 @@ from collections import OrderedDict
 from iggybase.auth.organization_access_control import OrganizationAccessControl
 from iggybase import utilities as util
 from .field_collection import FieldCollection
-from iggybase.admin import models as admin_models
 
 # Retreives and formats data based on table_query
 class TableQuery:
@@ -12,21 +11,21 @@ class TableQuery:
         self.order = order
         self.display_name = display_name
         self.table_name = table_name
-        self.table_rows = {}
-        self.table_dict = []
+        self.table_dict = {} # results indexed by row id and field display_name
         self.criteria = criteria
         self.rac = util.get_role_access_control()
-        self.fields = FieldCollection(id, table_name)
+        # fields will be decided with id or table_name
+        self.fc = FieldCollection(id, table_name)
 
     def get_results(self):
         """ calls several class functions and returns results
         """
-        self.fields.set_fk_fields()
+        self.fc.set_fk_fields()
         results = []
         self.criteria = self._add_table_query_criteria(self.criteria)
         self.oac = OrganizationAccessControl()
         self.results = self.oac.get_table_query_data(
-                self.fields.fields,
+                self.fc.fields,
                 self.criteria
         )
         return self.results
@@ -36,8 +35,8 @@ class TableQuery:
         # add criteria from get params
         filters = util.get_filters()
         for key, val in filters.items():
-            if key in self.fields.fields:
-                field = self.fields.fields[key]
+            if key in self.fc.fields:
+                field = self.fc.fields[key]
                 criteria_key = (field.TableObject.name, field.Field.field_name)
                 criteria[criteria_key] = val
         # add criteria from db
@@ -52,59 +51,55 @@ class TableQuery:
         return criteria
 
     def format_results(self, add_row_id = True, allow_links = True):
-        """Formats data for summary or detail
+        """Formats data
         - transforms into dictionary
-        - removes model objects sqlalchemy puts in
-        - formats FK data and link
-        - formats name link which goes to detail template
+        - adds links
+        - calculates calculated fields
+        - skips invisible fields, this must be done after data is retreived in
+          cases where invisible fields are used in calculations
         """
-        # format results as dictionary
         if self.results:
             keys = self.results[0].keys()
+
+        # keep track of special fields
         link_fields = {}
         calc_fields = []
         invisible_fields = []
         url_root = request.url_root
-        col_names = {}
-        col_count = 0
-        for field_name, field in self.fields.fields.items():
+        for field_name, field in self.fc.fields.items():
             if field.link_visible() and allow_links:
                 link_fields[field_name] = self.get_link(url_root, 'detail', field.TableObject.name)
             if field.is_calculation():
                 calc_fields.append(field_name)
             if not field.visible:
                 invisible_fields.append(field_name)
-            else:
-                col_names[field_name] = str(col_count)
-                col_count += 1
-        col_names['DT_RowId'] = 'DT_RowId'
-        # create dictionary for each row and for fk data
+
+        # create dictionary for each row
         for i, row in enumerate(self.results):
             row_dict = OrderedDict()
-            row_by_order = {}
             for i, col in enumerate(row):
                 name = keys[i]
+
+                # set column value
                 if name == 'DT_RowId':
                     dt_row_id = col
                     if not add_row_id:
                         continue
                 elif name in invisible_fields:
                     continue
-                else:
-                    if name in calc_fields:
-                        col = self.fields.fields[name].calculate(col, row,
+                elif name in calc_fields:
+                        col = self.fc.fields[name].calculate(col, row,
                                 keys)
-                if name in link_fields and col:
+                elif name in link_fields and col:
                     col_str = str(col)
-                    item_value = ('<a href="' + link_fields[name] + col_str + '">' +
+                    col = ('<a href="' + link_fields[name] + col_str + '">' +
                             col_str + '</a>')
-                else:
-                    item_value = col
-                row_by_order[col_names[name]] = item_value
-                row_dict[name] = item_value
-            if row_by_order:
-                self.table_rows[dt_row_id] = row_by_order
-                self.table_dict.append(row_dict)
+
+                row_dict[name] = col
+            if row_dict:
+                # store values as a dict of dict so we can access any of the
+                # data by row_id and field display_name
+                self.table_dict[dt_row_id] = row_dict
 
     def get_link(self, url_root, page = None, table = None):
         link = url_root + g.facility + '/' + g.module
@@ -114,16 +109,19 @@ class TableQuery:
             link += '/' + table + '/'
         return link
 
-    def get_first(self):
-        '''first = OrderedDict()
-        try:
-            vals = list(self.table_rows.values())[0]
-            for field_name, field in self.fields.fields.items():
-                first[field_name] = vals[str(field.order)]
-        except:
-            first = {}'''
-        first = self.table_dict[0]
-        return first
+    def get_list_of_list(self): # for download
+        table_list = []
+        keys = list(self.get_first().keys())
+        table_list.append(keys)
+        for row in self.table_dict.values():
+            table_list.append(list(row.values()))
+        return table_list
+
+    def get_first(self): # for detail
+        return self.get_row_list()[0]
+
+    def get_row_list(self): # for summary_ajax
+        return list(self.table_dict.values())
 
     def update_and_get_message(self, updates, ids, message_fields):
         updated = self.oac.update_table_rows(updates, ids, self.display_name)
@@ -133,7 +131,11 @@ class TableQuery:
             # update
             row_fields = []
             for field in message_fields:
-                row_fields.append(str(self.table_rows[i][str(self.fields.fields[field.replace('_', ' ')].order)]))
+                val = self.table_dict[i][field]
+                if val:
+                    row_fields.append(str(val))
             if row_fields:
                 updated_info.append(', '.join(row_fields))
+            else:
+                updated_info.append('no ' + ', '.join(message_fields) + ' for id = ' + str(i))
         return updated_info
