@@ -58,9 +58,8 @@ class OrganizationAccessControl:
 
             columns = []
             for row in field_data:
-                if row.FieldRole.visible == 1:
-                    columns.append(getattr(table_object, row.Field.field_name). \
-                                   label(row.FieldRole.display_name))
+                columns.append(getattr(table_object, row.Field.field_name).\
+                               label(row.FieldRole.display_name))
 
             criteria = [getattr(table_object, 'organization_id').in_(self.org_ids)]
 
