@@ -259,7 +259,6 @@ class OrganizationAccessControl:
             if key.startswith('bool_'):
                 key = key[key.index('_') + 1:]
 
-            field_id = ''
             if key.startswith('record_data_'):
                 # trim record_data_
                 field_id = key[12:]
@@ -272,9 +271,6 @@ class OrganizationAccessControl:
                 # trim data_entry_
                 field_id = key[11:]
                 fields[field_id] = data
-
-            logging.info('field_id: ' + field_id)
-            logging.info('data: ' + data)
 
         try:
             for field, data in fields.items():
@@ -301,25 +297,27 @@ class OrganizationAccessControl:
                         fields(table_id_field, {'field.field_name': column_name})[0]
 
                 if row_id not in row_org_id.keys():
-                    logging.info("fields['organization_id_' + str(row_id)]: " + fields['organization_id_' + str(row_id)])
-                    if fields['organization_id_' + str(row_id)].isdigit():
+                    try:
+                        float(fields['organization_id_' + str(row_id)])
                         row_org_id[row_id] = fields['organization_id_' + str(row_id)]
-                    elif fields['organization_id_' + str(row_id)] != '':
-                        if field_data[table_id_field]['organization_id'].Field.foreign_key_display is None:
-                            org_display = 'name'
+                    except ValueError:
+                        if fields['organization_id_' + str(row_id)] != '' and
+                            fields['organization_id_' + str(row_id)] is not None:
+                            if field_data[table_id_field]['organization_id'].Field.foreign_key_display is None:
+                                org_display = 'name'
+                            else:
+                                org_display = field_data[table_id_field]['organization_id'].Field.foreign_key_display
+
+                            org_data = self.session.query(models.Organization).filter(getattr(models.Organization,
+                                                                                              org_display)==
+                                                                                      fields['organization_id_' +
+                                                                                             str(row_id)]).first()
+
+                            row_org_id[row_id] = org_data.id
+                        elif self.current_org_id is not None:
+                            row_org_id[row_id] = self.current_org_id
                         else:
-                            org_display = field_data[table_id_field]['organization_id'].Field.foreign_key_display
-
-                        org_data = self.session.query(models.Organization).filter(getattr(models.Organization,
-                                                                                          org_display)==
-                                                                                  fields['organization_id_' +
-                                                                                         str(row_id)]).first()
-
-                        row_org_id[row_id] = org_data.id
-                    elif self.current_org_id is not None:
-                        row_org_id[row_id] = self.current_org_id
-                    else:
-                        row_org_id[row_id] = 1
+                            row_org_id[row_id] = 1
 
                 if row_id not in instances:
                     if current_inst_name == 'new':
