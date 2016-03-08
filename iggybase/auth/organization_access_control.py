@@ -259,6 +259,7 @@ class OrganizationAccessControl:
             if key.startswith('bool_'):
                 key = key[key.index('_') + 1:]
 
+            field_id = ''
             if key.startswith('record_data_'):
                 # trim record_data_
                 field_id = key[12:]
@@ -271,6 +272,9 @@ class OrganizationAccessControl:
                 # trim data_entry_
                 field_id = key[11:]
                 fields[field_id] = data
+
+            logging.info('field_id: ' + field_id)
+            logging.info('data: ' + data)
 
         try:
             for field, data in fields.items():
@@ -297,7 +301,10 @@ class OrganizationAccessControl:
                         fields(table_id_field, {'field.field_name': column_name})[0]
 
                 if row_id not in row_org_id.keys():
-                    if fields['organization_id_' + str(row_id)] != '':
+                    logging.info("fields['organization_id_' + str(row_id)]: " + fields['organization_id_' + str(row_id)])
+                    if fields['organization_id_' + str(row_id)].isdigit():
+                        row_org_id[row_id] = fields['organization_id_' + str(row_id)]
+                    elif fields['organization_id_' + str(row_id)] != '':
                         if field_data[table_id_field]['organization_id'].Field.foreign_key_display is None:
                             org_display = 'name'
                         else:
