@@ -29,7 +29,7 @@ class FormGenerator():
 
         if value is not None:
             kwargs['default'] = value
-            
+
         # no validators or classes attached to hidden fields, as it could cause issues
         # e.g. an empty hidden required field
         if field_data.FieldRole.visible != constants.VISIBLE:
