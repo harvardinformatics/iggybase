@@ -33,7 +33,7 @@ class RoleAccessControl:
             for fac in facility_res:
                 if fac.Facility.name not in self.facilities:
                     self.facilities[fac.Facility.name] = fac.Role.id
-                if fac.Role.id == self.user.current_user_role_id:
+                if fac.Role.id == self.role.id:
                     self.facility = fac.Facility.name
         else:
             self.user = None
@@ -44,7 +44,7 @@ class RoleAccessControl:
 
     def fields(self, table_object_id, filter=None, active=1):
         filters = [
-            (models.FieldRole.role_id == self.user.current_user_role_id),
+            (models.FieldRole.role_id == self.role.id),
             (models.Field.table_object_id == table_object_id),
             (models.Field.active == active),
             (models.FieldRole.active == active)
@@ -71,7 +71,7 @@ class RoleAccessControl:
         """
         filters = [
             (models.PageForm.name == page_form),
-            (models.PageFormRole.role_id == self.user.current_user_role_id),
+            (models.PageFormRole.role_id == self.role.id),
             (models.TableQuery.active == active)
         ]
         if table_name:
@@ -98,8 +98,8 @@ class RoleAccessControl:
 
     def calculation_fields(self, table_query_calculation_id, active = 1):
         filters = [
-            (models.FieldRole.role_id == self.user.current_user_role_id),
-            (models.TableObjectRole.role_id == self.user.current_user_role_id),
+            (models.FieldRole.role_id == self.role.id),
+            (models.TableObjectRole.role_id == self.role.id),
             (models.Field.active == active),
             (models.FieldRole.active == active),
             (models.TableObject.active == active),
@@ -126,8 +126,8 @@ class RoleAccessControl:
 
     def table_query_fields(self, table_query_id, table_name=None, table_id=None, field_name=None, field_id = None, active=1):
         filters = [
-            (models.FieldRole.role_id == self.user.current_user_role_id),
-            (models.TableObjectRole.role_id == self.user.current_user_role_id),
+            (models.FieldRole.role_id == self.role.id),
+            (models.TableObjectRole.role_id == self.role.id),
             (models.Field.active == active),
             (models.FieldRole.active == active),
             (models.TableObject.active == active)
@@ -223,7 +223,7 @@ class RoleAccessControl:
         role_menu_subs = OrderedDict({})
         if self.user is not None:
             for role in self.user.roles:
-                if role.id != self.user.current_user_role_id:
+                if role.id != self.role.id:
                     facility = self.session.query(models.Facility).filter_by(id = role.facility_id).first()
                     role_menu_subs[role.name] = {'title':role.name,
                             'class':'change_role', 'data':{'role_id': role.id, 'facility':facility.name}}
@@ -239,7 +239,7 @@ class RoleAccessControl:
         page_forms = []
 
         res = self.session.query(models.PageFormRole). \
-            filter_by(role_id=self.user.current_user_role_id).filter_by(active=active). \
+            filter_by(role_id=self.role.id).filter_by(active=active). \
             order_by(models.PageFormRole.order, models.PageFormRole.id).all()
         for row in res:
             page_form = self.session.query(models.PageForm). \
@@ -256,7 +256,7 @@ class RoleAccessControl:
         page_form_buttons['bottom'] = []
 
         res = self.session.query(models.PageFormButtonRole). \
-            filter_by(role_id=self.user.current_user_role_id).filter_by(active=active). \
+            filter_by(role_id=self.role.id).filter_by(active=active). \
             order_by(models.PageFormButtonRole.order, models.PageFormButtonRole.id).all()
         for row in res:
             page_form_button = self.session.query(models.PageFormButton).filter_by(id=row.page_form_button_id). \
@@ -278,7 +278,7 @@ class RoleAccessControl:
         table_object_role = getattr(models, auth_type + "Role")
 
         filters = [
-            getattr(table_object_role, 'role_id') == self.user.current_user_role_id,
+            getattr(table_object_role, 'role_id') == self.role.id,
             getattr(table_object, 'active') == active
         ]
 
@@ -295,7 +295,7 @@ class RoleAccessControl:
         menu = OrderedDict()
         items = (self.session.query(models.Menu, models.MenuRole).join(models.MenuRole)
             .filter(
-                models.MenuRole.role_id == self.user.current_user_role_id,
+                models.MenuRole.role_id == self.role.id,
                 models.Menu.parent_id == parent_id,
                 models.MenuRole.active == active,
                 models.Menu.active == active
@@ -339,7 +339,8 @@ class RoleAccessControl:
             filter(models.UserRole.user_id==self.user.id).first()
         if user_role.UserRole:
             facility = self.session.query(models.Facility).filter_by(id = user_role.Role.facility_id).first()
-            self.user.current_user_role_id = role_id
+            self.user.current_user_role_id = user_role.UserRole.id
+            self.role = (self.session.query(models.Role).filter(models.Role.id==role_id).first())
             self.session.commit()
             return facility.name
         else:
@@ -375,7 +376,7 @@ class RoleAccessControl:
                filter(models.Facility.active==active).
                filter(models.ModuleFacility.active==active).
                filter(models.TableObject.name==table_name).
-               filter(models.TableObjectRole.role_id==self.user.current_user_role_id).
+               filter(models.TableObjectRole.role_id==self.role.id).
                filter(models.Facility.id==self.role.facility_id).
                filter(models.Facility.name==facility).
                filter(models.Module.name==module).first())
@@ -393,7 +394,7 @@ class RoleAccessControl:
                filter(models.Facility.active==active).
                filter(models.Facility.id==self.role.facility_id).
                filter(models.Facility.name==facility).
-               filter(models.TableObjectRole.role_id==self.user.current_user_role_id).
+               filter(models.TableObjectRole.role_id==self.role.id).
                filter(models.TableObject.name==table_name).first())
 
         return rec is None
