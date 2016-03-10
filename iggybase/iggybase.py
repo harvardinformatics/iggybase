@@ -13,7 +13,7 @@ from werkzeug.wsgi import DispatcherMiddleware
 from iggybase.extensions import mail, lm, bootstrap
 from iggybase.admin import models
 from iggybase.database import db, init_db, db_session
-import iggybase.auth.role_access_control as rac
+import iggybase.core.role_access_control as rac
 import logging
 
 __all__ = [ 'create_app' ]

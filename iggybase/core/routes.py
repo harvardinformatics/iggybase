@@ -8,7 +8,7 @@ from . import core
 import iggybase.form_generator as form_generator
 from iggybase import utilities as util
 import iggybase.templating as templating
-from iggybase.auth.organization_access_control import OrganizationAccessControl
+from iggybase.core.organization_access_control import OrganizationAccessControl
 from .table_query_collection import TableQueryCollection
 import logging
 

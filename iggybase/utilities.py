@@ -3,7 +3,7 @@ from importlib import import_module
 from iggybase.tablefactory import TableFactory
 from iggybase.admin.models import TableObject
 from iggybase.database import db_session
-from iggybase.auth.role_access_control import RoleAccessControl
+from iggybase.core.role_access_control import RoleAccessControl
 import logging
 
 def get_role_access_control():

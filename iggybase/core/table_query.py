@@ -1,6 +1,6 @@
 from flask import request, g
 from collections import OrderedDict
-from iggybase.auth.organization_access_control import OrganizationAccessControl
+from iggybase.core.organization_access_control import OrganizationAccessControl
 from iggybase import utilities as util
 from .field_collection import FieldCollection
 

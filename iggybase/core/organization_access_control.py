@@ -1,7 +1,7 @@
 from flask import g, request
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import DateTime, func
-from iggybase.auth.role_access_control import RoleAccessControl
+from iggybase.core.role_access_control import RoleAccessControl
 from iggybase.database import db_session
 from iggybase.admin import models
 from iggybase import models as core_models
