@@ -72,12 +72,14 @@ class Menu(Base):
     organization_id = Column(Integer)
     order = Column(Integer)
     menu_type_id = Column(Integer, ForeignKey('menu_type.id'))
+    module_id = Column(Integer, ForeignKey('module.id'))
     url_path = Column(String(512), unique=True)
     url_params = Column(String(1024))  ## Stored as JSON
 
     parent = relationship('Menu', remote_side=[id])
     children = relationship('Menu')
     menu_menu_type = relationship("MenuType", foreign_keys=[menu_type_id])
+    menu_module = relationship("Module", foreign_keys=[module_id])
 
     def __repr__(self):
         return "<Menu(name=%s, description=%s, id=%d)>" % \
@@ -508,6 +510,7 @@ class Module(Base):
     organization_id = Column(Integer)
     order = Column(Integer)
     url_prefix = Column(String(50))
+    blueprint = Column(Boolean)
 
 
 class ModuleFacility(Base):

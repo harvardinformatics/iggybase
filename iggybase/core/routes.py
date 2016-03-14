@@ -247,8 +247,6 @@ def multiple_entry( facility_name, table_name ):
         oac = OrganizationAccessControl()
         row_names = oac.save_form()
 
-        form = fg.default_multiple_entry_form(row_names)
-
         return saved_data(facility_name, module_name, table_name, row_names)
 
     return templating.page_template('multiple_data_entry', module_name=module_name, form=form, table_name=table_name)

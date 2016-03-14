@@ -3,7 +3,7 @@ from collections import OrderedDict
 from flask import Flask, g, send_from_directory, abort, url_for, request
 from wtforms import StringField, SelectField
 from wtforms.validators import DataRequired
-from config import config, get_config
+from config import Config
 from flask import render_template
 from flask.ext.security import Security, SQLAlchemyUserDatastore, UserMixin, \
 RoleMixin, login_required, current_user, LoginForm, RegisterForm, \
@@ -18,11 +18,8 @@ import logging
 
 __all__ = [ 'create_app' ]
 
-def create_app( config_name = None, app_name = None ):
-    if config_name is None:
-        conf = get_config( )
-    else:
-        conf = config[ config_name ]( )
+def create_app( app_name = None ):
+    conf = Config( )
 
     iggybase = Flask( __name__ )
     iggybase.config.from_object( conf )
@@ -32,7 +29,7 @@ def create_app( config_name = None, app_name = None ):
 
     init_db( )
 
-    configure_blueprints(iggybase, conf.BLUEPRINTS)
+    configure_blueprints(iggybase)
     security, user_datastore = configure_extensions( iggybase, db )
     configure_error_handlers( iggybase )
     configure_hook( iggybase )
@@ -99,9 +96,10 @@ def add_base_routes( app, conf, security, user_datastore ):
             ('Reset Password', {'title':'Reset Password', 'url':url_for('security.forgot_password')}), ('Logout', {'title':'Logout', 'url':url_for('security.logout')})])
         return dict(navbar = navbar)
 
-def configure_blueprints(app, blueprints):
-    for module in blueprints:
-        bp = getattr(__import__('iggybase.'+module, fromlist=[module]),module)
+def configure_blueprints(app):
+    blueprints = models.Module.query.filter_by(blueprint = 1).all()
+    for mod in blueprints:
+        bp = getattr(__import__('iggybase.'+mod.name, fromlist=[mod.name]),mod.name)
         app.register_blueprint(bp)
 
 def configure_hook( app ):

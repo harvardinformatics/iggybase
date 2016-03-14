@@ -3,7 +3,6 @@ from flask import g, request
 from iggybase.database import db_session
 from iggybase.admin import models
 from iggybase.admin import constants as admin_consts
-from config import get_config
 import logging
 
 
@@ -11,7 +10,6 @@ import logging
 # Uses the permissions stored in the admin db
 class RoleAccessControl:
     def __init__(self):
-        config = get_config()
         self.session = db_session()
         # set user and role
         if g.user is not None and not g.user.is_anonymous:

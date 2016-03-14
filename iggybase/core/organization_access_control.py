@@ -348,12 +348,12 @@ class OrganizationAccessControl:
 
                 if field_data[table_id_field][column_name].Field.foreign_key_table_object_id == long_text_data.id and \
                                 data != '':
-                    if old_fields[field_id] == '':
+                    if old_fields[field] == '':
                         lt = core_models.LongText()
                         setattr(lt, 'name', long_text_data.get_new_name())
                         setattr(lt, 'date_created', datetime.datetime.utcnow())
                     else:
-                        lt_id = old_fields[field_id]
+                        lt_id = old_fields[field]
                         lt = self.session.query(core_models.LongText).filter_by(id=lt_id).first()
 
                     setattr(lt, 'organization_id', row_org_id[row_id])
@@ -410,7 +410,7 @@ class OrganizationAccessControl:
                         setattr(instances[row_id], column_name, data)
 
                 if column_name != 'last_modified' and column_name != 'date_created' and \
-                        not (old_fields[field_id] == data or old_fields[field_id] == str(data)):
+                        not (old_fields[field] == data or old_fields[field] == str(data)):
                     history_instance = core_models.History()
                     history_instance.name = history_data.get_new_name()
                     history_instance.date_created = datetime.datetime.utcnow()
@@ -420,7 +420,7 @@ class OrganizationAccessControl:
                     history_instance.organization_id = row_org_id[row_id]
                     history_instance.user_id = g.user.id
                     history_instance.instance_name = current_inst_name
-                    history_instance.old_value = old_fields[field_id]
+                    history_instance.old_value = old_fields[field]
                     history_instance.new_value = data
                     self.session.add(history_instance)
                     self.session.flush

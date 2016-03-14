@@ -2,11 +2,11 @@ from sqlalchemy import create_engine, exc, event
 from sqlalchemy.pool import Pool
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
-from config import get_config
+from config import Config
 from threading import Lock
 import logging
 
-conf = get_config()
+conf = Config()
 
 
 # used to create an object that mimics the object created by SQLAlchemy(app)
