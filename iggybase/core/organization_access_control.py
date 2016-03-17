@@ -39,6 +39,9 @@ class OrganizationAccessControl:
     def __del__ (self):
         self.session.commit()
 
+    def get_org_managers(self, org_id, parents = False):
+        pass
+
     def get_child_organization(self, parent_organization_id):
         self.org_ids.append(parent_organization_id)
         child_orgs = self.session.query(models.Organization).filter_by(parent_id=parent_organization_id).all()

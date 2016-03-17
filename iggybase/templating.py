@@ -53,7 +53,7 @@ def page_template(page_form_name, **context):
     navbar, sidebar = access_ctrl.page_form_menus(page_form.id)
     context.update({'navbar': navbar, 'sidebar': sidebar})
 
-    if submit_action_url == '':
+    if submit_action_url == '' or "<" in submit_action_url:
         context['submit_action_url'] = ''
     else:
         context['submit_action_url'] = request.url_root + submit_action_url
