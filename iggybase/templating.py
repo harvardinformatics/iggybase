@@ -2,32 +2,34 @@ from flask import render_template, abort, request, g
 from iggybase import utilities as util
 import logging
 
-def page_template( page_form_name, **context ):
+
+def page_template(page_form_name, **context):
     access_ctrl = util.get_role_access_control()
 
     context['page_form_name'] = page_form_name
-    context[ 'url_root' ] = request.url_root
+    context['url_root'] = request.url_root
 
     # add button, nav bar, side bar
-    page_form = access_ctrl.has_access( "PageForm", {'name': page_form_name} )
+    page_form = access_ctrl.has_access("PageForm", {'name': page_form_name})
 
     if page_form is None:
-        abort( 403 )
+        abort(403)
 
-    context[ 'page_header' ] = page_form.page_header
-    context[ 'page_title' ] = page_form.page_title
+    context['page_header'] = page_form.page_header
+    context['page_title'] = page_form.page_title
 
-    buttons = access_ctrl.page_form_buttons( page_form.id )
+    buttons = access_ctrl.page_form_buttons(page_form.id)
 
-    context[ 'top_buttons' ] = page_buttons(
-            buttons[ 'top' ]
+    context['top_buttons'], submit_action_url = page_buttons(
+        buttons['top']
     )
-    context[ 'bottom_buttons' ] = page_buttons(
-            buttons[ 'bottom' ]
+    context['bottom_buttons'], submit_action_url = page_buttons(
+        buttons['bottom']
     )
+    submit_action_url = submit_action_url.replace('<facility>', g.facility)
 
-    scripts = access_ctrl.page_form_javascript( page_form.id )
-    context[ 'scripts' ] = page_scripts( scripts )
+    scripts = access_ctrl.page_form_javascript(page_form.id)
+    context['scripts'] = page_scripts(scripts)
     if not 'hidden_fields' in context:
         context['hidden_fields'] = {}
     context['hidden_fields'].update({
@@ -37,40 +39,54 @@ def page_template( page_form_name, **context ):
         'facility': g.facility
     })
     if 'module_name' in context:
+        submit_action_url = submit_action_url.replace('<module>', context['module_name'])
         context['hidden_fields'].update({
             'mod': context['module_name']
         })
 
     if 'table_name' in context:
+        submit_action_url = submit_action_url.replace('<table>', context['table_name'])
         context['hidden_fields'].update({
             'table': context['table_name']
         })
     ## Menus
-    navbar, sidebar = access_ctrl.page_form_menus( page_form.id )
+    navbar, sidebar = access_ctrl.page_form_menus(page_form.id)
     context.update({'navbar': navbar, 'sidebar': sidebar})
+
+    if submit_action_url == '':
+        context['submit_action_url'] = ''
+    else:
+        context['submit_action_url'] = request.url_root + submit_action_url
 
     # logging.info( context )
 
-    return render_template( page_form.page_template, **context )
+    return render_template(page_form.page_template, **context)
 
-def page_buttons( buttons ):
-    btns = [ ]
+
+def page_buttons(buttons):
+    btns = []
+    submit_action_url = ''
+
     for button in buttons:
         btn_str = ' value="' + button.button_value + '" id="' + button.button_id + \
-            '" name="' + button.button_id + '" type="' + button.button_type + \
-            '" class="' + button.button_class  + '"'
+                  '" name="' + button.button_id + '" type="' + button.button_type + \
+                  '" class="' + button.button_class + '"'
 
         if button.special_props is not None:
             btn_str += button.special_props
 
-        btns.append( btn_str )
+        if button.submit_action_url is not None:
+            submit_action_url = button.submit_action_url
 
-    return btns
+        btns.append(btn_str)
 
-def page_scripts( scripts ):
-    scpts = [ ]
+    return btns, submit_action_url
+
+
+def page_scripts(scripts):
+    scpts = []
 
     for script in scripts:
-        scpts.append( script.page_javascript )
+        scpts.append(script.page_javascript)
 
     return scpts

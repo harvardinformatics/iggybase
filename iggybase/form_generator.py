@@ -15,11 +15,10 @@ import logging
 
 
 class FormGenerator():
-    def __init__(self, module, table_object):
+    def __init__(self, table_object):
         self.organization_access_control = OrganizationAccessControl()
         self.role_access_control = RoleAccessControl()
         self.table_object = table_object
-        self.module = module
         self.classattr = {}
         self.table_data = None
 
@@ -103,6 +102,11 @@ class FormGenerator():
             return IggybaseTextAreaField(field_data.FieldRole.display_name, **kwargs)
         else:
             return IggybaseStringField(field_data.FieldRole.display_name, **kwargs)
+
+    def empty_form(self):
+        newclass = new_class('DynamicForm', (Form,))
+
+        return newclass()
 
     def default_single_entry_form(self, table_data, row_name='new'):
         self.table_data = table_data

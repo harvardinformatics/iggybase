@@ -10,6 +10,11 @@
 {% block title %}Iggybase - {{ table_name.replace( '_',' ' ) }}{% endblock %}
 
 {% block content %}
+    {% if form is defined %}
+        <form action="{{ submit_action_url }}" class="form form-horizontal" method="post" role="form">
+            {{ form.hidden_tag() }}
+            {{ wtf.form_errors(form, hiddens='only') }}
+    {% endif %}
     <h1>{{page_form_name.replace('_',' ')|title}} {{ table_name.replace( '_', ' ' )|title }}s</h1>
     <div id="page_message">
             <p>
@@ -32,6 +37,9 @@
         {{ super() }}
         {{ macros.render_buttons(bottom_buttons)}}
     {%- endblock bottombuttonbar %}
+    {% if form is defined %}
+        </form>
+    {% endif %}
 {%- endblock content %}
 {% block scripts %}
     {{ super() }}

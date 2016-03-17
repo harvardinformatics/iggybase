@@ -20,7 +20,7 @@ $(document).ready(function(){
             style:'multi'
         }
     });
-    $("#edit").click(function(){$.fn.editSelected(table);});
+    $( 'form' ).submit( function(){ return $.fn.editSelected(table);} );
     $("#update_table").click(function(){$.fn.updateTable(table);});
     $.fn.updateButtonText();
 } );
@@ -28,17 +28,13 @@ $(document).ready(function(){
 ( function( $ ) {
     $.fn.editSelected = function (table) {
         var names = $.map(table.rows('.selected').data(), function (i) { return $(i['name']).text()});
-        if (names.length > 0) {
-            var hidden_fields = $("#hidden_fields");
-            var url = $URL_ROOT;
-            url += hidden_fields.find('input[name=facility]').val()
-                + '/' + hidden_fields.find('input[name=mod]').val()
-                + '/multiple_entry/' + hidden_fields.find('input[name=table]').val()
-                + '?row_names=' + JSON.stringify(names)
-            window.location = (url);
-        } else {
+        if (names.length == 0) {
             alert("No rows selected.  Select rows to edit by clicking.");
+            return false;
         }
+        var form = $( 'form' );
+        form.append("<input type='hidden' name='row_names' id='row_names' value='" + JSON.stringify(names) + "' />");
+        return true;
     }
     $.fn.updateButtonText = function (table) {
         var hidden_fields = $("#hidden_fields");

@@ -4,10 +4,11 @@
 {% block title %}{{ page_title }}{% endblock %}
 
 {% block content -%}
-    {% if form is defined %}
-        <form action class="form form-horizontal" method="post" role="form">
-                {{ form.hidden_tag() }}
-                {{ wtf.form_errors(form, hiddens='only') }}
+    {% if form is defined -%}
+        <form action="{{ submit_action_url }}" class="form form-horizontal" method="post" role="form">
+
+        {{ form.hidden_tag() }}
+        {{ wtf.form_errors(form, hiddens='only') }}
     {% endif %}
 
     {% block content_title -%}

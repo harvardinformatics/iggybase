@@ -191,6 +191,7 @@ class PageFormButton(Base):
     button_value = Column(String(100))
     button_id = Column(String(100))
     special_props = Column(String(255))
+    submit_action_url = Column(String(255))
 
     page_form_button_page_form = relationship("PageForm", foreign_keys=[page_form_id])
 

@@ -30,13 +30,15 @@ def summary(facility_name, table_name):
 def summary_ajax(facility_name, table_name, page_form = 'summary', criteria = {}):
     return build_summary_ajax(table_name, page_form, criteria)
 
-@core.route( '/action_summary/<table_name>/' )
+@core.route( '/action_summary/<table_name>/', methods=['GET', 'POST'] )
 @login_required
 def action_summary(facility_name, table_name):
+    fg = form_generator.FormGenerator(table_name)
+    form = fg.empty_form()
+
     page_form = 'summary'
     template = 'action_summary'
-    return build_summary(table_name, page_form,
-    template)
+    return build_summary(table_name, page_form,template,form)
 
 @core.route( '/action_summary/<table_name>/ajax' )
 @login_required
@@ -214,7 +216,7 @@ def data_entry(facility_name, table_name, row_name):
 
     link_data, child_tables = rac.get_child_tables(table_data.id)
 
-    fg = form_generator.FormGenerator('mod_' + module_name, table_name)
+    fg = form_generator.FormGenerator(table_name)
     if row_name == 'new' or not child_tables:
         form = fg.default_single_entry_form(table_data, row_name)
     else:
@@ -231,7 +233,7 @@ def data_entry(facility_name, table_name, row_name):
 
 @core.route( '/multiple_entry/<table_name>/', methods=['GET', 'POST'] )
 @login_required
-def multiple_entry( facility_name, table_name ):
+def multiple_entry( facility_name, table_name):
     module_name = MODULE_NAME
     rac = util.get_role_access_control()
     table_data = rac.has_access('TableObject', {'name': table_name})
@@ -239,11 +241,11 @@ def multiple_entry( facility_name, table_name ):
     if not table_data:
         abort(403)
 
-    row_names =  json.loads(request.args.get('row_names'))
-    fg = form_generator.FormGenerator('mod_' + module_name, table_name)
+    row_names = json.loads(request.form['row_names'])
+    fg = form_generator.FormGenerator(table_name)
     form = fg.default_multiple_entry_form(row_names)
 
-    if form.validate_on_submit() and len(form.errors) == 0:
+    if form.validate_on_submit() and len(form.errors) == 0 and len(row_names) == 0:
         oac = OrganizationAccessControl()
         row_names = oac.save_form()
 
@@ -255,7 +257,7 @@ def multiple_entry( facility_name, table_name ):
 
 """ helper functions start """
 
-def build_summary(table_name, page_form, template):
+def build_summary(table_name, page_form, template, form=None):
     tqc = TableQueryCollection(page_form, table_name)
     tq = tqc.get_first()
     # if nothing to display then page not found
@@ -263,6 +265,7 @@ def build_summary(table_name, page_form, template):
         abort(404)
     return templating.page_template(template,
             module_name = MODULE_NAME,
+            form = form,
             table_name = table_name,
             table_query = tq)
 

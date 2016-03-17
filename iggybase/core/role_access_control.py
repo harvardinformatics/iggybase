@@ -291,7 +291,9 @@ class RoleAccessControl:
 
     def get_menu_items(self, parent_id, active=1):
         menu = OrderedDict()
-        items = (self.session.query(models.Menu, models.MenuRole).join(models.MenuRole)
+        items = (self.session.query(models.Menu, models.MenuRole, models.Module)
+                 .join(models.MenuRole, models.Menu.id==models.MenuRole.menu_id)
+                 .outerjoin(models.Module, models.Menu.module_id==models.Module.id)
             .filter(
                 models.MenuRole.role_id == self.role.id,
                 models.Menu.parent_id == parent_id,
@@ -302,9 +304,9 @@ class RoleAccessControl:
         for item in items:
             if item.Menu.url_path and item.Menu.url_path != '':
                 if self.facility != '':
-                    url = self.facility + '/' + item.Menu.url_path
+                    url = self.facility + '/' + item.Module.name + '/' + item.Menu.url_path
                 else:
-                    url = item.Menu.url_path
+                    url = item.Module.name + '/' + item.Menu.url_path
 
                 if url and item.Menu.url_params:
                     url += item.Menu.url_params
