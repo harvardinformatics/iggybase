@@ -234,19 +234,19 @@ class FormGenerator():
                 logging.info(field.Field.field_name+': None')
                 self.classattr['old_value_'+field.Field.field_name+"_"+str(row_counter)]=\
                     HiddenField('old_value_'+field.Field.field_name+"_"+str(row_counter))
+
+                if row_name == 'new' and (field.Field.default is not None and field.Field.default != ''):
+                    # logging.info(field.Field.field_name + ': setting default')
+                    if field.Field.default == 'now':
+                        value = datetime.datetime.utcnow()
+                    elif field.Field.default == 'user':
+                        value = g.user.id
+                    elif field.Field.default is not None:
+                        value = field.Field.default
             else:
                 logging.info(field.Field.field_name+': '+str(value))
                 self.classattr['old_value_'+field.Field.field_name+"_"+str(row_counter)]=\
                     HiddenField('old_value_'+field.Field.field_name+"_"+str(row_counter), default=value)
-
-            if value is None and row_name == 'new' and (field.Field.default is not None and field.Field.default != ''):
-                # logging.info(field.Field.field_name + ': setting default')
-                if field.Field.default == 'now':
-                    value = datetime.datetime.utcnow()
-                elif field.Field.default == 'user':
-                    value = g.user.id
-                elif field.Field.default is not None:
-                    value = field.Field.default
 
             control_id = 'data_entry_' + field.Field.field_name+"_"+str(row_counter)
             self.classattr[control_id] = self.input_field(field, row_name, control_id, control_type, value)
