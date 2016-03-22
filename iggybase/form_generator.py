@@ -27,6 +27,7 @@ class FormGenerator():
         validators = []
 
         if value is not None:
+            # logging.info('input_field value: ' + str(value))
             kwargs['default'] = value
 
         # no validators or classes attached to hidden fields, as it could cause issues
@@ -118,7 +119,7 @@ class FormGenerator():
         self.classattr['startmaintable_'+str(self.table_data.id)]=\
             HiddenField('startmaintable_'+str(self.table_data.id), default=self.table_data.name)
 
-        self.get_row(fields, row_name, 1)
+        self.get_row(fields, row_name, 1, 'data-control')
 
         newclass = new_class('DynamicForm', (Form,), {}, lambda ns: ns.update(self.classattr))
 
@@ -140,6 +141,10 @@ class FormGenerator():
 
         newclass = new_class('DynamicForm', (Form,), {}, lambda ns: ns.update(self.classattr))
 
+        tmp = newclass()
+        for field in tmp:
+            logging.info(field.id +": "+str(field.data))
+
         return newclass()
 
     def default_parent_child_form(self, table_data, child_tables, link_data, row_name='new'):
@@ -151,7 +156,7 @@ class FormGenerator():
             HiddenField('startmaintable_'+str(self.table_data.id), default=self.table_data.name)
 
         fields = self.role_access_control.fields(self.table_data.id)
-        self.get_row(fields, row_name, 1)
+        self.get_row(fields, row_name, 1, 'data-control')
 
         parent_id = self.organization_access_control.get_row_id(table_data.name, {'name': row_name})
 
@@ -206,13 +211,15 @@ class FormGenerator():
                 'record_data_table_name_'+str(row_count): table_name_field,
                 'record_data_table_id_'+str(row_count): table_id_field}
 
-    def get_row(self, fields, row_name, row_counter, control_type='data-control'):
+    def get_row(self, fields, row_name, row_counter, control_type):
+        # logging.info('row_name: ' + row_name)
         if row_name != 'new':
             data = self.organization_access_control.get_entry_data(self.table_data.name, {'name': str(row_name)})
             if data:
                 data = data[0]
 
                 if type(data) is list:
+                    # logging.info('data is none')
                     data = None
                     row_name = 'new'
 
@@ -224,13 +231,16 @@ class FormGenerator():
                     value = data[data.keys().index(field.FieldRole.display_name)]
 
             if value is None:
+                logging.info(field.Field.field_name+': None')
                 self.classattr['old_value_'+field.Field.field_name+"_"+str(row_counter)]=\
                     HiddenField('old_value_'+field.Field.field_name+"_"+str(row_counter))
             else:
+                logging.info(field.Field.field_name+': '+str(value))
                 self.classattr['old_value_'+field.Field.field_name+"_"+str(row_counter)]=\
                     HiddenField('old_value_'+field.Field.field_name+"_"+str(row_counter), default=value)
 
             if value is None and row_name == 'new' and (field.Field.default is not None and field.Field.default != ''):
+                # logging.info(field.Field.field_name + ': setting default')
                 if field.Field.default == 'now':
                     value = datetime.datetime.utcnow()
                 elif field.Field.default == 'user':

@@ -1,7 +1,6 @@
 from flask import g, request
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import DateTime, func
-from iggybase.core.role_access_control import RoleAccessControl
 from iggybase.database import db_session
 from iggybase.admin import models
 from iggybase import models as core_models
@@ -21,6 +20,7 @@ class OrganizationAccessControl:
         self.org_ids = []
         self.current_org_id = None
         self.session = db_session()
+
         if g.user is not None and not g.user.is_anonymous:
             self.user =  self.session.query(models.User).filter_by(id=g.user.id).first()
             query = self.session.query(models.Organization.parent_id.distinct().label('parent_id'))
@@ -40,7 +40,20 @@ class OrganizationAccessControl:
         self.session.commit()
 
     def get_org_managers(self, org_id, parents = False):
+        parent_orgs = self.get_parent_organization(self.current_org_id)
+
         pass
+
+    def get_parent_organization(self, parent_organization_id):
+        role_access_control = util.get_role_access_control()
+        self.org_ids.append(parent_organization_id)
+        child_orgs = self.session.query(models.Organization).filter_by(parent_id=parent_organization_id).all()
+        for child_org in child_orgs:
+            if child_org.id in self.parent_orgs:
+                self.get_child_organization(child_org.id)
+            else:
+                self.org_ids.append(child_org.id)
+        return
 
     def get_child_organization(self, parent_organization_id):
         self.org_ids.append(parent_organization_id)
@@ -183,7 +196,7 @@ class OrganizationAccessControl:
                 }
 
     def get_field_data(self, table_name):
-        role_access_control = RoleAccessControl()
+        role_access_control = util.get_role_access_control()
         table_data = role_access_control.has_access('TableObject', {'name': table_name})
         field_data = None
 
@@ -193,7 +206,7 @@ class OrganizationAccessControl:
         return field_data
 
     def get_search_field_data(self, table_name, search_field_name):
-        role_access_control = RoleAccessControl()
+        role_access_control = util.get_role_access_control()
         table_data = role_access_control.has_access('TableObject', {'name': table_name})
 
         if table_data is not None:
@@ -231,7 +244,7 @@ class OrganizationAccessControl:
         return table.query.filter_by(id=lt_id).first()
 
     def save_form(self):
-        role_access_control = RoleAccessControl()
+        role_access_control = util.get_role_access_control()
 
         long_text_data = models.TableObject.query.filter_by(name='long_text').first()
 

@@ -18,6 +18,8 @@ class Facility(Base):
     active = Column(Boolean)
     organization_id = Column(Integer)
     order = Column(Integer)
+    root_organization_id = Column(Integer)
+
 
 class Level(Base):
     __tablename__ = 'level'
