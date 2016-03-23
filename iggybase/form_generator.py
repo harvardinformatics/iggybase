@@ -9,7 +9,7 @@ from wtforms.validators import DataRequired, Length, email, Optional
 from iggybase.core.organization_access_control import OrganizationAccessControl
 from iggybase.core.role_access_control import RoleAccessControl
 from iggybase import constants
-from json import dumps
+from json import dumps, loads
 import datetime
 import logging
 
@@ -105,7 +105,7 @@ class FormGenerator():
             return IggybaseStringField(field_data.FieldRole.display_name, **kwargs)
 
     def empty_form(self):
-        newclass = new_class('DynamicForm', (Form,))
+        newclass = new_class('EmptyForm', (Form,))
 
         return newclass()
 
@@ -121,11 +121,12 @@ class FormGenerator():
 
         self.get_row(fields, row_name, 1, 'data-control')
 
-        newclass = new_class('DynamicForm', (Form,), {}, lambda ns: ns.update(self.classattr))
+        newclass = new_class('SingleForm', (Form,), {}, lambda ns: ns.update(self.classattr))
 
         return newclass()
 
     def default_multiple_entry_form(self, row_names=[]):
+
         self.table_data = self.role_access_control.has_access('TableObject', {'name': self.table_object})
 
         fields = self.role_access_control.fields(self.table_data.id)
@@ -139,11 +140,11 @@ class FormGenerator():
             self.get_row(fields, row_name, row_counter, 'table-control')
             row_counter += 1
 
-        newclass = new_class('DynamicForm', (Form,), {}, lambda ns: ns.update(self.classattr))
+        newclass = new_class('MultipleForm', (Form,), {}, lambda ns: ns.update(self.classattr))
 
-        tmp = newclass()
-        for field in tmp:
-            logging.info(field.id +": "+str(field.data))
+        # tmp = newclass()
+        # for field in tmp:
+        #     logging.info(field.id +": "+str(field.data))
 
         return newclass()
 
@@ -198,7 +199,7 @@ class FormGenerator():
 
             child_index += 1
 
-        newclass = new_class('DynamicForm', (Form,), {}, lambda ns: ns.update(self.classattr))
+        newclass = new_class('ParentForm', (Form,), {}, lambda ns: ns.update(self.classattr))
 
         return newclass()
 
@@ -231,7 +232,7 @@ class FormGenerator():
                     value = data[data.keys().index(field.FieldRole.display_name)]
 
             if value is None:
-                logging.info(field.Field.field_name+': None')
+                # logging.info(field.Field.field_name+': None')
                 self.classattr['old_value_'+field.Field.field_name+"_"+str(row_counter)]=\
                     HiddenField('old_value_'+field.Field.field_name+"_"+str(row_counter))
 
@@ -244,7 +245,7 @@ class FormGenerator():
                     elif field.Field.default is not None:
                         value = field.Field.default
             else:
-                logging.info(field.Field.field_name+': '+str(value))
+                # logging.info(field.Field.field_name+': '+str(value))
                 self.classattr['old_value_'+field.Field.field_name+"_"+str(row_counter)]=\
                     HiddenField('old_value_'+field.Field.field_name+"_"+str(row_counter), default=value)
 

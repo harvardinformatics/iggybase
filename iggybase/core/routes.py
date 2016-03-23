@@ -1,4 +1,4 @@
-from flask import request, jsonify, abort, g
+from flask import request, jsonify, abort, g, redirect,url_for
 from flask.ext.security import login_required
 from flask.ext import excel
 import json
@@ -14,45 +14,48 @@ import logging
 
 MODULE_NAME = 'core'
 
-@core.route( '/' )
+
+@core.route('/')
 @login_required
 def default(facility_name):
     return templating.page_template('index.html')
 
-@core.route( '/summary/<table_name>/' )
+
+@core.route('/summary/<table_name>/')
 @login_required
 def summary(facility_name, table_name):
     page_form = template = 'summary'
     return build_summary(table_name, page_form, template)
 
-@core.route( '/summary/<table_name>/ajax' )
+
+@core.route('/summary/<table_name>/ajax')
 @login_required
-def summary_ajax(facility_name, table_name, page_form = 'summary', criteria = {}):
+def summary_ajax(facility_name, table_name, page_form='summary', criteria={}):
     return build_summary_ajax(table_name, page_form, criteria)
 
-@core.route( '/action_summary/<table_name>/', methods=['GET', 'POST'] )
+
+@core.route('/action_summary/<table_name>/', methods=['GET', 'POST'])
 @login_required
 def action_summary(facility_name, table_name):
-    fg = form_generator.FormGenerator(table_name)
-    form = fg.empty_form()
-
     page_form = 'summary'
     template = 'action_summary'
-    return build_summary(table_name, page_form,template,form)
+    return build_summary(table_name, page_form, template)
 
-@core.route( '/action_summary/<table_name>/ajax' )
+
+@core.route('/action_summary/<table_name>/ajax')
 @login_required
-def action_summary_ajax(facility_name, table_name, page_form = 'summary',
-        criteria = {}):
+def action_summary_ajax(facility_name, table_name, page_form='summary',
+                        criteria={}):
     return build_summary_ajax(table_name, page_form, criteria)
 
-@core.route( '/detail/<table_name>/<row_name>' )
+
+@core.route('/detail/<table_name>/<row_name>')
 @login_required
 def detail(facility_name, table_name, row_name):
     page_form = template = 'detail'
     criteria = {(table_name, 'name'): row_name}
     tqc = TableQueryCollection(page_form,
-            table_name, criteria)
+                               table_name, criteria)
     tqc.get_results()
     add_row_id = False
     tqc.format_results(add_row_id)
@@ -70,9 +73,10 @@ def detail(facility_name, table_name, row_name):
         hidden_fields=hidden_fields
     )
 
-@core.route( '/summary/<table_name>/download/' )
+
+@core.route('/summary/<table_name>/download/')
 @login_required
-def summary_download( facility_name, table_name ):
+def summary_download(facility_name, table_name):
     page_form = 'summary'
     add_row_id = False
     allow_links = False
@@ -83,7 +87,8 @@ def summary_download( facility_name, table_name ):
     csv = excel.make_response_from_array(tq.get_list_of_list(), 'csv')
     return csv
 
-@core.route( '/ajax/update_table_rows/<table_name>', methods=['GET', 'POST'] )
+
+@core.route('/ajax/update_table_rows/<table_name>', methods=['GET', 'POST'])
 @login_required
 def update_table_rows(facility_name, table_name):
     updates = request.json['updates']
@@ -91,12 +96,13 @@ def update_table_rows(facility_name, table_name):
     ids = request.json['ids']
 
     tqc = TableQueryCollection('update', table_name,
-            {(table_name, 'id'):ids})
+                               {(table_name, 'id'): ids})
     tqc.get_results()
     tqc.format_results(True)
     tq = tqc.get_first()
     updated = tq.update_and_get_message(updates, ids, message_fields)
     return json.dumps({'updated': updated})
+
 
 @core.route('/search', methods=['GET', 'POST'])
 def search(facility_name):
@@ -124,12 +130,13 @@ def search(facility_name):
             modal_html += '<tr><td><label>' + row.FieldRole.display_name.replace("_", " ").title() + '</label></td>'
             modal_html += '<td><input id="search_' + row.Field.field_name + '"></input></td></tr>'
     else:
-        modal_html += '<tr><td><label>'+field_name.replace("_", " ").title()+'</label></td>'
+        modal_html += '<tr><td><label>' + field_name.replace("_", " ").title() + '</label></td>'
         modal_html += '<td><input id="search_name"></input></td></tr>'
     modal_html += '</table>'
     modal_html += '</div>'
 
     return modal_html
+
 
 @core.route('/search_results', methods=['GET', 'POST'])
 def search_results(facility_name):
@@ -145,9 +152,9 @@ def search_results(facility_name):
     search_params = {}
     fields = []
     for key, value in search_vals.items():
-        if key[:7]=='search_':
+        if key[:7] == 'search_':
             fields.append(key[7:])
-            if value !='':
+            if value != '':
                 search_params[key[7:]] = value
 
     if search_table == '':
@@ -171,17 +178,17 @@ def search_results(facility_name):
     modal_html += '<table class="table-sm table-striped"><tr><td>Name</td>'
 
     for field in fields:
-        if field!='name':
+        if field != 'name':
             modal_html += '<td>' + field.replace("_", " ").title() + '</td>'
 
     modal_html += '</tr>'
 
     if search_results is not None and len(search_params) != 0:
         for row in search_results:
-            modal_html += '<tr><td><input luid="'+input_id+'"class="search-results" type="button" value="' + row.name + '"></input></td>'
+            modal_html += '<tr><td><input luid="' + input_id + '"class="search-results" type="button" value="' + row.name + '"></input></td>'
             for field in fields:
-                if field!='name':
-                    res = getattr(row,field)
+                if field != 'name':
+                    res = getattr(row, field)
                     if res is not None:
                         modal_html += '<td><label>' + format(res) + '</label></td>'
                     else:
@@ -196,13 +203,15 @@ def search_results(facility_name):
 
     return modal_html
 
-@core.route( '/ajax/change_role', methods=['POST'] )
+
+@core.route('/ajax/change_role', methods=['POST'])
 @login_required
 def change_role(facility_name):
     role_id = request.json['role_id']
     rac = util.get_role_access_control()
     success = rac.change_role(role_id)
-    return json.dumps({'success':success})
+    return json.dumps({'success': success})
+
 
 @core.route('/data_entry/<table_name>/<row_name>/', methods=['GET', 'POST'])
 @login_required
@@ -229,11 +238,12 @@ def data_entry(facility_name, table_name, row_name):
         return saved_data(facility_name, module_name, table_name, row_names)
 
     return templating.page_template('single_data_entry',
-            module_name=module_name, form=form, table_name=table_name)
+                                    module_name=module_name, form=form, table_name=table_name)
 
-@core.route( '/multiple_entry/<table_name>/', methods=['GET', 'POST'] )
+
+@core.route('/multiple_entry/<table_name>/', methods=['GET','POST'])
 @login_required
-def multiple_entry( facility_name, table_name):
+def multiple_entry(facility_name, table_name):
     module_name = MODULE_NAME
     rac = util.get_role_access_control()
     table_data = rac.has_access('TableObject', {'name': table_name})
@@ -242,6 +252,7 @@ def multiple_entry( facility_name, table_name):
         abort(403)
 
     row_names = json.loads(request.form['row_names'])
+
     fg = form_generator.FormGenerator(table_name)
     form = fg.default_multiple_entry_form(row_names)
 
@@ -254,8 +265,8 @@ def multiple_entry( facility_name, table_name):
     return templating.page_template('multiple_data_entry', module_name=module_name, form=form, table_name=table_name)
 
 
-
 """ helper functions start """
+
 
 def build_summary(table_name, page_form, template, form=None):
     tqc = TableQueryCollection(page_form, table_name)
@@ -264,10 +275,11 @@ def build_summary(table_name, page_form, template, form=None):
     if not tq.fc.fields:
         abort(404)
     return templating.page_template(template,
-            module_name = MODULE_NAME,
-            form = form,
-            table_name = table_name,
-            table_query = tq)
+                                    module_name=MODULE_NAME,
+                                    form=form,
+                                    table_name=table_name,
+                                    table_query=tq)
+
 
 def build_summary_ajax(table_name, page_form, criteria):
     start = time.time()
@@ -286,7 +298,8 @@ def build_summary_ajax(table_name, page_form, criteria):
     json_rows = table_query.get_row_list()
     current = time.time()
     print(str(current - start))
-    return jsonify({'data':json_rows})
+    return jsonify({'data': json_rows})
+
 
 def saved_data(facility_name, module_name, table_name, row_names):
     msg = 'Saved: '
@@ -294,18 +307,16 @@ def saved_data(facility_name, module_name, table_name, row_names):
     for row_name in row_names:
         if row_name[0] == 'error':
 
-            msg = 'Error: %s,' % str(row_name[1]).replace('<','').replace('>','')
+            msg = 'Error: %s,' % str(row_name[1]).replace('<', '').replace('>', '')
             error = True
         else:
             table = urllib.parse.quote(row_name[1])
             name = urllib.parse.quote(row_name[0])
-            msg += ' <a href='+request.url_root+facility_name+'/'+module_name+'/detail/'+table+'/'+name+'>'+\
-                   row_name[0]+'</a>,'
+            msg += ' <a href=' + request.url_root + facility_name + '/' + module_name + '/detail/' + table + '/' + name + '>' + \
+                   row_name[0] + '</a>,'
 
     msg = msg[:-1]
     if error:
         return templating.page_template('error_message', module_name=module_name, table_name=table_name, page_msg=msg)
     else:
         return templating.page_template('save_message', module_name=module_name, table_name=table_name, page_msg=msg)
-
-

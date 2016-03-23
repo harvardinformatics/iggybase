@@ -5,7 +5,7 @@
 
 {% block content -%}
     {% if form is defined -%}
-        <form action="{{ submit_action_url }}" class="form form-horizontal" method="post" role="form">
+        <form action="{{ submit_action_url }}" enctype="multipart/form-data" class="form form-horizontal" method="post" role="form">
 
         {{ form.hidden_tag() }}
         {{ wtf.form_errors(form, hiddens='only') }}
