@@ -251,7 +251,7 @@ def multiple_entry(facility_name, table_name):
     if not table_data:
         abort(403)
 
-    row_names = json.loads(request.form['row_names'])
+    row_names = json.loads(request.args.get('row_names'))
 
     fg = form_generator.FormGenerator(table_name)
     form = fg.default_multiple_entry_form(row_names)
