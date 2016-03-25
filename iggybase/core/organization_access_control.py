@@ -158,7 +158,7 @@ class OrganizationAccessControl:
                     joins.add(table_model)
 
             criteria_key = (field.TableObject.name, field.Field.field_name)
-            if criteria_key in criteria:
+            if criteria_key in criteria and not field.is_foreign_key:
                 if type(criteria[criteria_key]) is list:
                     wheres.append(col.in_(criteria[criteria_key]))
                 else:
