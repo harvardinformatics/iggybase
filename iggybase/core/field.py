@@ -23,10 +23,12 @@ class Field:
         return (self.TableQueryCalculation != None)
 
     def is_visible(self):
-        visible = True
         if self.TableQueryField:
             visible = self.TableQueryField.visible
-        visible = visible and self.FieldRole.visible
+        else:
+            visible = self.FieldRole.visible
+        if not visible:
+            visible = False
         return visible
 
     def set_fk_field(self, fk_field = None):
