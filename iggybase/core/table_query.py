@@ -107,7 +107,7 @@ class TableQuery:
                 self.table_dict.append(row_dict)
 
     def get_link(self, url_root, page = None, table = None):
-        link = url_root + g.facility + '/' + g.module
+        link = url_root + g.facility + '/' + 'core'
         if page:
             link += '/' + page
         if table:
