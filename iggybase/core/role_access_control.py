@@ -18,6 +18,7 @@ class RoleAccessControl:
             self.role = (self.session.query(models.Role)
                                   .join(models.UserRole)
                                   .filter(models.UserRole.id==self.user.current_user_role_id).first())
+            g.role_id = self.role.id
             facility_res = (self.session.query(models.Facility, models.Role,
                 models.Level)
                                   .join(models.Role, models.UserRole,
