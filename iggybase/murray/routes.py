@@ -4,12 +4,6 @@ from flask.ext.security import login_required
 from . import murray
 import iggybase.core.table_query_collection as tqc
 
-'''@murray.before_request
-def before_request():
-    role_access = RoleAccessControl()
-    if role_access.check_url3(g.facility, g.module):
-        abort(404)'''
-
 @murray.route('/')
 def default():
     return templating.page_template('index.html')
