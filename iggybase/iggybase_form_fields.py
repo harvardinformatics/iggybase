@@ -1,5 +1,5 @@
 from wtforms import StringField, IntegerField, BooleanField, DateField, TextAreaField, FloatField, SelectField,\
-    FileField, PasswordField
+    FileField, PasswordField, DecimalField
 
 
 class IggybaseLookUpField(StringField):
@@ -139,6 +139,29 @@ class IggybaseFloatField(FloatField):
             kwargs.setdefault('readonly', True)
 
         return super(IggybaseFloatField, self).__call__(*args, **kwargs)
+
+
+class IggybaseDecimalField(DecimalField):
+    def __init__(self, *args, **kwargs):
+        if 'iggybase_class' in kwargs:
+            self.iggybase_class = kwargs['iggybase_class']
+            del kwargs['iggybase_class']
+        else:
+            self.iggybase_class = None
+
+        self.readonly = kwargs['readonly']
+        del kwargs['readonly']
+
+        super(IggybaseDecimalField, self).__init__(*args, **kwargs)
+
+    def __call__(self, *args, **kwargs):
+        if self.iggybase_class is not None:
+            kwargs['class'] = self.iggybase_class
+
+        if self.readonly:
+            kwargs.setdefault('readonly', True)
+
+        return super(IggybaseDecimalField, self).__call__(*args, **kwargs)
 
 
 class IggybaseIntegerField(IntegerField):

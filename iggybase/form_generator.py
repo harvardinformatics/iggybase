@@ -109,22 +109,6 @@ class FormGenerator():
 
         return newclass()
 
-    def default_single_entry_form(self, table_data, row_name='new'):
-        self.table_data = table_data
-
-        self.classattr = self.row_fields(1, row_name)
-
-        fields = self.role_access_control.fields(self.table_data.id)
-
-        self.classattr['startmaintable_'+str(self.table_data.id)]=\
-            HiddenField('startmaintable_'+str(self.table_data.id), default=self.table_data.name)
-
-        self.get_row(fields, row_name, 1, 'data-control')
-
-        newclass = new_class('SingleForm', (Form,), {}, lambda ns: ns.update(self.classattr))
-
-        return newclass()
-
     def default_multiple_entry_form(self, row_names=[]):
 
         self.table_data = self.role_access_control.has_access('TableObject', {'name': self.table_object})
@@ -148,22 +132,32 @@ class FormGenerator():
 
         return newclass()
 
-    def default_parent_child_form(self, table_data, child_tables, link_data, row_name='new'):
+    def default_single_entry_form(self, table_data, row_name='new'):
         self.table_data = table_data
 
         self.classattr = self.row_fields(1, row_name)
 
+        fields = self.role_access_control.fields(self.table_data.id)
+
         self.classattr['startmaintable_'+str(self.table_data.id)]=\
             HiddenField('startmaintable_'+str(self.table_data.id), default=self.table_data.name)
 
-        fields = self.role_access_control.fields(self.table_data.id)
-        self.get_row(fields, row_name, 1, 'data-control')
+        row_counter = 1
+        self.get_row(fields, row_name, row_counter, 'data-control')
 
-        parent_id = self.organization_access_control.get_row_id(table_data.name, {'name': row_name})
+        link_data, child_tables = self.role_access_control.get_child_tables(self.table_data.id)
 
+        if row_name != 'new' and child_tables:
+            row_counter = self.child_data_form(child_tables, link_data, row_name, row_counter)
+
+        newclass = new_class('SingleForm', (Form,), {}, lambda ns: ns.update(self.classattr))
+
+        return newclass()
+
+    def many_to_many_data(self, table_data, link_tables, link_data):
         row_counter = 2
         child_index = 0
-        for child_table in child_tables:
+        for child_table in link_tables:
             self.table_data = child_table
             fields = self.role_access_control.fields(self.table_data.id)
 
@@ -202,6 +196,48 @@ class FormGenerator():
         newclass = new_class('ParentForm', (Form,), {}, lambda ns: ns.update(self.classattr))
 
         return newclass()
+
+    def child_data(self, child_tables, link_data, row_name, row_counter):
+        parent_id = self.organization_access_control.get_row_id(self.table_data.name, {'name': row_name})
+
+        child_index = 0
+        for child_table in child_tables:
+            self.table_data = child_table
+            fields = self.role_access_control.fields(self.table_data.id)
+
+            child_row_names = self.organization_access_control.get_child_row_names(child_table.name,
+                                                                                   link_data[child_index].child_link_field_id,
+                                                                                   parent_id)
+
+            link_field = self.role_access_control.has_access('Field',
+                                                             {'id': link_data[child_index].child_link_field_id})
+
+            self.classattr['linkcolumn_'+str(child_table.id)]=\
+                HiddenField('linkcolumn_'+str(child_table.id), default=link_field.field_name)
+
+            self.classattr['startchildtable_'+str(child_table.id)]=\
+                HiddenField('startchildtable_'+str(child_table.id), default=child_table.name)
+
+            self.classattr['headers_'+str(child_table.id)]=\
+                HiddenField('headers_'+str(child_table.id), default=self.get_field_headers(fields))
+
+            if len(child_row_names) == 0:
+                child_row_names.append('new')
+
+            for child_row_name in child_row_names:
+                #   needed to prevent oevrlapping row ids if rows are added dynamically
+                child_row = (child_index * 1000) + row_counter
+
+                self.classattr.update(self.row_fields(child_row, child_row_name))
+                self.get_row(fields, child_row_name, child_row, 'table-control')
+                row_counter += 1
+
+            self.classattr['endchildtable_'+str(child_table.id)]=\
+                HiddenField('endchildtable_'+str(child_table.id))
+
+            child_index += 1
+
+        return row_counter
 
     def row_fields(self, row_count, row_name):
         table_id_field = HiddenField('table_id_'+str(row_count), default=self.table_data.id)

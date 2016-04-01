@@ -255,6 +255,25 @@ class TableObjectRole(Base):
     table_object_role_unq = UniqueConstraint('role_id', 'table_object_id')
 
 
+class TableObjectMany(Base):
+    __tablename__ = 'table_object_many'
+    id = Column(Integer, primary_key=True)
+    name = Column(String(100), unique=True)
+    description = Column(String(255))
+    date_created = Column(DateTime, default=datetime.datetime.utcnow)
+    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
+    active = Column(Boolean)
+    organization_id = Column(Integer)
+    order = Column(Integer)
+    first_table_object_id = Column(Integer, ForeignKey('table_object.id'))
+    link_table_object_id = Column(Integer, ForeignKey('table_object.id'))
+    second_table_object_id = Column(Integer, ForeignKey('table_object.id'))
+
+    table_object_many_first_table_object = relationship("TableObject", foreign_keys=[first_table_object_id])
+    table_object_many_second_table_object = relationship("TableObject", foreign_keys=[link_table_object_id])
+    table_object_many_link_table_object = relationship("TableObject", foreign_keys=[second_table_object_id])
+
+
 class TableObjectChildren(Base):
     __tablename__ = 'table_object_children'
     id = Column(Integer, primary_key=True)

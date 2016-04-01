@@ -223,13 +223,8 @@ def data_entry(facility_name, table_name, row_name):
     if not table_data:
         abort(403)
 
-    link_data, child_tables = rac.get_child_tables(table_data.id)
-
     fg = form_generator.FormGenerator(table_name)
-    if row_name == 'new' or not child_tables:
-        form = fg.default_single_entry_form(table_data, row_name)
-    else:
-        form = fg.default_parent_child_form(table_data, child_tables, link_data, row_name)
+    form = fg.default_data_entry_form(table_data, row_name)
 
     if form.validate_on_submit() and len(form.errors) == 0:
         oac = OrganizationAccessControl()
@@ -251,13 +246,8 @@ def multiple_entry(facility_name, table_name):
     if not table_data:
         abort(403)
 
-<<<<<<< HEAD
     row_names = json.loads(request.args.get('row_names'))
 
-=======
-    row_names = json.loads(request.form['row_names'])
-    request.form = None # temporary fix for default values not displaying
->>>>>>> 3099edf8dbd0e49b7e4db5bb2f03e6fbab61353a
     fg = form_generator.FormGenerator(table_name)
     form = fg.default_multiple_entry_form(row_names)
 
