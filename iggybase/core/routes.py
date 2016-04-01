@@ -1,4 +1,4 @@
-from flask import request, jsonify, abort, g, redirect,url_for
+from flask import request, jsonify, abort, g, redirect,url_for, current_app
 from flask.ext.security import login_required
 from flask.ext import excel
 import json
@@ -6,6 +6,7 @@ import urllib
 import time
 from . import core
 import iggybase.form_generator as form_generator
+from iggybase.cached import cached
 from iggybase import utilities as util
 import iggybase.templating as templating
 from iggybase.core.organization_access_control import OrganizationAccessControl
@@ -23,6 +24,7 @@ def default(facility_name):
 
 @core.route('/summary/<table_name>/')
 @login_required
+@cached()
 def summary(facility_name, table_name):
     page_form = template = 'summary'
     return build_summary(table_name, page_form, template)
@@ -30,6 +32,7 @@ def summary(facility_name, table_name):
 
 @core.route('/summary/<table_name>/ajax')
 @login_required
+@cached()
 def summary_ajax(facility_name, table_name, page_form='summary', criteria={}):
     return build_summary_ajax(table_name, page_form, criteria)
 
@@ -91,6 +94,7 @@ def summary_download(facility_name, table_name):
 @core.route('/ajax/update_table_rows/<table_name>', methods=['GET', 'POST'])
 @login_required
 def update_table_rows(facility_name, table_name):
+
     updates = request.json['updates']
     message_fields = request.json['message_fields']
     ids = request.json['ids']
@@ -101,6 +105,13 @@ def update_table_rows(facility_name, table_name):
     tqc.format_results(True)
     tq = tqc.get_first()
     updated = tq.update_and_get_message(updates, ids, message_fields)
+    views_to_clear = ['summary']
+    if updated:
+        for view in views_to_clear:
+            cache_key = ('view/' + str(g.role_id) + '/' + g.facility + '/core/' + view
+            + '/' + table_name + '/ajax')
+            print(cache_key)
+            current_app.cache.set(cache_key, None, (5 * 60))
     return json.dumps({'updated': updated})
 
 
@@ -247,7 +258,10 @@ def multiple_entry(facility_name, table_name):
         abort(403)
 
     row_names = json.loads(request.args.get('row_names'))
+<<<<<<< HEAD
 
+=======
+>>>>>>> 0b88aa4eaa5c791875f752e135a3d6d7ef4f3a1d
     fg = form_generator.FormGenerator(table_name)
     form = fg.default_multiple_entry_form(row_names)
 

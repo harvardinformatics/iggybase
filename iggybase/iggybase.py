@@ -10,6 +10,7 @@ RoleMixin, login_required, current_user, LoginForm, RegisterForm, \
 user_registered, logout_user
 from flask.ext.sqlalchemy import SQLAlchemy
 from werkzeug.wsgi import DispatcherMiddleware
+from werkzeug.contrib.cache import SimpleCache
 from iggybase.extensions import mail, lm, bootstrap
 from iggybase.admin import models
 from iggybase.database import db, init_db, db_session
@@ -20,10 +21,9 @@ __all__ = [ 'create_app' ]
 
 def create_app( app_name = None ):
     conf = Config( )
-
     iggybase = Flask( __name__ )
     iggybase.config.from_object( conf )
-
+    iggybase.cache = SimpleCache()
     if app_name is None:
         app_name = conf.PROJECT
 
@@ -178,3 +178,5 @@ class ExtendedRegisterForm(RegisterForm):
         for fac in facilities:
             fac_choices.append((fac.id, fac.name))
         self.facility.choices = fac_choices
+
+
