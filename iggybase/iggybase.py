@@ -127,6 +127,9 @@ def configure_hook( app ):
                 else:
                     abort(404)
             g.facility = path[1]
+            route_access = role_access.route_access(request.path)
+            if not route_access:
+                abort(404)
 
 def configure_error_handlers( app ):
     from iggybase import base_routes

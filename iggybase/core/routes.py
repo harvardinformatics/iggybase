@@ -91,10 +91,10 @@ def summary_download(facility_name, table_name):
     return csv
 
 
-@core.route('/ajax/update_table_rows/<table_name>', methods=['GET', 'POST'])
+@core.route('/update_table_rows/<table_name>', methods=['GET', 'POST'])
 @login_required
 def update_table_rows(facility_name, table_name):
-
+    #TODO: protect this by checking the rows ageninst org_ids
     updates = request.json['updates']
     message_fields = request.json['message_fields']
     ids = request.json['ids']
@@ -215,7 +215,7 @@ def search_results(facility_name):
     return modal_html
 
 
-@core.route('/ajax/change_role', methods=['POST'])
+@core.route('/change_role', methods=['POST'])
 @login_required
 def change_role(facility_name):
     role_id = request.json['role_id']

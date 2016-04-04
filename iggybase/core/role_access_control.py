@@ -1,5 +1,5 @@
 from collections import OrderedDict as OrderedDict
-from flask import g, request
+from flask import g, request, session
 from iggybase.database import db_session
 from iggybase.admin import models
 from iggybase.admin import constants as admin_consts
@@ -29,15 +29,21 @@ class RoleAccessControl:
                                                            models.Level.order).all())
 
             self.facilities = {}
-            self.facility = ''
+            self.facility = None
             for fac in facility_res:
                 if fac.Facility.name not in self.facilities:
                     self.facilities[fac.Facility.name] = fac.Role.id
                 if fac.Role.id == self.role.id:
-                    self.facility = fac.Facility.name
+                    self.facility = fac.Facility
+
+            if 'routes' in session:
+                self.routes = session['routes']
+            else:
+                self.set_routes()
         else:
             self.user = None
             self.role = None
+            self.routes = []
 
     def __del__(self):
         self.session.commit()
@@ -201,23 +207,54 @@ class RoleAccessControl:
         )
         return criteria
 
+    def set_routes(self):
+        self.routes = []
+        res = (self.session.query(models.Route, models.RouteRole, models.Module,
+            models.ModuleFacility)
+                .join(models.RouteRole, models.Route.id==models.RouteRole.route_id)
+                .join(models.Module, models.Route.module_id==models.Module.id)
+                .join(models.ModuleFacility, models.Module.id==models.ModuleFacility.module_id)
+        .filter(
+            models.RouteRole.role_id == self.role.id,
+            models.RouteRole.active == 1,
+            models.ModuleFacility.facility_id == self.facility.id
+        ).all())
+        for row in res:
+            path =  self.facility.name + '/' + row.Module.name + '/' + row.Route.url_path
+            self.routes.append(path)
+        session['routes'] = self.routes
+
+    def route_access(self, route):
+        route = route.strip('/')
+        route = route.split('/')
+        route = '/'.join(route[:3])
+        if route in self.routes:
+            return True
+        else:
+            logging.info(
+                'user: '
+                + g.user.name
+                + ' has no access to this route: '
+                + route
+            )
+            return False
+
     def page_form_menus(self, page_form_id, active=True):
         """Setup NavBar and Side bar menus for templating context.
         Starts with the root navbar and sidebar records.
         Menus are recursive.
         """
         # TODO: do we need to query for this or can we just use constant
-        navbar_root = self.session.query(models.Menu). \
+        navbar_root = self.session.query(models.MenuNew). \
             filter_by(name=admin_consts.MENU_NAVBAR_ROOT).first()
         navbar = self.get_menu_items(navbar_root.id, active)
 
         # add facility role change options to navbar
         navbar['Role'] = self.make_role_menu()
 
-        sidebar_root = self.session.query(models.Menu). \
+        sidebar_root = self.session.query(models.MenuNew). \
             filter_by(name=admin_consts.MENU_SIDEBAR_ROOT).first()
         sidebar = self.get_menu_items(sidebar_root.id, active)
-
         return navbar, sidebar
 
     def make_role_menu(self):
@@ -295,38 +332,40 @@ class RoleAccessControl:
 
     def get_menu_items(self, parent_id, active=1):
         menu = OrderedDict()
-        items = (self.session.query(models.Menu, models.MenuRole, models.Module)
-                 .join(models.MenuRole, models.Menu.id == models.MenuRole.menu_id)
-                 .outerjoin(models.Module, models.Menu.module_id == models.Module.id)
-                 .filter(
-            models.MenuRole.role_id == self.role.id,
-            models.Menu.parent_id == parent_id,
-            models.MenuRole.active == active,
-            models.Menu.active == active
-        ).order_by(models.MenuRole.order, models.MenuRole.description).all())
+        items = (self.session.query(models.MenuNew, models.Route, models.MenuRole, models.Module)
+                 .join(models.MenuRole, models.MenuRole.menu_id==models.MenuNew.id)
+                 .outerjoin(models.Route, models.MenuNew.route_id==models.Route.id)
+                 .outerjoin(models.Module, models.Route.module_id==models.Module.id)
+            .filter(
+                models.MenuRole.role_id == self.role.id,
+                models.MenuRole.active == active,
+                models.MenuNew.parent_id == parent_id,
+                models.MenuNew.active == active
+            ).order_by(models.MenuNew.order, models.MenuNew.description).all())
 
         for item in items:
-            if item.Menu.url_path and item.Menu.url_path != '':
-                if self.facility != '':
-                    url = self.facility + '/' + item.Module.name + '/' + item.Menu.url_path
+            url = ''
+            if item.Route and item.Route.url_path and item.Route.url_path != '':
+                if self.facility.name != '':
+                    url = self.facility.name + '/' + item.Module.name + '/' + item.Route.url_path
                 else:
-                    url = item.Module.name + '/' + item.Menu.url_path
+                    url = item.Module.name + '/' + item.Route.url_path
+                if url and item.MenuNew.dynamic_suffix:
+                    url += '/' + item.MenuNew.dynamic_suffix
 
-                if url and item.Menu.url_params:
-                    url += item.Menu.url_params
+                if url and item.MenuNew.url_params:
+                    url += item.MenuNew.url_params
 
                 if url:
                     url = request.url_root + url
                 else:
                     url = '#'
-            else:
-                url = ''
 
-            menu[item.Menu.name] = {
-                'url': url,
-                'title': item.MenuRole.description,
-                'class': item.MenuRole.menu_class,
-                'subs': self.get_menu_items(item.Menu.id, active)
+            menu[item.MenuNew.name] = {
+                    'url': url,
+                    'title': item.MenuNew.display_name,
+                    'class': None,
+                    'subs': self.get_menu_items(item.MenuNew.id, active)
             }
         return menu
 
@@ -346,6 +385,9 @@ class RoleAccessControl:
             self.user.current_user_role_id = user_role.UserRole.id
             self.role = (self.session.query(models.Role).filter(models.Role.id == role_id).first())
             self.session.commit()
+            # renew the facility and routes
+            self.__init__()
+            self.set_routes()
             return facility.name
         else:
             return False

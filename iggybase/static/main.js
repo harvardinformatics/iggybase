@@ -40,11 +40,10 @@ $( document ).ready( function () {
     $('.change_role').click(function(){
         var currenturl = $.fn.parseURL(document.URL);
         var paths = currenturl.pathname.split("/");
-        var newpath = currenturl.protocol+"//"+currenturl.hostname+"/"+$(this).data('facility')+"/";
+        var newpath = $URL_ROOT + $(this).data('facility') + "/";
 
         $.ajax({
-            // TODO: don't hardcode facility
-            url:$URL_ROOT + $(this).data('facility') + '/core/ajax/change_role',
+            url:$URL_ROOT + paths[1] + '/core/change_role',
             data: JSON.stringify({
                 'role_id': $(this).data('role_id')
             }),
