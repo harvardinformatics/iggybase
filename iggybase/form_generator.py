@@ -156,8 +156,8 @@ class FormGenerator():
             link_data, many_tables = self.role_access_control.get_many_tables(self.table_data.id)
 
             if many_tables:
-                table_index, row_counter = self.child_data_form(many_tables, link_data, table_index, row_name,
-                                                                row_counter)
+                table_index, row_counter = self.child_data_form(constants.MANY_TO_MANY_TABLES, many_tables, link_data,
+                                                                table_index, row_name, row_counter)
 
         newclass = new_class('SingleForm', (Form,), {}, lambda ns: ns.update(self.classattr))
 
@@ -172,9 +172,16 @@ class FormGenerator():
             self.table_data = link_table
             fields = self.role_access_control.fields(self.table_data.id)
 
-            row_names = self.organization_access_control.get_many_row_names(link_table.name,
-                                                                            link_data[table_index].child_link_field_id,
-                                                                            parent_id)
+            if link_type == constants.CHILD_TABLES:
+                row_names = self.organization_access_control.get_many_row_names(link_table.name,
+                                                                                link_data[table_index].link_field_id,
+                                                                                parent_id)
+            elif link_type == constants.MANY_TO_MANY_TABLES:
+                pass
+            elif link_type == constants.GRANDCHILD_TABLES:
+                pass
+            else:
+                return
 
             link_field = self.role_access_control.has_access('Field',
                                                              {'id': link_data[table_index].child_link_field_id})

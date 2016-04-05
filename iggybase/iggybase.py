@@ -113,7 +113,7 @@ def configure_hook( app ):
         ignore_facility = ['static', 'logout', 'home']
         if (current_user.is_authenticated and path and path[1] not in ignore_facility):
             import iggybase.core.role_access_control as rac
-            
+
             # set module in g
             if len(path) > 2:
                 g.module = path[2]
