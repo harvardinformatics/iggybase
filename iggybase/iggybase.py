@@ -14,7 +14,6 @@ from werkzeug.contrib.cache import SimpleCache
 from iggybase.extensions import mail, lm, bootstrap
 from iggybase.admin import models
 from iggybase.database import db, init_db, db_session
-import iggybase.core.role_access_control as rac
 import logging
 
 __all__ = [ 'create_app' ]
@@ -112,8 +111,9 @@ def configure_hook( app ):
 
         # TODO: consider caching this for the session
         ignore_facility = ['static', 'logout', 'home']
-        if (current_user.is_authenticated and path and path[1] not in
-                ignore_facility):
+        if (current_user.is_authenticated and path and path[1] not in ignore_facility):
+            import iggybase.core.role_access_control as rac
+            
             # set module in g
             if len(path) > 2:
                 g.module = path[2]
