@@ -3,6 +3,7 @@ from flask import g, request
 from iggybase.database import db_session
 from iggybase.admin import models
 from iggybase.admin import constants as admin_consts
+from sqlalchemy import or_
 import logging
 
 
@@ -14,18 +15,18 @@ class RoleAccessControl:
         # set user and role
         if g.user is not None and not g.user.is_anonymous:
             self.user = self.session.query(models.User).filter_by(id=g.user.id).first()
-            #TODO check if current user role is set, if not set
+            # TODO check if current user role is set, if not set
             self.role = (self.session.query(models.Role)
-                                  .join(models.UserRole)
-                                  .filter(models.UserRole.id==self.user.current_user_role_id).first())
+                         .join(models.UserRole)
+                         .filter(models.UserRole.id == self.user.current_user_role_id).first())
             g.role_id = self.role.id
             facility_res = (self.session.query(models.Facility, models.Role,
-                models.Level)
-                                  .join(models.Role, models.UserRole,
-                                      models.Level)
-                                  .filter(models.UserRole.user_id ==
-                                      self.user.id).order_by(models.Facility.id,
-                                          models.Level.order).all())
+                                               models.Level)
+                            .join(models.Role, models.UserRole,
+                                  models.Level)
+                            .filter(models.UserRole.user_id ==
+                                    self.user.id).order_by(models.Facility.id,
+                                                           models.Level.order).all())
 
             self.facilities = {}
             self.facility = ''
@@ -38,7 +39,7 @@ class RoleAccessControl:
             self.user = None
             self.role = None
 
-    def __del__ (self):
+    def __del__(self):
         self.session.commit()
 
     def fields(self, table_object_id, filter=None, active=1):
@@ -57,8 +58,8 @@ class RoleAccessControl:
                     filters.append((getattr(models.FieldRole, field_data[1]) == value))
 
         res = self.session.query(models.Field, models.FieldRole).join(models.FieldRole). \
-                    filter(*filters). \
-                    order_by(models.FieldRole.order, models.FieldRole.display_name).all()
+            filter(*filters). \
+            order_by(models.FieldRole.order, models.FieldRole.display_name).all()
 
         if res is None:
             return []
@@ -95,7 +96,7 @@ class RoleAccessControl:
         )
         return table_queries
 
-    def calculation_fields(self, table_query_calculation_id, active = 1):
+    def calculation_fields(self, table_query_calculation_id, active=1):
         filters = [
             (models.FieldRole.role_id == self.role.id),
             (models.TableObjectRole.role_id == self.role.id),
@@ -105,25 +106,26 @@ class RoleAccessControl:
             (models.TableQueryCalculationField.table_query_calculation_id == table_query_calculation_id)
         ]
         joins = [
-                models.FieldRole,
-                models.TableObjectRole,
+            models.FieldRole,
+            models.TableObjectRole,
         ]
 
         res = (
             self.session.query(models.TableQueryCalculationField,
-                models.TableQueryField, models.Field).
+                               models.TableQueryField, models.Field).
                 join(models.TableQueryField).
                 join(models.Field).
                 join(
-                    models.TableObject,
-                    models.TableObject.id == models.Field.table_object_id
-                ).
+                models.TableObject,
+                models.TableObject.id == models.Field.table_object_id
+            ).
                 join(*joins).
-            filter(*filters).order_by(models.TableQueryCalculationField.order).all()
+                filter(*filters).order_by(models.TableQueryCalculationField.order).all()
         )
         return res
 
-    def table_query_fields(self, table_query_id, table_name=None, table_id=None, field_name=None, field_id = None, active=1):
+    def table_query_fields(self, table_query_id, table_name=None, table_id=None, field_name=None, field_id=None,
+                           active=1):
         filters = [
             (models.FieldRole.role_id == self.role.id),
             (models.TableObjectRole.role_id == self.role.id),
@@ -141,7 +143,7 @@ class RoleAccessControl:
             models.FieldRole,
             models.TableObjectRole
         ]
-        orders= [
+        orders = [
             models.Field.order
         ]
         outerjoins = []
@@ -154,7 +156,7 @@ class RoleAccessControl:
             selects.append(models.TableQueryCalculation)
             joins.append(models.TableQueryField)
             outerjoins.append(models.TableQueryCalculation)
-            orders= [
+            orders = [
                 models.TableQueryField.order,
                 models.Field.order
             ]
@@ -175,9 +177,9 @@ class RoleAccessControl:
                 models.TableObject,
                 models.TableObject.id == models.Field.table_object_id
             ).
-            join(*joins).
-            outerjoin(*outerjoins).
-            filter(*filters).order_by(*orders).all()
+                join(*joins).
+                outerjoin(*outerjoins).
+                filter(*filters).order_by(*orders).all()
         )
         return res
 
@@ -223,13 +225,14 @@ class RoleAccessControl:
         if self.user is not None:
             for role in self.user.roles:
                 if role.id != self.role.id:
-                    facility = self.session.query(models.Facility).filter_by(id = role.facility_id).first()
-                    role_menu_subs[role.name] = {'title':role.name,
-                            'class':'change_role', 'data':{'role_id': role.id, 'facility':facility.name}}
+                    facility = self.session.query(models.Facility).filter_by(id=role.facility_id).first()
+                    role_menu_subs[role.name] = {'title': role.name,
+                                                 'class': 'change_role',
+                                                 'data': {'role_id': role.id, 'facility': facility.name}}
 
         if role_menu_subs:
-            subs = {'title':'Change Role',
-                'subs': role_menu_subs}
+            subs = {'title': 'Change Role',
+                    'subs': role_menu_subs}
         else:
             subs = {}
         return subs
@@ -293,14 +296,14 @@ class RoleAccessControl:
     def get_menu_items(self, parent_id, active=1):
         menu = OrderedDict()
         items = (self.session.query(models.Menu, models.MenuRole, models.Module)
-                 .join(models.MenuRole, models.Menu.id==models.MenuRole.menu_id)
-                 .outerjoin(models.Module, models.Menu.module_id==models.Module.id)
-            .filter(
-                models.MenuRole.role_id == self.role.id,
-                models.Menu.parent_id == parent_id,
-                models.MenuRole.active == active,
-                models.Menu.active == active
-            ).order_by(models.MenuRole.order, models.MenuRole.description).all())
+                 .join(models.MenuRole, models.Menu.id == models.MenuRole.menu_id)
+                 .outerjoin(models.Module, models.Menu.module_id == models.Module.id)
+                 .filter(
+            models.MenuRole.role_id == self.role.id,
+            models.Menu.parent_id == parent_id,
+            models.MenuRole.active == active,
+            models.Menu.active == active
+        ).order_by(models.MenuRole.order, models.MenuRole.description).all())
 
         for item in items:
             if item.Menu.url_path and item.Menu.url_path != '':
@@ -320,10 +323,10 @@ class RoleAccessControl:
                 url = ''
 
             menu[item.Menu.name] = {
-                    'url': url,
-                    'title': item.MenuRole.description,
-                    'class': item.MenuRole.menu_class,
-                    'subs': self.get_menu_items(item.Menu.id, active)
+                'url': url,
+                'title': item.MenuRole.description,
+                'class': item.MenuRole.menu_class,
+                'subs': self.get_menu_items(item.Menu.id, active)
             }
         return menu
 
@@ -334,53 +337,82 @@ class RoleAccessControl:
         if self.user is None:
             return False
 
-        user_role = self.session.query(models.UserRole,models.Role).\
-            join(models.Role).\
-            filter(models.UserRole.role_id==role_id).\
-            filter(models.UserRole.user_id==self.user.id).first()
+        user_role = self.session.query(models.UserRole, models.Role). \
+            join(models.Role). \
+            filter(models.UserRole.role_id == role_id). \
+            filter(models.UserRole.user_id == self.user.id).first()
         if user_role.UserRole:
-            facility = self.session.query(models.Facility).filter_by(id = user_role.Role.facility_id).first()
+            facility = self.session.query(models.Facility).filter_by(id=user_role.Role.facility_id).first()
             self.user.current_user_role_id = user_role.UserRole.id
-            self.role = (self.session.query(models.Role).filter(models.Role.id==role_id).first())
+            self.role = (self.session.query(models.Role).filter(models.Role.id == role_id).first())
             self.session.commit()
             return facility.name
         else:
             return False
 
-    def get_child_tables(self, table_object_id, active = 1):
-        child_tables = []
-        link_data = []
+    def get_link_tables(self, table_object_id, child_only=False, active=1):
+        link_tables = {}
+        link_data = {}
 
         res = self.session.query(models.TableObjectChildren). \
             filter_by(table_object_id=table_object_id).filter_by(active=active). \
             order_by(models.TableObjectChildren.order, models.TableObjectChildren.child_table_object_id).all()
 
-        for row in res:
-            table_data = self.has_access('TableObject', {'id': row.child_table_object_id})
-            if table_data:
-                child_tables.append(table_data)
-                link_data.append(row)
+        if len(res) > 0:
+            child_tables = []
+            child_data = []
 
-        return link_data, child_tables
+            for row in res:
+                table_data = self.has_access('TableObject', {'id': row.child_table_object_id})
+                if table_data:
+                    child_tables.append(table_data)
+                    child_data.append(row)
+
+            if len(child_tables) > 0:
+                link_tables['child'] = child_tables
+                link_data['child'] = child_data
+
+        if not child_only:
+            res = self.session.query(models.TableObjectMany). \
+                filter(or_(models.TableObjectMany.first_table_object_id==table_object_id,
+                           models.TableObjectMany.second_table_object_id==table_object_id)).\
+                filter_by(active=active). \
+                order_by(models.TableObjectMany.order, models.TableObjectMany.id).all()
+
+            if len(res) > 0:
+                many_tables = []
+                many_data = []
+
+                for row in res:
+                    table_data = self.has_access('TableObject', {'id': row.child_table_object_id})
+                    if table_data:
+                        many_tables.append(table_data)
+                        many_data.append(row)
+
+                if len(many_tables) > 0:
+                    link_tables['many'] = many_tables
+                    link_data['many'] = many_data
+
+        return link_data, link_tables
 
     def check_facility_module(self, facility, module, table_name, active=1):
         rec = (self.session.query(models.TableObject).
-               join(models.TableObjectRole, models.TableObject.id==models.TableObjectRole.table_object_id).
-               join(models.Role, models.TableObjectRole.role_id==models.Role.id).
-               join(models.Facility, models.Role.facility_id==models.Facility.id).
-               join(models.ModuleFacility, models.Facility.id==models.ModuleFacility.facility_id).
-               join(models.Module, models.ModuleFacility.module_id==models.Module.id).
-               filter(models.TableObject.active==active).
-               filter(models.TableObjectRole.active==active).
-               filter(models.Role.active==active).
-               filter(models.Module.active==active).
-               filter(models.Facility.active==active).
-               filter(models.ModuleFacility.active==active).
-               filter(models.TableObject.name==table_name).
-               filter(models.TableObjectRole.role_id==self.role.id).
-               filter(models.Facility.id==self.role.facility_id).
-               filter(models.Facility.name==facility).
-               filter(models.Module.name==module).first())
+               join(models.TableObjectRole, models.TableObject.id == models.TableObjectRole.table_object_id).
+               join(models.Role, models.TableObjectRole.role_id == models.Role.id).
+               join(models.Facility, models.Role.facility_id == models.Facility.id).
+               join(models.ModuleFacility, models.Facility.id == models.ModuleFacility.facility_id).
+               join(models.Module, models.ModuleFacility.module_id == models.Module.id).
+               filter(models.TableObject.active == active).
+               filter(models.TableObjectRole.active == active).
+               filter(models.Role.active == active).
+               filter(models.Module.active == active).
+               filter(models.Facility.active == active).
+               filter(models.ModuleFacility.active == active).
+               filter(models.TableObject.name == table_name).
+               filter(models.TableObjectRole.role_id == self.role.id).
+               filter(models.Facility.id == self.role.facility_id).
+               filter(models.Facility.name == facility).
+               filter(models.Module.name == module).first())
 
         return rec is None
 
@@ -389,14 +421,14 @@ class RoleAccessControl:
                join(models.TableObjectRole).
                join(models.Role).
                join(models.Facility).
-               filter(models.TableObject.active==active).
-               filter(models.TableObjectRole.active==active).
-               filter(models.Role.active==active).
-               filter(models.Facility.active==active).
-               filter(models.Facility.id==self.role.facility_id).
-               filter(models.Facility.name==facility).
-               filter(models.TableObjectRole.role_id==self.role.id).
-               filter(models.TableObject.name==table_name).first())
+               filter(models.TableObject.active == active).
+               filter(models.TableObjectRole.active == active).
+               filter(models.Role.active == active).
+               filter(models.Facility.active == active).
+               filter(models.Facility.id == self.role.facility_id).
+               filter(models.Facility.name == facility).
+               filter(models.TableObjectRole.role_id == self.role.id).
+               filter(models.TableObject.name == table_name).first())
 
         return rec is None
 
@@ -404,12 +436,12 @@ class RoleAccessControl:
         rec = (self.session.query(models.Facility).
                join(models.Module).
                join(models.ModuleFacility).
-               filter(models.Module.active==active).
-               filter(models.Facility.active==active).
-               filter(models.ModuleFacility.active==active).
-               filter(models.Facility.id==self.role.facility_id).
-               filter(models.Facility.name==facility).
-               filter(models.Module.name==module).first())
+               filter(models.Module.active == active).
+               filter(models.Facility.active == active).
+               filter(models.ModuleFacility.active == active).
+               filter(models.Facility.id == self.role.facility_id).
+               filter(models.Facility.name == facility).
+               filter(models.Module.name == module).first())
 
         return rec is None
 
