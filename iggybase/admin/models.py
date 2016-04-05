@@ -371,6 +371,10 @@ class Permission(Base):
 
 
 class Action(Base):
+    """This table initially works for database changes create and update and as a result,
+    sends an email to a list of recipients. It will change however as more action types
+    are introduced.
+    """
     __tablename__ = 'action'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True)
@@ -378,27 +382,23 @@ class Action(Base):
     date_created = Column(DateTime, default=datetime.datetime.utcnow)
     last_modified = Column(DateTime, default=datetime.datetime.utcnow)
     active = Column(Boolean)
-    organization_id = Column(Integer)
+    organization_id = Column(Integer, ForeignKey('organization.id'))
     order = Column(Integer)
-    action_event_id = Column(Integer, ForeignKey('action_event.id'))
+    action_type = Column(String(50)) #['email'|'workflow'|'cron']
+    email_text = Column(String(1024))
+    email_recipients = Column(String(1024)) # csv email@addresses
     table_object_id = Column(Integer, ForeignKey('table_object.id'))
-    object_name = Column(String(100))
-    action_value = Column(String(255))
+    field_id = Column(Integer, ForeignKey('field_id'))
+    field_value = Column(String(255))  # eg. 'Turnbaugh' | 'Purchase_Order'
+    action_value = Column(String(255)) # ['new'|'dirty'|deleted']
 
-    action_action_event = relationship("ActionEvent", foreign_keys=[action_event_id])
-    action_table_object = relationship("TableObject", foreign_keys=[table_object_id])
+    table_object = relationship("TableObject")
+    organization = relationship("Organization")
 
-
-class ActionEvent(Base):
-    __tablename__ = 'action_event'
-    id = Column(Integer, primary_key=True)
-    name = Column(String(100), unique=True)
-    description = Column(String(255))
-    date_created = Column(DateTime, default=datetime.datetime.utcnow)
-    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
-    active = Column(Boolean)
-    organization_id = Column(Integer)
-    order = Column(Integer)
+    def __repr__(self):
+        return "<Action(name=%s, id=%s, active=%s, organization=%s, table_object=%s" \
+            (self.name, repr(self.active), self.organization.name,
+             self.table_object.name)
 
 
 class TableQuery(Base):
