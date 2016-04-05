@@ -173,6 +173,8 @@ class FormGenerator():
                         get_child_row_names(link_table.name,
                                             table_data[link_type][table_index].child_link_field_id,
                                             parent_id)
+
+                    child_data, child_tables = self.role_access_control.get_link_tables(self.table_data.id, True)
                 elif link_type == 'many':
                     row_names = self.organization_access_control.\
                         get_many_row_names(link_table.name,
@@ -209,8 +211,6 @@ class FormGenerator():
                     HiddenField('endchildtable_'+str(link_table.id))
 
                 table_index += 1
-
-        return table_index, row_counter
 
     def row_fields(self, row_count, row_name):
         table_id_field = HiddenField('table_id_'+str(row_count), default=self.table_data.id)
