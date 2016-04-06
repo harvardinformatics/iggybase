@@ -142,7 +142,6 @@ class FormGenerator():
         self.classattr['startmaintable_'+str(self.table_data.id)]=\
             HiddenField('startmaintable_'+str(self.table_data.id), default=self.table_data.name)
 
-        row_counter = 1
         self.get_row(fields, row_name, 1, 'data-control')
 
         if row_name != 'new':
@@ -180,6 +179,9 @@ class FormGenerator():
                         get_many_row_names(link_table.name,
                                            table_data[link_type][table_index].link_table_object_id,
                                            parent_id)
+
+                    link_table_fields = self.role_access_control.\
+                        fields(table_data[link_type][table_index].link_table_object_id)
                 else:
                     return
 
