@@ -15,7 +15,7 @@ class Cache:
 
     def get(self, key):
         if key in self.refresh_key:
-            key = self.add_version(key)
+            key += self.get_key_version(key)
         logging.info('GET: ' + key)
         res = self.store.get(key)
         return res
@@ -24,7 +24,7 @@ class Cache:
         if set_refresh:
             self.set_refresh(key, refresh_on)
         if key in self.refresh_key:
-            key = self.add_version(key)
+            key = self.get_key_version(key)
         if not timeout:
             timeout = self.TIMEOUT
         logging.info('SET: ' + key)
@@ -37,13 +37,13 @@ class Cache:
         elif key in self.refresh_key:
             self.refresh_key.pop(key, None)
 
-    def add_version(self, key):
+    def get_key_version(self, key):
         version = []
         for obj in self.refresh_key[key]:
             if not obj in self.version:
                 self.version[obj] = self.VERSION_MIN
             version.append(obj + str(self.version[obj]))
-        return key + '|v.' + '_'.join(version)
+        return '|v.' + '_'.join(version)
 
     def increment_version(self, objs):
         objs = self.lower_list(objs)

@@ -282,6 +282,8 @@ def cache(facility_name):
         elif 'get_version' in request.form and request.form['get_version']:
             if form.data['refresh_obj']:
                 value = str(current_app.cache.get_version(form.data['refresh_obj']))
+            elif form.data['key']:
+                value = str(current_app.cache.get_key_version(form.data['key']))
         elif 'set_version' in request.form and request.form['set_version']:
             if form.data['refresh_obj'] and form.data['version']:
                 success = current_app.cache.set_version(form.data['refresh_obj'], form.data['version'])
@@ -338,8 +340,7 @@ def build_summary_ajax(table_name, page_form, criteria):
         current = time.time()
         print(str(current - start))
         ret = jsonify({'data': json_rows})
-        current_app.cache.set(key, ret, current_app.cache.TIMEOUT,
-                [table_name])
+        current_app.cache.set(key, ret, (24 * 60 * 60), [table_name])
     return ret
 
 
