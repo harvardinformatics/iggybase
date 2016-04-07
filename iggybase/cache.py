@@ -20,9 +20,10 @@ class Cache:
         res = self.store.get(key)
         return res
 
-    def set(self, key, val, timeout = None, refresh_on = []):
-        use_version = self.set_refresh(key, refresh_on)
-        if use_version:
+    def set(self, key, val, timeout = None, refresh_on = [], set_refresh = True):
+        if set_refresh:
+            self.set_refresh(key, refresh_on)
+        if key in self.refresh_key:
             key = self.add_version(key)
         if not timeout:
             timeout = self.TIMEOUT
@@ -33,10 +34,8 @@ class Cache:
         if refresh_on:
             refresh_on = self.lower_list(refresh_on)
             self.refresh_key[key] = refresh_on
-            return True
         elif key in self.refresh_key:
             self.refresh_key.pop(key, None)
-        return False
 
     def add_version(self, key):
         version = []
@@ -66,6 +65,18 @@ class Cache:
         if criteria:
             key += '|' + criteria
         return key
+
+    def get_version(self, obj):
+        if obj in self.version:
+            return self.version[obj]
+        else:
+            return None
+
+    def set_version(self, obj, version):
+        if obj and version:
+            self.version[obj] = version
+            return True
+        return False
 
     @staticmethod
     def lower_list(objs):

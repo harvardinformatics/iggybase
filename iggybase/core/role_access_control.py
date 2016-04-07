@@ -293,17 +293,21 @@ class RoleAccessControl:
         page_form_buttons = {}
         page_form_buttons['top'] = []
         page_form_buttons['bottom'] = []
-
-        res = self.session.query(models.PageFormButtonRole). \
-            filter_by(role_id=self.role.id).filter_by(active=active). \
-            order_by(models.PageFormButtonRole.order, models.PageFormButtonRole.id).all()
+        filters = [
+                models.PageFormButton.page_form_id == page_form_id,
+                models.PageFormButtonRole.role_id == self.role.id,
+                models.PageFormButton.active == active,
+                models.PageFormButtonRole.active == active,
+        ]
+        res = (self.session.query(models.PageFormButton)
+                .join(models.PageFormButtonRole,
+                    models.PageFormButtonRole.page_form_button_id ==
+                    models.PageFormButton.id)
+            .filter(*filters)
+            .order_by(models.PageFormButton.order, models.PageFormButton.id).all())
         for row in res:
-            page_form_button = self.session.query(models.PageFormButton).filter_by(id=row.page_form_button_id). \
-                filter_by(page_form_id=page_form_id).filter_by(active=active).first()
-            if page_form_button is not None and page_form_button.button_location in ['top', 'bottom']:
-                page_form_buttons[page_form_button.button_location].append(page_form_button)
-                break
-
+            if row.button_location in ['top', 'bottom']:
+                page_form_buttons[row.button_location].append(row)
         return page_form_buttons
 
     def page_form_javascript(self, page_form_id, active=1):

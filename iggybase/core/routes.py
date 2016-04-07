@@ -8,6 +8,7 @@ from . import core
 import iggybase.form_generator as form_generator
 from iggybase import utilities as util
 from iggybase.cached import cached
+from iggybase import forms
 import iggybase.templating as templating
 from iggybase.core.organization_access_control import OrganizationAccessControl
 from .table_query_collection import TableQueryCollection
@@ -260,6 +261,40 @@ def multiple_entry(facility_name, table_name):
 
     return templating.page_template('multiple_data_entry', module_name=module_name, form=form, table_name=table_name)
 
+@core.route('/cache/', methods=['GET','POST'])
+@login_required
+def cache(facility_name):
+    module_name = MODULE_NAME
+    form = forms.CacheForm()
+    value = None
+    if form.validate_on_submit() and len(form.errors) == 0:
+        if 'get_value' in request.form and request.form['get_value']:
+            if form.data['key']:
+                value = current_app.cache.get(form.data['key'])
+                if hasattr(value, 'data'):
+                    value = value.data
+        elif 'set_key' in request.form and request.form['set_key']:
+            if form.data['key'] and form.data['value']:
+                current_app.cache.set(form.data['key'], form.data['value'],
+                        None, None, False)
+                value = ('successfully set key ' + form.data['key'] + ' = ' +
+                    form.data['value'])
+        elif 'get_version' in request.form and request.form['get_version']:
+            if form.data['refresh_obj']:
+                value = str(current_app.cache.get_version(form.data['refresh_obj']))
+        elif 'set_version' in request.form and request.form['set_version']:
+            if form.data['refresh_obj'] and form.data['version']:
+                success = current_app.cache.set_version(form.data['refresh_obj'], form.data['version'])
+                if success:
+                    value = 'successfully '
+                else:
+                    value = 'failed to '
+                value += ('set version ' + form.data['refresh_obj'] + ' = ' +
+                    form.data['version'])
+
+    return templating.page_template('cache', module_name=module_name,
+            form=form,
+            value=value)
 
 """ helper functions start """
 
