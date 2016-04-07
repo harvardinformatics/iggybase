@@ -1,4 +1,4 @@
-from flask import g, request
+from flask import g, request, current_app
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import DateTime, func
 from iggybase.database import db_session
@@ -448,12 +448,15 @@ class OrganizationAccessControl:
             self.session.flush()
 
             row_names = []
+            table_names = []
             for row_id, instance in instances.items():
                 self.session.add(instance)
                 self.session.flush()
                 row_names.append([instance.name, instance.__tablename__])
-
+                table_names.append(instance.__tablename__)
             self.session.commit()
+            # change table version in cache
+            current_app.cache.increment_version(table_names)
             return row_names
         except:
             self.session.rollback()
@@ -511,6 +514,8 @@ class OrganizationAccessControl:
             if len(updates) == len(row_updates):
                 self.session.commit()
                 updated.append(ids[i])
+                # change table version in cache
+                current_app.cache.increment_version([table])
             else:
                 self.session.rollback()
         return updated

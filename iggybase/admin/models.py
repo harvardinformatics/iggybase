@@ -111,6 +111,74 @@ class MenuRole(Base):
         return "<MenuRole(name=%s, description=%s, id=%d, menu_id=%d, order=%d>)" % \
                (self.name, self.description, self.id, self.menu_id, self.order)
 
+class Route(Base):
+    __tablename__ = 'route'
+    id = Column(Integer, primary_key=True)
+    name = Column(String(100), unique=True)
+    description = Column(String(255))
+    date_created = Column(DateTime, default=datetime.datetime.utcnow)
+    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
+    active = Column(Boolean)
+    organization_id = Column(Integer)
+    order = Column(Integer)
+    module_id = Column(Integer, ForeignKey('module.id'))
+    url_path = Column(String(512), unique=True)
+
+    route_module = relationship("Module", foreign_keys=[module_id])
+
+    def __repr__(self):
+        return "<Route(name=%s, description=%s, id=%d)>" % \
+               (self.name, self.description, self.id)
+
+class MenuNew(Base):
+    __tablename__ = 'menu_new'
+    id = Column(Integer, primary_key=True)
+    parent_id = Column(Integer, ForeignKey('menu_new.id'))
+    name = Column(String(100), unique=True)
+    description = Column(String(255))
+    date_created = Column(DateTime, default=datetime.datetime.utcnow)
+    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
+    active = Column(Boolean)
+    organization_id = Column(Integer)
+    order = Column(Integer)
+    menu_type_id = Column(Integer, ForeignKey('menu_type.id'))
+    route_id = Column(Integer, ForeignKey('route.id'))
+    url_params = Column(String(1024))  ## Stored as JSON
+    dynamic_suffix = Column(String(255))
+    display_name = Column(String(50))
+
+    parent = relationship('MenuNew', remote_side=[id])
+    children = relationship('MenuNew')
+    menu_new_menu_type = relationship("MenuType", foreign_keys=[menu_type_id])
+    menu_new_route = relationship("Route", foreign_keys=[route_id])
+
+    def __repr__(self):
+        return "<MenuNew(name=%s, description=%s, id=%d)>" % \
+               (self.name, self.description, self.id)
+
+class RouteRole(Base):
+    __tablename__ = 'route_role'
+    id = Column(Integer, primary_key=True)
+    name = Column(String(100), unique=True)
+    description = Column(String(255))
+    date_created = Column(DateTime, default=datetime.datetime.utcnow)
+    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
+    active = Column(Boolean)
+    organization_id = Column(Integer)
+    order = Column(Integer)
+    role_id = Column(Integer, ForeignKey('role.id'))
+    route_id = Column(Integer, ForeignKey('route.id'))
+
+    route_role_role = relationship(
+            "Role", foreign_keys=[role_id])
+    route_role_unq = UniqueConstraint('role_id', 'route_id')
+    route_role_route = relationship("Route", foreign_keys=[route_id])
+
+    def __repr__(self):
+        return "<RouteRole(name=%s, description=%s, id=%d, route_id=%d, order=%d>)" % \
+               (self.name, self.description, self.id, self.route_id, self.order)
+
+
 
 class MenuType(Base):
     __tablename__ = 'menu_type'

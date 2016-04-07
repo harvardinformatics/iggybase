@@ -6,6 +6,11 @@ from iggybase.database import db_session
 from iggybase.core.role_access_control import RoleAccessControl
 import logging
 
+FACILITY = 0
+MODULE = 1
+ROUTE = 2
+DYNAMIC = 3
+
 def get_role_access_control():
     if 'role_access' not in g:
         g.role_access = RoleAccessControl()
@@ -63,6 +68,11 @@ def to_camel_case(snake_str):
     components = snake_str.split('_')
 
     return "".join(x.title() for x in components)
+
+def get_path(part):
+    path = request.path.strip('/')
+    path = path.split('/')
+    return path[part]
 
 class DictObject(dict):
     def __init__(self, dict):

@@ -7,7 +7,7 @@ from iggybase.iggybase_form_fields import IggybaseBooleanField, IggybaseDateFiel
 from wtforms import HiddenField
 from wtforms.validators import DataRequired, Length, email, Optional
 from iggybase.core.organization_access_control import OrganizationAccessControl
-from iggybase.core.role_access_control import RoleAccessControl
+from iggybase.utilities import get_role_access_control
 from iggybase import constants
 from json import dumps, loads
 import datetime
@@ -17,7 +17,7 @@ import logging
 class FormGenerator():
     def __init__(self, table_object):
         self.organization_access_control = OrganizationAccessControl()
-        self.role_access_control = RoleAccessControl()
+        self.role_access_control = get_role_access_control()
         self.table_object = table_object
         self.classattr = {}
         self.table_data = None
@@ -132,7 +132,7 @@ class FormGenerator():
 
         return newclass()
 
-    def default_single_entry_form(self, table_data, row_name='new'):
+    def default_data_entry_form(self, table_data, row_name='new'):
         self.table_data = table_data
 
         self.classattr = self.row_fields(1, row_name)
@@ -142,76 +142,77 @@ class FormGenerator():
         self.classattr['startmaintable_'+str(self.table_data.id)]=\
             HiddenField('startmaintable_'+str(self.table_data.id), default=self.table_data.name)
 
-        table_index = 0
-        row_counter = 1
-        self.get_row(fields, row_name, row_counter, 'data-control')
+        self.get_row(fields, row_name, 1, 'data-control')
 
         if row_name != 'new':
-            link_data, child_tables = self.role_access_control.get_child_tables(self.table_data.id)
+            link_data, link_tables = self.role_access_control.get_link_tables(self.table_data.id)
 
-            if child_tables:
-                table_index, row_counter = self.linked_data(constants.CHILD_TABLES, child_tables, link_data,
-                                                            table_index, row_name, row_counter)
-
-            link_data, many_tables = self.role_access_control.get_many_tables(self.table_data.id)
-
-            if many_tables:
-                table_index, row_counter = self.child_data_form(constants.MANY_TO_MANY_TABLES, many_tables, link_data,
-                                                                table_index, row_name, row_counter)
+            self.linked_data(link_tables, link_data, row_name)
 
         newclass = new_class('SingleForm', (Form,), {}, lambda ns: ns.update(self.classattr))
 
         return newclass()
 
-    def linked_data(self, link_type, link_tables, link_data, table_index, row_name, row_counter):
+    def linked_data(self, tables, table_data, row_name):
         parent_id = self.organization_access_control.get_row_id(self.table_data.name, {'name': row_name})
 
-        for link_table in link_tables:
-            table_index_adj = table_index * 1000
+        row_counter = 2
 
-            self.table_data = link_table
-            fields = self.role_access_control.fields(self.table_data.id)
+        for link_type, link_tables in tables.items():
+            table_index = 0
 
-            if link_type == constants.CHILD_TABLES:
-                row_names = self.organization_access_control.get_many_row_names(link_table.name,
-                                                                                link_data[table_index].link_field_id,
-                                                                                parent_id)
-            elif link_type == constants.MANY_TO_MANY_TABLES:
-                pass
-            elif link_type == constants.GRANDCHILD_TABLES:
-                pass
-            else:
-                return
+            for link_table in link_tables:
+                table_index_id = table_index * 1000
 
-            link_field = self.role_access_control.has_access('Field',
-                                                             {'id': link_data[table_index].child_link_field_id})
+                self.table_data = link_table
+                fields = self.role_access_control.fields(self.table_data.id)
 
-            self.classattr['linkcolumn_'+str(link_table.id)]=\
-                HiddenField('linkcolumn_'+str(link_table.id), default=link_field.field_name)
+                if link_type == 'child':
+                    row_names = self.organization_access_control.\
+                        get_child_row_names(link_table.name,
+                                            table_data[link_type][table_index].child_link_field_id,
+                                            parent_id)
 
-            self.classattr['startchildtable_'+str(link_table.id)]=\
-                HiddenField('startchildtable_'+str(link_table.id), default=link_table.name)
+                    child_data, child_tables = self.role_access_control.get_link_tables(self.table_data.id, True)
+                elif link_type == 'many':
+                    row_names = self.organization_access_control.\
+                        get_many_row_names(link_table.name,
+                                           table_data[link_type][table_index].link_table_object_id,
+                                           parent_id)
 
-            self.classattr['headers_'+str(link_table.id)]=\
-                HiddenField('headers_'+str(link_table.id), default=self.get_field_headers(fields))
+                    link_table_fields = self.role_access_control.\
+                        fields(table_data[link_type][table_index].link_table_object_id)
+                else:
+                    return
 
-            if len(row_names) == 0:
-                row_names.append('new')
+                link_field = self.role_access_control.\
+                    has_access('Field',
+                               {'id': table_data[link_type][table_index].child_link_field_id})
 
-            for row_name in row_names:
-                #   needed to prevent oevrlapping row ids if rows are added dynamically
-                link_row =  table_index_adj + row_counter
+                self.classattr['linkcolumn_'+str(link_table.id)]=\
+                    HiddenField('linkcolumn_'+str(link_table.id), default=link_field.field_name)
 
-                self.classattr.update(self.row_fields(link_row, row_name))
-                self.get_row(fields, row_name, link_row, 'table-control')
-                row_counter += 1
+                self.classattr['startchildtable_'+str(link_table.id)]=\
+                    HiddenField('startchildtable_'+str(link_table.id), default=link_table.name)
 
-            self.classattr['endchildtable_'+str(link_table.id)]=\
-                HiddenField('endchildtable_'+str(link_table.id))
+                self.classattr['headers_'+str(link_table.id)]=\
+                    HiddenField('headers_'+str(link_table.id), default=self.get_field_headers(fields))
 
-            table_index += 1
+                if len(row_names) == 0:
+                    row_names.append('new')
 
-        return table_index, row_counter
+                for row_name in row_names:
+                    #   needed to prevent oevrlapping row ids if rows are added dynamically
+                    link_row =  table_index_id + row_counter
+
+                    self.classattr.update(self.row_fields(link_row, row_name))
+                    self.get_row(fields, row_name, link_row, 'table-control')
+                    row_counter += 1
+
+                self.classattr['endchildtable_'+str(link_table.id)]=\
+                    HiddenField('endchildtable_'+str(link_table.id))
+
+                table_index += 1
 
     def row_fields(self, row_count, row_name):
         table_id_field = HiddenField('table_id_'+str(row_count), default=self.table_data.id)

@@ -6,15 +6,14 @@ import urllib
 import time
 from . import core
 import iggybase.form_generator as form_generator
-from iggybase.cached import cached
 from iggybase import utilities as util
+from iggybase.cached import cached
 import iggybase.templating as templating
 from iggybase.core.organization_access_control import OrganizationAccessControl
 from .table_query_collection import TableQueryCollection
 import logging
 
 MODULE_NAME = 'core'
-
 
 @core.route('/')
 @login_required
@@ -24,7 +23,6 @@ def default(facility_name):
 
 @core.route('/summary/<table_name>/')
 @login_required
-@cached()
 def summary(facility_name, table_name):
     page_form = template = 'summary'
     return build_summary(table_name, page_form, template)
@@ -32,7 +30,6 @@ def summary(facility_name, table_name):
 
 @core.route('/summary/<table_name>/ajax')
 @login_required
-@cached()
 def summary_ajax(facility_name, table_name, page_form='summary', criteria={}):
     return build_summary_ajax(table_name, page_form, criteria)
 
@@ -91,10 +88,10 @@ def summary_download(facility_name, table_name):
     return csv
 
 
-@core.route('/ajax/update_table_rows/<table_name>', methods=['GET', 'POST'])
+@core.route('/update_table_rows/<table_name>', methods=['GET', 'POST'])
 @login_required
 def update_table_rows(facility_name, table_name):
-
+    #TODO: protect this by checking the rows ageninst org_ids
     updates = request.json['updates']
     message_fields = request.json['message_fields']
     ids = request.json['ids']
@@ -105,13 +102,6 @@ def update_table_rows(facility_name, table_name):
     tqc.format_results(True)
     tq = tqc.get_first()
     updated = tq.update_and_get_message(updates, ids, message_fields)
-    views_to_clear = ['summary']
-    if updated:
-        for view in views_to_clear:
-            cache_key = ('view/' + str(g.role_id) + '/' + g.facility + '/core/' + view
-            + '/' + table_name + '/ajax')
-            print(cache_key)
-            current_app.cache.set(cache_key, None, (5 * 60))
     return json.dumps({'updated': updated})
 
 
@@ -215,7 +205,7 @@ def search_results(facility_name):
     return modal_html
 
 
-@core.route('/ajax/change_role', methods=['POST'])
+@core.route('/change_role', methods=['POST'])
 @login_required
 def change_role(facility_name):
     role_id = request.json['role_id']
@@ -289,22 +279,33 @@ def build_summary(table_name, page_form, template, form=None):
 
 def build_summary_ajax(table_name, page_form, criteria):
     start = time.time()
-    tqc = TableQueryCollection(page_form, table_name, criteria)
-    current = time.time()
-    print(str(current - start))
-    tqc.get_results()
-    current = time.time()
-    print(str(current - start))
-    tqc.format_results()
-    current = time.time()
-    print(str(current - start))
-    table_query = tqc.get_first()
-    current = time.time()
-    print(str(current - start))
-    json_rows = table_query.get_row_list()
-    current = time.time()
-    print(str(current - start))
-    return jsonify({'data': json_rows})
+    route = util.get_path(util.ROUTE)
+    key = current_app.cache.make_key(
+            route,
+            g.rac.role.id,
+            table_name
+    )
+    ret = current_app.cache.get(key)
+    if not ret:
+        tqc = TableQueryCollection(page_form, table_name, criteria)
+        current = time.time()
+        print(str(current - start))
+        tqc.get_results()
+        current = time.time()
+        print(str(current - start))
+        tqc.format_results()
+        current = time.time()
+        print(str(current - start))
+        table_query = tqc.get_first()
+        current = time.time()
+        print(str(current - start))
+        json_rows = table_query.get_row_list()
+        current = time.time()
+        print(str(current - start))
+        ret = jsonify({'data': json_rows})
+        current_app.cache.set(key, ret, current_app.cache.TIMEOUT,
+                [table_name])
+    return ret
 
 
 def saved_data(facility_name, module_name, table_name, row_names):
