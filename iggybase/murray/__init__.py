@@ -1,5 +1,5 @@
 from flask import Blueprint
 
-murray = Blueprint('murray', __name__, url_prefix = '/<facility_name>/murray')
+murray = Blueprint('murray', __name__)
 
 from . import routes

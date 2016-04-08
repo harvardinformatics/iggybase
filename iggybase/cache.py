@@ -24,7 +24,7 @@ class Cache:
         if set_refresh:
             self.set_refresh(key, refresh_on)
         if key in self.refresh_key:
-            key = self.get_key_version(key)
+            key += self.get_key_version(key)
         if not timeout:
             timeout = self.TIMEOUT
         logging.info('SET: ' + key)
