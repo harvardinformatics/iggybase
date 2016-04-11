@@ -8,21 +8,9 @@ from iggybase.extensions import lm
 import datetime
 
 
-class Facility(Base):
-    __tablename__ = 'facility'
-    id = Column(Integer, primary_key=True)
-    name = Column(String(100), unique=True)
-    description = Column(String(255))
-    date_created = Column(DateTime, default=datetime.datetime.utcnow)
-    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
-    active = Column(Boolean)
-    organization_id = Column(Integer)
-    order = Column(Integer)
-    root_organization_id = Column(Integer)
-
-
 class Level(Base):
     __tablename__ = 'level'
+    table_type = 'admin'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True)
     description = Column(String(255))
@@ -41,6 +29,7 @@ class Role(Base, RoleMixin):
         to.
     '''
     __tablename__ = 'role'
+    table_type = 'admin'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True)
     description = Column(String(255))
@@ -56,6 +45,20 @@ class Role(Base, RoleMixin):
     role_level = relationship("Level", foreign_keys=[level_id])
     role_unq = UniqueConstraint('facility_id', 'level_id')
 
+
+class Facility(Base):
+    __tablename__ = 'facility'
+    table_type = 'admin'
+    id = Column(Integer, primary_key=True)
+    name = Column(String(100), unique=True)
+    description = Column(String(255))
+    date_created = Column(DateTime, default=datetime.datetime.utcnow)
+    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
+    active = Column(Boolean)
+    organization_id = Column(Integer)
+    order = Column(Integer)
+    root_organization_id = Column(Integer)
+
     def __repr__(self):
         return "<Role=%s, description=%s, id=%d, level=%s, facility=%s>)" % \
                (self.name, self.description, self.id,
@@ -64,6 +67,7 @@ class Role(Base, RoleMixin):
 
 class Menu(Base):
     __tablename__ = 'menu'
+    table_type = 'admin'
     id = Column(Integer, primary_key=True)
     parent_id = Column(Integer, ForeignKey('menu.id'))
     name = Column(String(100), unique=True)
@@ -90,6 +94,7 @@ class Menu(Base):
 
 class MenuRole(Base):
     __tablename__ = 'menu_role'
+    table_type = 'admin'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True)
     description = Column(String(255))
@@ -113,6 +118,7 @@ class MenuRole(Base):
 
 class Route(Base):
     __tablename__ = 'route'
+    table_type = 'admin'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True)
     description = Column(String(255))
@@ -132,6 +138,7 @@ class Route(Base):
 
 class MenuNew(Base):
     __tablename__ = 'menu_new'
+    table_type = 'admin'
     id = Column(Integer, primary_key=True)
     parent_id = Column(Integer, ForeignKey('menu_new.id'))
     name = Column(String(100), unique=True)
@@ -158,6 +165,7 @@ class MenuNew(Base):
 
 class RouteRole(Base):
     __tablename__ = 'route_role'
+    table_type = 'admin'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True)
     description = Column(String(255))
@@ -182,6 +190,7 @@ class RouteRole(Base):
 
 class MenuType(Base):
     __tablename__ = 'menu_type'
+    table_type = 'admin'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True)
     description = Column(String(255))
@@ -198,6 +207,7 @@ class MenuType(Base):
 
 class PageForm(Base):
     __tablename__ = 'page_form'
+    table_type = 'admin'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True)
     description = Column(String(255))
@@ -229,6 +239,7 @@ class PageFormJavascript(Base):
 
 class PageFormRole(Base):
     __tablename__ = 'page_form_role'
+    table_type = 'admin'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True)
     description = Column(String(255))
@@ -246,6 +257,7 @@ class PageFormRole(Base):
 
 class PageFormButton(Base):
     __tablename__ = 'page_form_button'
+    table_type = 'admin'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True)
     description = Column(String(255))
@@ -268,6 +280,7 @@ class PageFormButton(Base):
 
 class PageFormButtonRole(Base):
     __tablename__ = 'page_form_button_role'
+    table_type = 'admin'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True)
     description = Column(String(255))
@@ -285,6 +298,7 @@ class PageFormButtonRole(Base):
 
 class TableObject(Base):
     __tablename__ = 'table_object'
+    table_type = 'admin'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True)
     description = Column(String(255))
@@ -306,6 +320,7 @@ class TableObject(Base):
 
 class TableObjectRole(Base):
     __tablename__ = 'table_object_role'
+    table_type = 'admin'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True)
     description = Column(String(255))
@@ -325,6 +340,7 @@ class TableObjectRole(Base):
 
 class TableObjectMany(Base):
     __tablename__ = 'table_object_many'
+    table_type = 'admin'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True)
     description = Column(String(255))
@@ -344,6 +360,7 @@ class TableObjectMany(Base):
 
 class TableObjectChildren(Base):
     __tablename__ = 'table_object_children'
+    table_type = 'admin'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True)
     description = Column(String(255))
@@ -363,6 +380,7 @@ class TableObjectChildren(Base):
 
 class Field(Base):
     __tablename__ = 'field'
+    table_type = 'admin'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True)
     description = Column(String(255))
@@ -392,6 +410,7 @@ class Field(Base):
 
 class FieldRole(Base):
     __tablename__ = 'field_role'
+    table_type = 'admin'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True)
     description = Column(String(255))
@@ -416,6 +435,7 @@ class FieldRole(Base):
 
 class DataType(Base):
     __tablename__ = 'data_type'
+    table_type = 'admin'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True)
     description = Column(String(255))
@@ -428,6 +448,7 @@ class DataType(Base):
 
 class Permission(Base):
     __tablename__ = 'permission'
+    table_type = 'admin'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True)
     description = Column(String(255))
@@ -444,6 +465,7 @@ class Action(Base):
     are introduced.
     """
     __tablename__ = 'action'
+    table_type = 'admin'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True)
     description = Column(String(255))
@@ -471,6 +493,7 @@ class Action(Base):
 
 class TableQuery(Base):
     __tablename__ = 'table_query'
+    table_type = 'admin'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True)
     description = Column(String(255))
@@ -484,6 +507,7 @@ class TableQuery(Base):
 
 class TableQueryRender(Base):
     __tablename__ = 'table_query_render'
+    table_type = 'admin'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True)
     description = Column(String(255))
@@ -505,6 +529,7 @@ class TableQueryRender(Base):
 
 class TableQueryTableObject(Base):
     __tablename__ = 'table_query_table_object'
+    table_type = 'admin'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True)
     description = Column(String(255))
@@ -522,6 +547,7 @@ class TableQueryTableObject(Base):
 
 class TableQueryField(Base):
     __tablename__ = 'table_query_field'
+    table_type = 'admin'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True)
     description = Column(String(255))
@@ -541,6 +567,7 @@ class TableQueryField(Base):
 
 class TableQueryCriteria(Base):
     __tablename__ = 'table_query_criteria'
+    table_type = 'admin'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True)
     description = Column(String(255))
@@ -559,6 +586,7 @@ class TableQueryCriteria(Base):
 
 class TableQueryCalculation(Base):
     __tablename__ = 'table_query_calculation'
+    table_type = 'admin'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True)
     description = Column(String(255))
@@ -574,6 +602,7 @@ class TableQueryCalculation(Base):
 
 class TableQueryCalculationField(Base):
     __tablename__ = 'table_query_calculation_field'
+    table_type = 'admin'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True)
     description = Column(String(255))
@@ -591,6 +620,7 @@ class TableQueryCalculationField(Base):
 
 class Module(Base):
     __tablename__ = 'module'
+    table_type = 'admin'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True)
     description = Column(String(255))
@@ -605,6 +635,7 @@ class Module(Base):
 
 class ModuleFacility(Base):
     __tablename__ = 'module_facility'
+    table_type = 'admin'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True)
     description = Column(String(255))
@@ -622,6 +653,7 @@ class ModuleFacility(Base):
 
 class UserRole(Base):
     __tablename__ = 'user_role'
+    table_type = 'admin'
     __table_args__ = {'mysql_engine': 'InnoDB'}
     id = Column(Integer, primary_key=True)
     name = Column(String(50), unique=True)
@@ -643,6 +675,7 @@ class UserRole(Base):
 
 class User(Base, UserMixin):
     __tablename__ = 'user'
+    table_type = 'admin'
     __table_args__ = {'mysql_engine': 'InnoDB'}
     id = Column(Integer, primary_key=True)
     name = Column(String(50), unique=True)
@@ -689,6 +722,7 @@ class User(Base, UserMixin):
 
 class UserOrganization(Base):
     __tablename__ = 'user_organization'
+    table_type = 'admin'
     __table_args__ = {'mysql_engine': 'InnoDB'}
     id = Column(Integer, primary_key=True)
     name = Column(String(50), unique=True)
@@ -707,6 +741,7 @@ class UserOrganization(Base):
 
 class Institution(Base):
     __tablename__ = 'institution'
+    table_type = 'admin'
     __table_args__ = {'mysql_engine': 'InnoDB'}
     id = Column(Integer, primary_key=True)
     name = Column(String(50), unique=True)
@@ -720,6 +755,7 @@ class Institution(Base):
 
 class Department(Base):
     __tablename__ = 'department'
+    table_type = 'admin'
     __table_args__ = {'mysql_engine': 'InnoDB'}
     id = Column(Integer, primary_key=True)
     name = Column(String(50), unique=True)
@@ -737,6 +773,7 @@ class Department(Base):
 
 class Organization(Base):
     __tablename__ = 'organization'
+    table_type = 'admin'
     __table_args__ = {'mysql_engine': 'InnoDB'}
     id = Column(Integer, primary_key=True)
     name = Column(String(50), unique=True)
@@ -759,6 +796,7 @@ class Organization(Base):
 
 class OrganizationType(Base):
     __tablename__ = 'organization_type'
+    table_type = 'admin'
     __table_args__ = {'mysql_engine': 'InnoDB'}
     id = Column(Integer, primary_key=True)
     name = Column(String(50), unique=True)

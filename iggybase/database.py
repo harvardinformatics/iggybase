@@ -29,5 +29,4 @@ db = DB_Factory(Base.query, db_session)
 
 
 def init_db():
-    getattr(__import__('iggybase', fromlist=['models']), 'models')
     Base.metadata.create_all(bind=engine)
