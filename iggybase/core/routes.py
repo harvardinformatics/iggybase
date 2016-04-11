@@ -8,6 +8,7 @@ from . import core
 import iggybase.form_generator as form_generator
 from iggybase import utilities as util
 from iggybase.cached import cached
+from iggybase import forms
 import iggybase.templating as templating
 from iggybase.core.organization_access_control import OrganizationAccessControl
 from .table_query_collection import TableQueryCollection
@@ -23,7 +24,6 @@ def default(facility_name):
 
 @core.route('/summary/<table_name>/')
 @login_required
-@cached()
 def summary(facility_name, table_name):
     page_form = template = 'summary'
     return build_summary(table_name, page_form, template)
@@ -31,7 +31,6 @@ def summary(facility_name, table_name):
 
 @core.route('/summary/<table_name>/ajax')
 @login_required
-@cached()
 def summary_ajax(facility_name, table_name, page_form='summary', criteria={}):
     return build_summary_ajax(table_name, page_form, criteria)
 
@@ -104,13 +103,6 @@ def update_table_rows(facility_name, table_name):
     tqc.format_results(True)
     tq = tqc.get_first()
     updated = tq.update_and_get_message(updates, ids, message_fields)
-    views_to_clear = ['summary']
-    if updated:
-        for view in views_to_clear:
-            cache_key = ('view/' + str(g.role_id) + '/' + g.facility + '/core/' + view
-            + '/' + table_name + '/ajax')
-            print(cache_key)
-            current_app.cache.set(cache_key, None, (5 * 60))
     return json.dumps({'updated': updated})
 
 
@@ -269,6 +261,42 @@ def multiple_entry(facility_name, table_name):
 
     return templating.page_template('multiple_data_entry', module_name=module_name, form=form, table_name=table_name)
 
+@core.route('/cache/', methods=['GET','POST'])
+@login_required
+def cache(facility_name):
+    module_name = MODULE_NAME
+    form = forms.CacheForm()
+    value = None
+    if form.validate_on_submit() and len(form.errors) == 0:
+        if 'get_value' in request.form and request.form['get_value']:
+            if form.data['key']:
+                value = current_app.cache.get(form.data['key'])
+                if hasattr(value, 'data'):
+                    value = value.data
+        elif 'set_key' in request.form and request.form['set_key']:
+            if form.data['key'] and form.data['value']:
+                current_app.cache.set(form.data['key'], form.data['value'],
+                        None, None, False)
+                value = ('successfully set key ' + form.data['key'] + ' = ' +
+                    form.data['value'])
+        elif 'get_version' in request.form and request.form['get_version']:
+            if form.data['refresh_obj']:
+                value = str(current_app.cache.get_version(form.data['refresh_obj']))
+            elif form.data['key']:
+                value = str(current_app.cache.get_key_version(form.data['key']))
+        elif 'set_version' in request.form and request.form['set_version']:
+            if form.data['refresh_obj'] and form.data['version']:
+                success = current_app.cache.set_version(form.data['refresh_obj'], form.data['version'])
+                if success:
+                    value = 'successfully '
+                else:
+                    value = 'failed to '
+                value += ('set version ' + form.data['refresh_obj'] + ' = ' +
+                    form.data['version'])
+
+    return templating.page_template('cache', module_name=module_name,
+            form=form,
+            value=value)
 
 """ helper functions start """
 
@@ -288,22 +316,33 @@ def build_summary(table_name, page_form, template, form=None):
 
 def build_summary_ajax(table_name, page_form, criteria):
     start = time.time()
-    tqc = TableQueryCollection(page_form, table_name, criteria)
-    current = time.time()
-    print(str(current - start))
-    tqc.get_results()
-    current = time.time()
-    print(str(current - start))
-    tqc.format_results()
-    current = time.time()
-    print(str(current - start))
-    table_query = tqc.get_first()
-    current = time.time()
-    print(str(current - start))
-    json_rows = table_query.get_row_list()
-    current = time.time()
-    print(str(current - start))
-    return jsonify({'data': json_rows})
+    route = util.get_path(util.ROUTE)
+    key = current_app.cache.make_key(
+            route,
+            g.rac.role.id,
+            table_name
+    )
+    ret = current_app.cache.get(key)
+    if not ret:
+        print('NOT')
+        tqc = TableQueryCollection(page_form, table_name, criteria)
+        current = time.time()
+        print(str(current - start))
+        tqc.get_results()
+        current = time.time()
+        print(str(current - start))
+        tqc.format_results()
+        current = time.time()
+        print(str(current - start))
+        table_query = tqc.get_first()
+        current = time.time()
+        print(str(current - start))
+        json_rows = table_query.get_row_list()
+        current = time.time()
+        print(str(current - start))
+        ret = jsonify({'data': json_rows})
+        current_app.cache.set(key, ret, (24 * 60 * 60), [table_name])
+    return ret
 
 
 def saved_data(facility_name, module_name, table_name, row_names):

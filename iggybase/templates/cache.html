@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+{% import 'macros.html' as macros %}
+{% block styles %}
+    {{ super() }}
+    <link href="{{ url_for('static', filename='cache.css') }}" rel="stylesheet">
+{%- endblock styles %}
+{% block title %}{{ page_title }}{% endblock %}
+{% block content -%}
+    {% block content_title -%}
+        <div class="content_title">
+            {% if table_name is defined %}
+                <h1>{{ table_name.replace( '_',' ' )|title }} {{ page_header.replace( '_',' ' )|title }}</h1>
+            {% else %}
+                <h1>{{ page_header.replace( '_',' ' )|title }}</h1>
+            {% endif %}
+        </div>
+    {%- endblock content_title %}
+
+    {% block topbuttonbar -%}
+        <div class="top_buttons">
+        {{ macros.render_buttons( top_buttons ) }}
+        </div>
+    {%- endblock topbuttonbar %}
+
+    {% block hidden_fields -%}
+        {{ super() }}
+    {% endblock hidden_fields -%}
+
+    <div id="page_message">
+        <p>{{ page_msg|safe }}</p>
+    </div>
+
+    {% if form is defined -%}
+        <form action="{{ submit_action_url }}" enctype="multipart/form-data" class="form form-horizontal" method="post" role="form">
+
+        {{ form.hidden_tag() }}
+        {{ wtf.form_errors(form, hiddens='only') }}
+    {% endif %}
+    {% if form is defined %}
+        {% block page_content -%}
+        <div class="page_content">
+            {%- for field in form %}
+                {% if not bootstrap_is_hidden_field( field ) -%}
+                    {{ macros.render_field( field ) }}
+                {% endif %}
+            {%- endfor -%}
+        </div>
+        {% endblock page_content -%}
+    {% endif -%}
+
+    {% block bottombuttonbar -%}
+        <div class="bottom_buttons">
+        {{ macros.render_buttons( bottom_buttons ) }}
+        </div>
+    {%- endblock bottombuttonbar %}
+
+    {% if form is defined %}
+</form>
+    <pre class='json'>
+        {% if form.data and value %}
+            {{ value }}
+        {% endif %}
+    </pre>
+    {% endif %}
+{%- endblock content %}
