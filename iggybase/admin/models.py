@@ -464,12 +464,8 @@ class Event(Base):
     records), workflow steps, or timed periodic. Each event has one or more assiciated 
     actions. Event is a base class for all types of events.
     """
-<<<<<<< HEAD
-    __tablename__ = 'action'
-    table_type = 'admin'
-=======
     __tablename__ = 'event'
->>>>>>> d8b64ca12142c79e66d577df1b6e8b06f415f08f
+    table_type = 'admin'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True)
     description = Column(String(255))
@@ -487,6 +483,7 @@ class DatabaseEvent(Event):
     action_type - selectable
     """
     __tablename__ = 'database_event'
+    table_type = 'admin'
     id = Column(Integer, ForeignKey('event.id'), primary_key=True)
     table_object_id = Column(Integer, ForeignKey('table_object.id'))
     field_id = Column(Integer, ForeignKey('field.id'))
@@ -507,6 +504,7 @@ class Action(Base):
     This is a base class.
     """
     __tablename__ = 'action'
+    table_type = 'admin'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True)
     description = Column(String(255))
@@ -523,6 +521,7 @@ class Action(Base):
 
 class EmailAction(Action):
     __tablename__ = 'email_action'
+    table_type = 'admin'
     id = Column(Integer, ForeignKey('action.id'), primary_key=True)
     text = Column(String(1024))
     subject = Column(String(100))
@@ -541,6 +540,7 @@ class ActionValue(Base):
     {'name': valueof(table_object.field)}.
     """
     __tablename__ = 'action_value'
+    table_type = 'admin'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True)
     description = Column(String(255))
