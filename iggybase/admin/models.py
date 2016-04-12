@@ -466,13 +466,13 @@ class DatabaseEvent(Event):
     field_id = Column(Integer, ForeignKey('field.id'))
     field_value = Column(String(255))  # eg. 'Turnbaugh' | 'Purchase_Order'
 
+    event = relationship("Event")
     table_object = relationship("TableObject")
-    organization = relationship("Organization")
+    field = relationship("Field")
 
     def __repr__(self):
-        return "<DatabaseEvent(name=%s, id=%s, active=%s, organization=%s, table_object=%s" \
-            (self.name, repr(self.active), self.organization.name,
-             self.table_object.name)
+        return "<DatabaseEvent(name=%s, id=%s, active=%s, table_object=%s, field=%s" % \
+            (self.id, self.name, self.active, self.table_object.name, self.field.field_name)
 
 
     
@@ -491,7 +491,7 @@ class Action(Base):
     order = Column(Integer)
 
     def __repr__(self):
-        return "<Action(name=%s, id=%s, active=%s, organization=%s, table_object=%s" \
+        return "<Action(name=%s, id=%s, active=%s, organization=%s, table_object=%s" % \
             (self.name, repr(self.active), self.organization.name,
              self.table_object.name)
 
@@ -505,7 +505,7 @@ class EmailAction(Action):
     email_bcc = Column(String(1024))
                        
     def __repr__(self):
-        return "<EmailAction(name=%s, id=%s>" \
+        return "<EmailAction(name=%s, id=%s>" % \
             (self.name, self.id)
 
 
@@ -526,7 +526,7 @@ class ActionValue(Base):
     field_id = Column(Integer, ForeignKey('field.id'))
 
     def __repr__(self):
-        return "<ActionValue(name=%s, id=%d, action_id=%d, table_object_id=%d, field_id=%d)>" \
+        return "<ActionValue(name=%s, id=%d, action_id=%d, table_object_id=%d, field_id=%d)>" % \
                (self.name, self.id, self.action_id, self.table_object_id, self.field_id)
              
     
