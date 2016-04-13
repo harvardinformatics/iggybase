@@ -59,8 +59,9 @@ class RoleAccessControl:
                     self.facility = fac.Facility
                     self.level_id = fac.Role.level_id
 
-            if 'routes' in session:
+            if 'routes' in session and session['routes']:
                 self.routes = session['routes']
+                self.set_routes()
             else:
                 self.set_routes()
         else:
@@ -519,3 +520,25 @@ class RoleAccessControl:
         if self.role.role_facility.name == facility:
             return True
         return False
+
+    def work_item_group(self, work_item_group):
+        res = None
+        if work_item_group:
+            res = (self.session.query(models.Workflow, models.WorkItemGroup, models.Step, models.TableObject, models.Route, models.Module, models.Field).
+                join(models.WorkItemGroup).
+                join(models.Step).
+                join(models.TableObject).
+                join(models.Route).
+                join(models.Module).
+                outerjoin(models.Field, models.Step.dynamic_field ==
+                    models.Field.id).
+                filter(models.WorkItemGroup.name == work_item_group).first())
+        return res
+
+    def work_items(self, work_item_group_id):
+        res = None
+        if work_item_group_id:
+            res = (self.session.query(models.WorkItem).
+                filter(models.WorkItem.work_item_group_id == work_item_group_id).all())
+        return res
+

@@ -51,11 +51,11 @@ class Field:
                         )
                 else:
                     fk_field = self.rac.table_query_fields(
-                            None,
-                            None,
-                            fk_to,
-                            'name' # if fk then we want the human readable name
-                        )
+                        None,
+                        None,
+                        fk_to,
+                        'name' # if fk then we want the human readable name
+                    )
                 if fk_field:
                     fk_field = fk_field[0]
         if fk_field:
@@ -98,6 +98,8 @@ class Field:
                     self.is_title_field or
                     (
                         self.is_foreign_key and
+                        # cant get data on name and fk_display from oac query
+                        self.fk_field == 'name' and
                         self.TableObject.name != 'long_text' and
                         self.is_visible()
                     )
