@@ -129,7 +129,6 @@ def configure_hook( app ):
             role_access = rac.RoleAccessControl()
             g.rac = role_access
             access = role_access.has_facility_access(path[1])
-
             if not access:
                 if path[1] in role_access.facilities:
                     role_access.change_role(role_access.facilities[path[1]])

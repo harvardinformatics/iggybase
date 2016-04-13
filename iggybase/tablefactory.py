@@ -97,10 +97,8 @@ class TableFactory:
             filter(TableObject.active==active). \
             filter(TableObject.admin_table!=1). \
             order_by(TableObject.order).all()
-
         for row in res:
             table_objects.append(row)
-
         return table_objects
 
     def fields(self, table_object_id, active=1):

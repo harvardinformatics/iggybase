@@ -30,6 +30,7 @@ def get_table(table_name):
             module_model = import_module('iggybase.models')
         table_object = getattr(module_model, to_camel_case(table_name))
     except AttributeError:
+        print('abort: ' + table_name)
         logging.info('abort ' + table_name)
         abort(403)
     finally:

@@ -1,4 +1,4 @@
-from flask import request, jsonify, abort, g, redirect,url_for, current_app
+from flask import request, jsonify, abort, g, render_template, url_for, current_app
 from flask.ext.security import login_required
 from flask.ext import excel
 import json
@@ -7,11 +7,12 @@ import time
 from . import core
 import iggybase.form_generator as form_generator
 from iggybase import utilities as util
-from iggybase.cached import cached
+from iggybase.decorators import cached, templated
 from iggybase import forms
 import iggybase.templating as templating
 from iggybase.core.organization_access_control import OrganizationAccessControl
 from .table_query_collection import TableQueryCollection
+from .work_item_group import WorkItemGroup
 import logging
 
 MODULE_NAME = 'core'
@@ -24,6 +25,7 @@ def default(facility_name):
 
 @core.route('/summary/<table_name>/')
 @login_required
+@templated('summary')
 def summary(facility_name, table_name):
     page_form = template = 'summary'
     return build_summary(table_name, page_form, template)
@@ -48,7 +50,6 @@ def action_summary(facility_name, table_name):
 def action_summary_ajax(facility_name, table_name, page_form='summary',
                         criteria={}):
     return build_summary_ajax(table_name, page_form, criteria)
-
 
 @core.route('/detail/<table_name>/<row_name>')
 @login_required
@@ -117,7 +118,7 @@ def search(facility_name):
     search_table, search_fields = oac.get_search_field_data(table_object, field_name)
 
     modal_html = '<div class="modal-header">'
-    modal_html += '<button type="button" class="close_modal">&times;</button>'
+    modal_html += '<button tobjectviewype="button" class="close_modal">&times;</button>'
     modal_html += '<h4 class="modal-title">' + table_name + ' Search</h4>'
     modal_html += '</div>'
     modal_html += '<div class="modal-body">'
@@ -217,24 +218,27 @@ def change_role(facility_name):
 
 @core.route('/data_entry/<table_name>/<row_name>/', methods=['GET', 'POST'])
 @login_required
+@templated('single_data_entry')
 def data_entry(facility_name, table_name, row_name):
     module_name = MODULE_NAME
     rac = util.get_role_access_control()
     table_data = rac.has_access('TableObject', {'name': table_name})
 
     if not table_data:
+        print(test)
         abort(403)
 
     fg = form_generator.FormGenerator(table_name)
     form = fg.default_data_entry_form(table_data, row_name)
 
     if form.validate_on_submit() and len(form.errors) == 0:
+        print(test2)
         oac = OrganizationAccessControl()
         row_names = oac.save_form()
 
         return saved_data(facility_name, module_name, table_name, row_names)
 
-    return templating.page_template('single_data_entry',
+    return templating.page_template_context('single_data_entry',
                                     module_name=module_name, form=form, table_name=table_name)
 
 
@@ -247,7 +251,6 @@ def multiple_entry(facility_name, table_name):
 
     if not table_data:
         abort(403)
-
     row_names = json.loads(request.args.get('row_names'))
 
     fg = form_generator.FormGenerator(table_name)
@@ -297,6 +300,44 @@ def cache(facility_name):
     return templating.page_template('cache', module_name=module_name,
             form=form,
             value=value)
+@core.route('/workflow/<table_name>/')
+@login_required
+def workflow(facility_name, table_name):
+    table_name = 'work_item_group'
+    page_form = 'summary'
+    template = 'workflow_summary'
+    return build_summary(table_name, page_form, template)
+
+@core.route('/workflow/<table_name>/ajax')
+@login_required
+def workflow_summary_ajax(facility_name, table_name, page_form='summary',
+                        criteria={}):
+    criteria = {'work_item_group.workflow':table_name}
+    table_name = 'work_item_group'
+    return action_summary_ajax(facility_name, table_name, page_form, criteria)
+
+@core.route('/workflow/<workflow_name>/<work_item_group>', methods=['GET', 'POST'])
+@login_required
+def workflow_item_group(facility_name, workflow_name, work_item_group):
+    page_form = 'summary'
+    template = 'workflow_summary'
+    template = 'single_data_entry'
+    wig = WorkItemGroup(work_item_group)
+    dynamic_vars = {}
+    table_name = ''
+    if wig.TableObject:
+        table_name = wig.TableObject.name
+        dynamic_vars['table_name'] = table_name
+        dynamic_vars['row_name'] = 'new'
+        dynamic_vars['facility_name'] = g.facility
+    #url = url_for('core.data_entry', facility_name = g.facility, table_name = 'order', row_name = 'new')
+    #url = url_for('core.detail', facility_name = 'murray', table_name = 'user', row_name = g.user.name)
+    #url = url_for((module + '.' + route), **dynamic_vars)
+    func = globals()[wig.Route.url_path]
+    context = func(**dynamic_vars)
+    wig.get_buttons(context['bottom_buttons'])
+    context['wig'] = wig
+    return render_template('work_item_group.html', **context)
 
 """ helper functions start """
 
@@ -307,7 +348,7 @@ def build_summary(table_name, page_form, template, form=None):
     # if nothing to display then page not found
     if not tq.fc.fields:
         abort(404)
-    return templating.page_template(template,
+    return templating.page_template_context(template,
                                     module_name=MODULE_NAME,
                                     form=form,
                                     table_name=table_name,
