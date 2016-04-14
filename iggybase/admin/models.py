@@ -79,6 +79,7 @@ class Field(Base):
     length = Column(Integer)
     default = Column(String(255))
     field_class = Column(String(100))
+    select_list_id = Column(Integer, ForeignKey('select_list.id'))
     foreign_key_table_object_id = Column(Integer, ForeignKey('table_object.id'))
     foreign_key_field_id = Column(Integer, ForeignKey('field.id'))
     foreign_key_display = Column(Integer, ForeignKey('field.id'))
@@ -222,6 +223,30 @@ class RouteRole(Base):
 
 class MenuType(Base):
     table_type = 'admin'
+
+    def __repr__(self):
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+
+
+class SelectList(Base):
+    table_type = 'admin'
+
+    def __repr__(self):
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+
+
+class SelectListItem(Base):
+    table_type = 'admin'
+    select_list_id = Column(Integer, ForeignKey('select_list.id'))
+    display_name = Column(String(50))
+
+    select_list_item_select_list = relationship("SelectList", foreign_keys=[select_list_id])
+
+    def __repr__(self):
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
 
 
 class PageForm(Base):
