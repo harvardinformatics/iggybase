@@ -60,8 +60,8 @@ class FormGenerator():
         else:
             kwargs['readonly'] = True
 
-        if field_data.Field.select_field_id is not None:
-            choices = self.organization_access_control.get_select_list(field_data.Field.select_field_id)
+        if field_data.Field.select_list_id is not None:
+            choices = self.organization_access_control.get_select_list(field_data.Field.select_list_id)
 
             kwargs['coerce'] = int
             kwargs['choices'] = choices
@@ -70,7 +70,7 @@ class FormGenerator():
                 kwargs['default'] = value
 
             return IggybaseSelectField(field_data.FieldRole.display_name, **kwargs)
-        elif field_data.Field.foreign_key_table_object_id is not None or field_data.Field.select_field_id is not None:
+        elif field_data.Field.foreign_key_table_object_id is not None:
             long_text = self.role_access_control.has_access("TableObject", {'name': 'long_text'})
             if long_text.id == field_data.Field.foreign_key_table_object_id:
                 if value is not None:
@@ -97,7 +97,7 @@ class FormGenerator():
 
                     if value is not None:
                         kwargs['default'] = value
-                        
+
                     return IggybaseSelectField(field_data.FieldRole.display_name, **kwargs)
         elif field_data.Field.data_type_id == constants.INTEGER:
             return IggybaseIntegerField(field_data.FieldRole.display_name, **kwargs)

@@ -86,6 +86,18 @@ class OrganizationAccessControl:
 
         return results
 
+    def get_select_list(self, select_list_id, active=1):
+        select_list_items = self.session.query(models.SelectListItem).\
+            filter_by(select_list_id=select_list_id). \
+            filter_by(active=active).all()
+
+        results = [(-99, '')]
+
+        for row in select_list_items:
+            results.append((row.id, row.display_name))
+
+        return results
+
     def get_foreign_key_data(self, fk_table_id, params=None):
         fk_table_data = self.session.query(models.TableObject).filter_by(id=fk_table_id).first()
         fk_field_data = self.foreign_key(fk_table_id)

@@ -86,6 +86,7 @@ class Field(Base):
 
     field_type = relationship("TableObject", foreign_keys=[table_object_id])
     field_data_type = relationship("DataType", foreign_keys=[data_type_id])
+    field_select_list = relationship("SelectList", foreign_keys=[select_list_id])
     field_foreign_key_table_object = relationship("TableObject", foreign_keys=[foreign_key_table_object_id])
     field_foreign_key_field = relationship("Field", foreign_keys=[foreign_key_field_id])
     field_foreign_key_display = relationship("Field", foreign_keys=[foreign_key_display])
