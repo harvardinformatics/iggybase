@@ -109,15 +109,11 @@ class ActionManager(object):
         The event is identified by category, name, and type. The 
         Categories are: database
         For database events:
-             name is the __tablename__ of a SqlAlchemy model.
-             event type is one of new|delete|dirty (changed)
-        
-        Wild cards are permitted for tablenames and event_types. 
+             modelname,
+             columnname,
+             event_type is one of new|delete|dirty
         """
         valid_categories = ['database']
-        valid_tablenames = reflection.Inspector.from_engine(self.session.get_bind()). \
-                           get_table_names()
-
         valid_event_types = ['new', 'deleted', 'dirty']
 
         # The registry is a flat dict by combining category and name.
@@ -125,24 +121,36 @@ class ActionManager(object):
         if not k in valid_categories:
             raise ValueError( '%s is not a valid category %s' % \
                 (k, str(valid_categories)))
-        if action.event_name:
-            if action.event_name not in valid_tablenames:
-                raise ValueError( '%s is not a valid tablename %s' % \
-                    (action.event_name, str(valid_tablenames)))
-            k = k + ':' + action.event_name
-        if action.event_type:
-            if action.event_type not in valid_event_types:
-                raise ValueError( '%s is not a valid event type %s, %s' % \
-                    (action.event_type, k, str(valid_event_types)))
-            k = k + ':' + action.event_type
 
+        if action.modelname in dir(self):
+            k = k + ':' + action.modelname
+        else:
+            raise ValueError('%s must be a valid model name' % action.modelname)
+
+        if action.columnname:
+            k = k + ':' + action.columnname
+
+        if action.event_type not in valid_event_types:
+            raise ValueError( '%s is not a valid event type %s, %s' % \
+                              (action.event_type, k, str(valid_event_types)))
+        k = k + ':' + action.event_type
+
+
+        # The registry: keys are like: 'database-modelname-columnname-dirty'
         event_registry.setdefault(k, []).append(action)
         
-        # The listener.
-        event.listen(action.tablename__class__.action.columnname, 'set', db_attr_event)
+        # The listener needs the model.attribute such as: User.first_name
+        if action.field_name:
+            collection = setattr(eval(action.event_name), action.field_name)
+        else:
+            collection = eval(action.event_name)
+                                 
+        event.listen(collection, 'set', db_attr_event)
 
 
     def unregister(self, action):
+        """ToDo
+        """
         return True
 
 
@@ -223,28 +231,34 @@ class VerifyObject(object):
 class Action(object):
     """Base class for actions.
     Events are database, cron, or application specified.
-    For database events, names are the model name, and type is dirty, new, or deleted.
+    For database events, names are:
+        modelname - the name of the model.
+        fieldname
+        event_type - new, delete, or dirty.
 
     default: database
     """
     name = 'Action'
     description = 'Base Action class for database events.'
     
-    def __init__(self, cat='database', table=None, column=None, event_type='dirty', **kwargs):
+    def __init__(self, cat='database', modelname=None, columnname=None,
+                 event_type='dirty', **kwargs):
         """
         verify_params (kwargs) are used by the verify method to further test the 
-        validity of an event. They are passed as:
-        tablename=xxx, fieldname=yyy, keyname=zzz, rows=[0....n]
+        validity of an event. 
         """
-        if not cat None:
+        if not cat:
             raise ValueError('category cannot be None')
         self.event_category = cat
-        if not table:
-            raise ValueError('tablename cannot be None')
-        self.event_tablename = table
-        self.event_column = column
-        self.event_type = event_type if cat and name and event_type else \
+        if not modelname:
+            raise ValueError('modelname cannot be None')
+        self.modelname
+        self.columnname = column
+        if event_type not in ['new', 'dirty', 'delete']:
             raise ValueError('event_type cannut be null')
+        else:
+            self.event_type = event_type
+            
         if kwargs:
             for k,v in kwargs.items():
                 setattr(self, k, v)
