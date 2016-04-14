@@ -30,11 +30,13 @@ class RoleAccessControl:
 
             self.facilities = {}
             self.facility = None
+            self.level_id = None
             for fac in facility_res:
                 if fac.Facility.name not in self.facilities:
                     self.facilities[fac.Facility.name] = fac.Role.id
                 if fac.Role.id == self.role.id:
                     self.facility = fac.Facility
+                    self.level_id = fac.Role.level_id
 
             if 'routes' in session:
                 self.routes = session['routes']
@@ -44,6 +46,7 @@ class RoleAccessControl:
             self.user = None
             self.role = None
             self.routes = []
+            self.level_id = None
 
     def __del__(self):
         self.session.commit()
