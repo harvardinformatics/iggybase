@@ -12,7 +12,7 @@ import logging
 conf = Config()
 
 
-class Base(object):
+class IggybaseBase(object):
     @declared_attr
     def __tablename__(cls):
         return to_snake_case(cls.__name__)
@@ -51,7 +51,7 @@ class DB_Factory:
 
 engine = create_engine(conf.SQLALCHEMY_DATABASE_URI + conf.DATA_DB_NAME, pool_recycle=3600)
 db_session = scoped_session(sessionmaker(autocommit=False, autoflush=False, bind=engine))
-Base = declarative_base(cls=Base)
+Base = declarative_base(cls=IggybaseBase)
 Base.query = db_session.query_property()
 db = DB_Factory(Base.query, db_session)
 
