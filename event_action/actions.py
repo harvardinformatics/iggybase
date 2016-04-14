@@ -21,6 +21,13 @@ def db_event_pitcher(sender, **kw):
     """
     sender.execute(**kw)
 
+def db_attr_event(target, value, oldvalue, initiator):
+    """
+    Find the appropriate object and verify. 
+    Dispatch if necessary.
+    """
+    return
+
 
 def db_event(session, stat, instances):
     """Dispatcher for database events
@@ -91,9 +98,9 @@ class ActionManager(object):
         self.db_action_signal = signal('action_signal')
         self.db_action_signal.connect(db_event_pitcher)
 
-        event.listen(self.session, 'before_flush', db_event)
+        #event.listen(self.session, 'before_flush', db_event)
 
-        event.listen(self.session, 'after_rollback', db_rollback)
+        #event.listen(self.session, 'after_rollback', db_rollback)
 
         
     def register_db_event(self, action):
@@ -110,8 +117,8 @@ class ActionManager(object):
         valid_categories = ['database']
         valid_tablenames = reflection.Inspector.from_engine(self.session.get_bind()). \
                            get_table_names()
-        valid_tablenames.append('*')
-        valid_event_types = ['new', 'deleted', 'dirty', '*']
+
+        valid_event_types = ['new', 'deleted', 'dirty']
 
         # The registry is a flat dict by combining category and name.
         k = action.event_category
@@ -130,6 +137,9 @@ class ActionManager(object):
             k = k + ':' + action.event_type
 
         event_registry.setdefault(k, []).append(action)
+        
+        # The listener.
+        event.listen(action.tablename__class__.action.columnname, 'set', db_attr_event)
 
 
     def unregister(self, action):
@@ -220,15 +230,21 @@ class Action(object):
     name = 'Action'
     description = 'Base Action class for database events.'
     
-    def __init__(self, cat='database', name=None, event_type=None, **kwargs):
+    def __init__(self, cat='database', table=None, column=None, event_type='dirty', **kwargs):
         """
-        verify_params (kwarg args)  are used by the verify method to further test the 
+        verify_params (kwargs) are used by the verify method to further test the 
         validity of an event. They are passed as:
         tablename=xxx, fieldname=yyy, keyname=zzz, rows=[0....n]
         """
-        self.event_category = cat if cat else ""
-        self.event_name = name if cat and name else ""
-        self.event_type = event_type if cat and name and event_type else ""
+        if not cat None:
+            raise ValueError('category cannot be None')
+        self.event_category = cat
+        if not table:
+            raise ValueError('tablename cannot be None')
+        self.event_tablename = table
+        self.event_column = column
+        self.event_type = event_type if cat and name and event_type else \
+            raise ValueError('event_type cannut be null')
         if kwargs:
             for k,v in kwargs.items():
                 setattr(self, k, v)
