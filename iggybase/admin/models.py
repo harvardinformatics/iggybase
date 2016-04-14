@@ -437,100 +437,6 @@ class Permission(Base):
     organization_id = Column(Integer)
     order = Column(Integer)
 
-
-class Event(Base):
-    """Events are triggered by one of: database action (new, updated, or deleted
-    records), workflow steps, or timed periodic. Each event has one or more assiciated 
-    actions. Event is a base class for all types of events.
-    """
-    __tablename__ = 'event'
-    id = Column(Integer, primary_key=True)
-    name = Column(String(100), unique=True)
-    description = Column(String(255))
-    date_created = Column(DateTime, default=datetime.datetime.utcnow)
-    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
-    active = Column(Boolean)
-    organization_id = Column(Integer, ForeignKey('organization.id'))
-    order = Column(Integer)
-
-class DatabaseEvent(Event):
-    """Database events.
-    table_object - the table for the event is triggered.
-    field - the table's field.
-    field_value - a value that either changes or is created or even deleted.
-    action_type - selectable
-    """
-    __tablename__ = 'database_event'
-    id = Column(Integer, ForeignKey('event.id'), primary_key=True)
-    table_object_id = Column(Integer, ForeignKey('table_object.id'))
-    field_id = Column(Integer, ForeignKey('field.id'))
-    field_value = Column(String(255))  # eg. 'Turnbaugh' | 'Purchase_Order'
-
-    event = relationship("Event")
-    table_object = relationship("TableObject")
-    field = relationship("Field")
-
-    def __repr__(self):
-        return "<DatabaseEvent(name=%s, id=%s, active=%s, table_object=%s, field=%s" % \
-            (self.id, self.name, self.active, self.table_object.name, self.field.field_name)
-
-
-    
-class Action(Base):
-    """Actions taken for a specific event. Events can have multiple actions
-    This is a base class.
-    """
-    __tablename__ = 'action'
-    id = Column(Integer, primary_key=True)
-    name = Column(String(100), unique=True)
-    description = Column(String(255))
-    date_created = Column(DateTime, default=datetime.datetime.utcnow)
-    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
-    active = Column(Boolean)
-    organization_id = Column(Integer, ForeignKey('organization.id'))
-    order = Column(Integer)
-
-    def __repr__(self):
-        return "<Action(name=%s, id=%s, active=%s, organization=%s, table_object=%s" % \
-            (self.name, repr(self.active), self.organization.name,
-             self.table_object.name)
-
-class EmailAction(Action):
-    __tablename__ = 'email_action'
-    id = Column(Integer, ForeignKey('action.id'), primary_key=True)
-    text = Column(String(1024))
-    subject = Column(String(100))
-    email_recipients = Column(String(1024)) # csv email@addresses
-    email_cc = Column(String(1024)) # csv email@addresses
-    email_bcc = Column(String(1024))
-                       
-    def __repr__(self):
-        return "<EmailAction(name=%s, id=%s>" % \
-            (self.name, self.id)
-
-
-class ActionValue(Base):
-    """Values used for creating context for text rendering.
-    For example, ... {{ name }} ... would have a context of
-    {'name': valueof(table_object.field)}.
-    """
-    __tablename__ = 'action_value'
-    id = Column(Integer, primary_key=True)
-    name = Column(String(100), unique=True)
-    description = Column(String(255))
-    date_created = Column(DateTime, default=datetime.datetime.utcnow)
-    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
-    active = Column(Boolean)
-    action_id = Column(Integer, ForeignKey('action.id'))
-    table_object_id = Column(Integer, ForeignKey('table_object.id'))
-    field_id = Column(Integer, ForeignKey('field.id'))
-
-    def __repr__(self):
-        return "<ActionValue(name=%s, id=%d, action_id=%d, table_object_id=%d, field_id=%d)>" % \
-               (self.name, self.id, self.action_id, self.table_object_id, self.field_id)
-             
-    
-
 class TableQuery(Base):
     __tablename__ = 'table_query'
     id = Column(Integer, primary_key=True)
@@ -832,6 +738,140 @@ class OrganizationType(Base):
     order = Column(Integer)
 
 
+class EventType(Base):
+    """Event types: database, cron, ...
+    """
+    __tablename__ = 'event_type'
+    id = Column(Integer, primary_key=True)
+    name = Column(String(100), unique=True)
+    description = Column(String(255))
+    date_created = Column(DateTime, default=datetime.datetime.utcnow)
+    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
+    active = Column(Boolean)
+    order = Column(Integer)
+    
+
+
+class Event(Base):
+    """Events are triggered by one of: database action (new, updated, or deleted
+    records), workflow steps, or timed periodic. Each event has one or more assiciated 
+    actions. Event is a base class for all types of events.
+    """
+    __tablename__ = 'event'
+    id = Column(Integer, primary_key=True)
+    name = Column(String(100), unique=True)
+    description = Column(String(255))
+    date_created = Column(DateTime, default=datetime.datetime.utcnow)
+    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
+    active = Column(Boolean)
+    organization_id = Column(Integer, ForeignKey('organization.id'))
+    order = Column(Integer)
+    event_type_id = Column(Integer, ForeignKey('event_type.id'))
+
+    event_type = relationship("EventType")
+
+class DatabaseEvent(Event):
+    """Database events.
+    table_object - the table for the event is triggered.
+    field - the table's field.
+    field_value - a value that either changes or is created or even deleted.
+    action_type - selectable
+    """
+    __tablename__ = 'database_event'
+    id = Column(Integer, ForeignKey('event.id'), primary_key=True)
+    table_object_id = Column(Integer, ForeignKey('table_object.id'))
+    field_id = Column(Integer, ForeignKey('field.id'))
+    field_value = Column(String(255))  # eg. 'Turnbaugh' | 'Purchase_Order'
+
+    table_object = relationship("TableObject")
+    field = relationship("Field")
+
+    def __repr__(self):
+        return "<DatabaseEvent(name=%s, id=%s, active=%s, table_object=%s, field=%s" % \
+            (self.id, self.name, self.active, self.table_object.name, self.field.field_name)
+
+
+    
+class ActionType(Base):
+    """Action types: 'email', 'alert', workflow_step, ...
+    """
+    __tablename__ = 'action_type'
+    id = Column(Integer, primary_key=True)
+    name = Column(String(100), unique=True)
+    description = Column(String(255))
+    date_created = Column(DateTime, default=datetime.datetime.utcnow)
+    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
+    active = Column(Boolean)
+    organization_id = Column(Integer)
+    order = Column(Integer)
+
+
+    
+
+class Action(Base):
+    """Actions taken for a specific event. Events can have multiple actions
+    This is a base class.
+    """
+    __tablename__ = 'action'
+    id = Column(Integer, primary_key=True)
+    name = Column(String(100), unique=True)
+    description = Column(String(255))
+    date_created = Column(DateTime, default=datetime.datetime.utcnow)
+    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
+    active = Column(Boolean)
+    organization_id = Column(Integer, ForeignKey('organization.id'))
+    order = Column(Integer)
+    action_type_id = Column(Integer, ForeignKey('action_type.id'))
+    event_id = Column(Integer, ForeignKey('event.id'))
+
+    action = relationship("ActionType")
+    event = relationship("Event")
+
+    def __repr__(self):
+        return "<Action(name=%s, id=%s, active=%s, organization=%s, table_object=%s" % \
+            (self.name, repr(self.active), self.organization.name,
+             self.table_object.name)
+
+class EmailAction(Action):
+    __tablename__ = 'email_action'
+    id = Column(Integer, ForeignKey('action.id'), primary_key=True)
+    text = Column(String(1024))
+    subject = Column(String(100))
+    email_recipients = Column(String(1024)) # csv email@addresses
+    email_cc = Column(String(1024)) # csv email@addresses
+    email_bcc = Column(String(1024))
+                       
+    def __repr__(self):
+        return "<EmailAction(name=%s, id=%s>" % \
+            (self.name, self.id)
+
+
+class ActionValue(Base):
+    """Values used for creating context for text rendering.
+    For example, ... {{ name }} ... would have a context of
+    {'name': valueof(table_object.field)}.
+    """
+    __tablename__ = 'action_value'
+    id = Column(Integer, primary_key=True)
+    name = Column(String(100), unique=True)
+    description = Column(String(255))
+    date_created = Column(DateTime, default=datetime.datetime.utcnow)
+    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
+    active = Column(Boolean)
+    action_id = Column(Integer, ForeignKey('action.id'))
+    table_object_id = Column(Integer, ForeignKey('table_object.id'))
+    field_id = Column(Integer, ForeignKey('field.id'))
+    action_id = Column(Integer, ForeignKey('action.id'))
+
+    field = relationship("Field")
+    action = relationship("Action")
+    
+
+    def __repr__(self):
+        return "<ActionValue(name=%s, id=%d, action_id=%d, table_object_id=%d, field_id=%d)>" % \
+               (self.name, self.id, self.action_id, self.table_object_id, self.field_id)
+             
+    
 @lm.user_loader
 def load_user(id):
     return User.query.get(int(id))
