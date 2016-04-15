@@ -4,6 +4,7 @@ from flask import current_app
 
 from sqlalchemy import event
 from sqlalchemy.engine import reflection
+from sqlalchemy.util.langhelpers import symbol
 from flask_mail import Attachment, Connection, Message, Mail
 
 """# db_session and db should be passed to ActionManager when initiating.
@@ -26,7 +27,18 @@ def db_attr_event(target, value, oldvalue, initiator):
     Find the appropriate object and verify. 
     Dispatch if necessary.
     """
-    return
+    op = 'new' if oldvalue == symbol('NO_VALUE') else 'dirty'
+
+    reg_key = 'database:%s:%s:%s' % (target.__tablename__, initiator.key, op)
+    actions = event_registry.get(reg_key, None)
+    import pdb
+    pdb.set_trace()
+    kwargs = {'newvalue': value, 'oldvalue': oldvalue}
+    if actions:
+        for action in actions:
+            if action.verify(target, op, **kwargs):
+                action.dispatch(target, op, **kwargs)
+    return target
 
 
 def db_event(session, stat, instances):
@@ -109,26 +121,23 @@ class ActionManager(object):
         The event is identified by category, name, and type. The 
         Categories are: database
         For database events:
-             modelname,
-             columnname,
+             model,
+             field_name,
              event_type is one of new|delete|dirty
         """
         valid_categories = ['database']
         valid_event_types = ['new', 'deleted', 'dirty']
 
         # The registry is a flat dict by combining category and name.
-        k = action.event_category
-        if not k in valid_categories:
-            raise ValueError( '%s is not a valid category %s' % \
-                (k, str(valid_categories)))
+        k = 'database'    # Database event
 
-        if action.modelname in dir(self):
-            k = k + ':' + action.modelname
+        if action.model:
+            k = k + ':' + action.model.__tablename__
         else:
-            raise ValueError('%s must be a valid model name' % action.modelname)
+            raise ValueError('%s must be a valid model' % action.model)
 
-        if action.columnname:
-            k = k + ':' + action.columnname
+        if action.field_name:
+            k = k + ':' + action.field_name
 
         if action.event_type not in valid_event_types:
             raise ValueError( '%s is not a valid event type %s, %s' % \
@@ -136,14 +145,14 @@ class ActionManager(object):
         k = k + ':' + action.event_type
 
 
-        # The registry: keys are like: 'database-modelname-columnname-dirty'
+        # The registry: keys are like: 'database-model-field_name-dirty'
         event_registry.setdefault(k, []).append(action)
         
         # The listener needs the model.attribute such as: User.first_name
-        if action.field_name:
-            collection = setattr(eval(action.event_name), action.field_name)
+        if action.model:
+            collection = getattr(action.model, action.field_name)
         else:
-            collection = eval(action.event_name)
+            collection = eval(action.model)
                                  
         event.listen(collection, 'set', db_attr_event)
 
@@ -232,8 +241,8 @@ class Action(object):
     """Base class for actions.
     Events are database, cron, or application specified.
     For database events, names are:
-        modelname - the name of the model.
-        fieldname
+        model - the model. There no other way to import it.
+        field_name
         event_type - new, delete, or dirty.
 
     default: database
@@ -241,7 +250,7 @@ class Action(object):
     name = 'Action'
     description = 'Base Action class for database events.'
     
-    def __init__(self, cat='database', modelname=None, columnname=None,
+    def __init__(self, cat='database', model=None, field_name=None,
                  event_type='dirty', **kwargs):
         """
         verify_params (kwargs) are used by the verify method to further test the 
@@ -250,10 +259,10 @@ class Action(object):
         if not cat:
             raise ValueError('category cannot be None')
         self.event_category = cat
-        if not modelname:
-            raise ValueError('modelname cannot be None')
-        self.modelname
-        self.columnname = column
+        if not model:
+            raise ValueError('model cannot be None')
+        self.model = model
+        self.field_name = field_name
         if event_type not in ['new', 'dirty', 'delete']:
             raise ValueError('event_type cannut be null')
         else:
@@ -272,30 +281,14 @@ class Action(object):
                                                self.keyname, self.rows)
 
 
-    def verify(self, obj, evt_type):
+    def verify(self, obj, evt_type, **kwargs):
         """Validate event. 
         Returning False means the event is a don't care. 
         Otherwise, returning True (default)  validates the object.
         It can then be either call the execute method. Or, it can return True
         and the execute will be dispatched via a signal maybe in another thread.
-
-        Override this method to further test the that the action should be
-        executed.
-
-        Old record values a passed as:
-        tablename=tablename, fieldname=fieldname, keyname='id', rows=[0..n]
         """
-        if hasattr(self, 'verify_object'):
-            ret_val = self.verify_object.search_params(obj)
-            if ret_val == 'changed':
-                
-                
-                return True
-            else:
-                """
-                probably log a info or something
-                """
-                return False
+        return True
 
 
     def load_params(self, tablename, fieldname, keyname, rows):
@@ -316,7 +309,7 @@ class Action(object):
     
 
 
-    def dispatch(self, obj, **kwargs):
+    def dispatch(self, obj, event_type, **kwargs):
         """Enqueue the object for a signal. 
         False return means nothing enqueued.
         """
