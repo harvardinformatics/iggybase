@@ -1,36 +1,116 @@
 from iggybase.database import Base
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, UniqueConstraint, DateTime
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import relationship, relation, backref
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask.ext.security import UserMixin, RoleMixin
 from iggybase.admin.constants import ROLE
 from iggybase.extensions import lm
-import datetime
 
 
-class Facility(Base):
-    __tablename__ = 'facility'
-    id = Column(Integer, primary_key=True)
-    name = Column(String(100), unique=True)
-    description = Column(String(255))
-    date_created = Column(DateTime, default=datetime.datetime.utcnow)
-    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
-    active = Column(Boolean)
-    organization_id = Column(Integer)
-    order = Column(Integer)
-    root_organization_id = Column(Integer)
+class Institution(Base):
+    table_type = 'admin'
+
+    def __repr__(self):
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+
+
+class Department(Base):
+    table_type = 'admin'
+    institution_id = Column(Integer, ForeignKey('institution.id'))
+
+    department_institution = relationship("Institution", foreign_keys=[institution_id])
+
+    def __repr__(self):
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+
+
+class OrganizationType(Base):
+    table_type = 'admin'
+
+    def __repr__(self):
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+
+
+class Organization(Base):
+    table_type = 'admin'
+
+    address_id = Column(Integer)
+    billing_address_id = Column(Integer)
+    organization_type_id = Column(Integer, ForeignKey('organization_type.id'))
+    parent_id = Column(Integer, ForeignKey('organization.id'))
+    department_id = Column(Integer, ForeignKey('department.id'))
+
+    parent = relation('Organization', remote_side="Organization.id", foreign_keys=[parent_id])
+    organization_department = relationship("Department", foreign_keys=[department_id])
+    organization_organization_type = relationship("OrganizationType", foreign_keys=[organization_type_id])
+
+    def __repr__(self):
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+
+
+class TableObject(Base):
+    table_type = 'admin'
+    admin_table = Column(Boolean)
+    new_name_prefix = Column(String(10))
+    new_name_id = Column(Integer)
+    id_length = Column(Integer)
+
+    def get_new_name(self):
+        new_name = self.new_name_prefix + str(self.new_name_id).zfill(self.id_length)
+        self.new_name_id += 1
+        return new_name
+
+    def __repr__(self):
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+
+
+class Field(Base):
+    table_type = 'admin'
+    field_name = Column(String(100))
+    table_object_id = Column(Integer, ForeignKey('table_object.id'))
+    data_type_id = Column(Integer, ForeignKey('data_type.id'))
+    unique = Column(Boolean)
+    primary_key = Column(Boolean)
+    length = Column(Integer)
+    default = Column(String(255))
+    field_class = Column(String(100))
+    select_list_id = Column(Integer, ForeignKey('select_list.id'))
+    foreign_key_table_object_id = Column(Integer, ForeignKey('table_object.id'))
+    foreign_key_field_id = Column(Integer, ForeignKey('field.id'))
+    foreign_key_display = Column(Integer, ForeignKey('field.id'))
+
+    field_type = relationship("TableObject", foreign_keys=[table_object_id])
+    field_data_type = relationship("DataType", foreign_keys=[data_type_id])
+    field_select_list = relationship("SelectList", foreign_keys=[select_list_id])
+    field_foreign_key_table_object = relationship("TableObject", foreign_keys=[foreign_key_table_object_id])
+    field_foreign_key_field = relationship("Field", foreign_keys=[foreign_key_field_id])
+    field_foreign_key_display = relationship("Field", foreign_keys=[foreign_key_display])
+
+    def __repr__(self):
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+
+
+class DataType(Base):
+    table_type = 'admin'
+
+    def __repr__(self):
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
 
 
 class Level(Base):
     __tablename__ = 'level'
-    id = Column(Integer, primary_key=True)
-    name = Column(String(100), unique=True)
-    description = Column(String(255))
-    date_created = Column(DateTime, default=datetime.datetime.utcnow)
-    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
-    active = Column(Boolean)
-    organization_id = Column(Integer)
-    order = Column(Integer)
+    table_type = 'admin'
+
+    def __repr__(self):
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
 
 
 class Role(Base, RoleMixin):
@@ -40,15 +120,7 @@ class Role(Base, RoleMixin):
         Role will determine what functionality on the site the user has access
         to.
     '''
-    __tablename__ = 'role'
-    id = Column(Integer, primary_key=True)
-    name = Column(String(100), unique=True)
-    description = Column(String(255))
-    date_created = Column(DateTime, default=datetime.datetime.utcnow)
-    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
-    active = Column(Boolean)
-    organization_id = Column(Integer)
-    order = Column(Integer)
+    table_type = 'admin'
     facility_id = Column(Integer, ForeignKey('facility.id'))
     level_id = Column(Integer, ForeignKey('level.id'))
 
@@ -57,203 +129,165 @@ class Role(Base, RoleMixin):
     role_unq = UniqueConstraint('facility_id', 'level_id')
 
     def __repr__(self):
-        return "<Role=%s, description=%s, id=%d, level=%s, facility=%s>)" % \
-               (self.name, self.description, self.id,
-                self.role_level.name, self.role_facility.name)
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+
+
+class Facility(Base):
+    table_type = 'admin'
+    root_organization_id = Column(Integer)
+
+    def __repr__(self):
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
 
 
 class Menu(Base):
-    __tablename__ = 'menu'
-    id = Column(Integer, primary_key=True)
+    table_type = 'admin'
     parent_id = Column(Integer, ForeignKey('menu.id'))
-    name = Column(String(100), unique=True)
-    description = Column(String(255))
-    date_created = Column(DateTime, default=datetime.datetime.utcnow)
-    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
-    active = Column(Boolean)
-    organization_id = Column(Integer)
-    order = Column(Integer)
     menu_type_id = Column(Integer, ForeignKey('menu_type.id'))
     module_id = Column(Integer, ForeignKey('module.id'))
     url_path = Column(String(512), unique=True)
     url_params = Column(String(1024))  ## Stored as JSON
 
-    parent = relationship('Menu', remote_side=[id])
+    parent = relationship('Menu', remote_side='Menu.id')
     children = relationship('Menu')
     menu_menu_type = relationship("MenuType", foreign_keys=[menu_type_id])
     menu_module = relationship("Module", foreign_keys=[module_id])
 
     def __repr__(self):
-        return "<Menu(name=%s, description=%s, id=%d)>" % \
-               (self.name, self.description, self.id)
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
 
 
 class MenuRole(Base):
-    __tablename__ = 'menu_role'
-    id = Column(Integer, primary_key=True)
-    name = Column(String(100), unique=True)
-    description = Column(String(255))
-    date_created = Column(DateTime, default=datetime.datetime.utcnow)
-    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
-    active = Column(Boolean)
-    organization_id = Column(Integer)
-    order = Column(Integer)
+    table_type = 'admin'
     role_id = Column(Integer, ForeignKey('role.id'))
     menu_id = Column(Integer, ForeignKey('menu.id'))
     menu_class = Column(String(100))
 
     menu_role_role = relationship(
-            "Role", foreign_keys=[role_id])
+        "Role", foreign_keys=[role_id])
     menu_role_unq = UniqueConstraint('role_id', 'menu_id')
     menu_role_menu = relationship("Menu", foreign_keys=[menu_id])
 
     def __repr__(self):
-        return "<MenuRole(name=%s, description=%s, id=%d, menu_id=%d, order=%d>)" % \
-               (self.name, self.description, self.id, self.menu_id, self.order)
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+
 
 class Route(Base):
-    __tablename__ = 'route'
-    id = Column(Integer, primary_key=True)
-    name = Column(String(100), unique=True)
-    description = Column(String(255))
-    date_created = Column(DateTime, default=datetime.datetime.utcnow)
-    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
-    active = Column(Boolean)
-    organization_id = Column(Integer)
-    order = Column(Integer)
+    table_type = 'admin'
     module_id = Column(Integer, ForeignKey('module.id'))
     url_path = Column(String(512), unique=True)
 
     route_module = relationship("Module", foreign_keys=[module_id])
 
     def __repr__(self):
-        return "<Route(name=%s, description=%s, id=%d)>" % \
-               (self.name, self.description, self.id)
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+
 
 class MenuNew(Base):
-    __tablename__ = 'menu_new'
-    id = Column(Integer, primary_key=True)
+    table_type = 'admin'
     parent_id = Column(Integer, ForeignKey('menu_new.id'))
-    name = Column(String(100), unique=True)
-    description = Column(String(255))
-    date_created = Column(DateTime, default=datetime.datetime.utcnow)
-    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
-    active = Column(Boolean)
-    organization_id = Column(Integer)
-    order = Column(Integer)
     menu_type_id = Column(Integer, ForeignKey('menu_type.id'))
     route_id = Column(Integer, ForeignKey('route.id'))
     url_params = Column(String(1024))  ## Stored as JSON
     dynamic_suffix = Column(String(255))
     display_name = Column(String(50))
 
-    parent = relationship('MenuNew', remote_side=[id])
+    parent = relationship('MenuNew', remote_side='MenuNew.id')
     children = relationship('MenuNew')
     menu_new_menu_type = relationship("MenuType", foreign_keys=[menu_type_id])
     menu_new_route = relationship("Route", foreign_keys=[route_id])
 
     def __repr__(self):
-        return "<MenuNew(name=%s, description=%s, id=%d)>" % \
-               (self.name, self.description, self.id)
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+
 
 class RouteRole(Base):
-    __tablename__ = 'route_role'
-    id = Column(Integer, primary_key=True)
-    name = Column(String(100), unique=True)
-    description = Column(String(255))
-    date_created = Column(DateTime, default=datetime.datetime.utcnow)
-    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
-    active = Column(Boolean)
-    organization_id = Column(Integer)
-    order = Column(Integer)
+    table_type = 'admin'
     role_id = Column(Integer, ForeignKey('role.id'))
     route_id = Column(Integer, ForeignKey('route.id'))
 
     route_role_role = relationship(
-            "Role", foreign_keys=[role_id])
+        "Role", foreign_keys=[role_id])
     route_role_unq = UniqueConstraint('role_id', 'route_id')
     route_role_route = relationship("Route", foreign_keys=[route_id])
 
     def __repr__(self):
-        return "<RouteRole(name=%s, description=%s, id=%d, route_id=%d, order=%d>)" % \
-               (self.name, self.description, self.id, self.route_id, self.order)
-
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
 
 
 class MenuType(Base):
-    __tablename__ = 'menu_type'
-    id = Column(Integer, primary_key=True)
-    name = Column(String(100), unique=True)
-    description = Column(String(255))
-    date_created = Column(DateTime, default=datetime.datetime.utcnow)
-    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
-    active = Column(Boolean)
-    organization_id = Column(Integer)
-    order = Column(Integer)
+    table_type = 'admin'
 
     def __repr__(self):
-        return "<MenuType(name=%s, description=%s, id=%d>)" % \
-               (self.name, self.description, self.id)
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+
+
+class SelectList(Base):
+    table_type = 'admin'
+
+    def __repr__(self):
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+
+
+class SelectListItem(Base):
+    table_type = 'admin'
+    select_list_id = Column(Integer, ForeignKey('select_list.id'))
+    display_name = Column(String(50))
+
+    select_list_item_select_list = relationship("SelectList", foreign_keys=[select_list_id])
+
+    def __repr__(self):
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
 
 
 class PageForm(Base):
-    __tablename__ = 'page_form'
-    id = Column(Integer, primary_key=True)
-    name = Column(String(100), unique=True)
-    description = Column(String(255))
-    date_created = Column(DateTime, default=datetime.datetime.utcnow)
-    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
-    active = Column(Boolean)
-    organization_id = Column(Integer)
-    order = Column(Integer)
+    table_type = 'admin'
     page_title = Column(String(50))
     page_header = Column(String(50))
     page_template = Column(String(100))
 
+    def __repr__(self):
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+
 
 class PageFormJavascript(Base):
-    __tablename__ = 'page_form_javascript'
-    id = Column(Integer, primary_key=True)
-    name = Column(String(100), unique=True)
-    description = Column(String(255))
-    date_created = Column(DateTime, default=datetime.datetime.utcnow)
-    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
-    active = Column(Boolean)
-    organization_id = Column(Integer)
-    order = Column(Integer)
+    table_type = 'admin'
     page_form_id = Column(Integer, ForeignKey('page_form.id'))
     page_javascript = Column(String(100))
 
     page_javascript_page = relationship("PageForm", foreign_keys=[page_form_id])
 
+    def __repr__(self):
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+
 
 class PageFormRole(Base):
-    __tablename__ = 'page_form_role'
-    id = Column(Integer, primary_key=True)
-    name = Column(String(100), unique=True)
-    description = Column(String(255))
-    date_created = Column(DateTime, default=datetime.datetime.utcnow)
-    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
-    active = Column(Boolean)
-    organization_id = Column(Integer)
-    order = Column(Integer)
+    table_type = 'admin'
     role_id = Column(Integer, ForeignKey('role.id'))
     page_form_id = Column(Integer, ForeignKey('page_form.id'))
 
     page_role_role = relationship("Role", foreign_keys=[role_id])
     page_role_page = relationship("PageForm", foreign_keys=[page_form_id])
 
+    def __repr__(self):
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+
 
 class PageFormButton(Base):
-    __tablename__ = 'page_form_button'
-    id = Column(Integer, primary_key=True)
-    name = Column(String(100), unique=True)
-    description = Column(String(255))
-    date_created = Column(DateTime, default=datetime.datetime.utcnow)
-    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
-    active = Column(Boolean)
-    organization_id = Column(Integer)
-    order = Column(Integer)
+    table_type = 'admin'
     page_form_id = Column(Integer, ForeignKey('page_form.id'))
     button_type = Column(String(100))
     button_location = Column(String(100))
@@ -265,55 +299,26 @@ class PageFormButton(Base):
 
     page_form_button_page_form = relationship("PageForm", foreign_keys=[page_form_id])
 
+    def __repr__(self):
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+
 
 class PageFormButtonRole(Base):
-    __tablename__ = 'page_form_button_role'
-    id = Column(Integer, primary_key=True)
-    name = Column(String(100), unique=True)
-    description = Column(String(255))
-    date_created = Column(DateTime, default=datetime.datetime.utcnow)
-    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
-    active = Column(Boolean)
-    organization_id = Column(Integer)
-    order = Column(Integer)
+    table_type = 'admin'
     role_id = Column(Integer, ForeignKey('role.id'))
     page_form_button_id = Column(Integer, ForeignKey('page_form_button.id'))
 
     page_form_button_role_role = relationship("Role", foreign_keys=[role_id])
     page_form_button_role_page_form = relationship("PageFormButton", foreign_keys=[page_form_button_id])
 
-
-class TableObject(Base):
-    __tablename__ = 'table_object'
-    id = Column(Integer, primary_key=True)
-    name = Column(String(100), unique=True)
-    description = Column(String(255))
-    date_created = Column(DateTime, default=datetime.datetime.utcnow)
-    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
-    active = Column(Boolean)
-    organization_id = Column(Integer)
-    order = Column(Integer)
-    admin_table = Column(Boolean)
-    new_name_prefix = Column(String(10))
-    new_name_id = Column(Integer)
-    id_length = Column(Integer)
-
-    def get_new_name(self):
-        new_name = self.new_name_prefix + str(self.new_name_id).zfill(self.id_length)
-        self.new_name_id += 1
-        return new_name
+    def __repr__(self):
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
 
 
 class TableObjectRole(Base):
-    __tablename__ = 'table_object_role'
-    id = Column(Integer, primary_key=True)
-    name = Column(String(100), unique=True)
-    description = Column(String(255))
-    date_created = Column(DateTime, default=datetime.datetime.utcnow)
-    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
-    active = Column(Boolean)
-    organization_id = Column(Integer)
-    order = Column(Integer)
+    table_type = 'admin'
     role_id = Column(Integer, ForeignKey('role.id'))
     table_object_id = Column(Integer, ForeignKey('table_object.id'))
     display_name = Column(String(100))
@@ -322,17 +327,13 @@ class TableObjectRole(Base):
     table_object_role_table_object = relationship("TableObject", foreign_keys=[table_object_id])
     table_object_role_unq = UniqueConstraint('role_id', 'table_object_id')
 
+    def __repr__(self):
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+
 
 class TableObjectMany(Base):
-    __tablename__ = 'table_object_many'
-    id = Column(Integer, primary_key=True)
-    name = Column(String(100), unique=True)
-    description = Column(String(255))
-    date_created = Column(DateTime, default=datetime.datetime.utcnow)
-    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
-    active = Column(Boolean)
-    organization_id = Column(Integer)
-    order = Column(Integer)
+    table_type = 'admin'
     first_table_object_id = Column(Integer, ForeignKey('table_object.id'))
     link_table_object_id = Column(Integer, ForeignKey('table_object.id'))
     second_table_object_id = Column(Integer, ForeignKey('table_object.id'))
@@ -341,17 +342,13 @@ class TableObjectMany(Base):
     table_object_many_second_table_object = relationship("TableObject", foreign_keys=[link_table_object_id])
     table_object_many_link_table_object = relationship("TableObject", foreign_keys=[second_table_object_id])
 
+    def __repr__(self):
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+
 
 class TableObjectChildren(Base):
-    __tablename__ = 'table_object_children'
-    id = Column(Integer, primary_key=True)
-    name = Column(String(100), unique=True)
-    description = Column(String(255))
-    date_created = Column(DateTime, default=datetime.datetime.utcnow)
-    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
-    active = Column(Boolean)
-    organization_id = Column(Integer)
-    order = Column(Integer)
+    table_type = 'admin'
     table_object_id = Column(Integer, ForeignKey('table_object.id'))
     child_table_object_id = Column(Integer, ForeignKey('table_object.id'))
     child_link_field_id = Column(Integer, ForeignKey('field.id'))
@@ -360,46 +357,14 @@ class TableObjectChildren(Base):
     table_object_children_child_table_object = relationship("TableObject", foreign_keys=[child_table_object_id])
     table_object_children_field = relationship("Field", foreign_keys=[child_link_field_id])
 
-
-class Field(Base):
-    __tablename__ = 'field'
-    id = Column(Integer, primary_key=True)
-    name = Column(String(100), unique=True)
-    description = Column(String(255))
-    date_created = Column(DateTime, default=datetime.datetime.utcnow)
-    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
-    active = Column(Boolean)
-    organization_id = Column(Integer)
-    order = Column(Integer)
-    field_name = Column(String(100))
-    table_object_id = Column(Integer, ForeignKey('table_object.id'))
-    data_type_id = Column(Integer, ForeignKey('data_type.id'))
-    unique = Column(Boolean)
-    primary_key = Column(Boolean)
-    length = Column(Integer)
-    default = Column(String(255))
-    field_class = Column(String(100))
-    foreign_key_table_object_id = Column(Integer, ForeignKey('table_object.id'))
-    foreign_key_field_id = Column(Integer, ForeignKey('field.id'))
-    foreign_key_display = Column(Integer, ForeignKey('field.id'))
-
-    field_type = relationship("TableObject", foreign_keys=[table_object_id])
-    field_data_type = relationship("DataType", foreign_keys=[data_type_id])
-    field_foreign_key_table_object = relationship("TableObject", foreign_keys=[foreign_key_table_object_id])
-    field_foreign_key_field = relationship("Field", foreign_keys=[foreign_key_field_id])
-    field_foreign_key_display = relationship("Field", foreign_keys=[foreign_key_display])
+    def __repr__(self):
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
 
 
 class FieldRole(Base):
     __tablename__ = 'field_role'
-    id = Column(Integer, primary_key=True)
-    name = Column(String(100), unique=True)
-    description = Column(String(255))
-    date_created = Column(DateTime, default=datetime.datetime.utcnow)
-    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
-    active = Column(Boolean)
-    organization_id = Column(Integer)
-    order = Column(Integer)
+    table_type = 'admin'
     role_id = Column(Integer, ForeignKey('role.id'))
     field_id = Column(Integer, ForeignKey('field.id'))
     display_name = Column(String(100))
@@ -413,91 +378,59 @@ class FieldRole(Base):
     field_role_permission = relationship("Permission", foreign_keys=[permission_id])
     field_role_unq = UniqueConstraint('role_id', 'field_id', 'page_id')
 
-
-class DataType(Base):
-    __tablename__ = 'data_type'
-    id = Column(Integer, primary_key=True)
-    name = Column(String(100), unique=True)
-    description = Column(String(255))
-    date_created = Column(DateTime, default=datetime.datetime.utcnow)
-    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
-    active = Column(Boolean)
-    organization_id = Column(Integer)
-    order = Column(Integer)
+    def __repr__(self):
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
 
 
 class Permission(Base):
-    __tablename__ = 'permission'
-    id = Column(Integer, primary_key=True)
-    name = Column(String(100), unique=True)
-    description = Column(String(255))
-    date_created = Column(DateTime, default=datetime.datetime.utcnow)
-    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
-    active = Column(Boolean)
-    organization_id = Column(Integer)
-    order = Column(Integer)
+    table_type = 'admin'
+
+    def __repr__(self):
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
 
 class TableQuery(Base):
-    __tablename__ = 'table_query'
-    id = Column(Integer, primary_key=True)
-    name = Column(String(100), unique=True)
-    description = Column(String(255))
-    date_created = Column(DateTime, default=datetime.datetime.utcnow)
-    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
-    active = Column(Boolean)
-    organization_id = Column(Integer)
-    order = Column(Integer)
+    table_type = 'admin'
     display_name = Column(String(100))
+
+    def __repr__(self):
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
 
 
 class TableQueryRender(Base):
-    __tablename__ = 'table_query_render'
-    id = Column(Integer, primary_key=True)
-    name = Column(String(100), unique=True)
-    description = Column(String(255))
-    date_created = Column(DateTime, default=datetime.datetime.utcnow)
-    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
-    active = Column(Boolean)
-    organization_id = Column(Integer)
-    order = Column(Integer)
+    table_type = 'admin'
     table_query_id = Column(Integer, ForeignKey('table_query.id'))
     table_object_id = Column(Integer, ForeignKey('table_object.id'))
     page_form_role_id = Column(Integer, ForeignKey(
-            'page_form_role.id'))
+        'page_form_role.id'))
 
     table_query_render_page_form_role = relationship("PageFormRole",
-                                                              foreign_keys=[page_form_role_id])
+                                                     foreign_keys=[page_form_role_id])
     table_query_render_table_query = relationship("TableQuery", foreign_keys=[table_query_id])
     table_query_render_table_object = relationship("TableObject", foreign_keys=[table_object_id])
 
+    def __repr__(self):
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+
 
 class TableQueryTableObject(Base):
-    __tablename__ = 'table_query_table_object'
-    id = Column(Integer, primary_key=True)
-    name = Column(String(100), unique=True)
-    description = Column(String(255))
-    date_created = Column(DateTime, default=datetime.datetime.utcnow)
-    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
-    active = Column(Boolean)
-    organization_id = Column(Integer)
-    order = Column(Integer)
+    table_type = 'admin'
     table_query_id = Column(Integer, ForeignKey('table_query.id'))
     table_object_id = Column(Integer, ForeignKey('table_object.id'))
 
     table_query_type_type = relationship("TableObject", foreign_keys=[table_object_id])
     table_query_type_table_query = relationship("TableQuery", foreign_keys=[table_query_id])
 
+    def __repr__(self):
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+
 
 class TableQueryField(Base):
-    __tablename__ = 'table_query_field'
-    id = Column(Integer, primary_key=True)
-    name = Column(String(100), unique=True)
-    description = Column(String(255))
-    date_created = Column(DateTime, default=datetime.datetime.utcnow)
-    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
-    active = Column(Boolean)
-    organization_id = Column(Integer)
-    order = Column(Integer)
+    table_type = 'admin'
     table_query_id = Column(Integer, ForeignKey('table_query.id'))
     field_id = Column(Integer, ForeignKey('field.id'))
     display_name = Column(String(100))
@@ -506,17 +439,13 @@ class TableQueryField(Base):
     table_query_field_field = relationship("Field", foreign_keys=[field_id])
     table_query_field_table_query = relationship("TableQuery", foreign_keys=[table_query_id])
 
+    def __repr__(self):
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+
 
 class TableQueryCriteria(Base):
-    __tablename__ = 'table_query_criteria'
-    id = Column(Integer, primary_key=True)
-    name = Column(String(100), unique=True)
-    description = Column(String(255))
-    date_created = Column(DateTime, default=datetime.datetime.utcnow)
-    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
-    active = Column(Boolean)
-    organization_id = Column(Integer)
-    order = Column(Integer)
+    table_type = 'admin'
     table_query_id = Column(Integer, ForeignKey('table_query.id'))
     field_id = Column(Integer, ForeignKey('field.id'))
     value = Column(String(255))
@@ -525,80 +454,64 @@ class TableQueryCriteria(Base):
     table_query_criteria_table_query = relationship("TableQuery", foreign_keys=[table_query_id])
     table_query_criteria_field = relationship("Field", foreign_keys=[field_id])
 
+    def __repr__(self):
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+
+
 class TableQueryCalculation(Base):
-    __tablename__ = 'table_query_calculation'
-    id = Column(Integer, primary_key=True)
-    name = Column(String(100), unique=True)
-    description = Column(String(255))
-    date_created = Column(DateTime, default=datetime.datetime.utcnow)
-    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
-    active = Column(Boolean)
-    organization_id = Column(Integer)
-    order = Column(Integer)
+    table_type = 'admin'
     function = Column(String(100))
     table_query_field_id = Column(Integer, ForeignKey('table_query_field.id'))
 
     table_query_calculation_table_query_field = relationship("TableQueryField", foreign_keys=[table_query_field_id])
 
+    def __repr__(self):
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+
+
 class TableQueryCalculationField(Base):
-    __tablename__ = 'table_query_calculation_field'
-    id = Column(Integer, primary_key=True)
-    name = Column(String(100), unique=True)
-    description = Column(String(255))
-    date_created = Column(DateTime, default=datetime.datetime.utcnow)
-    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
-    active = Column(Boolean)
-    organization_id = Column(Integer)
-    order = Column(Integer)
+    table_type = 'admin'
     table_query_calculation_id = Column(Integer,
-            ForeignKey('table_query_calculation.id'))
+                                        ForeignKey('table_query_calculation.id'))
     table_query_field_id = Column(Integer, ForeignKey('table_query_field.id'))
 
-    table_query_calculation_field_table_query_calculation = relationship("TableQueryCalculation", foreign_keys=[table_query_calculation_id])
-    table_query_calculation_field_table_query_field = relationship("TableQueryField", foreign_keys=[table_query_field_id])
+    table_query_calculation_field_table_query_calculation = relationship("TableQueryCalculation",
+                                                                         foreign_keys=[table_query_calculation_id])
+    table_query_calculation_field_table_query_field = relationship("TableQueryField",
+                                                                   foreign_keys=[table_query_field_id])
+
+    def __repr__(self):
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+
 
 class Module(Base):
-    __tablename__ = 'module'
-    id = Column(Integer, primary_key=True)
-    name = Column(String(100), unique=True)
-    description = Column(String(255))
-    date_created = Column(DateTime, default=datetime.datetime.utcnow)
-    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
-    active = Column(Boolean)
-    organization_id = Column(Integer)
-    order = Column(Integer)
+    table_type = 'admin'
     url_prefix = Column(String(50))
     blueprint = Column(Boolean)
 
+    def __repr__(self):
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+
 
 class ModuleFacility(Base):
-    __tablename__ = 'module_facility'
-    id = Column(Integer, primary_key=True)
-    name = Column(String(100), unique=True)
-    description = Column(String(255))
-    date_created = Column(DateTime, default=datetime.datetime.utcnow)
-    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
-    active = Column(Boolean)
-    organization_id = Column(Integer)
-    order = Column(Integer)
+    table_type = 'admin'
     facility_id = Column(Integer, ForeignKey('facility.id'))
     module_id = Column(Integer, ForeignKey('module.id'))
 
     module_facility_facility = relationship("Facility", foreign_keys=[facility_id])
     module_facility_module = relationship("Module", foreign_keys=[module_id])
 
+    def __repr__(self):
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+
 
 class UserRole(Base):
-    __tablename__ = 'user_role'
-    __table_args__ = {'mysql_engine': 'InnoDB'}
-    id = Column(Integer, primary_key=True)
-    name = Column(String(50), unique=True)
-    description = Column(String(255))
-    date_created = Column(DateTime, default=datetime.datetime.utcnow)
-    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
-    active = Column(Boolean)
-    organization_id = Column(Integer, ForeignKey('organization.id'))
-    order = Column(Integer)
+    table_type = 'admin'
     user_id = Column(Integer, ForeignKey('user.id'))
     role_id = Column(Integer, ForeignKey('role.id'))
     director = Column(Boolean)
@@ -606,20 +519,14 @@ class UserRole(Base):
 
     user_role_user = relationship("User", foreign_keys=[user_id])
     user_role_role = relationship("Role", foreign_keys=[role_id])
-    user_role_organization = relationship("Organization", foreign_keys=[organization_id])
+
+    def __repr__(self):
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
 
 
 class User(Base, UserMixin):
-    __tablename__ = 'user'
-    __table_args__ = {'mysql_engine': 'InnoDB'}
-    id = Column(Integer, primary_key=True)
-    name = Column(String(50), unique=True)
-    description = Column(String(255))
-    date_created = Column(DateTime, default=datetime.datetime.utcnow)
-    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
-    active = Column(Boolean)
-    organization_id = Column(Integer, ForeignKey('organization.id'))
-    order = Column(Integer)
+    table_type = 'admin'
     password_hash = Column(String(120))
     password = Column(String(120))
     first_name = Column(String(50))
@@ -630,7 +537,6 @@ class User(Base, UserMixin):
     current_user_role_id = Column(Integer, ForeignKey('user_role.id'))
 
     user_user_role = relationship("UserRole", foreign_keys=[current_user_role_id])
-    user_organization = relationship("Organization", foreign_keys=[organization_id])
     roles = relationship('Role', secondary='user_role', primaryjoin='user_role.c.user_id == User.id',
                          secondaryjoin='user_role.c.role_id == Role.id', order_by='Role.name',
                          backref=backref('users', lazy='dynamic'))
@@ -656,16 +562,7 @@ class User(Base, UserMixin):
 
 
 class UserOrganization(Base):
-    __tablename__ = 'user_organization'
-    __table_args__ = {'mysql_engine': 'InnoDB'}
-    id = Column(Integer, primary_key=True)
-    name = Column(String(50), unique=True)
-    description = Column(String(255))
-    date_created = Column(DateTime, default=datetime.datetime.utcnow)
-    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
-    active = Column(Boolean)
-    organization_id = Column(Integer)
-    order = Column(Integer)
+    table_type = 'admin'
     user_id = Column(Integer, ForeignKey('user.id'))
     user_organization_id = Column(Integer, ForeignKey('organization.id'))
     default_organization = Column(Boolean)
@@ -673,69 +570,9 @@ class UserOrganization(Base):
     user_organization_organization = relationship('Organization', foreign_keys=[user_organization_id])
     user_organization_user = relationship('User', foreign_keys=[user_id])
 
-class Institution(Base):
-    __tablename__ = 'institution'
-    __table_args__ = {'mysql_engine': 'InnoDB'}
-    id = Column(Integer, primary_key=True)
-    name = Column(String(50), unique=True)
-    description = Column(String(255))
-    date_created = Column(DateTime, default=datetime.datetime.utcnow)
-    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
-    active = Column(Boolean)
-    organization_id = Column(Integer)
-    order = Column(Integer)
-
-
-class Department(Base):
-    __tablename__ = 'department'
-    __table_args__ = {'mysql_engine': 'InnoDB'}
-    id = Column(Integer, primary_key=True)
-    name = Column(String(50), unique=True)
-    description = Column(String(255))
-    date_created = Column(DateTime, default=datetime.datetime.utcnow)
-    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
-    active = Column(Boolean)
-    organization_id = Column(Integer)
-    order = Column(Integer)
-    institution_id = Column(Integer, ForeignKey('institution.id'))
-
-    department_institution = relationship("Institution",
-            foreign_keys=[institution_id])
-
-
-class Organization(Base):
-    __tablename__ = 'organization'
-    __table_args__ = {'mysql_engine': 'InnoDB'}
-    id = Column(Integer, primary_key=True)
-    name = Column(String(50), unique=True)
-    description = Column(String(255))
-    date_created = Column(DateTime, default=datetime.datetime.utcnow)
-    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
-    active = Column(Boolean)
-    organization_id = Column(Integer)
-    order = Column(Integer)
-    address_id = Column(Integer)
-    billing_address_id = Column(Integer)
-    organization_type_id = Column(Integer)
-    parent_id = Column(Integer, ForeignKey('organization.id'))
-    department_id = Column(Integer, ForeignKey('department.id'))
-
-    parent = relation('Organization', remote_side=[id])
-    organization_department = relationship("Department",
-            foreign_keys=[department_id])
-
-
-class OrganizationType(Base):
-    __tablename__ = 'organization_type'
-    __table_args__ = {'mysql_engine': 'InnoDB'}
-    id = Column(Integer, primary_key=True)
-    name = Column(String(50), unique=True)
-    description = Column(String(255))
-    date_created = Column(DateTime, default=datetime.datetime.utcnow)
-    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
-    active = Column(Boolean)
-    organization_id = Column(Integer)
-    order = Column(Integer)
+    def __repr__(self):
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
 
 
 class EventType(Base):

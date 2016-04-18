@@ -107,7 +107,8 @@ def configure_blueprints(app):
     blueprints = models.Module.query.filter_by(blueprint = 1).all()
     for mod in blueprints:
         bp = getattr(__import__('iggybase.'+mod.name, fromlist=[mod.name]),mod.name)
-        app.register_blueprint(bp)
+        url_prefix = '/<facility_name>/' + mod.name
+        app.register_blueprint(bp, url_prefix = url_prefix)
 
 def configure_hook( app ):
     @app.before_request

@@ -15,15 +15,16 @@ class Cache:
 
     def get(self, key):
         if key in self.refresh_key:
-            key = self.add_version(key)
+            key += self.get_key_version(key)
         logging.info('GET: ' + key)
         res = self.store.get(key)
         return res
 
-    def set(self, key, val, timeout = None, refresh_on = []):
-        use_version = self.set_refresh(key, refresh_on)
-        if use_version:
-            key = self.add_version(key)
+    def set(self, key, val, timeout = None, refresh_on = [], set_refresh = True):
+        if set_refresh:
+            self.set_refresh(key, refresh_on)
+        if key in self.refresh_key:
+            key += self.get_key_version(key)
         if not timeout:
             timeout = self.TIMEOUT
         logging.info('SET: ' + key)
@@ -33,18 +34,16 @@ class Cache:
         if refresh_on:
             refresh_on = self.lower_list(refresh_on)
             self.refresh_key[key] = refresh_on
-            return True
         elif key in self.refresh_key:
             self.refresh_key.pop(key, None)
-        return False
 
-    def add_version(self, key):
+    def get_key_version(self, key):
         version = []
         for obj in self.refresh_key[key]:
             if not obj in self.version:
                 self.version[obj] = self.VERSION_MIN
             version.append(obj + str(self.version[obj]))
-        return key + '|v.' + '_'.join(version)
+        return '|v.' + '_'.join(version)
 
     def increment_version(self, objs):
         objs = self.lower_list(objs)
@@ -57,7 +56,7 @@ class Cache:
                     self.version[obj] = self.VERSION_MIN
             else:
                 self.version[obj] = self.VERSION_MIN
-            logging.info('Increment version: ' + obj + ' to: ' + self.version[obj])
+            logging.info('Increment version: ' + obj + ' to: ' + str(self.version[obj]))
 
     def make_key(self, route, role, dynamic = None, criteria = None):
         key = route + '|' + str(role)
@@ -66,6 +65,18 @@ class Cache:
         if criteria:
             key += '|' + criteria
         return key
+
+    def get_version(self, obj):
+        if obj in self.version:
+            return self.version[obj]
+        else:
+            return None
+
+    def set_version(self, obj, version):
+        if obj and version:
+            self.version[obj] = version
+            return True
+        return False
 
     @staticmethod
     def lower_list(objs):

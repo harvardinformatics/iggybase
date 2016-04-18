@@ -1,6 +1,5 @@
 from flask import abort, request, g
 from importlib import import_module
-from iggybase.tablefactory import TableFactory
 from iggybase.admin.models import TableObject
 from iggybase.database import db_session
 from iggybase.core.role_access_control import RoleAccessControl
@@ -29,7 +28,7 @@ def get_table(table_name):
             module_model = import_module('iggybase.admin.models')
         else:
             module_model = import_module('iggybase.models')
-        table_object = getattr(module_model, TableFactory.to_camel_case(table_name))
+        table_object = getattr(module_model, to_camel_case(table_name))
     except AttributeError:
         logging.info('abort ' + table_name)
         abort(403)

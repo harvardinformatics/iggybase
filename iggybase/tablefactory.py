@@ -9,6 +9,8 @@ import logging, sys, inspect
 
 
 class TableFactory:
+    predefined_columns = ['id','name','description','date_created','last_modified','active','organization_id','order']
+
     def __init__(self, active=1):
         self.active = active
         self.session = db_session()
@@ -17,17 +19,19 @@ class TableFactory:
         self.session.commit()
 
     def table_object_factory(self, class_name, table_object):
-        classattr = {"__tablename__": table_object.name}
+        classattr = {'table_type': 'user'}
 
         table_object_cols = self.fields(table_object.id, self.active)
 
         if not table_object_cols:
             return None
 
-
-        # logging.info( 'table name: ' + class_name )
+        #logging.info( 'table name: ' + class_name )
         for col in table_object_cols:
-            # logging.info( col.field_name )
+            if col.field_name in self.predefined_columns:
+                continue
+
+            #logging.info( col.field_name )
             if col.foreign_key_table_object_id is not None:
                 foreign_table =  self.session.query(TableObject).filter_by(id=col.foreign_key_table_object_id).first()
                 foreign_column = self.session.query(Field).filter_by(id=col.foreign_key_field_id).first()
@@ -40,8 +44,6 @@ class TableFactory:
                                                 classattr[col.field_name])
             else:
                 classattr[col.field_name] = self.create_column(col)
-
-        classattr['__table_args__'] = {'mysql_engine': 'InnoDB'}
 
         newclass = new_class(class_name, (Base,), {}, lambda ns: ns.update(classattr))
 
@@ -74,9 +76,11 @@ class TableFactory:
             arg['default'] = attributes.default
 
         if foreign_table_name is not None and foreign_column_name is not None:
-            return Column(dtinst, ForeignKey(foreign_table_name + "." + foreign_column_name), **arg)
+            col = Column(dtinst, ForeignKey(foreign_table_name + "." + foreign_column_name), **arg)
         else:
-            return Column(dtinst, **arg)
+            col = Column(dtinst, **arg)
+
+        return col
 
     def create_foreign_key(self, foreign_table_name, foreign_column):
 
@@ -89,7 +93,8 @@ class TableFactory:
     def table_objects(self, active=1):
         table_objects = []
 
-        res = self.session.query(TableObject).filter(TableObject.active==active). \
+        res = self.session.query(TableObject). \
+            filter(TableObject.active==active). \
             filter(TableObject.admin_table!=1). \
             order_by(TableObject.order).all()
 
