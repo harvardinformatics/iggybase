@@ -578,15 +578,7 @@ class UserOrganization(Base):
 class EventType(Base):
     """Event types: database, cron, ...
     """
-    __tablename__ = 'event_type'
-    id = Column(Integer, primary_key=True)
-    name = Column(String(100), unique=True)
-    description = Column(String(255))
-    date_created = Column(DateTime, default=datetime.datetime.utcnow)
-    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
-    active = Column(Boolean)
-    order = Column(Integer)
-    
+    table_type = 'admin'
 
 
 class Event(Base):
@@ -594,15 +586,7 @@ class Event(Base):
     records), workflow steps, or timed periodic. Each event has one or more assiciated 
     actions. Event is a base class for all types of events.
     """
-    __tablename__ = 'event'
-    id = Column(Integer, primary_key=True)
-    name = Column(String(100), unique=True)
-    description = Column(String(255))
-    date_created = Column(DateTime, default=datetime.datetime.utcnow)
-    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
-    active = Column(Boolean)
-    organization_id = Column(Integer, ForeignKey('organization.id'))
-    order = Column(Integer)
+    table_type = 'admin'
     event_type_id = Column(Integer, ForeignKey('event_type.id'))
 
     event_type = relationship("EventType")
@@ -614,7 +598,7 @@ class DatabaseEvent(Event):
     field_value - a value that either changes or is created or even deleted.
     action_type - selectable
     """
-    __tablename__ = 'database_event'
+    table_type = 'admin'
     id = Column(Integer, ForeignKey('event.id'), primary_key=True)
     table_object_id = Column(Integer, ForeignKey('table_object.id'))
     field_id = Column(Integer, ForeignKey('field.id'))
@@ -632,16 +616,7 @@ class DatabaseEvent(Event):
 class ActionType(Base):
     """Action types: 'email', 'alert', workflow_step, ...
     """
-    __tablename__ = 'action_type'
-    id = Column(Integer, primary_key=True)
-    name = Column(String(100), unique=True)
-    description = Column(String(255))
-    date_created = Column(DateTime, default=datetime.datetime.utcnow)
-    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
-    active = Column(Boolean)
-    organization_id = Column(Integer)
-    order = Column(Integer)
-
+    table_type = 'admin'    
 
     
 
@@ -649,15 +624,7 @@ class Action(Base):
     """Actions taken for a specific event. Events can have multiple actions
     This is a base class.
     """
-    __tablename__ = 'action'
-    id = Column(Integer, primary_key=True)
-    name = Column(String(100), unique=True)
-    description = Column(String(255))
-    date_created = Column(DateTime, default=datetime.datetime.utcnow)
-    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
-    active = Column(Boolean)
-    organization_id = Column(Integer, ForeignKey('organization.id'))
-    order = Column(Integer)
+    table_type = 'admin'        
     action_type_id = Column(Integer, ForeignKey('action_type.id'))
     event_id = Column(Integer, ForeignKey('event.id'))
 
@@ -670,7 +637,7 @@ class Action(Base):
              self.table_object.name)
 
 class EmailAction(Action):
-    __tablename__ = 'email_action'
+    table_type = 'admin'        
     id = Column(Integer, ForeignKey('action.id'), primary_key=True)
     text = Column(String(1024))
     subject = Column(String(100))
@@ -688,13 +655,7 @@ class ActionValue(Base):
     For example, ... {{ name }} ... would have a context of
     {'name': valueof(table_object.field)}.
     """
-    __tablename__ = 'action_value'
-    id = Column(Integer, primary_key=True)
-    name = Column(String(100), unique=True)
-    description = Column(String(255))
-    date_created = Column(DateTime, default=datetime.datetime.utcnow)
-    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
-    active = Column(Boolean)
+    table_type = 'admin'        
     action_id = Column(Integer, ForeignKey('action.id'))
     table_object_id = Column(Integer, ForeignKey('table_object.id'))
     field_id = Column(Integer, ForeignKey('field.id'))
