@@ -28,6 +28,9 @@ class RoleAccessControl:
                     return
 
                 self.user.current_user_role_id =  role_data.UserRole.id
+                self.session.add(self.user)
+                self.session.flush()
+                self.session.commit()
                 self.role = role_data.Role
             else:
                 self.role = (self.session.query(models.Role)
