@@ -28,7 +28,7 @@ class RoleAccessControl:
                     return
 
                 self.user.current_user_role_id =  role_data.UserRole.id
-                self.role = role_data.role
+                self.role = role_data.Role
             else:
                 self.role = (self.session.query(models.Role)
                              .join(models.UserRole)
