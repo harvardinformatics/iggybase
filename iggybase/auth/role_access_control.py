@@ -16,10 +16,24 @@ class RoleAccessControl:
         # set user and role
         if g.user is not None and not g.user.is_anonymous:
             self.user = self.session.query(models.User).filter_by(id=g.user.id).first()
-            #TODO check if current user role is set, if not set
-            self.role = (self.session.query(models.Role)
-                                  .join(models.UserRole)
-                                  .filter(models.UserRole.id==self.user.current_user_role_id).first())
+
+            if self.user.current_user_role_id is None:
+                role_data = (self.session.query(models.Role, models.UserRole)
+                             .join(models.UserRole)
+                             .filter(models.UserRole.user_id==self.user.id).first())
+
+                if role_data is None:
+                    self.user = None
+                    self.role = None
+                    return
+
+                self.user.current_user_role_id =  role_data.UserRole.id
+                self.role = role_data.role
+            else:
+                self.role = (self.session.query(models.Role)
+                             .join(models.UserRole)
+                             .filter(models.UserRole.id==self.user.current_user_role_id).first())
+
             facility_res = (self.session.query(models.Facility, models.Role,
                 models.Level)
                                   .join(models.Role, models.UserRole,
@@ -276,7 +290,7 @@ class RoleAccessControl:
     def has_access(self, auth_type, criteria, active=1):
         table_object = getattr(models, auth_type)
         table_object_role = getattr(models, auth_type + "Role")
-
+        
         filters = [
             getattr(table_object_role, 'role_id') == self.role.id,
             getattr(table_object, 'active') == active
