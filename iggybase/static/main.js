@@ -100,8 +100,8 @@ $( document ).ready( function () {
                     //clear old hidden fields if more than 1 row was added
                     $( td ).find( 'input[type=hidden]' ).remove( );
 
-                    var new_id = "data_entry_" + matches[ 1 ] + "_" + ( row_id );
-                    var hidden_id = "old_value_" + matches[ 1 ] + "_" + ( row_id );
+                    var new_id = matches[ 1 ] + "_" + ( row_id );
+                    var hidden_id = new_id.replace("data_entry", "old_value");
 
                     if ( $( this ).prop( 'type' ) == 'select-one' ) {
                         if ( link_column == matches[ 1 ] ) {
@@ -117,7 +117,7 @@ $( document ).ready( function () {
                             $( this ).val( '' ).attr( 'id', new_id ).attr( 'name', new_id );
                     }
 
-                    if ( matches[ 1 ] == 'name' ) {
+                    if ( matches[ 1 ] == 'data_entry_name' ) {
                         td.append( "<input id='" + hidden_id + "' name='" + hidden_id + "' type='hidden' value='new'>" );
                         td.append( "<input id='record_data_row_name_" + row_id + "' name='record_data_row_name_" + row_id + "' type='hidden' value='new'>" );
                         td.append( "<input id='record_data_table_name_" + row_id +"' name='record_data_table_name_" + row_id +"' type='hidden' value='" + target + "'>" );
