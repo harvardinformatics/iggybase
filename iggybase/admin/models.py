@@ -590,6 +590,7 @@ class Event(Base):
     event_type_id = Column(Integer, ForeignKey('event_type.id'))
 
     event_type = relationship("EventType")
+    
 
 class DatabaseEvent(Event):
     """Database events.
@@ -608,9 +609,12 @@ class DatabaseEvent(Event):
     field = relationship("Field")
 
     def __repr__(self):
-        return "<DatabaseEvent(name=%s, id=%s, active=%s, table_object=%s, field=%s" % \
-            (self.id, self.name, self.active, self.table_object.name, self.field.field_name)
-
+        return "<DatabaseEvent(id=%s, name=%s, description=%s, active=%s, table_object=%s, field=%s, event_type=%s" % \
+            (self.id, self.name, 
+             repr(getattr(self, 'description', None)), self.active, 
+             self.table_object.name, repr(getattr(self, 'field.name', None)),
+             self.event_type.name)
+             
 
     
 class ActionType(Base):
@@ -627,9 +631,9 @@ class Action(Base):
     table_type = 'admin'        
     action_type_id = Column(Integer, ForeignKey('action_type.id'))
     event_id = Column(Integer, ForeignKey('event.id'))
-
-    action = relationship("ActionType")
-    event = relationship("Event")
+             
+    action_type = relationship('ActionType')
+    event = relationship("Event", backref='actions')
 
     def __repr__(self):
         return "<Action(name=%s, id=%s, active=%s, organization=%s, table_object=%s" % \
@@ -662,7 +666,7 @@ class ActionValue(Base):
     action_id = Column(Integer, ForeignKey('action.id'))
 
     field = relationship("Field")
-    action = relationship("Action")
+    action = relationship("Action", backerf='action_values')
     
 
     def __repr__(self):

@@ -9,12 +9,12 @@ class StartEvents(object):
         Look for events and register their actions.
         """
         db_events = db_session.query(DatabaseEvent).filter_by(active=True)
-        for db_event in db_events:
-            actions = db_event.action
+        for db_event in db_events.all():
+            actions = db_event.actions
             ctx = {}
             for act in actions:
-                if act.name == 'email':
-                    for val in action_value:
+                if act.action_type.name == 'email':
+                    for val in action_values:
                         value = query(table_object.name.__class__.field.name).first()
                         ctx[val.name] =  value
                         kwargs = {'text': act.text,
