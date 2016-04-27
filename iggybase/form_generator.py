@@ -7,7 +7,7 @@ from iggybase.iggybase_form_fields import IggybaseBooleanField, IggybaseDateFiel
 from wtforms import HiddenField
 from wtforms.validators import DataRequired, Length, email, Optional
 from iggybase.core.organization_access_control import OrganizationAccessControl
-from iggybase.utilities import get_role_access_control
+from iggybase import utilities as util
 from iggybase import constants
 from json import dumps, loads
 import datetime
@@ -17,7 +17,7 @@ import logging
 class FormGenerator():
     def __init__(self, table_object):
         self.organization_access_control = OrganizationAccessControl()
-        self.role_access_control = get_role_access_control()
+        self.role_access_control = util.get_role_access_control()
         self.table_object = table_object
         self.classattr = {}
         self.table_data = None
@@ -283,6 +283,8 @@ class FormGenerator():
         headers = ''
         for field in fields:
             if field.FieldRole.visible == 1:
-                headers += field.FieldRole.display_name + '|'
+                field_display_name = util.get_field_attr(field.Field,
+                        field.FieldRole, 'display_name')
+                headers += field_display_name + '|'
 
         return dumps(headers[:-1])

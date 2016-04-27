@@ -1,4 +1,4 @@
-from flask import request, jsonify, abort, g, render_template, url_for, current_app
+from flask import request, jsonify, abort, g, render_template, url_for, current_app, redirect
 from flask.ext.security import login_required
 from flask.ext import excel
 import json
@@ -39,6 +39,7 @@ def summary_ajax(facility_name, table_name, page_form='summary', criteria={}):
 
 @core.route('/action_summary/<table_name>/', methods=['GET', 'POST'])
 @login_required
+@templated('action_summary')
 def action_summary(facility_name, table_name):
     page_form = 'summary'
     template = 'action_summary'
@@ -225,14 +226,12 @@ def data_entry(facility_name, table_name, row_name):
     table_data = rac.has_access('TableObject', {'name': table_name})
 
     if not table_data:
-        print(test)
         abort(403)
 
     fg = form_generator.FormGenerator(table_name)
     form = fg.default_data_entry_form(table_data, row_name)
 
     if form.validate_on_submit() and len(form.errors) == 0:
-        print(test2)
         oac = OrganizationAccessControl()
         row_names = oac.save_form()
 
@@ -316,13 +315,17 @@ def workflow_summary_ajax(facility_name, table_name, page_form='summary',
     table_name = 'work_item_group'
     return action_summary_ajax(facility_name, table_name, page_form, criteria)
 
-@core.route('/workflow/<workflow_name>/<work_item_group>', methods=['GET', 'POST'])
+@core.route('/workflow/<workflow_name>/<step>/<work_item_group>', methods=['GET', 'POST'])
 @login_required
-def workflow_item_group(facility_name, workflow_name, work_item_group):
-    page_form = 'summary'
-    template = 'workflow_summary'
-    template = 'single_data_entry'
+def workflow_item_group(facility_name, workflow_name, step, work_item_group):
     wig = WorkItemGroup(work_item_group)
+    if 'next_step' in request.form:
+        wig.set_saved(request.form['saved_rows'])
+        next_step = wig.next_step()
+        url = url_for(wig.Module.name + '.workflow_item_group', facility_name = g.facility, workflow_name
+                = 'order', step = next_step, work_item_group = work_item_group)
+        print(url)
+        return redirect(url)
     dynamic_vars = {}
     table_name = ''
     if wig.TableObject:
@@ -330,12 +333,12 @@ def workflow_item_group(facility_name, workflow_name, work_item_group):
         dynamic_vars['table_name'] = table_name
         dynamic_vars['row_name'] = 'new'
         dynamic_vars['facility_name'] = g.facility
-    #url = url_for('core.data_entry', facility_name = g.facility, table_name = 'order', row_name = 'new')
-    #url = url_for('core.detail', facility_name = 'murray', table_name = 'user', row_name = g.user.name)
-    #url = url_for((module + '.' + route), **dynamic_vars)
     func = globals()[wig.Route.url_path]
     context = func(**dynamic_vars)
     wig.get_buttons(context['bottom_buttons'])
+    if 'saved_rows' in context:
+        wig.set_saved(context['saved_rows'])
+
     context['wig'] = wig
     return render_template('work_item_group.html', **context)
 
@@ -385,10 +388,10 @@ def build_summary_ajax(table_name, page_form, criteria):
         current_app.cache.set(key, ret, (24 * 60 * 60), [table_name])
     return ret
 
-
 def saved_data(facility_name, module_name, table_name, row_names):
     msg = 'Saved: '
     error = False
+    saved_rows = {}
     for row_name in row_names:
         if row_name[0] == 'error':
 
@@ -399,9 +402,15 @@ def saved_data(facility_name, module_name, table_name, row_names):
             name = urllib.parse.quote(row_name[0])
             msg += ' <a href=' + request.url_root + facility_name + '/' + module_name + '/detail/' + table + '/' + name + '>' + \
                    row_name[0] + '</a>,'
+            # TODO: allow this to support data saving by other than name
+            row_key = table + '.' + 'name'
+            saved_rows[row_key] = {
+                    'table': table,
+                    'column': 'name',
+                    'value': name}
 
     msg = msg[:-1]
     if error:
-        return templating.page_template('error_message', module_name=module_name, table_name=table_name, page_msg=msg)
+        return templating.page_template_context('error_message', module_name=module_name, table_name=table_name, page_msg=msg)
     else:
-        return templating.page_template('save_message', module_name=module_name, table_name=table_name, page_msg=msg)
+        return templating.page_template_context('save_message', module_name=module_name, table_name=table_name, page_msg=msg, saved_rows=saved_rows)

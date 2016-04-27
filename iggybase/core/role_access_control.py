@@ -64,6 +64,7 @@ class RoleAccessControl:
                 self.set_routes()
             else:
                 self.set_routes()
+            self.set_routes()
         else:
             self.user = None
             self.role = None
@@ -518,6 +519,7 @@ class RoleAccessControl:
 
     def has_facility_access(self, facility):
         if self.role.role_facility.name == facility:
+            print('facility true')
             return True
         return False
 
@@ -532,4 +534,5 @@ class RoleAccessControl:
                 join(models.Module).
                 filter(models.WorkItemGroup.name == work_item_group).first())
         return res
+
 

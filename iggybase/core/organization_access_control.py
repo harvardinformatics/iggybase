@@ -546,3 +546,21 @@ class OrganizationAccessControl:
             else:
                 self.session.rollback()
         return updated
+
+    def update_step(self, workflow_id, group_name, step):
+        table_model = util.get_table('work_item_group')
+        res = (self.session.query(models.Workflow, models.Step).
+               join(models.Step).
+               filter(models.Step.order == step, models.Workflow.id ==
+                   workflow_id).first())
+        step_id = res.Step.id
+        work_item_group = table_model.query.filter(table_model.name == group_name, getattr(table_model, 'organization_id').in_(self.org_ids)).first()
+        updated = False
+        try:
+            setattr(work_item_group, 'step_id', res.Step.id)
+            updated = True
+        except AttributeError:
+            pass
+        if updated:
+            self.session.commit()
+        return updated

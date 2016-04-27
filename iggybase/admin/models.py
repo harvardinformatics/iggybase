@@ -379,33 +379,16 @@ class FieldRole(Base):
     field_role_unq = UniqueConstraint('role_id', 'field_id', 'page_id')
 
 
-class DataType(Base):
-    __tablename__ = 'data_type'
-    table_type = 'admin'
-    id = Column(Integer, primary_key=True)
-    name = Column(String(100), unique=True)
-    description = Column(String(255))
-    date_created = Column(DateTime, default=datetime.datetime.utcnow)
-    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
-    active = Column(Boolean)
-    organization_id = Column(Integer)
-    order = Column(Integer)
-
-
 class Permission(Base):
     __tablename__ = 'permission'
     table_type = 'admin'
-    id = Column(Integer, primary_key=True)
-    name = Column(String(100), unique=True)
-    description = Column(String(255))
-    date_created = Column(DateTime, default=datetime.datetime.utcnow)
-    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
-    active = Column(Boolean)
-    organization_id = Column(Integer)
-    order = Column(Integer)
+
+    def __repr__(self):
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
 
 
-class Event(Base):
+'''class Event(Base):
     """Events are triggered by one of: database action (new, updated, or deleted
     records), workflow steps, or timed periodic. Each event has one or more assiciated
     actions. Event is a base class for all types of events.
@@ -486,22 +469,16 @@ class ActionValue(Base):
     def __repr__(self):
         return "<ActionValue(name=%s, id=%d, action_id=%d, table_object_id=%d, field_id=%d)>" \
                (self.name, self.id, self.action_id, self.table_object_id, self.field_id)
-
+'''
 
 
 class TableQuery(Base):
-    __tablename__ = 'table_query'
     table_type = 'admin'
-    id = Column(Integer, primary_key=True)
-    name = Column(String(100), unique=True)
-    description = Column(String(255))
-    date_created = Column(DateTime, default=datetime.datetime.utcnow)
-    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
-    active = Column(Boolean)
-    organization_id = Column(Integer)
-    order = Column(Integer)
     display_name = Column(String(100))
 
+    def __repr__(self):
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
 
 class TableQueryRender(Base):
     table_type = 'admin'
@@ -592,30 +569,16 @@ class TableQueryCalculationField(Base):
 
 
 class Workflow(Base):
-    __tablename__ = 'workflow'
     table_type = 'admin'
-    id = Column(Integer, primary_key=True)
-    name = Column(String(100), unique=True)
-    description = Column(String(255))
-    date_created = Column(DateTime, default=datetime.datetime.utcnow)
-    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
-    active = Column(Boolean)
-    organization_id = Column(Integer)
-    order = Column(Integer)
     display_name = Column(String(100))
     notes = Column(String(255))
 
+    def __repr__(self):
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+
 class Step(Base):
-    __tablename__ = 'step'
     table_type = 'admin'
-    id = Column(Integer, primary_key=True)
-    name = Column(String(100), unique=True)
-    description = Column(String(255))
-    date_created = Column(DateTime, default=datetime.datetime.utcnow)
-    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
-    active = Column(Boolean)
-    organization_id = Column(Integer)
-    order = Column(Integer)
     display_name = Column(String(100))
     workflow_id = Column(Integer, ForeignKey('workflow.id'))
     status_id = Column(Integer)
@@ -623,23 +586,20 @@ class Step(Base):
     table_object_id = Column(Integer, ForeignKey('table_object.id'))
     params = Column(String(255))
     notes = Column(String(255))
+    dynamic_field = Column(Integer, ForeignKey('field.id'))
 
     step_workflow = relationship("Workflow", foreign_keys=[workflow_id])
     #step_status = relationship("Status", foreign_keys=[status_id])
     step_route = relationship("Route", foreign_keys=[route_id])
     step_table_object = relationship("TableObject", foreign_keys=[table_object_id])
+    step_dynamic_field = relationship("Field", foreign_keys=[dynamic_field])
+
+    def __repr__(self):
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
 
 class WorkItemGroup(Base):
-    __tablename__ = 'work_item_group'
     table_type = 'admin'
-    id = Column(Integer, primary_key=True)
-    name = Column(String(100), unique=True)
-    description = Column(String(255))
-    date_created = Column(DateTime, default=datetime.datetime.utcnow)
-    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
-    active = Column(Boolean)
-    organization_id = Column(Integer)
-    order = Column(Integer)
     display_name = Column(String(100))
     workflow_id = Column(Integer, ForeignKey('workflow.id'))
     step_id = Column(Integer, ForeignKey('step.id'))
@@ -650,17 +610,12 @@ class WorkItemGroup(Base):
     work_item_group_step = relationship("Step", foreign_keys=[step_id])
     work_item_group_user = relationship("User", foreign_keys=[assigned_to])
 
+    def __repr__(self):
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+
 class WorkItem(Base):
-    __tablename__ = 'work_item'
     table_type = 'admin'
-    id = Column(Integer, primary_key=True)
-    name = Column(String(100), unique=True)
-    description = Column(String(255))
-    date_created = Column(DateTime, default=datetime.datetime.utcnow)
-    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
-    active = Column(Boolean)
-    organization_id = Column(Integer)
-    order = Column(Integer)
     work_item_group_id = Column(Integer, ForeignKey('work_item_group.id'))
     table_object_id = Column(Integer, ForeignKey('table_object.id'))
     row_id = Column(Integer)
@@ -669,6 +624,10 @@ class WorkItem(Base):
     work_item_work_item_group = relationship("WorkItemGroup", foreign_keys=[work_item_group_id])
     work_item_table_object = relationship("TableObject",
             foreign_keys=[table_object_id])
+
+    def __repr__(self):
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
 
 class Module(Base):
     table_type = 'admin'

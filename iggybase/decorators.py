@@ -29,6 +29,9 @@ def templated(template = None):
                 return render_template(context['template'], **context)
             # if not endpoint then return context for further mod, exp workflows
             else:
+                print('NOT')
+                print(req_func)
+                print(f.__name__)
                 return context
         return decorated_function
     return decorator
