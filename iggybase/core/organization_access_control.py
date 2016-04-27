@@ -11,6 +11,7 @@ import datetime
 import sys
 import logging
 import time
+import random
 
 
 # Controls access to the data db data based on organization
@@ -268,193 +269,206 @@ class OrganizationAccessControl:
         # fields contain the data that was displayed on the form and possibly edited
         fields = {}
         # fields contain the data that was displayed on the form and possibly edited
-        field_data = {}
-        # record fields contain the record data (table name, id and record name)
-        record_fields = {}
-        # hidden fields contain the old values
-        old_fields = {}
+        table_field_data = {}
         # keeps track of the tables that store the data
         table_defs = {}
-        # keeps track of the row organization ids
-        row_org_id = {}
         # keeps track of the table object data for tables that store the child data used for generating the auto IDs
         table_objects = {}
         # all the data to be saved as an instance of the sqlalchemy table
         instances = {}
+        # tracks whether a row was modified
+        row_modified = {}
 
         # used to identify fields that contain data that needs to be saved
-        field_pattern = re.compile('(\S+)_(\d+)')
+        field_pattern = re.compile('(data_entry|record_data|old_value)_(\S+)_(\d+)')
         for key in request.form:
             data = request.form.get(key)
+
             if key.startswith('bool_'):
                 key = key[key.index('_') + 1:]
 
-            if key.startswith('record_data_'):
-                # trim record_data_
-                field_id = key[12:]
-                record_fields[field_id]=data
-            elif key.startswith('old_value_'):
-                # trim old_value_
-                field_id = key[10:]
-                old_fields[field_id] = data
-            elif key.startswith('data_entry_'):
-                # trim data_entry_
-                field_id = key[11:]
-                fields[field_id] = data
+            field_id = field_pattern.match(key)
+            if field_id is not None:
+                # logging.info('key: ' + key)
+                if field_id.group(3) not in fields.keys():
+                    fields[field_id.group(3)] = {'data_entry': {}, 'record_data': {}, 'old_value': {}}
+
+                fields[field_id.group(3)][field_id.group(1)][field_id.group(2)] = data
+
+        # for key1, value1 in fields.items():
+        #     for key2, value2 in value1.items():
+        #         for key3, value3 in value2.items():
+        #             logging.info(str(key1) + ' ' + str(key2) + ' ' + str(key3) + ': ' + str(value3))
 
         try:
-            for field, data in fields.items():
-                row_id = int(field[field.rindex('_') + 1:])
-                column_name = field[:field.rindex('_')]
+            for row_id, temp_data in fields.items():
+                # allows modifiction of dictionary while verifying and checking the data (e.g. name)
+                row_data = temp_data
 
-                table_name_field = record_fields['table_name_' + str(row_id)]
-                table_id_field = record_fields['table_id_' + str(row_id)]
-                current_inst_name = record_fields['row_name_' + str(row_id)]
+                table_name_field = row_data['record_data']['table_name']
+                table_id_field = row_data['record_data']['table_id']
+                current_inst_name = row_data['record_data']['row_name']
 
                 if table_id_field not in table_defs.keys():
-                    field_data[table_id_field] = {}
-                    field_data[table_id_field]['organization_id'] = role_access_control.\
-                        fields(table_id_field, {'field.field_name': 'organization_id'})[0]
+                    table_field_data[table_id_field] = {}
+                    temp_field_data = role_access_control.fields(table_id_field)
+                    for field in temp_field_data:
+                        table_field_data[table_id_field][field.Field.field_name] = field.Field
+
                     table_objects[table_id_field] = util.get_table(table_name_field)
                     table_defs[table_id_field] = self.session.query(models.TableObject).\
                         filter_by(name=table_objects[table_id_field].__tablename__).first()
 
                 current_table_object = table_objects[table_id_field]
                 current_table_data = table_defs[table_id_field]
-
-                if column_name not in field_data[table_id_field].keys():
-                    field_data[table_id_field][column_name] = role_access_control.\
-                        fields(table_id_field, {'field.field_name': column_name})[0]
-
-                if row_id not in row_org_id.keys():
-                    try:
-                        float(fields['organization_id_' + str(row_id)])
-                        row_org_id[row_id] = fields['organization_id_' + str(row_id)]
-                    except ValueError:
-                        if fields['organization_id_' + str(row_id)] != '' and\
-                                        fields['organization_id_' + str(row_id)] is not None:
-                            if field_data[table_id_field]['organization_id'].Field.foreign_key_display is None:
-                                org_display = 'name'
-                            else:
-                                org_display = field_data[table_id_field]['organization_id'].Field.foreign_key_display
-
-                            org_data = self.session.query(models.Organization).filter(getattr(models.Organization,
-                                                                                              org_display)==
-                                                                                      fields['organization_id_' +
-                                                                                             str(row_id)]).first()
-
-                            row_org_id[row_id] = org_data.id
-                        elif self.current_org_id is not None:
-                            row_org_id[row_id] = self.current_org_id
-                        else:
-                            row_org_id[row_id] = 1
+                current_field_data = table_field_data[table_id_field]
 
                 if row_id not in instances:
                     if current_inst_name == 'new':
-                        name_field = fields['name_' + str(row_id)]
-
                         instances[row_id] = current_table_object()
-
                         setattr(instances[row_id], 'date_created', datetime.datetime.utcnow())
-                        if current_table_data.new_name_prefix is not None and current_table_data.new_name_prefix != "":
-                            if fields['name_' + str(row_id)] == 'new' or \
-                                            fields['name_' + str(row_id)] == '':
-                                current_inst_name = current_table_data.get_new_name()
-                                self.session.add(current_table_data)
-                                self.session.flush()
-                            else:
-                                current_inst_name = fields['name_' + str(row_id)]
-                        else:
-                            current_inst_name = fields['name_' + str(row_id)]
 
-                        fields['name_' + str(row_id)] = current_inst_name
+                        if 'name' in row_data['data_entry'].keys() and row_data['data_entry']['name'] != '' and \
+                                        row_data['data_entry']['name'] != 'new':
+                            current_inst_name = row_data['data_entry']['name']
+                        elif current_table_data.new_name_prefix is not None and \
+                                        current_table_data.new_name_prefix != "":
+                            current_inst_name = current_table_data.get_new_name()
+                            self.session.add(current_table_data)
+                            self.session.flush()
+                        else:
+                            current_inst_name = table_name_field + str(random.randint(1000000000, 9999999999))
+
+                        row_data['data_entry']['name'] = current_inst_name
                     else:
                         instances[row_id] = self.session.query(current_table_object). \
                             filter_by(name=current_inst_name).first()
 
-                        if old_fields['date_created_' + str(row_id)] == '':
+                        if row_data['old_value']['date_created_'] == '':
                             setattr(instances[row_id], 'date_created', datetime.datetime.utcnow())
 
                     setattr(instances[row_id], 'last_modified', datetime.datetime.utcnow())
 
-                if field_data[table_id_field][column_name].Field.foreign_key_table_object_id == long_text_data.id and \
-                                data != '':
-                    if old_fields[field] == '':
-                        lt = core_models.LongText()
-                        setattr(lt, 'name', long_text_data.get_new_name())
-                        setattr(lt, 'date_created', datetime.datetime.utcnow())
+                # logging.info('current_inst_name: ' + current_inst_name)
+                # logging.info('row_data[data_entry][name]: ' + row_data['data_entry']['name'])
+
+                if 'organization_id' in row_data['data_entry'].keys():
+                    row_org_id = row_data['data_entry']['organization_id']
+                elif 'organization_id' in row_data['old_value'].keys():
+                    row_org_id = row_data['old_value']['organization_id']
+                elif self.current_org_id is not None:
+                    row_org_id = self.current_org_id
+                else:
+                    row_org_id = 1
+
+                if not isinstance(row_org_id, int):
+                    if current_field_data['organization_id'].foreign_key_display is None:
+                        org_display = 'name'
                     else:
-                        lt_id = old_fields[field]
-                        lt = self.session.query(core_models.LongText).filter_by(id=lt_id).first()
+                        org_display = field_data[table_id_field]['organization_id'].Field.foreign_key_display
 
-                    setattr(lt, 'organization_id', row_org_id[row_id])
-                    setattr(lt, 'last_modified', datetime.datetime.utcnow())
-                    setattr(lt, 'long_text', data)
-                    self.session.add(lt)
-                    self.session.flush()
-                    lt_id = lt.id
-                    setattr(instances[row_id], column_name, lt_id)
-                elif field_data[table_id_field][column_name].Field.foreign_key_table_object_id is not None:
-                    try:
-                        # TODO find a better way to deal with no value in a select
-                        # a top row is is added to all selects with an index of -99 (get_foreign_key_data)
-                        if int(data) == -99:
-                            setattr(instances[row_id], column_name, None)
-                        else:
-                            setattr(instances[row_id], column_name, int(data))
-                    except ValueError:
-                        if field_data[table_id_field][column_name].Field.foreign_key_display is None:
-                            fk_display = 'name'
-                        else:
-                            fk_display = field_data[table_id_field][column_name].Field.foreign_key_display
+                    org_data = (self.session.query(models.Organization).
+                                filter(getattr(models.Organization, org_display) == row_org_id).first())
 
-                        fk_id = []
-                        if data is not None and data != '':
-                            fk_id = self.get_foreign_key_data(field_data[table_id_field][column_name].\
-                                                              Field.foreign_key_table_object_id,
-                                                              {fk_display: data})
-
-                        if len(fk_id) > 1:
-                            setattr(instances[row_id], column_name, fk_id[1][0])
-                            data = fk_id[1][0]
-                        else:
-                            setattr(instances[row_id], column_name, None)
-                elif column_name != 'id' and column_name != 'last_modified' and column_name != 'date_created':
-                    if field_data[table_id_field][column_name].Field.data_type_id == 1:
-                        if data is None or data == '':
-                            setattr(instances[row_id], column_name, None)
-                        else:
-                            setattr(instances[row_id], column_name, int(data))
-                    elif field_data[table_id_field][column_name].Field.data_type_id == 8:
-                        if data is None or data == '':
-                            setattr(instances[row_id], column_name, None)
-                        else:
-                            setattr(instances[row_id], column_name, float(data))
-                    elif field_data[table_id_field][column_name].Field.data_type_id == 3:
-                        if data == 'y':
-                            setattr(instances[row_id], column_name, 1)
-                            data = True
-                        else:
-                            setattr(instances[row_id], column_name, 0)
-                            data = False
+                    if org_data is None:
+                        row_org_id = 1
                     else:
-                        setattr(instances[row_id], column_name, data)
+                        row_org_id = org_data.id
 
-                if column_name != 'last_modified' and column_name != 'date_created' and \
-                        not (old_fields[field] == data or old_fields[field] == str(data)):
-                    history_instance = core_models.History()
-                    history_instance.name = history_data.get_new_name()
-                    history_instance.date_created = datetime.datetime.utcnow()
-                    history_instance.last_modified = datetime.datetime.utcnow()
-                    history_instance.table_object_id = table_id_field
-                    history_instance.field_id = field_data[table_id_field][column_name].Field.id
-                    history_instance.organization_id = row_org_id[row_id]
-                    history_instance.user_id = g.user.id
-                    history_instance.instance_name = current_inst_name
-                    history_instance.old_value = old_fields[field]
-                    history_instance.new_value = data
-                    self.session.add(history_instance)
-                    self.session.flush
+                row_data['data_entry']['organization_id'] = row_org_id
+
+                row_modified[row_id] = False
+
+                for field, field_data in current_field_data.items():
+                    # only update fields that were displayed on the form
+                    if field not in row_data['data_entry'].keys():
+                        continue
+
+                    if field_data.foreign_key_table_object_id == long_text_data.id and \
+                                    row_data['data_entry'][field] != '':
+                        if row_data['old_value'][field] == '':
+                            lt = core_models.LongText()
+                            setattr(lt, 'name', long_text_data.get_new_name())
+                            setattr(lt, 'date_created', datetime.datetime.utcnow())
+                        else:
+                            lt_id = row_data['old_value'][field]
+                            lt = self.session.query(core_models.LongText).filter_by(id=lt_id).first()
+
+                        setattr(lt, 'organization_id', row_org_id)
+                        setattr(lt, 'last_modified', datetime.datetime.utcnow())
+                        setattr(lt, 'long_text', row_data['data_entry'][field])
+                        self.session.add(lt)
+                        self.session.flush()
+                        lt_id = lt.id
+                        setattr(instances[row_id], field, lt_id)
+                    elif field_data.foreign_key_table_object_id is not None:
+                        try:
+                            # TODO find a better way to deal with no value in a select
+                            # a top row is is added to all selects with an index of -99 (get_foreign_key_data)
+                            if int(row_data['data_entry'][field]) == -99:
+                                setattr(instances[row_id], field, None)
+                                row_data['data_entry'][field] = None
+                            else:
+                                setattr(instances[row_id], field, int(row_data['data_entry'][field]))
+                        except ValueError:
+                            if field_data.foreign_key_display is None:
+                                fk_display = 'name'
+                            else:
+                                fk_display = field_data.foreign_key_display
+
+                            fk_id = []
+                            if row_data['data_entry'][field] is not None and row_data['data_entry'][field] != '':
+                                fk_id = self.get_foreign_key_data(field_data.foreign_key_table_object_id,
+                                                                  {fk_display: row_data['data_entry'][field]})
+
+                            if len(fk_id) == 0:
+                                setattr(instances[row_id], field, None)
+                                row_data['data_entry'][field] = None
+                            else:
+                                setattr(instances[row_id], field, fk_id[1][0])
+                                row_data['data_entry'][field] = fk_id[1][0]
+                    elif field != 'id' and field != 'last_modified' and field != 'date_created':
+                        if row_data['data_entry'][field] is None or row_data['data_entry'][field] == '':
+                            setattr(instances[row_id], field, None)
+                        elif field_data.data_type_id == 1:
+                            setattr(instances[row_id], field, int(row_data['data_entry'][field]))
+                        elif field_data.data_type_id == 8:
+                            setattr(instances[row_id], field, float(row_data['data_entry'][field]))
+                        elif field_data.data_type_id == 3:
+                            if row_data['data_entry'][field] == 'y':
+                                setattr(instances[row_id], field, 1)
+                                row_data['data_entry'][field] = True
+                            else:
+                                setattr(instances[row_id], field, None)
+                                row_data['data_entry'][field] = None
+                        else:
+                            setattr(instances[row_id], field, row_data['data_entry'][field])
+
+                    if field != 'last_modified' and field != 'date_created' and \
+                            not (row_data['old_value'][field] == row_data['data_entry'][field] or
+                                 row_data['old_value'][field] == str(row_data['data_entry'][field]) or
+                                 (row_data['record_data']['row_name'] == 'new' and
+                                  row_data['data_entry'][field] is None)):
+
+                        if not(row_data['record_data']['row_name'] == 'new' and field in ['name', 'organization_id']):
+                            row_modified[row_id] = True
+
+                        # logging.info('field: ' + field + '  old vlaue: ' + str(row_data['old_value'][field]) +
+                        #              '  new value: ' + str(row_data['data_entry'][field]))
+
+                        history_instance = core_models.History()
+                        history_instance.name = history_data.get_new_name()
+                        history_instance.date_created = datetime.datetime.utcnow()
+                        history_instance.last_modified = datetime.datetime.utcnow()
+                        history_instance.table_object_id = table_id_field
+                        history_instance.field_id = field_data.id
+                        history_instance.organization_id = row_org_id
+                        history_instance.user_id = g.user.id
+                        history_instance.instance_name = current_inst_name
+                        history_instance.old_value = row_data['old_value'][field]
+                        history_instance.new_value = row_data['data_entry'][field]
+                        self.session.add(history_instance)
+                        self.session.flush
 
             self.session.add(history_data)
             self.session.flush()
@@ -462,10 +476,11 @@ class OrganizationAccessControl:
             row_names = []
             table_names = set()
             for row_id, instance in instances.items():
-                self.session.add(instance)
-                self.session.flush()
-                row_names.append([instance.name, instance.__tablename__])
-                table_names.add(instance.__tablename__)
+                if row_modified[row_id]:
+                    self.session.add(instance)
+                    self.session.flush()
+                    row_names.append([instance.name, instance.__tablename__])
+                    table_names.add(instance.__tablename__)
             self.session.commit()
             # change table version in cache
             current_app.cache.increment_version(list(table_names))

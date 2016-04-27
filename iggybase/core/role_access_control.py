@@ -15,6 +15,27 @@ class RoleAccessControl:
         # set user and role
         if g.user is not None and not g.user.is_anonymous:
             self.user = self.session.query(models.User).filter_by(id=g.user.id).first()
+
+            if self.user.current_user_role_id is None:
+                role_data = (self.session.query(models.Role, models.UserRole)
+                             .join(models.UserRole)
+                             .filter(models.UserRole.user_id==self.user.id).first())
+
+                if role_data is None:
+                    self.user = None
+                    self.role = None
+                    return
+
+                self.user.current_user_role_id =  role_data.UserRole.id
+                self.session.add(self.user)
+                self.session.flush()
+                self.session.commit()
+                self.role = role_data.Role
+            else:
+                self.role = (self.session.query(models.Role)
+                             .join(models.UserRole)
+                             .filter(models.UserRole.id==self.user.current_user_role_id).first())
+
             # TODO check if current user role is set, if not set
             self.role = (self.session.query(models.Role)
                          .join(models.UserRole)
