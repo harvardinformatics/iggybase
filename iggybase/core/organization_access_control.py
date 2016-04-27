@@ -301,9 +301,8 @@ class OrganizationAccessControl:
         #             logging.info(str(key1) + ' ' + str(key2) + ' ' + str(key3) + ': ' + str(value3))
 
         try:
-            for row_id, temp_data in fields.items():
-                # allows modifiction of dictionary while verifying and checking the data (e.g. name)
-                row_data = temp_data
+            for row_id in sorted(fields.keys()):
+                row_data = fields[row_id]
 
                 table_name_field = row_data['record_data']['table_name']
                 table_id_field = row_data['record_data']['table_id']
@@ -344,7 +343,7 @@ class OrganizationAccessControl:
                         instances[row_id] = self.session.query(current_table_object). \
                             filter_by(name=current_inst_name).first()
 
-                        if row_data['old_value']['date_created_'] == '':
+                        if row_data['old_value']['date_created'] == '':
                             setattr(instances[row_id], 'date_created', datetime.datetime.utcnow())
 
                     setattr(instances[row_id], 'last_modified', datetime.datetime.utcnow())
@@ -475,12 +474,18 @@ class OrganizationAccessControl:
 
             row_names = []
             table_names = set()
-            for row_id, instance in instances.items():
+            for row_id in sorted(instances.keys()):
+                instance = instances[row_id]
                 if row_modified[row_id]:
                     self.session.add(instance)
                     self.session.flush()
+
                     row_names.append([instance.name, instance.__tablename__])
                     table_names.add(instance.__tablename__)
+                elif instance.name is not None:
+                    row_names.append([instance.name, instance.__tablename__])
+                    table_names.add(instance.__tablename__)
+
             self.session.commit()
             # change table version in cache
             current_app.cache.increment_version(list(table_names))

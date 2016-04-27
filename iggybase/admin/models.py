@@ -666,7 +666,7 @@ class ActionValue(Base):
     action_id = Column(Integer, ForeignKey('action.id'))
 
     field = relationship("Field")
-    action = relationship("Action", backerf='action_values')
+    action = relationship("Action", backref='action_values')
     
 
     def __repr__(self):
