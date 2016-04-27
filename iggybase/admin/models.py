@@ -143,29 +143,12 @@ class Facility(Base):
                (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
 
 
-class Menu(Base):
-    table_type = 'admin'
-    parent_id = Column(Integer, ForeignKey('menu.id'))
-    menu_type_id = Column(Integer, ForeignKey('menu_type.id'))
-    module_id = Column(Integer, ForeignKey('module.id'))
-    url_path = Column(String(512), unique=True)
-    url_params = Column(String(1024))  ## Stored as JSON
-
-    parent = relationship('Menu', remote_side='Menu.id')
-    children = relationship('Menu')
-    menu_menu_type = relationship("MenuType", foreign_keys=[menu_type_id])
-    menu_module = relationship("Module", foreign_keys=[module_id])
-
-    def __repr__(self):
-        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
-               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
-
-
 class MenuRole(Base):
     table_type = 'admin'
     role_id = Column(Integer, ForeignKey('role.id'))
     menu_id = Column(Integer, ForeignKey('menu.id'))
     menu_class = Column(String(100))
+    display_name = Column(String(50))
 
     menu_role_role = relationship(
         "Role", foreign_keys=[role_id])
@@ -189,17 +172,17 @@ class Route(Base):
                (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
 
 
-class MenuNew(Base):
+class Menu(Base):
     table_type = 'admin'
-    parent_id = Column(Integer, ForeignKey('menu_new.id'))
+    parent_id = Column(Integer, ForeignKey('menu.id'))
     menu_type_id = Column(Integer, ForeignKey('menu_type.id'))
     route_id = Column(Integer, ForeignKey('route.id'))
     url_params = Column(String(1024))  ## Stored as JSON
     dynamic_suffix = Column(String(255))
     display_name = Column(String(50))
 
-    parent = relationship('MenuNew', remote_side='MenuNew.id')
-    children = relationship('MenuNew')
+    parent = relationship('Menu', remote_side='Menu.id')
+    children = relationship('Menu')
     menu_new_menu_type = relationship("MenuType", foreign_keys=[menu_type_id])
     menu_new_route = relationship("Route", foreign_keys=[route_id])
 
@@ -584,14 +567,14 @@ class EventType(Base):
 
 class Event(Base):
     """Events are triggered by one of: database action (new, updated, or deleted
-    records), workflow steps, or timed periodic. Each event has one or more assiciated 
+    records), workflow steps, or timed periodic. Each event has one or more assiciated
     actions. Event is a base class for all types of events.
     """
     table_type = 'admin'
     event_type_id = Column(Integer, ForeignKey('event_type.id'))
 
     event_type = relationship("EventType")
-    
+
 
 class DatabaseEvent(Event):
     """Database events.
@@ -611,28 +594,28 @@ class DatabaseEvent(Event):
 
     def __repr__(self):
         return "<DatabaseEvent(id=%s, name=%s, description=%s, active=%s, table_object=%s, field=%s, event_type=%s" % \
-            (self.id, self.name, 
-             repr(getattr(self, 'description', None)), self.active, 
+            (self.id, self.name,
+             repr(getattr(self, 'description', None)), self.active,
              self.table_object.name, repr(getattr(self, 'field.name', None)),
              self.event_type.name)
-             
 
-    
+
+
 class ActionType(Base):
     """Action types: 'email', 'alert', workflow_step, ...
     """
-    table_type = 'admin'    
+    table_type = 'admin'
 
-    
+
 
 class Action(Base):
     """Actions taken for a specific event. Events can have multiple actions
     This is a base class.
     """
-    table_type = 'admin'        
+    table_type = 'admin'
     action_type_id = Column(Integer, ForeignKey('action_type.id'))
     event_id = Column(Integer, ForeignKey('event.id'))
-             
+
     action_type = relationship('ActionType')
     event = relationship("Event", backref='actions')
 
@@ -642,14 +625,14 @@ class Action(Base):
              self.table_object.name)
 
 class EmailAction(Action):
-    table_type = 'admin'        
+    table_type = 'admin'
     id = Column(Integer, ForeignKey('action.id'), primary_key=True)
     text = Column(String(1024))
     subject = Column(String(100))
     email_recipients = Column(String(1024)) # csv email@addresses
     email_cc = Column(String(1024)) # csv email@addresses
     email_bcc = Column(String(1024))
-                       
+
     def __repr__(self):
         return "<EmailAction(name=%s, id=%s>" % \
             (self.name, self.id)
@@ -660,7 +643,7 @@ class ActionValue(Base):
     For example, ... {{ name }} ... would have a context of
     {'name': valueof(table_object.field)}.
     """
-    table_type = 'admin'        
+    table_type = 'admin'
     action_id = Column(Integer, ForeignKey('action.id'))
     table_object_id = Column(Integer, ForeignKey('table_object.id'))
     field_id = Column(Integer, ForeignKey('field.id'))
@@ -668,13 +651,13 @@ class ActionValue(Base):
 
     field = relationship("Field")
     action = relationship("Action", backref='action_values')
-    
+
 
     def __repr__(self):
         return "<ActionValue(name=%s, id=%d, action_id=%d, table_object_id=%d, field_id=%d)>" % \
                (self.name, self.id, self.action_id, self.table_object_id, self.field_id)
-             
-    
+
+
 @lm.user_loader
 def load_user(id):
     return User.query.get(int(id))
