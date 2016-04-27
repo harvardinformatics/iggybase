@@ -109,8 +109,9 @@ class Level(Base):
     table_type = 'admin'
 
     def __repr__(self):
-        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
-               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+        return "<%s(class=%s, name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
+               (self.__class__, self.name, self.description, self.id, self.organization_id,
+                getattr(self, 'order', None))
 
 
 class Role(Base, RoleMixin):
