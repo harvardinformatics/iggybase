@@ -13,7 +13,6 @@ from werkzeug.wsgi import DispatcherMiddleware
 from iggybase.extensions import mail, lm, bootstrap
 from iggybase.admin import models
 from iggybase.cache import Cache
-from iggybase.admin.events import StartEvents
 from iggybase.database import db, init_db, db_session
 from event_action import init_app as init_act_mgr
 import logging
@@ -47,14 +46,16 @@ def configure_extensions( app, db ):
     mail.init_app( app )
     init_act_mgr(app, db_session)
 
-    # Configure actions
-    StartEvents().configure(db_session)
-    
 
     # configure Flask Security
     user_datastore = SQLAlchemyUserDatastore(db, models.User, models.Role)
     security = Security(app, user_datastore, login_form = ExtendedLoginForm,
             register_form = ExtendedRegisterForm)
+
+    # Configure actions - the import statement has to be here since it
+    # can't preceed the user datastor setup.
+    from iggybase.admin.events import StartEvents
+    StartEvents().configure(db_session)
 
     return security, user_datastore
 

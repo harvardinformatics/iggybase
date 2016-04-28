@@ -372,8 +372,9 @@ class EmailAction(Action):
 
     def get_body(self, **kwargs):
         """
-        body is a dict: 
-            { 'text', template_data, 'context': { ... } }
+        Body consists of text and context as:
+            {'body': { 'text': ..., 'context': ... }}
+
         """
         if hasattr(self, 'body'):
             return self.render_from_text(getattr(self, 'body', None))
@@ -419,8 +420,6 @@ class EmailAction(Action):
                 else:
                     setattr(msg, tail, result)
 
-        import pdb
-        pdb.set_trace()
         mail = Mail(current_app)
         mail.connect()
         mail.send(msg)
@@ -433,7 +432,7 @@ class EmailAction(Action):
 
     def render_from_text(self, ctx):
         """
-        ctx is { 'text', 'context': { ... } }
+        ctx is { 'text': ...,  'context': { ... } }
         """
         from jinja2 import Template
 

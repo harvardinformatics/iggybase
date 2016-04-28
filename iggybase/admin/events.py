@@ -1,4 +1,5 @@
 from iggybase.admin.models import DatabaseEvent, EmailAction, ActionValue
+from iggybase.utilities import get_table
 from event_action import EmailAction
 
 class StartEvents(object):
@@ -14,24 +15,28 @@ class StartEvents(object):
             ctx = {}
             for act in actions:
                 if act.action_type.name == 'email':
-                    for val in action_values:
-                        value = query(table_object.name.__class__.field.name).first()
-                        ctx[val.name] =  value
-                        kwargs = {'text': act.text,
-                                  'ctx': ctx,
-                                  'subject': act.subject,
-                                  'email_recipients': act.email_recipients}
+                    for action_val in action_values:
+                        try:
+                            table = action_valget_table(table_object.name)
+                            query_obj = getattr(table, action_val.field.name)
+                        except:
+                            raise ValueError(' cannot load table %s' % table_object.name)
+                        value = db_session.query(query_obj).first()
+                        ctx[action_val.name] =  value
+                    kwargs = {'body': {'text': act.text, 'context': ctx },
+                              'subject': act.subject,
+                              'email_recipients': act.email_recipients}
 
-                        if act.email_cc:
-                            kwargs['cc'] = act.email_cc
-                        if act.email_bcc:
-                            kwargs['bcc'] = act.email_cc
+                    if act.email_cc:
+                        kwargs['cc'] = act.email_cc
+                    if act.email_bcc:
+                        kwargs['bcc'] = act.email_cc
 
-                        e_action = EmailAction(db_event.table_object.name,
-                                               db_event.field.field_name,
-                                               db_event.event_type.name,
-                                               **kwargs)
-                        actions.append(e_action)
-            
+                    e_action = EmailAction(db_event.table_object.name,
+                                           db_event.field.field_name,
+                                           db_event.event_type.name,
+                                           **kwargs)
+                    actions.append(e_action)
+
                                    
         

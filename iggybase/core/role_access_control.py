@@ -269,14 +269,14 @@ class RoleAccessControl:
         Menus are recursive.
         """
         # TODO: do we need to query for this or can we just use constant
-        navbar_root = self.session.query(models.MenuNew). \
+        navbar_root = self.session.query(models.Menu). \
             filter_by(name=admin_consts.MENU_NAVBAR_ROOT).first()
         navbar = self.get_menu_items(navbar_root.id, active)
 
         # add facility role change options to navbar
         navbar['Role'] = self.make_role_menu()
 
-        sidebar_root = self.session.query(models.MenuNew). \
+        sidebar_root = self.session.query(models.Menu). \
             filter_by(name=admin_consts.MENU_SIDEBAR_ROOT).first()
         sidebar = self.get_menu_items(sidebar_root.id, active)
         return navbar, sidebar
@@ -360,15 +360,15 @@ class RoleAccessControl:
 
     def get_menu_items(self, parent_id, active=1):
         menu = OrderedDict()
-        items = (self.session.query(models.MenuNew, models.Route, models.MenuRole, models.Module)
-                 .join(models.MenuRole, models.MenuRole.menu_id==models.MenuNew.id)
-                 .outerjoin(models.Route, models.MenuNew.route_id==models.Route.id)
+        items = (self.session.query(models.Menu, models.Route, models.MenuRole, models.Module)
+                 .join(models.MenuRole, models.MenuRole.menu_id==models.Menu.id)
+                 .outerjoin(models.Route, models.Menu.route_id==models.Route.id)
                  .outerjoin(models.Module, models.Route.module_id==models.Module.id)
             .filter(
                 models.MenuRole.role_id == self.role.id,
                 models.MenuRole.active == active,
-                models.MenuNew.parent_id == parent_id,
-                models.MenuNew.active == active
+                models.Menu.parent_id == parent_id,
+                models.Menu.active == active
             ).order_by(models.MenuRole.order, models.MenuRole.description).all())
 
         for item in items:
@@ -378,22 +378,22 @@ class RoleAccessControl:
                     url = self.facility.name + '/' + item.Module.name + '/' + item.Route.url_path
                 else:
                     url = item.Module.name + '/' + item.Route.url_path
-                if url and item.MenuNew.dynamic_suffix:
-                    url += '/' + item.MenuNew.dynamic_suffix
+                if url and item.Menu.dynamic_suffix:
+                    url += '/' + item.Menu.dynamic_suffix
 
-                if url and item.MenuNew.url_params:
-                    url += item.MenuNew.url_params
+                if url and item.Menu.url_params:
+                    url += item.Menu.url_params
 
                 if url:
                     url = request.url_root + url
                 else:
                     url = '#'
 
-            menu[item.MenuNew.name] = {
+            menu[item.Menu.name] = {
                     'url': url,
-                    'title': item.MenuNew.display_name,
+                    'title': item.Menu.display_name,
                     'class': None,
-                    'subs': self.get_menu_items(item.MenuNew.id, active)
+                    'subs': self.get_menu_items(item.Menu.id, active)
             }
         return menu
 
