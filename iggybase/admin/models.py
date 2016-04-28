@@ -255,6 +255,9 @@ class PageForm(Base):
     page_title = Column(String(50))
     page_header = Column(String(50))
     page_template = Column(String(100))
+    parent_id = Column(Integer, ForeignKey('page_form.id'))
+
+    parent = relation('PageForm', remote_side="PageForm.id", foreign_keys=[parent_id])
 
     def __repr__(self):
         return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
