@@ -23,41 +23,57 @@ class OrganizationAccessControl:
         self.session = db_session()
 
         if g.user is not None and not g.user.is_anonymous:
+            role_access_control = util.get_role_access_control()
+
             self.user =  self.session.query(models.User).filter_by(id=g.user.id).first()
             query = self.session.query(models.Organization.parent_id.distinct().label('parent_id'))
             self.parent_orgs = [row.parent_id for row in query.all()]
 
+            facility_root_org_id = role_access_control.facility.root_organization_id
+
             user_orgs = self.session.query(models.UserOrganization).filter_by(active=1, user_id=self.user.id).all()
 
+            facility_orgs = {}
             for user_org in user_orgs:
                 if user_org.user_organization_id is not None:
-                    self.get_child_organization(user_org.user_organization_id)
-                    if user_org.default_organization == 1:
-                        self.current_org_id = user_org.user_organization_id
+                    level = self.get_facility_orgs(user_org.user_organization_id, facility_root_org_id, 0)
+                    if level is not None:
+                        facility_orgs[user_org.user_organization_id] = level
+
+            self.current_org_id = user_org
+            min_level = None
+            for user_org, level in facility_orgs.items():
+                logging.info('facility_orgs: ' + str(user_org))
+                if min_level is None or (level < min_level and user_org != self.user.organization_id):
+                    min_level = level
+                    self.current_org_id = user_org
+                self.get_child_organization(user_org)
+
+            logging.info('self.current_org_id: ' + str(self.current_org_id))
         else:
             self.user = None
 
     def __del__ (self):
         self.session.commit()
 
-    def get_org_managers(self, org_id, parents = False):
-        parent_orgs = self.get_parent_organization(self.current_org_id)
+    def get_facility_orgs(self, org_id, root_org_id, level):
+        level += 1
 
-        pass
+        if org_id == root_org_id:
+            return level
 
-    def get_parent_organization(self, parent_organization_id):
-        role_access_control = util.get_role_access_control()
-        self.org_ids.append(parent_organization_id)
-        child_orgs = self.session.query(models.Organization).filter_by(parent_id=parent_organization_id).all()
-        for child_org in child_orgs:
-            if child_org.id in self.parent_orgs:
-                self.get_child_organization(child_org.id)
-            else:
-                self.org_ids.append(child_org.id)
-        return
+        root_org = self.session.query(models.Organization).filter_by(id=org_id).first()
+
+        if root_org is None:
+            return None
+        elif root_org.parent_id is None:
+            return None
+        else:
+            return self.get_facility_orgs(root_org.parent_id, root_org_id, level)
 
     def get_child_organization(self, parent_organization_id):
         self.org_ids.append(parent_organization_id)
+        logging.info('child_org: ' + str(parent_organization_id))
         child_orgs = self.session.query(models.Organization).filter_by(parent_id=parent_organization_id).all()
         for child_org in child_orgs:
             if child_org.id in self.parent_orgs:

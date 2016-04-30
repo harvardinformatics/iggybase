@@ -68,6 +68,7 @@ class RoleAccessControl:
             self.role = None
             self.routes = []
             self.level_id = None
+            self.facility = None
 
     def __del__(self):
         self.session.commit()
@@ -369,7 +370,7 @@ class RoleAccessControl:
                 models.MenuRole.active == active,
                 models.Menu.parent_id == parent_id,
                 models.Menu.active == active
-            ).order_by(models.MenuRole.order, models.MenuRole.description).all())
+            ).order_by(models.MenuRole.order, models.MenuRole.display_name, models.Menu.display_name).all())
 
         for item in items:
             url = ''
