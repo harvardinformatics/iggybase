@@ -1,4 +1,4 @@
-from flask import request, jsonify, abort, g, render_template, url_for, current_app, redirect
+from flask import request, jsonify, abort, g, render_template, current_app, redirect
 from flask.ext.security import login_required
 from flask.ext import excel
 import json
@@ -323,10 +323,8 @@ def workflow_item_group(facility_name, workflow_name, step, work_item_group):
     wig = WorkItemGroup(work_item_group)
     if 'next_step' in request.form:
         wig.set_saved(json.loads(request.form['saved_rows']))
-        next_step = wig.next_step()
-        url = url_for(wig.Module.name + '.workflow_item_group', facility_name = g.facility, workflow_name
-                = 'order', step = next_step, work_item_group = work_item_group)
-        return redirect(url)
+        next_step_url = wig.next_step()
+        return redirect(next_step_url)
     dynamic_vars = {}
     table_name = ''
     dynamic_params = wig.set_dynamic_params()

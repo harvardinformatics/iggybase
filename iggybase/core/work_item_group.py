@@ -1,5 +1,6 @@
-from flask import request, g
+from flask import request, g, url_for
 import json
+from collections import OrderedDict
 from iggybase.core.organization_access_control import OrganizationAccessControl
 from iggybase import utilities as util
 import iggybase.templating as templating
@@ -21,7 +22,7 @@ class WorkItemGroup:
         self.saved_rows = {}
         self.get_work_item_group()
         self.work_items = self.rac.work_items(self.WorkItemGroup.id)
-        self.workflow_steps = self.rac.workflow_steps(self.Workflow.id)
+        self.workflow_steps = self.get_workflow_steps()
 
     def get_work_item_group(self):
         wig = self.rac.work_item_group(self.name)
@@ -75,7 +76,8 @@ class WorkItemGroup:
         if not success:
             logging.error('Workflow: next step failed.  Work Item Group: ' +
                     self.WorkItemGroup.name + ' Step: ' + self.Step.name)
-        return next_step
+
+        return self.get_link(self.Module.name, g.facility, self.Workflow.name, next_step, self.WorkItemGroup.name)
 
     def get_oac(self):
         if not self.oac:
@@ -99,6 +101,22 @@ class WorkItemGroup:
         if not 'row_name' in dynamic_params:
             dynamic_params['row_name'] = 'new'
         return dynamic_params
+
+    def get_workflow_steps(self):
+        work_steps = OrderedDict()
+        res = self.rac.workflow_steps(self.Workflow.id)
+        for step in res:
+            url = self.get_link(self.Module.name, g.facility, self.Workflow.name, step.order, self.WorkItemGroup.name)
+            current = False
+            if step.name == self.Step.name:
+                current = True
+            work_steps[step.name] = {'url': url, 'num':step.order,
+                    'current':current}
+        return work_steps
+
+    def get_link(self, module, facility, workflow_name, step, work_item_group_name):
+        return url_for(module + '.workflow_item_group', facility_name = facility, workflow_name = workflow_name,
+                step = step, work_item_group = work_item_group_name)
 
 
     '''

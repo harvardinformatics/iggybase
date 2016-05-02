@@ -1,8 +1,12 @@
 {% extends template %}
 {% import "bootstrap/wtf.html" as wtf %}
 {% import 'macros.html' as macros %}
-{% block title %}{{ page_title }}{% endblock %}
+{% block styles %}
+    {{ super() }}
+    <link href="{{ url_for('static', filename='work_item_group.css') }}" rel="stylesheet">
+{%- endblock styles %}
 
+{% block title %}{{ page_title }}{% endblock %}
 {% block content_title -%}
     <div class="content_title">
         <h1>Workflow {{wig.Workflow.name|title}}</h1>
@@ -24,17 +28,21 @@
         {{ macros.render_buttons( bottom_buttons ) }}
     </div>
     <hr>
-    <h3>Workflow Navigation</h3>
     <div class="workflow_buttons">
         <form action="" enctype="multipart/form-data" class="form form-horizontal" method="post" role="form">
             <input type="hidden" name="saved_rows" value="{{wig.saved_rows}}">
             {{ macros.render_buttons( wig.buttons ) }}
         </form>
     </div>
+    <br><br>
     <div>
-        <ul>
-            {% for step in wig.workflow_steps %}
-                <li><a href=#>{{step.order}}</a></li>
+        <ul class='breadcrumbs'>
+            {% for name, step in wig.workflow_steps.items() %}
+            <li><a href='{{step['url']}}'
+                {% if step['current'] %}
+                    class='current'
+                {% endif %}
+                >{{step['num']}}</a></li>
             {% endfor %}
         </ul>
     </div>
