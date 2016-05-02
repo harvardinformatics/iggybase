@@ -241,18 +241,22 @@ class FormGenerator():
         if row_name != 'new':
             data = self.organization_access_control.get_entry_data(self.table_data.name, {'name': str(row_name)})
             if data:
+                # logging.info('data is true')
                 data = data[0]
 
                 if type(data) is list:
-                    # logging.info('data is none')
+                    # logging.info('data[0] is none')
                     data = None
                     row_name = 'new'
-
+            else:
+                data = None
+                row_name = 'new'
+                
         for field in fields:
             # logging.info(str(field.Field.id) + " " + field.Field.field_name +': ' + field.FieldRole.display_name)
             value = None
             if row_name != 'new' and data is not None:
-                if  field.FieldRole.display_name in data.keys():
+                if field.FieldRole.display_name in data.keys():
                     value = data[data.keys().index(field.FieldRole.display_name)]
 
             if value is None:

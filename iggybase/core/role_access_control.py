@@ -94,7 +94,7 @@ class RoleAccessControl:
             order_by(models.FieldRole.order, models.FieldRole.display_name).all()
 
         if res is None:
-            return []
+            return {'Field': {}, 'FieldRole': {}}
         else:
             return res
 
