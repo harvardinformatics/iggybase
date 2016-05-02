@@ -41,8 +41,6 @@ def get_field_attr(field, table_query_field, attr):
     if table_query_field and getattr(table_query_field, attr):
         value = getattr(table_query_field, attr)
     else:
-        if attr == 'display_name':
-            attr = 'field_name'
         value = getattr(field, attr)
     return value
 
