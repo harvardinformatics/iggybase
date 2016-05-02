@@ -94,6 +94,9 @@ class OrganizationAccessControl:
                 columns.append(getattr(table_object, row.Field.display_name).\
                                label(row.Field.display_name))
 
+            if len(columns) == 0:
+                return results
+            
             criteria = [getattr(table_object, 'organization_id').in_(self.org_ids)]
 
             for key, value in params.items():

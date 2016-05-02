@@ -30,6 +30,11 @@ class FormGenerator():
             # logging.info('input_field value: ' + str(value))
             kwargs['default'] = value
 
+        if field_data.FieldRole.display_name == '':
+            display_name = field_data.Field.display_name
+        else:
+            display_name = field_data.FieldRole.display_name
+
         # no validators or classes attached to hidden fields, as it could cause issues
         # e.g. an empty hidden required field
         if field_data.FieldRole.visible != constants.VISIBLE:
@@ -69,7 +74,7 @@ class FormGenerator():
             if value is not None:
                 kwargs['default'] = value
 
-            return IggybaseSelectField(field_data.FieldRole.display_name, **kwargs)
+            return IggybaseSelectField(display_name, **kwargs)
         elif field_data.Field.foreign_key_table_object_id is not None:
             long_text = self.role_access_control.has_access("TableObject", {'name': 'long_text'})
             if long_text.id == field_data.Field.foreign_key_table_object_id:
@@ -77,7 +82,7 @@ class FormGenerator():
                     lt_row = self.organization_access_control.get_long_text(value)
                     kwargs['default'] = lt_row.long_text
 
-                return IggybaseTextAreaField(field_data.FieldRole.display_name, **kwargs)
+                return IggybaseTextAreaField(display_name, **kwargs)
             else:
                 choices = self.organization_access_control.\
                     get_foreign_key_data(field_data.Field.foreign_key_table_object_id)
@@ -90,7 +95,7 @@ class FormGenerator():
                             get_foreign_key_data(field_data.Field.foreign_key_table_object_id, {'id': value})
                         kwargs['default'] = value[1][1]
 
-                    return IggybaseLookUpField(field_data.FieldRole.display_name, **kwargs)
+                    return IggybaseLookUpField(display_name, **kwargs)
                 else:
                     kwargs['coerce'] = int
                     kwargs['choices'] = choices
@@ -98,24 +103,24 @@ class FormGenerator():
                     if value is not None:
                         kwargs['default'] = value
 
-                    return IggybaseSelectField(field_data.FieldRole.display_name, **kwargs)
+                    return IggybaseSelectField(display_name, **kwargs)
         elif field_data.Field.data_type_id == constants.INTEGER:
-            return IggybaseIntegerField(field_data.FieldRole.display_name, **kwargs)
+            return IggybaseIntegerField(display_name, **kwargs)
         elif field_data.Field.data_type_id == constants.FLOAT:
-            return IggybaseFloatField(field_data.FieldRole.display_name, **kwargs)
+            return IggybaseFloatField(display_name, **kwargs)
         elif field_data.Field.data_type_id == constants.BOOLEAN:
             self.classattr['bool_' + control_id]=HiddenField('bool_' + control_id, default=value)
-            return IggybaseBooleanField(field_data.FieldRole.display_name, **kwargs)
+            return IggybaseBooleanField(display_name, **kwargs)
         elif field_data.Field.data_type_id == constants.DATE:
-            return IggybaseDateField(field_data.FieldRole.display_name, **kwargs)
+            return IggybaseDateField(display_name, **kwargs)
         elif field_data.Field.data_type_id == constants.PASSWORD:
-            return IggybasePasswordField(field_data.FieldRole.display_name, **kwargs)
+            return IggybasePasswordField(display_name, **kwargs)
         elif field_data.Field.data_type_id == constants.FILE:
-            return IggybaseFileField(field_data.FieldRole.display_name, **kwargs)
+            return IggybaseFileField(display_name, **kwargs)
         elif field_data.Field.data_type_id == constants.TEXT_AREA:
-            return IggybaseTextAreaField(field_data.FieldRole.display_name, **kwargs)
+            return IggybaseTextAreaField(display_name, **kwargs)
         else:
-            return IggybaseStringField(field_data.FieldRole.display_name, **kwargs)
+            return IggybaseStringField(display_name, **kwargs)
 
     def empty_form(self):
         newclass = new_class('EmptyForm', (Form,))
@@ -256,8 +261,8 @@ class FormGenerator():
             # logging.info(str(field.Field.id) + " " + field.Field.field_name +': ' + field.FieldRole.display_name)
             value = None
             if row_name != 'new' and data is not None:
-                if field.FieldRole.display_name in data.keys():
-                    value = data[data.keys().index(field.FieldRole.display_name)]
+                if field.Field.display_name in data.keys():
+                    value = data[data.keys().index(field.Field.display_name)]
 
             if value is None:
                 # logging.info(field.Field.field_name+': None')
