@@ -46,7 +46,6 @@ def configure_extensions( app, db ):
     mail.init_app( app )
     init_act_mgr(app, db_session)
 
-
     # configure Flask Security
     user_datastore = SQLAlchemyUserDatastore(db, models.User, models.Role)
     security = Security(app, user_datastore, login_form = ExtendedLoginForm,
@@ -120,7 +119,7 @@ def configure_hook( app ):
         path = request.path.split('/')
 
         # TODO: consider caching this for the session
-        ignore_facility = ['static', 'logout', 'home']
+        ignore_facility = ['static', 'logout', 'home', 'favicon.ico']
         if (current_user.is_authenticated and path and path[1] not in ignore_facility):
             import iggybase.core.role_access_control as rac
 
@@ -130,7 +129,6 @@ def configure_hook( app ):
             role_access = rac.RoleAccessControl()
             g.rac = role_access
             access = role_access.has_facility_access(path[1])
-
             if not access:
                 if path[1] in role_access.facilities:
                     role_access.change_role(role_access.facilities[path[1]])

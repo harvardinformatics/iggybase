@@ -488,7 +488,7 @@ class OrganizationAccessControl:
             self.session.add(history_data)
             self.session.flush()
 
-            row_names = []
+            row_names = {}
             table_names = set()
             for row_id in sorted(instances.keys()):
                 instance = instances[row_id]
@@ -496,10 +496,10 @@ class OrganizationAccessControl:
                     self.session.add(instance)
                     self.session.flush()
 
-                    row_names.append([instance.name, instance.__tablename__])
+                    row_names[row_id] = {'name': instance.name, 'table': instance.__tablename__}
                     table_names.add(instance.__tablename__)
                 elif instance.name is not None:
-                    row_names.append([instance.name, instance.__tablename__])
+                    row_names[row_id] = {'name': instance.name, 'table': instance.__tablename__}
                     table_names.add(instance.__tablename__)
 
             self.session.commit()
@@ -567,3 +567,53 @@ class OrganizationAccessControl:
             else:
                 self.session.rollback()
         return updated
+
+    def update_step(self, group_id, step, workflow_id):
+        table_model = util.get_table('work_item_group')
+        res = (self.session.query(models.Workflow, models.Step).
+               join(models.Step).
+               filter(models.Step.order == step, models.Workflow.id ==
+                   workflow_id).first())
+        step_id = res.Step.id
+        work_item_group = table_model.query.filter(table_model.id == group_id, getattr(table_model, 'organization_id').in_(self.org_ids)).first()
+        updated = False
+        try:
+            setattr(work_item_group, 'step_id', res.Step.id)
+            updated = True
+        except AttributeError:
+            pass
+        if updated:
+            self.session.commit()
+        return updated
+
+    def save_work_items(self, work_item_group_id, save_items):
+        table_model = util.get_table('work_item')
+        work_item_table_object = self.session.query(models.TableObject).filter_by(name='work_item').first()
+        table_object_id = None
+        success = False
+        try:
+            for item in save_items:
+                table_object_id = self.session.query(models.TableObject.id).filter_by(name=item['table']).first()[0]
+                new_name = work_item_table_object.get_new_name()
+                new_row = table_model(name= new_name, active=1,
+                        organization_id=1, work_item_group_id = work_item_group_id,
+                        table_object_id = table_object_id, row_id = item['id'])
+                self.session.add(new_row)
+        except:
+            print('rollback')
+            self.session.rollback()
+        else:
+            print('commit')
+            self.session.commit()
+            success = True
+        return success
+
+    def get_step_actions(self, step_id):
+        return self.session.query(models.StepAction).filter_by(step_id=step_id).all()
+
+    def get_attr_from_id(self, table_object_id, row_id, attr):
+        table_object = self.session.query(models.TableObject).filter_by(id=table_object_id).first()
+        table_model = util.get_table(table_object.name)
+        row = self.session.query(table_model).filter_by(id=row_id).first()
+        return getattr(row, attr)
+

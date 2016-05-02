@@ -1,4 +1,4 @@
-from flask import request, jsonify, abort, g, redirect,url_for, current_app
+from flask import request, jsonify, abort, g, render_template, url_for, current_app, redirect
 from flask.ext.security import login_required
 from flask.ext import excel
 import json
@@ -7,11 +7,12 @@ import time
 from . import core
 import iggybase.form_generator as form_generator
 from iggybase import utilities as util
-from iggybase.cached import cached
+from iggybase.decorators import cached, templated
 from iggybase import forms
 import iggybase.templating as templating
 from iggybase.core.organization_access_control import OrganizationAccessControl
 from .table_query_collection import TableQueryCollection
+from .work_item_group import WorkItemGroup
 import logging
 
 MODULE_NAME = 'core'
@@ -24,6 +25,7 @@ def default(facility_name):
 
 @core.route('/summary/<table_name>/')
 @login_required
+@templated('summary')
 def summary(facility_name, table_name):
     page_form = template = 'summary'
     return build_summary(table_name, page_form, template)
@@ -37,6 +39,7 @@ def summary_ajax(facility_name, table_name, page_form='summary', criteria={}):
 
 @core.route('/action_summary/<table_name>/', methods=['GET', 'POST'])
 @login_required
+@templated('action_summary')
 def action_summary(facility_name, table_name):
     page_form = 'summary'
     template = 'action_summary'
@@ -48,7 +51,6 @@ def action_summary(facility_name, table_name):
 def action_summary_ajax(facility_name, table_name, page_form='summary',
                         criteria={}):
     return build_summary_ajax(table_name, page_form, criteria)
-
 
 @core.route('/detail/<table_name>/<row_name>')
 @login_required
@@ -217,6 +219,7 @@ def change_role(facility_name):
 
 @core.route('/data_entry/<table_name>/<row_name>/', methods=['GET', 'POST'])
 @login_required
+@templated('single_data_entry')
 def data_entry(facility_name, table_name, row_name):
     module_name = MODULE_NAME
     rac = util.get_role_access_control()
@@ -234,7 +237,7 @@ def data_entry(facility_name, table_name, row_name):
 
         return saved_data(facility_name, module_name, table_name, row_names)
 
-    return templating.page_template('single_data_entry',
+    return templating.page_template_context('single_data_entry',
                                     module_name=module_name, form=form, table_name=table_name)
 
 
@@ -247,7 +250,6 @@ def multiple_entry(facility_name, table_name):
 
     if not table_data:
         abort(403)
-
     row_names = json.loads(request.args.get('row_names'))
 
     fg = form_generator.FormGenerator(table_name)
@@ -298,6 +300,44 @@ def cache(facility_name):
             form=form,
             value=value)
 
+@core.route('/workflow/<table_name>/')
+@login_required
+@templated('summary')
+def workflow(facility_name, table_name):
+    table_name = 'work_item_group'
+    page_form = 'summary'
+    template = 'workflow_summary'
+    return build_summary(table_name, page_form, template)
+
+@core.route('/workflow/<table_name>/ajax')
+@login_required
+def workflow_summary_ajax(facility_name, table_name, page_form='summary',
+                        criteria={}):
+    criteria = {'work_item_group.workflow':table_name}
+    table_name = 'work_item_group'
+    return action_summary_ajax(facility_name, table_name, page_form, criteria)
+
+@core.route('/workflow/<workflow_name>/<step>/<work_item_group>', methods=['GET', 'POST'])
+@login_required
+def workflow_item_group(facility_name, workflow_name, step, work_item_group):
+    wig = WorkItemGroup(work_item_group)
+    if 'next_step' in request.form:
+        wig.set_saved(json.loads(request.form['saved_rows']))
+        next_step = wig.next_step()
+        url = url_for(wig.Module.name + '.workflow_item_group', facility_name = g.facility, workflow_name
+                = 'order', step = next_step, work_item_group = work_item_group)
+        return redirect(url)
+    dynamic_vars = {}
+    table_name = ''
+    dynamic_params = wig.set_dynamic_params()
+    func = globals()[wig.Route.url_path]
+    context = func(**dynamic_params)
+    wig.get_buttons(context['bottom_buttons'])
+    if 'saved_rows' in context:
+        wig.set_saved(context['saved_rows'])
+    context['wig'] = wig
+    return render_template('work_item_group.html', **context)
+
 """ helper functions start """
 
 
@@ -307,7 +347,7 @@ def build_summary(table_name, page_form, template, form=None):
     # if nothing to display then page not found
     if not tq.fc.fields:
         abort(404)
-    return templating.page_template(template,
+    return templating.page_template_context(template,
                                     module_name=MODULE_NAME,
                                     form=form,
                                     table_name=table_name,
@@ -324,7 +364,6 @@ def build_summary_ajax(table_name, page_form, criteria):
     )
     ret = current_app.cache.get(key)
     if not ret:
-        print('NOT')
         tqc = TableQueryCollection(page_form, table_name, criteria)
         current = time.time()
         print(str(current - start))
@@ -344,23 +383,31 @@ def build_summary_ajax(table_name, page_form, criteria):
         current_app.cache.set(key, ret, (24 * 60 * 60), [table_name])
     return ret
 
-
 def saved_data(facility_name, module_name, table_name, row_names):
     msg = 'Saved: '
     error = False
-    for row_name in row_names:
-        if row_name[0] == 'error':
+    saved_rows = {}
+    for id, row_info in row_names.items():
+        if row_info['name'] == 'error':
 
-            msg = 'Error: %s,' % str(row_name[1]).replace('<', '').replace('>', '')
+            msg = 'Error: %s,' % str(row_info['table']).replace('<', '').replace('>', '')
             error = True
         else:
-            table = urllib.parse.quote(row_name[1])
-            name = urllib.parse.quote(row_name[0])
+            table = urllib.parse.quote(row_info['table'])
+            name = urllib.parse.quote(row_info['name'])
             msg += ' <a href=' + request.url_root + facility_name + '/' + module_name + '/detail/' + table + '/' + name + '>' + \
-                   row_name[0] + '</a>,'
-
+                   row_info['name'] + '</a>,'
+            # TODO: allow this to support data saving by other than name
+            if not table in saved_rows:
+                saved_rows[table] = []
+            saved_rows[table].append({
+                    'column': 'name',
+                    'value': name,
+                    'id': id,
+                    'table': table
+            })
     msg = msg[:-1]
     if error:
-        return templating.page_template('error_message', module_name=module_name, table_name=table_name, page_msg=msg)
+        return templating.page_template_context('error_message', module_name=module_name, table_name=table_name, page_msg=msg)
     else:
-        return templating.page_template('save_message', module_name=module_name, table_name=table_name, page_msg=msg)
+        return templating.page_template_context('save_message', module_name=module_name, table_name=table_name, page_msg=msg, saved_rows=json.dumps(saved_rows))

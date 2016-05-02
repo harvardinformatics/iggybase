@@ -1,0 +1,34 @@
+{% extends template %}
+{% import "bootstrap/wtf.html" as wtf %}
+{% import 'macros.html' as macros %}
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content_title -%}
+    <div class="content_title">
+        <h1>Workflow {{wig.Workflow.name|title}}</h1>
+        <h2>Step
+            {% if wig.Step.order %}
+                {{wig.Step.order}}
+            {% endif %}
+            - {{wig.Step.name}}:
+        {% if table_name is defined %}
+             {{ table_name.replace( '_',' ' )|title }} {{ page_header.replace( '_',' ' )|title }}</h2>
+        {% else %}
+            {{ page_header.replace( '_',' ' )|title }}</h1>
+        {% endif %}
+    </div>
+    <hr>
+{%- endblock content_title %}
+{% block bottombuttonbar -%}
+    <div class="bottom_buttons">
+        {{ macros.render_buttons( bottom_buttons ) }}
+    </div>
+    <hr>
+    <h3>Workflow Navigation</h3>
+    <div class="workflow_buttons">
+        <form action="" enctype="multipart/form-data" class="form form-horizontal" method="post" role="form">
+            <input type="hidden" name="saved_rows" value="{{wig.saved_rows}}">
+            {{ macros.render_buttons( wig.buttons ) }}
+        </form>
+    </div>
+{%- endblock bottombuttonbar %}

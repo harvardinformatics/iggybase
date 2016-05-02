@@ -365,17 +365,99 @@ class FieldRole(Base):
     field_role_permission = relationship("Permission", foreign_keys=[permission_id])
     field_role_unq = UniqueConstraint('role_id', 'field_id', 'page_id')
 
-    def __repr__(self):
-        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
-               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
-
 
 class Permission(Base):
+    __tablename__ = 'permission'
     table_type = 'admin'
 
     def __repr__(self):
         return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
                (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+
+
+'''class Event(Base):
+    """Events are triggered by one of: database action (new, updated, or deleted
+    records), workflow steps, or timed periodic. Each event has one or more assiciated
+    actions. Event is a base class for all types of events.
+    """
+    __tablename__ = 'event'
+    table_type = 'admin'
+    id = Column(Integer, primary_key=True)
+    name = Column(String(100), unique=True)
+    description = Column(String(255))
+    date_created = Column(DateTime, default=datetime.datetime.utcnow)
+    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
+    active = Column(Boolean)
+    organization_id = Column(Integer, ForeignKey('organization.id'))
+    order = Column(Integer)
+
+class DatabaseEvent(Event):
+    """Database events.
+    table_object - the table for the event is triggered.
+    field - the table's field.
+    field_value - a value that either changes or is created or even deleted.
+    action_type - selectable
+    """
+    __tablename__ = 'database_event'
+    table_type = 'admin'
+    id = Column(Integer, ForeignKey('event.id'), primary_key=True)
+    table_object_id = Column(Integer, ForeignKey('table_object.id'))
+    field_id = Column(Integer, ForeignKey('field.id'))
+    field_value = Column(String(255))  # eg. 'Turnbaugh' | 'Purchase_Order'
+
+    table_object = relationship("TableObject")
+    organization = relationship("Organization")
+
+    def __repr__(self):
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+
+
+class Action(Base):
+    """Actions taken for a specific event. Events can have multiple actions
+    This is a base class.
+    """
+    __tablename__ = 'action'
+    table_type = 'admin'
+
+    def __repr__(self):
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+
+    id = Column(Integer, ForeignKey('action.id'), primary_key=True)
+    text = Column(String(1024))
+    subject = Column(String(100))
+    email_recipients = Column(String(1024)) # csv email@addresses
+    email_cc = Column(String(1024)) # csv email@addresses
+    email_bcc = Column(String(1024))
+
+    def __repr__(self):
+        return "<EmailAction(name=%s, id=%s>" \
+            (self.name, self.id)
+
+
+class ActionValue(Base):
+    """Values used for creating context for text rendering.
+    For example, ... {{ name }} ... would have a context of
+    {'name': valueof(table_object.field)}.
+    """
+    __tablename__ = 'action_value'
+    table_type = 'admin'
+    id = Column(Integer, primary_key=True)
+    name = Column(String(100), unique=True)
+    description = Column(String(255))
+    date_created = Column(DateTime, default=datetime.datetime.utcnow)
+    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
+    active = Column(Boolean)
+    action_id = Column(Integer, ForeignKey('action.id'))
+    table_object_id = Column(Integer, ForeignKey('table_object.id'))
+    field_id = Column(Integer, ForeignKey('field.id'))
+
+    def __repr__(self):
+        return "<ActionValue(name=%s, id=%d, action_id=%d, table_object_id=%d, field_id=%d)>" \
+               (self.name, self.id, self.action_id, self.table_object_id, self.field_id)
+'''
+
 
 class TableQuery(Base):
     table_type = 'admin'
@@ -384,7 +466,6 @@ class TableQuery(Base):
     def __repr__(self):
         return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
                (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
-
 
 class TableQueryRender(Base):
     table_type = 'admin'
@@ -472,6 +553,80 @@ class TableQueryCalculationField(Base):
     def __repr__(self):
         return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
                (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+
+
+class Workflow(Base):
+    table_type = 'admin'
+    display_name = Column(String(100))
+    notes = Column(String(255))
+
+    def __repr__(self):
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+
+class Step(Base):
+    table_type = 'admin'
+    display_name = Column(String(100))
+    workflow_id = Column(Integer, ForeignKey('workflow.id'))
+    status_id = Column(Integer)
+    route_id = Column(Integer, ForeignKey('route.id'))
+    table_object_id = Column(Integer, ForeignKey('table_object.id'))
+    params = Column(String(255))
+    notes = Column(String(255))
+    dynamic_field = Column(Integer, ForeignKey('field.id'))
+
+    step_workflow = relationship("Workflow", foreign_keys=[workflow_id])
+    #step_status = relationship("Status", foreign_keys=[status_id])
+    step_route = relationship("Route", foreign_keys=[route_id])
+    step_table_object = relationship("TableObject", foreign_keys=[table_object_id])
+    step_dynamic_field = relationship("Field", foreign_keys=[dynamic_field])
+
+    def __repr__(self):
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+
+class WorkItemGroup(Base):
+    table_type = 'admin'
+    display_name = Column(String(100))
+    workflow_id = Column(Integer, ForeignKey('workflow.id'))
+    step_id = Column(Integer, ForeignKey('step.id'))
+    assigned_to = Column(Integer, ForeignKey('user.id'))
+    notes = Column(String(255))
+
+    work_item_group_workflow = relationship("Workflow", foreign_keys=[workflow_id])
+    work_item_group_step = relationship("Step", foreign_keys=[step_id])
+    work_item_group_user = relationship("User", foreign_keys=[assigned_to])
+
+    def __repr__(self):
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+
+class WorkItem(Base):
+    table_type = 'admin'
+    work_item_group_id = Column(Integer, ForeignKey('work_item_group.id'))
+    table_object_id = Column(Integer, ForeignKey('table_object.id'))
+    row_id = Column(Integer)
+    notes = Column(String(255))
+
+    work_item_work_item_group = relationship("WorkItemGroup", foreign_keys=[work_item_group_id])
+    work_item_table_object = relationship("TableObject",
+            foreign_keys=[table_object_id])
+
+    def __repr__(self):
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+
+class StepAction(Base):
+    table_type = 'admin'
+    step_id = Column(Integer, ForeignKey('step.id'))
+    function = Column(String(255))
+    params = Column(String(255))
+
+    step_action_step = relationship("Step", foreign_keys=[step_id])
+
+    def __repr__(self):
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id)
 
 
 class Module(Base):
