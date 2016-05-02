@@ -33,7 +33,7 @@ class StartEvents(object):
                         kwargs['bcc'] = act.email_cc
 
                     e_action = EmailAction(db_event.table_object.name,
-                                           db_event.field.field_name,
+                                           db_event.field.display_name,
                                            db_event.event_type.name,
                                            **kwargs)
                     actions.append(e_action)

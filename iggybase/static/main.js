@@ -230,13 +230,13 @@ $( document ).ready( function () {
             var matches = input_id.match( /data_entry_(\S+)_(\d+)/);
             var table_object = $( '#record_data_table_name_' + matches[2] ).val( );
 
-            var field_name = matches[ 1 ];
+            var display_name = matches[ 1 ];
             var search_vals = {};
 
             search_vals['search_name'] = ele.val();
             search_vals['modal_input_id'] = input_id;
             search_vals['modal_table_object'] = table_object;
-            search_vals['modal_field_name'] = field_name;
+            search_vals['modal_field_name'] = display_name;
             search_vals['modal_search_table'] = '';
 
             var formurl = $URL_ROOT + "system/core/search_results?search_vals=" + JSON.stringify(search_vals);
@@ -253,9 +253,9 @@ $( document ).ready( function () {
         var matches = input_id.match( /data_entry_(\S+)_(\d+)/);
         var table_object = $( '#record_data_table_name_' + matches[2] ).val( );
 
-        var field_name = matches[ 1 ];
+        var display_name = matches[ 1 ];
 
-        var formurl = $URL_ROOT + "system/core/search?table_object=" + table_object + "&input_id=" + input_id + "&field_name=" + field_name;
+        var formurl = $URL_ROOT + "system/core/search?table_object=" + table_object + "&input_id=" + input_id + "&field_name=" + display_name;
 
         var buttons = {};
         buttons[ "Search" ] = $.fn.searchResults;

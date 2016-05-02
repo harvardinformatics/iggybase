@@ -43,13 +43,13 @@ class OrganizationAccessControl:
             self.current_org_id = user_org
             min_level = None
             for user_org, level in facility_orgs.items():
-                logging.info('facility_orgs: ' + str(user_org))
+                # logging.info('facility_orgs: ' + str(user_org))
                 if min_level is None or (level < min_level and user_org != self.user.organization_id):
                     min_level = level
                     self.current_org_id = user_org
                 self.get_child_organization(user_org)
 
-            logging.info('self.current_org_id: ' + str(self.current_org_id))
+            # logging.info('self.current_org_id: ' + str(self.current_org_id))
         else:
             self.user = None
 
@@ -73,7 +73,7 @@ class OrganizationAccessControl:
 
     def get_child_organization(self, parent_organization_id):
         self.org_ids.append(parent_organization_id)
-        logging.info('child_org: ' + str(parent_organization_id))
+        # logging.info('child_org: ' + str(parent_organization_id))
         child_orgs = self.session.query(models.Organization).filter_by(parent_id=parent_organization_id).all()
         for child_org in child_orgs:
             if child_org.id in self.parent_orgs:
@@ -91,8 +91,8 @@ class OrganizationAccessControl:
 
             columns = []
             for row in field_data:
-                columns.append(getattr(table_object, row.Field.field_name).\
-                               label(row.FieldRole.display_name))
+                columns.append(getattr(table_object, row.Field.display_name).\
+                               label(row.Field.display_name))
 
             criteria = [getattr(table_object, 'organization_id').in_(self.org_ids)]
 
@@ -164,20 +164,20 @@ class OrganizationAccessControl:
                     table_models[field.fk_table.name] = fk_table_model
                 # create alias to the fk table
                 # solves the case of more than one join to same table
-                alias_name = field.fk_field.field_name + '_' + field.TableObject.name + '_' + field.Field.field_name
+                alias_name = field.fk_field.display_name + '_' + field.TableObject.name + '_' + field.Field.display_name
                 aliases[alias_name] = aliased(table_model)
                 outer_joins.append((
                     aliases[alias_name],
-                    getattr(fk_table_model, field.fk_field.field_name) == aliases[alias_name].id
+                    getattr(fk_table_model, field.fk_field.display_name) == aliases[alias_name].id
                 ))
                 col = getattr(aliases[alias_name],
-                    field.Field.field_name)
+                    field.Field.display_name)
                 # TODO: validate that tablequeries don't allow dup display names
                 columns.append(col.label(field.display_name))
 
             else:  # non-fk field
                 tables.add(table_model)
-                col = getattr(table_model, field.Field.field_name)
+                col = getattr(table_model, field.Field.display_name)
                 columns.append(col.label(field.display_name))
                                 # add to joins if not first table, avoid joining to self
                 if (not first_table_named
@@ -186,7 +186,7 @@ class OrganizationAccessControl:
                 else:
                     joins.add(table_model)
 
-            criteria_key = (field.TableObject.name, field.Field.field_name)
+            criteria_key = (field.TableObject.name, field.Field.display_name)
             # don't include criteria for self foreign keys
             if criteria_key in criteria and not (field.is_foreign_key and
                     field.TableObject.name == first_table_named):
@@ -216,14 +216,14 @@ class OrganizationAccessControl:
         filters = [(models.Field.table_object_id == table_object_id)]
         if not display:
             # name is default display column for FK
-            filters.append(models.Field.field_name == 'name')
+            filters.append(models.Field.display_name == 'name')
         else:
             filters.append(models.Field.id == display)
         res = (self.session.query(models.Field, models.TableObject).
                join(models.TableObject, models.TableObject.id == models.Field.table_object_id).
                join(models.TableObjectRole, models.TableObject.id == models.TableObjectRole.table_object_id).
                filter(*filters).first())
-        return {'foreign_key': res.Field.field_name,
+        return {'foreign_key': res.Field.display_name,
                 'name': res.TableObject.name
                 }
 
@@ -237,13 +237,13 @@ class OrganizationAccessControl:
 
         return field_data
 
-    def get_search_field_data(self, table_name, search_field_name):
+    def get_search_field_data(self, table_name, search_display_name):
         role_access_control = util.get_role_access_control()
         table_data = role_access_control.has_access('TableObject', {'name': table_name})
 
         if table_data is not None:
             field_data = role_access_control.fields(table_data.id,
-                                                    {'field.field_name': search_field_name})
+                                                    {'field.field_name': search_display_name})
 
             if field_data is not None:
                 search_table = role_access_control.has_access('TableObject',
@@ -328,7 +328,7 @@ class OrganizationAccessControl:
                     table_field_data[table_id_field] = {}
                     temp_field_data = role_access_control.fields(table_id_field)
                     for field in temp_field_data:
-                        table_field_data[table_id_field][field.Field.field_name] = field.Field
+                        table_field_data[table_id_field][field.Field.display_name] = field.Field
 
                     table_objects[table_id_field] = util.get_table(table_name_field)
                     table_defs[table_id_field] = self.session.query(models.TableObject).\
@@ -533,7 +533,7 @@ class OrganizationAccessControl:
 
         child_table = util.get_table(child_table_name)
 
-        rows = self.session.query(child_table).filter(getattr(child_table, field.field_name) == parent_id).all( )
+        rows = self.session.query(child_table).filter(getattr(child_table, field.display_name) == parent_id).all( )
 
         names = []
         for row in rows:

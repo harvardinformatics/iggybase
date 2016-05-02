@@ -28,7 +28,7 @@ class TableFactory:
 
         #logging.info( 'table name: ' + class_name )
         for col in table_object_cols:
-            if col.field_name in self.predefined_columns:
+            if col.display_name in self.predefined_columns:
                 continue
 
             #logging.info( col.field_name )
@@ -36,14 +36,14 @@ class TableFactory:
                 foreign_table =  self.session.query(TableObject).filter_by(id=col.foreign_key_table_object_id).first()
                 foreign_column = self.session.query(Field).filter_by(id=col.foreign_key_field_id).first()
 
-                classattr[col.field_name] = self.create_column(col, foreign_table.name, foreign_column.field_name)
+                classattr[col.display_name] = self.create_column(col, foreign_table.name, foreign_column.display_name)
 
                 if foreign_table is not None and foreign_column is not None:
-                    classattr[table_object.name + "_" + col.field_name + "_" + foreign_table.name] = \
+                    classattr[table_object.name + "_" + col.display_name + "_" + foreign_table.name] = \
                         self.create_foreign_key(TableFactory.to_camel_case(foreign_table.name), \
-                                                classattr[col.field_name])
+                                                classattr[col.display_name])
             else:
-                classattr[col.field_name] = self.create_column(col)
+                classattr[col.display_name] = self.create_column(col)
 
         newclass = new_class(class_name, (Base,), {}, lambda ns: ns.update(classattr))
 

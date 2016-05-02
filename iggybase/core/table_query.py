@@ -37,14 +37,14 @@ class TableQuery:
         for key, val in filters.items():
             if key in self.fc.fields:
                 field = self.fc.fields[key]
-                criteria_key = (field.TableObject.name, field.Field.field_name)
+                criteria_key = (field.TableObject.name, field.Field.display_name)
                 criteria[criteria_key] = val
         # add criteria from db
         res = self.rac.table_query_criteria(
             self.id
         )
         for row in res:
-            criteria_key = (row.TableObject.name, row.Field.field_name)
+            criteria_key = (row.TableObject.name, row.Field.display_name)
             criteria[criteria_key] = row.TableQueryCriteria.value
 
         criteria.update(orig_criteria)
@@ -66,13 +66,13 @@ class TableQuery:
         calc_fields = []
         invisible_fields = []
         url_root = request.url_root
-        for field_name, field in self.fc.fields.items():
+        for display_name, field in self.fc.fields.items():
             if field.link_visible() and allow_links:
-                link_fields[field_name] = self.get_link(url_root, 'detail', field.TableObject.name)
+                link_fields[display_name] = self.get_link(url_root, 'detail', field.TableObject.name)
             if field.is_calculation():
-                calc_fields.append(field_name)
+                calc_fields.append(display_name)
             if not field.visible:
-                invisible_fields.append(field_name)
+                invisible_fields.append(display_name)
 
         # create dictionary for each row
         for i, row in enumerate(self.results):

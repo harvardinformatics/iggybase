@@ -159,7 +159,7 @@ CREATE TABLE `field` (
   `active` tinyint(1) DEFAULT NULL,
   `organization_id` int(11) DEFAULT NULL,
   `order` int(11) DEFAULT NULL,
-  `field_name` varchar(100) DEFAULT NULL,
+  `display_name` varchar(100) DEFAULT NULL,
   `table_object_id` int(11) DEFAULT NULL,
   `data_type_id` int(11) DEFAULT NULL,
   `unique` tinyint(1) DEFAULT NULL,
@@ -169,7 +169,7 @@ CREATE TABLE `field` (
   `foreign_key_table_object_id` int(11) DEFAULT NULL,
   `foreign_key_field_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `field_name` (`name`),
+  UNIQUE KEY `display_name` (`name`),
   KEY `type_id` (`table_object_id`)
 ) ENGINE=MyISAM AUTO_INCREMENT=129 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;

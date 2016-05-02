@@ -33,7 +33,7 @@ for aa, col in insp.columns.items():
 
     field = Field(active=True,
                   name='F%06d' % (id_nbr),
-                  field_name=col.name,
+                  display_name=col.name,
                   table_object_id=table_object_id,
                   primary_key=col.primary_key,
                   organization_id=1,
@@ -57,7 +57,7 @@ for aa, col in insp.columns.items():
         # create a map in core because the sql driver chokes when looking for an
         # equivalent name in the field variable. So, a little trickiness
         fobj = sess.query(Field).filter_by(table_object_id=tobj.id). \
-                filter_by(field_name='id').one()
+                filter_by(display_name='id').one()
         field.foreign_key_field_id = fobj.id
             
     sess.add(field)

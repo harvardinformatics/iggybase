@@ -43,7 +43,7 @@ class FormGenerator():
         if field_data.Field.length is not None and field_data.Field.data_type_id == constants.STRING:
             validators.append(Length(0, field_data.Field.length))
 
-        if "email" in field_data.Field.field_name:
+        if "email" in field_data.Field.display_name:
             validators.append(email())
 
         kwargs['validators'] = validators
@@ -203,7 +203,7 @@ class FormGenerator():
                                {'id': table_data[link_type][table_index].child_link_field_id})
 
                 self.classattr['linkcolumn_'+str(link_table.id)]=\
-                    HiddenField('linkcolumn_'+str(link_table.id), default=link_field.field_name)
+                    HiddenField('linkcolumn_'+str(link_table.id), default=link_field.display_name)
 
                 self.classattr['startchildtable_'+str(link_table.id)]=\
                     HiddenField('startchildtable_'+str(link_table.id), default=link_table.name)
@@ -251,7 +251,7 @@ class FormGenerator():
             else:
                 data = None
                 row_name = 'new'
-                
+
         for field in fields:
             # logging.info(str(field.Field.id) + " " + field.Field.field_name +': ' + field.FieldRole.display_name)
             value = None
@@ -261,8 +261,8 @@ class FormGenerator():
 
             if value is None:
                 # logging.info(field.Field.field_name+': None')
-                self.classattr['old_value_'+field.Field.field_name+"_"+str(row_counter)]=\
-                    HiddenField('old_value_'+field.Field.field_name+"_"+str(row_counter))
+                self.classattr['old_value_'+field.Field.display_name+"_"+str(row_counter)]=\
+                    HiddenField('old_value_'+field.Field.display_name+"_"+str(row_counter))
 
                 if row_name == 'new' and (field.Field.default is not None and field.Field.default != ''):
                     # logging.info(field.Field.field_name + ': setting default')
@@ -274,10 +274,10 @@ class FormGenerator():
                         value = field.Field.default
             else:
                 # logging.info(field.Field.field_name+': '+str(value))
-                self.classattr['old_value_'+field.Field.field_name+"_"+str(row_counter)]=\
-                    HiddenField('old_value_'+field.Field.field_name+"_"+str(row_counter), default=value)
+                self.classattr['old_value_'+field.Field.display_name+"_"+str(row_counter)]=\
+                    HiddenField('old_value_'+field.Field.display_name+"_"+str(row_counter), default=value)
 
-            control_id = 'data_entry_' + field.Field.field_name+"_"+str(row_counter)
+            control_id = 'data_entry_' + field.Field.display_name+"_"+str(row_counter)
             self.classattr[control_id] = self.input_field(field, row_name, control_id, control_type, value)
 
         self.classattr['endrow_'+str(row_counter)]=\

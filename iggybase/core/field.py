@@ -94,7 +94,7 @@ class Field:
     def link_visible(self):
         return (not self.is_calculation() and
                 (
-                    (self.Field.field_name == 'name' and not self.is_foreign_key) or
+                    (self.Field.display_name == 'name' and not self.is_foreign_key) or
                     self.is_title_field or
                     (
                         self.is_foreign_key and

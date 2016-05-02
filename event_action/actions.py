@@ -136,8 +136,8 @@ class ActionManager(object):
         else:
             raise ValueError('%s must be a valid model' % action.model)
 
-        if action.field_name:
-            k = k + ':' + action.field_name
+        if action.display_name:
+            k = k + ':' + action.display_name
 
         if action.event_type not in valid_event_types:
             raise ValueError( '%s is not a valid event type %s, %s' % \
@@ -150,7 +150,7 @@ class ActionManager(object):
         
         # The listener needs the model.attribute such as: User.first_name
         if action.model:
-            collection = getattr(action.model, action.field_name)
+            collection = getattr(action.model, action.display_name)
         else:
             collection = eval(action.model)
                                  
@@ -250,7 +250,7 @@ class Action(object):
     name = 'Action'
     description = 'Base Action class for database events.'
     
-    def __init__(self, cat='database', model=None, field_name=None,
+    def __init__(self, cat='database', model=None, display_name=None,
                  event_type='dirty', **kwargs):
         """
         verify_params (kwargs) are used by the verify method to further test the 
@@ -262,7 +262,7 @@ class Action(object):
         if not model:
             raise ValueError('model cannot be None')
         self.model = model
-        self.field_name = field_name
+        self.display_name = display_name
         if event_type not in ['new', 'dirty', 'delete']:
             raise ValueError('event_type cannut be null')
         else:

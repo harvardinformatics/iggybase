@@ -82,8 +82,8 @@ class RoleAccessControl:
             (models.FieldRole.active == active)
         ]
         if filter is not None:
-            for field_name, value in filter.items():
-                field_data = field_name.split(".")
+            for display_name, value in filter.items():
+                field_data = display_name.split(".")
                 if field_data[0] == "field":
                     filters.append((getattr(models.Field, field_data[1]) == value))
                 else:
@@ -156,7 +156,7 @@ class RoleAccessControl:
         )
         return res
 
-    def table_query_fields(self, table_query_id, table_name=None, table_id=None, field_name=None, field_id=None,
+    def table_query_fields(self, table_query_id, table_name=None, table_id=None, display_name=None, field_id=None,
                            active=1):
         filters = [
             (models.FieldRole.role_id == self.role.id),
@@ -198,8 +198,8 @@ class RoleAccessControl:
             filters.append((models.TableObject.id == table_id))
 
         # add any field_name filter
-        if field_name:
-            filters.append((models.Field.field_name == field_name))
+        if display_name:
+            filters.append((models.Field.display_name == display_name))
         elif field_id:
             filters.append((models.Field.id == field_id))
 

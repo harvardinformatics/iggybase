@@ -71,7 +71,7 @@ class TableObject(Base):
 
 class Field(Base):
     table_type = 'admin'
-    field_name = Column(String(100))
+    display_name = Column(String(100))
     table_object_id = Column(Integer, ForeignKey('table_object.id'))
     data_type_id = Column(Integer, ForeignKey('data_type.id'))
     unique = Column(Boolean)

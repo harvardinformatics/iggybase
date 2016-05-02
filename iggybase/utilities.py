@@ -15,9 +15,9 @@ def get_role_access_control():
         g.role_access = RoleAccessControl()
     return g.role_access
 
-def get_column(module, table_name, field_name):
+def get_column(module, table_name, display_name):
     table_model = get_table(table_name)
-    return getattr(table_model, field_name)
+    return getattr(table_model, display_name)
 
 def get_table(table_name):
     session = db_session()
