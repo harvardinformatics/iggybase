@@ -17,7 +17,7 @@ def cached(timeout = (5 *60)):
         return decorated_function
     return decorator
 
-def templated(template = None):
+def templated():
     def decorator(f):
         @wraps(f)
         def decorated_function(*args, **kwargs):

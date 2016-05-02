@@ -25,7 +25,7 @@ def default(facility_name):
 
 @core.route('/summary/<table_name>/')
 @login_required
-@templated('summary')
+@templated()
 def summary(facility_name, table_name):
     page_form = template = 'summary'
     return build_summary(table_name, page_form, template)
@@ -39,7 +39,7 @@ def summary_ajax(facility_name, table_name, page_form='summary', criteria={}):
 
 @core.route('/action_summary/<table_name>/', methods=['GET', 'POST'])
 @login_required
-@templated('action_summary')
+@templated()
 def action_summary(facility_name, table_name):
     page_form = 'summary'
     template = 'action_summary'
@@ -219,7 +219,7 @@ def change_role(facility_name):
 
 @core.route('/data_entry/<table_name>/<row_name>/', methods=['GET', 'POST'])
 @login_required
-@templated('single_data_entry')
+@templated()
 def data_entry(facility_name, table_name, row_name):
     module_name = MODULE_NAME
     rac = util.get_role_access_control()
@@ -302,7 +302,7 @@ def cache(facility_name):
 
 @core.route('/workflow/<table_name>/')
 @login_required
-@templated('summary')
+@templated()
 def workflow(facility_name, table_name):
     table_name = 'work_item_group'
     page_form = 'summary'

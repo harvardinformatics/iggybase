@@ -85,14 +85,15 @@ class OrganizationAccessControl:
     def get_entry_data(self, table_name, params):
         field_data = self.get_field_data(table_name)
         results = None
-
         if field_data is not None:
             table_object = util.get_table(table_name)
 
             columns = []
             for row in field_data:
+                field_display_name = util.get_field_attr(row.Field,
+                    row.FieldRole, 'display_name')
                 columns.append(getattr(table_object, row.Field.display_name).\
-                               label(row.Field.display_name))
+                               label(field_display_name))
 
             if len(columns) == 0:
                 return results
@@ -103,7 +104,6 @@ class OrganizationAccessControl:
                 criteria.append(getattr(table_object, key) == value)
 
             results = self.session.query(*columns).filter(*criteria).all()
-
         return results
 
     def get_select_list(self, select_list_id, active=1):

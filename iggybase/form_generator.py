@@ -260,9 +260,11 @@ class FormGenerator():
         for field in fields:
             # logging.info(str(field.Field.id) + " " + field.Field.field_name +': ' + field.FieldRole.display_name)
             value = None
-            if row_name != 'new' and data is not None:
-                if field.Field.display_name in data.keys():
-                    value = data[data.keys().index(field.Field.display_name)]
+            field_display_name = util.get_field_attr(field.Field,
+                    field.FieldRole, 'display_name')
+            if row_name != 'new' and data:
+                if  field_display_name in data.keys():
+                    value = data[data.keys().index(field_display_name)]
 
             if value is None:
                 # logging.info(field.Field.field_name+': None')

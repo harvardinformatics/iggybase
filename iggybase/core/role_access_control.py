@@ -543,3 +543,11 @@ class RoleAccessControl:
                 filter(models.WorkItem.work_item_group_id == work_item_group_id).all())
         return res
 
+    def workflow_steps(self, workflow_id):
+        res = None
+        if workflow_id:
+            res = (self.session.query(models.Step).
+                filter(models.Step.workflow_id == workflow_id).
+                order_by(models.Step.order).all())
+        return res
+

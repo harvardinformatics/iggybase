@@ -21,6 +21,7 @@ class WorkItemGroup:
         self.saved_rows = {}
         self.get_work_item_group()
         self.work_items = self.rac.work_items(self.WorkItemGroup.id)
+        self.workflow_steps = self.rac.workflow_steps(self.Workflow.id)
 
     def get_work_item_group(self):
         wig = self.rac.work_item_group(self.name)
@@ -95,6 +96,8 @@ class WorkItemGroup:
                         dynamic_params['row_name'] = name
                         break
                 item_tbl_ids.add(item.table_object_id)
+        if not 'row_name' in dynamic_params:
+            dynamic_params['row_name'] = 'new'
         return dynamic_params
 
 

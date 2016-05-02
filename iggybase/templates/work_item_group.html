@@ -31,4 +31,11 @@
             {{ macros.render_buttons( wig.buttons ) }}
         </form>
     </div>
+    <div>
+        <ul>
+            {% for step in wig.workflow_steps %}
+                <li><a href=#>{{step.order}}</a></li>
+            {% endfor %}
+        </ul>
+    </div>
 {%- endblock bottombuttonbar %}
