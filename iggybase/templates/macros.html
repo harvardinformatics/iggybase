@@ -150,7 +150,13 @@
 
 {% macro render_buttons( buttons ) -%}
     {% for button in buttons -%}
-        <input {{ button|safe }}>
+        <input value="{{button.button_value}}" id="{{button.button_id}}"
+            name="{{button.button_id}}" type="{{button.button_type}}"
+            class="{{button.button_class}}"
+            {% if button.special_props %}
+                {{ button.special_props}}
+            {% endif %}
+        >
     {% endfor -%}
 {%- endmacro %}
 

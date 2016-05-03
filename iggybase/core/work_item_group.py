@@ -3,7 +3,6 @@ import json
 from collections import OrderedDict
 from iggybase.core.organization_access_control import OrganizationAccessControl
 from iggybase import utilities as util
-import iggybase.templating as templating
 
 # Retreives and formats data based on table_query
 class WorkItemGroup:
@@ -38,21 +37,20 @@ class WorkItemGroup:
 
     def get_buttons(self, context_btns = None):
         submit_btn = False
-        '''
-        TODO have the template use a macro for building button from array
         for btn in context_btns:
-            if btn['button_type'] == 'submit':
+            if btn.button_type == 'submit':
                 submit_btn = True
-                break'''
-        workflow_button = {
-            'button_type': 'submit',
-            'button_value': 'Next Step',
-            'button_id': 'next_step',
-            'button_class': 'btn btn-default',
-            'special_props': None,
-            'submit_action_url': None
-        }
-        self.buttons = [templating.button_string(util.DictObject(workflow_button))]
+                break
+        if not submit_btn:
+            workflow_button = {
+                'button_type': 'submit',
+                'button_value': 'Next Step',
+                'button_id': 'next_step',
+                'button_class': 'btn btn-default',
+                'special_props': None,
+                'submit_action_url': None
+            }
+            self.buttons = [util.DictObject(workflow_button)]
 
     def set_saved(self, saved_rows):
         self.saved_rows = saved_rows

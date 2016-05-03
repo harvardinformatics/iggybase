@@ -54,6 +54,7 @@ def action_summary_ajax(facility_name, table_name, page_form='summary',
 
 @core.route('/detail/<table_name>/<row_name>')
 @login_required
+@templated()
 def detail(facility_name, table_name, row_name):
     page_form = template = 'detail'
     criteria = {(table_name, 'name'): row_name}
@@ -67,7 +68,7 @@ def detail(facility_name, table_name, row_name):
     if not tqc.get_first().table_dict:
         abort(403)
     hidden_fields = {'table': table_name, 'row_name': row_name}
-    return templating.page_template(
+    return templating.page_template_context(
         template,
         module_name=MODULE_NAME,
         table_name=table_name,
@@ -243,6 +244,7 @@ def data_entry(facility_name, table_name, row_name):
 
 @core.route('/multiple_entry/<table_name>/', methods=['GET','POST'])
 @login_required
+@templated()
 def multiple_entry(facility_name, table_name):
     module_name = MODULE_NAME
     rac = util.get_role_access_control()
@@ -261,10 +263,11 @@ def multiple_entry(facility_name, table_name):
 
         return saved_data(facility_name, module_name, table_name, row_names)
 
-    return templating.page_template('multiple_data_entry', module_name=module_name, form=form, table_name=table_name)
+    return templating.page_template_context('multiple_data_entry', module_name=module_name, form=form, table_name=table_name)
 
 @core.route('/cache/', methods=['GET','POST'])
 @login_required
+@templated()
 def cache(facility_name):
     module_name = MODULE_NAME
     form = forms.CacheForm()
@@ -296,7 +299,7 @@ def cache(facility_name):
                 value += ('set version ' + form.data['refresh_obj'] + ' = ' +
                     form.data['version'])
 
-    return templating.page_template('cache', module_name=module_name,
+    return templating.page_template_context('cache', module_name=module_name,
             form=form,
             value=value)
 

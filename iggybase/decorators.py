@@ -25,13 +25,9 @@ def templated():
             req_func = request.endpoint.split('.')
             # if caller is the endpoint then return response
             if f.__name__ in req_func:
-                print('render_me')
                 return render_template(context['template'], **context)
             # if not endpoint then return context for further mod, exp workflows
             else:
-                print('NOT')
-                print(req_func)
-                print(f.__name__)
                 return context
         return decorated_function
     return decorator
