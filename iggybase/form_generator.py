@@ -172,6 +172,7 @@ class FormGenerator():
         return newclass()
 
     def linked_data(self, tables, table_data, row_name):
+        parent_name = self.table_data.name
         parent_id = self.organization_access_control.get_row_id(self.table_data.name, {'name': row_name})
 
         row_counter = 2

@@ -2,11 +2,13 @@ from flask import g, abort
 from iggybase import core, templating
 from flask.ext.security import login_required
 from . import murray
+from iggybase.decorators import templated
 import iggybase.core.table_query_collection as tqc
 
 @murray.route('/')
+@templated()
 def default():
-    return templating.page_template('index.html')
+    return templating.page_template_context('index.html')
 
 @murray.route( '/update_ordered/<table_name>/ajax' )
 @login_required
@@ -15,6 +17,7 @@ def update_ordered_ajax(facility_name, table_name):
 
 @murray.route( '/update_ordered/<table_name>/' )
 @login_required
+@templated()
 def update_ordered(facility_name, table_name):
     # update ordered to received
     page_form = 'update'
@@ -31,7 +34,7 @@ def update_ordered(facility_name, table_name):
     if not tq.fc.fields:
         abort(403)
 
-    return templating.page_template('update',
+    return templating.page_template_context('update',
             module_name = 'murray',
             table_name = table_name,
             table_query = tq, hidden_fields = hidden_fields)
@@ -44,6 +47,7 @@ def update_requested_ajax(facility_name, table_name):
 
 @murray.route( '/update_requested/<table_name>/' )
 @login_required
+@templated()
 def update_requested(facility_name, table_name):
     # update requested to ordered
     page_form = 'update'
@@ -58,7 +62,7 @@ def update_requested(facility_name, table_name):
     if not tq.fc.fields:
         abort(403)
 
-    return templating.page_template('update',
+    return templating.page_template_context('update',
             module_name = 'murray',
             table_name = table_name,
             table_query = tq, hidden_fields = hidden_fields)
@@ -70,6 +74,7 @@ def cancel_ajax(facility_name, table_name):
 
 @murray.route( '/cancel/<table_name>/' )
 @login_required
+@templated()
 def cancel(facility_name, table_name):
     # update ordered to received
     page_form = 'update'
@@ -85,7 +90,7 @@ def cancel(facility_name, table_name):
     # if nothing to display then page not found
     if not tq.fc.fields:
         abort(403)
-    return templating.page_template('update',
+    return templating.page_template_context('update',
             module_name = 'murray',
             table_name = table_name,
             table_query = tq, hidden_fields = hidden_fields)

@@ -77,7 +77,8 @@
 
                     {% if not bootstrap_is_hidden_field( field ) -%}
                         {% if endrow == 1 -%}
-                            <tr table_object_name="{{ table_name }}">
+                            {% set field_vars = field.id.split("_") %}
+                            <tr row_id="{{ field_vars[field_vars|length - 1] }}" table_object_name="{{ table_name }}">
                             {% set endrow = 0 -%}
                         {% endif -%}
 
