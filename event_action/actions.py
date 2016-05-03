@@ -7,7 +7,9 @@ from sqlalchemy.engine import reflection
 from sqlalchemy.util.langhelpers import symbol
 from flask_mail import Attachment, Connection, Message, Mail
 
-"""# db_session and db should be passed to ActionManager when initiating.
+"""
+db_session and db should be passed to ActionManager when initiating.
+
 # These imports are backups.
 from database import db_session
 from database import db
@@ -21,24 +23,7 @@ def db_event_pitcher(sender, **kw):
     act_obj must have an execute method
     """
     sender.execute(**kw)
-
-def db_attr_event(target, value, oldvalue, initiator):
-    """
-    Find the appropriate object and verify. 
-    Dispatch if necessary.
-    """
-    op = 'new' if oldvalue == symbol('NO_VALUE') else 'dirty'
-
-    reg_key = 'database:%s:%s:%s' % (target.__tablename__, initiator.key, op)
-    actions = event_registry.get(reg_key, None)
-    import pdb
-    pdb.set_trace()
-    kwargs = {'newvalue': value, 'oldvalue': oldvalue}
-    if actions:
-        for action in actions:
-            if action.verify(target, op, **kwargs):
-                action.dispatch(target, op, **kwargs)
-    return target
+    return
 
 
 def db_event(session, stat, instances):
@@ -48,7 +33,6 @@ def db_event(session, stat, instances):
     def event_scan(session_itr):
         """Scans the event objects (db table create/update/delete actions).
         """
-        
         for obj in session_itr:
             evt_name = getattr(obj, '__tablename__', None)
             model_name = '%s:%s' % (evt_cat, evt_name)
@@ -65,11 +49,12 @@ def db_event(session, stat, instances):
                 if not actions:  
                     continue
 
-            for action in actions:
-                if action.verify(obj, evt_type):
-                    action.dispatch(obj, event_type=evt_type)
+                for action in actions:
+                    if action.verify(obj, evt_type):
+                        action.dispatch(obj, event_type=evt_type)
     
     evt_cat = 'database'
+
 
     if session.deleted:
         print(session.deleted)
@@ -78,11 +63,29 @@ def db_event(session, stat, instances):
     if session.new:
         print(session.new)
         evt_type = 'new'
-        event_scan(session.deleted)        
+        event_scan(session.new)        
     if session.dirty:
         print(session.dirty)
         evt_type = 'dirty'
         event_scan(session.dirty)
+
+
+def db_attr_event(target, value, oldvalue, initiator):
+    """
+    Find the appropriate object and verify. 
+    Dispatch if necessary.
+    """
+    op = 'new' if oldvalue == symbol('NO_VALUE') else 'dirty'
+
+    reg_key = 'database:%s:%s:%s' % (target.__tablename__, initiator.key, op)
+    actions = event_registry.get(reg_key, None)
+    kwargs = {'newvalue': value, 'oldvalue': oldvalue}
+    if actions:
+        for action in actions:
+            if action.verify(target, op, **kwargs):
+                action.dispatch(target, op, **kwargs)
+
+    return target
 
 
 
@@ -91,9 +94,10 @@ def db_rollback(session):
 
 
 def init_app(app, session):
+    if hasattr(app, 'act_manager'):
+        return app.act_manager
     app.act_manager = ActionManager(app, session)
     act_manager = app.act_manager
-    return act_manager
 
     
 class ActionManager(object):
@@ -110,9 +114,9 @@ class ActionManager(object):
         self.db_action_signal = signal('action_signal')
         self.db_action_signal.connect(db_event_pitcher)
 
-        #event.listen(self.session, 'before_flush', db_event)
+        event.listen(self.session, 'before_flush', db_event)
 
-        #event.listen(self.session, 'after_rollback', db_rollback)
+        event.listen(self.session, 'after_rollback', db_rollback)
 
         
     def register_db_event(self, action):
@@ -149,12 +153,9 @@ class ActionManager(object):
         event_registry.setdefault(k, []).append(action)
         
         # The listener needs the model.attribute such as: User.first_name
-        if action.model:
+        if action.model and action.display_name and action.event_type == 'dirty':
             collection = getattr(action.model, action.display_name)
-        else:
-            collection = eval(action.model)
-                                 
-        event.listen(collection, 'set', db_attr_event)
+            event.listen(collection, 'set', db_attr_event)
 
 
     def unregister(self, action):
@@ -248,7 +249,7 @@ class Action(object):
     default: database
     """
     name = 'Action'
-    description = 'Base Action class for database events.'
+    description = 'Base class for database events.'
     
     def __init__(self, cat='database', model=None, display_name=None,
                  event_type='dirty', **kwargs):

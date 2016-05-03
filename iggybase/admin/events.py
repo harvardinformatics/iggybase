@@ -1,9 +1,19 @@
-from iggybase.admin.models import DatabaseEvent, EmailAction, ActionValue
+from iggybase.admin.models import DatabaseEvent, EmailAction as EAction, ActionValue
 from iggybase.utilities import get_table
-from event_action import EmailAction
+from iggybase.admin.models import User
+from event_action import EmailAction, Action
+
+actions = []
+
+
 
 class StartEvents(object):
-    actions = []
+
+    def __init__(self, app):
+        self.app = app
+        self.actions = []
+        self.actions.append(Action(model=User, event_type='new'))
+
 
     def configure(self, db_session):
         """
@@ -36,7 +46,10 @@ class StartEvents(object):
                                            db_event.field.display_name,
                                            db_event.event_type.name,
                                            **kwargs)
-                    actions.append(e_action)
+                    self.actions.append(e_action)
+
+        for action in self.actions:
+            self.app.act_manager.register_db_event(action)
 
                                    
         
