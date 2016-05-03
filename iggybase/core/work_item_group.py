@@ -50,18 +50,18 @@ class WorkItemGroup:
                 'special_props': None,
                 'submit_action_url': None
             }
+            if len(self.workflow_steps) == self.Step.order: # last step
+                workflow_button['button_value'] = 'Complete'
+
             self.buttons = [util.DictObject(workflow_button)]
 
     def set_saved(self, saved_rows):
         self.saved_rows = saved_rows
-        print(self.saved_rows)
 
     def next_step(self):
         # first perform any actions on this step
         actions = self.get_oac().get_step_actions(self.Step.id)
         for action in actions:
-            print(action)
-            print(action.function)
             if hasattr(self, action.function):
                 func = getattr(self, action.function)
                 params = {}
@@ -121,12 +121,13 @@ class WorkItemGroup:
     below are workflow action functions
     '''
 
-    def insert_work_item(self, items):
+    def insert_work_item(self, items, parent = None):
         success = True
         for tbl in items:
-            print(tbl)
             if tbl in self.saved_rows:
                 tbl_items = self.saved_rows[tbl]
-                success = self.get_oac().save_work_items(self.WorkItemGroup.id, tbl_items)
+                if parent and parent in self.saved_rows:
+                    # assume there will only be one parent
+                    parent = self.saved_rows[parent][0]
+                success = self.get_oac().save_work_items(self.WorkItemGroup.id, tbl_items, parent)
         return success
-
