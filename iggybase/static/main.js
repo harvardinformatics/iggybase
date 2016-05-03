@@ -147,6 +147,9 @@ $( document ).ready( function () {
             }
         ).end( ).appendTo( "#" + target );
 
+        var values = new Array();
+        var inputs = new Array();
+
         $('input[id$="_' + old_id + '"]' ).each(
             function() {
                 if ( $( this ).css( 'display' ) == 'none' ) {
@@ -154,27 +157,31 @@ $( document ).ready( function () {
                     var new_id = matches[ 1 ] + "_" + ( row_id );
                     var value = '';
 
-                    if ( matches[ 1 ] == 'old_value_name' || matches[ 1 ] == 'record_data_row_name' )
-                        value = 'new';
-                    else if ( matches[ 1 ] == 'record_data_table_id' )
-                        value = table_object_id;
-                    else if ( matches[ 1 ] == 'record_data_table_name' )
-                        value = target;
-                    else if ( 'old_value_' + link_column == matches[ 1 ] )
-                        value = $( this ).val();
-
                     var new_input = $( '<input>' ).attr( {
                         type: 'hidden',
                         id: new_id,
-                        name: new_id,
-                        defaultvalue: value,
-                        value: value
-                    } )
+                        name: new_id
+                    } ).appendTo( new_tr );
 
-                    new_input.appendTo( new_tr );
+                    if ( matches[ 1 ] == 'old_value_name' || matches[ 1 ] == 'record_data_row_name' ) {
+                        values[values.length] = 'new';
+                        inputs[inputs.length] = new_id
+                    } else if ( matches[ 1 ] == 'record_data_table_id' ) {
+                        values[values.length] = table_object_id;
+                        inputs[inputs.length] = new_id
+                    } else if ( matches[ 1 ] == 'record_data_table_name' ) {
+                        values[values.length] = target;
+                        inputs[inputs.length] = new_id
+                    } else if ( 'old_value_' + link_column == matches[ 1 ] ) {
+                        values[values.length] = $( this ).val();
+                        inputs[inputs.length] = new_id
+                    }
                 }
             }
         )
+
+        for ( var i = 0; i < values.length; i++ )
+            document.getElementsByName( inputs[ i ] )[ 0 ].value = values[ i ];
     }
 
     $.fn.showModalDialog = function ( url, buttons, callback ) {
