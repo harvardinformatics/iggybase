@@ -76,53 +76,37 @@ $( document ).ready( function () {
         var target = ele.attr( "target_table" );
         var table_object_id = ele.attr( "table_object_id" );
         var link_column = $( "#linkcolumn_" + table_object_id ).val( );
-        var new_id;
-        var parser = location;
-        var parent_id;
-        var row_id;
-        var td;
-        var path = parser.pathname.split( "/" );
-        if ( path[ path.length - 1 ] == "" )
-            parent_id = path[ path.length - 2 ];
-        else
-            parent_id = path[ path.length - 1 ];
+        var parent_name = $( '#old_value_name_1' ).val( );
 
-        $( "#" + target + " tr:last" ).clone( ).find( "input, select" ).each(
+        var old_id;
+        var row_id;
+
+        var new_tr = $( "#" + target + " tr:last" ).clone( )
+
+        new_tr.find( "input, select" ).each(
             function() {
 		        var id = $(this).attr( 'id' );
 		        var matches = id.match( /(\S+)_(\d+)/);
 
 		        if ( matches && matches.length > 1 ) {
+		            old_id = matches[ 2 ];
 		            row_id = parseInt( matches[ 2 ] )+ 1;
-                    td = $( this ).closest( 'td' );
-
-                    //clear old hidden fields if more than 1 row was added
-                    $( td ).find( 'input[type=hidden]' ).remove( );
+                    var td = $( this ).closest( 'td' );
 
                     var new_id = matches[ 1 ] + "_" + ( row_id );
-                    var hidden_id = new_id.replace("data_entry", "old_value");
 
                     if ( $( this ).prop( 'type' ) == 'select-one' ) {
-                        if ( link_column == matches[ 1 ] ) {
+                        if ( 'data_entry_' + link_column == matches[ 1 ] ) {
                             $( this ).attr( 'id', new_id ).attr( 'name', new_id );
-                            $( this ).filter( function( ) { return $( this ).text( ) == parent_id; } ).prop( 'selectedIndex', true );
+                            $( this ).filter( function( ) { return $( this ).text( ) == parent_name; } ).prop( 'selectedIndex', true );
                         } else {
                             $( this ).prop( 'selectedIndex', 0 ).attr( 'id', new_id ).attr( 'name', new_id );
                         }
                     } else {
-                        if ( link_column == matches[ 1 ] )
-                            $( this ).val( parent_id ).attr( 'id', new_id ).attr( 'name', new_id );
+                        if ( 'data_entry_' + link_column == matches[ 1 ] )
+                            $( this ).val( parent_name ).attr( 'id', new_id ).attr( 'name', new_id );
                         else
                             $( this ).val( '' ).attr( 'id', new_id ).attr( 'name', new_id );
-                    }
-
-                    if ( matches[ 1 ] == 'data_entry_name' ) {
-                        td.append( "<input id='" + hidden_id + "' name='" + hidden_id + "' type='hidden' value='new'>" );
-                        td.append( "<input id='record_data_row_name_" + row_id + "' name='record_data_row_name_" + row_id + "' type='hidden' value='new'>" );
-                        td.append( "<input id='record_data_table_name_" + row_id +"' name='record_data_table_name_" + row_id +"' type='hidden' value='" + target + "'>" );
-                        td.append( "<input id='record_data_table_id_" + row_id +"' name='record_data_table_id_" + row_id +"' type='hidden' value='" + table_object_id + "'>" );
-                    } else {
-                        td.append( "<input id='" + hidden_id + "' name='" + hidden_id + "' type='hidden' value=''>" );
                     }
 
                     var searchbutton = $( td ).find( '.search-button' );
@@ -153,12 +137,6 @@ $( document ).ready( function () {
                     }
 
                     if ( $( this ).hasClass( 'boolean-field' ) ) {
-                        new_bool_id = 'bool_' + new_id;
-                        if ( $( this ).is(':checked') )
-                            td.append( "<input id='" + new_bool_id + "' name='" + new_bool_id + "' type='hidden' value='y' disabled='disabled'>" );
-                        else
-                            td.append( "<input id='" + new_bool_id + "' name='" + new_bool_id + "' type='hidden' value='n'>" );
-
                         $( this ).change(
                             function( ) {
                                 $.fn.changeCheckBox( $( this ) );
@@ -168,6 +146,35 @@ $( document ).ready( function () {
                 }
             }
         ).end( ).appendTo( "#" + target );
+
+        $('input[id$="_' + old_id + '"]' ).each(
+            function() {
+                if ( $( this ).css( 'display' ) == 'none' ) {
+                    var matches = $( this ).attr( 'id' ).match( /(\S+)_(\d+)/);
+                    var new_id = matches[ 1 ] + "_" + ( row_id );
+                    var value = '';
+
+                    if ( matches[ 1 ] == 'old_value_name' || matches[ 1 ] == 'record_data_row_name' )
+                        value = 'new';
+                    else if ( matches[ 1 ] == 'record_data_table_id' )
+                        value = table_object_id;
+                    else if ( matches[ 1 ] == 'record_data_table_name' )
+                        value = target;
+                    else if ( 'old_value_' + link_column == matches[ 1 ] )
+                        value = $( this ).val();
+
+                    var new_input = $( '<input>' ).attr( {
+                        type: 'hidden',
+                        id: new_id,
+                        name: new_id,
+                        defaultvalue: value,
+                        value: value
+                    } )
+
+                    new_input.appendTo( new_tr );
+                }
+            }
+        )
     }
 
     $.fn.showModalDialog = function ( url, buttons, callback ) {

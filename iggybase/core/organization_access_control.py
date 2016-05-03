@@ -398,9 +398,12 @@ class OrganizationAccessControl:
                 row_modified[row_id] = False
 
                 for field, field_data in current_field_data.items():
-                    # only update fields that were displayed on the form
+                    # only update fields that were on the form
                     if field not in row_data['data_entry'].keys():
-                        continue
+                        if field in row_data['old_value'].keys():
+                            row_data['data_entry'][field] = row_data['old_value'][field]
+                        else:
+                            continue
 
                     if field_data.foreign_key_table_object_id == long_text_data.id and \
                                     row_data['data_entry'][field] != '':
