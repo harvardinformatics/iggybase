@@ -1,20 +1,25 @@
 import iggybase.templating as templating
 from flask import g, redirect, url_for
+from iggybase.decorators import templated
 
 def index():
     return templating.render_template( 'index.html' )
 
+@templated()
 def default():
-    return templating.page_template('index.html')
+    return templating.page_template_context('index.html')
 
+@templated()
 def message(page_temp, page_msg):
-    return templating.page_template(page_temp, page_msg=page_msg)
+    return templating.page_template_context(page_temp, page_msg=page_msg)
 
+@templated()
 def forbidden():
-    return templating.page_template('forbidden')
+    return templating.page_template_context('forbidden')
 
+@templated()
 def page_not_found():
-    return templating.page_template('not_authorized')
+    return templating.page_template_context('not_authorized')
 
 def home():
     """redirects to user home page
