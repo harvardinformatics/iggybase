@@ -97,7 +97,7 @@ class OrganizationAccessControl:
 
             if len(columns) == 0:
                 return results
-            
+
             criteria = [getattr(table_object, 'organization_id').in_(self.org_ids)]
 
             for key, value in params.items():
@@ -342,7 +342,7 @@ class OrganizationAccessControl:
                 current_field_data = table_field_data[table_id_field]
 
                 if row_id not in instances:
-                    if current_inst_name == 'new':
+                    if current_inst_name == 'new' or current_inst_name == '':
                         instances[row_id] = current_table_object()
                         setattr(instances[row_id], 'date_created', datetime.datetime.utcnow())
 
