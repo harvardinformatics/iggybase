@@ -22,6 +22,8 @@ class WorkItemGroup:
         self.get_work_item_group()
         self.work_items = self.rac.work_items(self.WorkItemGroup.id)
         self.workflow_steps = self.get_workflow_steps()
+        self.next_step = self.Step.order + 1
+        self.complete = False
 
     def get_work_item_group(self):
         wig = self.rac.work_item_group(self.name)
@@ -52,13 +54,27 @@ class WorkItemGroup:
             }
             if len(self.workflow_steps) == self.Step.order: # last step
                 workflow_button['button_value'] = 'Complete'
+                workflow_button['button_id'] = 'complete'
 
             self.buttons = [util.DictObject(workflow_button)]
 
     def set_saved(self, saved_rows):
         self.saved_rows = saved_rows
 
-    def next_step(self):
+    def update_step(self):
+        # next_step can be altered by actions, by default it is incremented by one
+        if self.next_step != self.Step.order:
+            success = self.get_oac().update_step(self.WorkItemGroup.id, self.next_step, self.Workflow.id)
+            if not success:
+                logging.error('Workflow: next step failed.  Work Item Group: ' +
+                        self.WorkItemGroup.name + ' Step: ' + self.Step.name)
+        if self.complete:
+            url = self.get_complete_url()
+        else:
+            url = self.get_url(self.Module.name, g.facility, 'work_item_group', self.Workflow.name, self.next_step, self.WorkItemGroup.name)
+        return url
+
+    def do_step_actions(self):
         # first perform any actions on this step
         actions = self.get_oac().get_step_actions(self.Step.id)
         for action in actions:
@@ -68,14 +84,6 @@ class WorkItemGroup:
                 if action.params:
                     params = json.loads(action.params)
                 func(**params)
-        # increment the step
-        next_step = self.Step.order + 1
-        success = self.get_oac().update_step(self.WorkItemGroup.id, next_step, self.Workflow.id)
-        if not success:
-            logging.error('Workflow: next step failed.  Work Item Group: ' +
-                    self.WorkItemGroup.name + ' Step: ' + self.Step.name)
-
-        return self.get_link(self.Module.name, g.facility, self.Workflow.name, next_step, self.WorkItemGroup.name)
 
     def get_oac(self):
         if not self.oac:
@@ -104,7 +112,7 @@ class WorkItemGroup:
         work_steps = OrderedDict()
         res = self.rac.workflow_steps(self.Workflow.id)
         for step in res:
-            url = self.get_link(self.Module.name, g.facility, self.Workflow.name, step.order, self.WorkItemGroup.name)
+            url = self.get_url(self.Module.name, g.facility, 'work_item_group', self.Workflow.name, step.order, self.WorkItemGroup.name)
             current = False
             if step.name == self.Step.name:
                 current = True
@@ -112,9 +120,25 @@ class WorkItemGroup:
                     'current':current}
         return work_steps
 
-    def get_link(self, module, facility, workflow_name, step, work_item_group_name):
-        return url_for(module + '.workflow_item_group', facility_name = facility, workflow_name = workflow_name,
-                step = step, work_item_group = work_item_group_name)
+    def get_complete_url(self):
+        return self.get_url(self.Module.name, g.facility, 'workflow_complete',
+                self.Workflow.name, None, self.WorkItemGroup.name)
+
+    def get_summary_url(self):
+        return self.get_url(self.Module.name, g.facility, 'workflow',
+                self.Workflow.name)
+
+    def get_url(self, module, facility, table, workflow, step = None, work_item_group = None):
+        endpoint = module + '.' + table
+        values = {
+                'facility_name': facility,
+                'workflow_name': workflow
+                }
+        if step:
+            values['step'] = step
+        if work_item_group:
+            values['work_item_group'] = work_item_group
+        return url_for(endpoint, **values)
 
 
     '''
@@ -131,3 +155,12 @@ class WorkItemGroup:
                     parent = self.saved_rows[parent][0]
                 success = self.get_oac().save_work_items(self.WorkItemGroup.id, tbl_items, parent)
         return success
+
+    def check_item_type(self, item, type):
+        if item in self.saved_rows:
+            work_item = self.saved_rows[item][0]
+            res = self.get_oac().get_row(item, {'id': work_item['id']})
+            if res:
+                if res.quantity == 2: # TODO: replace with type check
+                    self.next_step = self.Step.order
+                    self.complete = True

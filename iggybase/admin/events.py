@@ -19,6 +19,11 @@ class StartEvents(object):
         """
         Look for events and register their actions.
         """
+        pass
+        '''
+        WAS getting error on start up so I commented this out for now
+
+
         db_events = db_session.query(DatabaseEvent).filter_by(active=True)
         for db_event in db_events.all():
             actions = db_event.actions
@@ -49,7 +54,7 @@ class StartEvents(object):
                     self.actions.append(e_action)
 
         for action in self.actions:
-            self.app.act_manager.register_db_event(action)
+            self.app.act_manager.register_db_event(action)'''
 
-                                   
-        
+
+

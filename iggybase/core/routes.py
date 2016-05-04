@@ -303,31 +303,47 @@ def cache(facility_name):
             form=form,
             value=value)
 
-@core.route('/workflow/<table_name>/')
+@core.route('/workflow/<workflow_name>/')
 @login_required
 @templated()
-def workflow(facility_name, table_name):
+def workflow(facility_name, workflow_name):
     table_name = 'work_item_group'
     page_form = 'summary'
     template = 'workflow_summary'
     return build_summary(table_name, page_form, template)
 
-@core.route('/workflow/<table_name>/ajax')
+@core.route('/workflow/<workflow_name>/ajax')
 @login_required
-def workflow_summary_ajax(facility_name, table_name, page_form='summary',
+def workflow_summary_ajax(facility_name, workflow_name, page_form='summary',
                         criteria={}):
-    criteria = {'work_item_group.workflow':table_name}
+    criteria = {'work_item_group.workflow':workflow_name}
     table_name = 'work_item_group'
     return action_summary_ajax(facility_name, table_name, page_form, criteria)
 
+@core.route('/workflow/<workflow_name>/<work_item_group>')
+@login_required
+@templated()
+def workflow_complete(facility_name, workflow_name, work_item_group):
+    wig = WorkItemGroup(work_item_group)
+    template = 'workflow_complete'
+    return templating.page_template_context(template,
+                                    module_name=MODULE_NAME,
+                                    wig=wig)
+
 @core.route('/workflow/<workflow_name>/<step>/<work_item_group>', methods=['GET', 'POST'])
 @login_required
-def workflow_item_group(facility_name, workflow_name, step, work_item_group):
+def work_item_group(facility_name, workflow_name, step, work_item_group):
     wig = WorkItemGroup(work_item_group)
     if 'next_step' in request.form:
         wig.set_saved(json.loads(request.form['saved_rows']))
-        next_step_url = wig.next_step()
+        wig.do_step_actions()
+        next_step_url = wig.update_step()
         return redirect(next_step_url)
+    elif 'complete' in request.form:
+        wig.set_saved(json.loads(request.form['saved_rows']))
+        wig.do_step_actions()
+        complete_url = wig.get_complete_url()
+        return redirect(complete_url)
     dynamic_vars = {}
     table_name = ''
     dynamic_params = wig.set_dynamic_params()
@@ -338,6 +354,7 @@ def workflow_item_group(facility_name, workflow_name, step, work_item_group):
         wig.set_saved(context['saved_rows'])
     context['wig'] = wig
     return render_template('work_item_group.html', **context)
+
 
 """ helper functions start """
 

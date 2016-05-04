@@ -520,6 +520,13 @@ class OrganizationAccessControl:
             return [['error',err]]
 
     def get_row_id(self, table_name, params):
+        result = self.get_row(table_name, params)
+        if result:
+            return result.id
+        else:
+            return None
+
+    def get_row(self, table_name, params):
         table_object = util.get_table(table_name)
 
         criteria = []
@@ -529,10 +536,7 @@ class OrganizationAccessControl:
 
         result = self.session.query(table_object).filter(*criteria).first()
 
-        if result:
-            return result.id
-        else:
-            return None
+        return result
 
     def get_child_row_names(self, child_table_name, child_link_field_id, parent_id):
         field = self.session.query(models.Field).filter_by(id=child_link_field_id).first()
@@ -616,8 +620,14 @@ class OrganizationAccessControl:
                         parent_id = parent_id)
                 self.session.add(new_row)
         except:
-            print('rollback')
             self.session.rollback()
+            print('rollback')
+            logging.info(
+                'save_work_item rollback- params: '
+                + ' work_item_group_id: ' + work_item_group_id
+                + ' parent: ' + parent
+                + ' save_items: ' + json.dumps(save_items)
+            )
         else:
             print('commit')
             self.session.commit()
@@ -625,7 +635,7 @@ class OrganizationAccessControl:
         return success
 
     def get_step_actions(self, step_id):
-        return self.session.query(models.StepAction).filter_by(step_id=step_id).all()
+        return self.session.query(models.StepAction).filter_by(step_id=step_id).order_by(models.StepAction.order).all()
 
     def get_attr_from_id(self, table_object_id, row_id, attr):
         table_object = self.session.query(models.TableObject).filter_by(id=table_object_id).first()
