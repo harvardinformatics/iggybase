@@ -78,77 +78,46 @@ $( document ).ready( function () {
         var link_column = $( "#linkcolumn_" + table_object_id ).val( );
         var parent_name = $( '#old_value_name_1' ).val( );
 
-        var old_id;
-        var row_id;
+        var new_tr = $( "#" + target + " tr:last" ).clone( );
 
-        var new_tr = $( "#" + target + " tr:last" ).clone( )
+        var old_id = new_tr.attr( 'row_id' );
+        var row_id = parseInt( old_id ) + 1;
+
+        new_tr.attr( 'row_id', row_id );
+
+        var values = new Array();
+        var inputs = new Array();
 
         new_tr.find( "input, select" ).each(
             function() {
-		        var id = $(this).attr( 'id' );
-		        var matches = id.match( /(\S+)_(\d+)/);
+                if ( $( this ).css( 'display' ) == 'none' ) {
+                    $( this ).remove( );
+                } else {
+                    var id = $(this).attr( 'id' );
+                    var matches = id.match( /(\S+)_(\d+)/);
 
-		        if ( matches && matches.length > 1 ) {
-		            old_id = matches[ 2 ];
-		            row_id = parseInt( matches[ 2 ] )+ 1;
-                    var td = $( this ).closest( 'td' );
+                    if ( matches && matches.length > 1 ) {
+                        var td = $( this ).closest( 'td' );
 
-                    var new_id = matches[ 1 ] + "_" + ( row_id );
+                        var new_id = matches[ 1 ] + "_" + ( row_id );
 
-                    if ( $( this ).prop( 'type' ) == 'select-one' ) {
-                        if ( 'data_entry_' + link_column == matches[ 1 ] ) {
-                            $( this ).attr( 'id', new_id ).attr( 'name', new_id );
-                            $( this ).filter( function( ) { return $( this ).text( ) == parent_name; } ).prop( 'selectedIndex', true );
+                        if ( $( this ).prop( 'type' ) == 'select-one' ) {
+                            if ( 'data_entry_' + link_column == matches[ 1 ] ) {
+                                $( this ).attr( 'id', new_id ).attr( 'name', new_id );
+                                $( this ).filter( function( ) { return $( this ).text( ) == parent_name; } ).prop( 'selectedIndex', true );
+                            } else {
+                                $( this ).prop( 'selectedIndex', 0 ).attr( 'id', new_id ).attr( 'name', new_id );
+                            }
                         } else {
-                            $( this ).prop( 'selectedIndex', 0 ).attr( 'id', new_id ).attr( 'name', new_id );
+                            if ( 'data_entry_' + link_column == matches[ 1 ] )
+                                $( this ).val( parent_name ).attr( 'id', new_id ).attr( 'name', new_id );
+                            else
+                                $( this ).val( '' ).attr( 'id', new_id ).attr( 'name', new_id );
                         }
-                    } else {
-                        if ( 'data_entry_' + link_column == matches[ 1 ] )
-                            $( this ).val( parent_name ).attr( 'id', new_id ).attr( 'name', new_id );
-                        else
-                            $( this ).val( '' ).attr( 'id', new_id ).attr( 'name', new_id );
-                    }
-
-                    var searchbutton = $( td ).find( '.search-button' );
-                    if ( searchbutton.length ) {
-                        $( searchbutton ).click(
-                            function( ) {
-                                $.fn.searchClick( $( this ) );
-                            }
-                        );
-                        var luid = $( this ).attr( "id" )
-                        $( searchbutton ).attr( "luid", luid )
-                    }
-
-                    if ( $( this ).hasClass( 'datepicker-field' ) ) {
-                        $( this ).datepicker({
-                            format: 'yyyy-mm-dd',
-                            autoclose: true
-
-                        });
-                    }
-
-                    if ( $( this ).hasClass( 'lookupfield' ) ) {
-                        $( this ).keydown(
-                            function ( e ) {
-                                return $.fn.keydownLookupField( e, $( this ) );
-                            }
-                        );
-                    }
-
-                    if ( $( this ).hasClass( 'boolean-field' ) ) {
-                        $( this ).change(
-                            function( ) {
-                                $.fn.changeCheckBox( $( this ) );
-                            }
-                        );
                     }
                 }
             }
         ).end( ).appendTo( "#" + target );
-
-        var values = new Array();
-        var inputs = new Array();
 
         $('input[id$="_' + old_id + '"]' ).each(
             function() {
@@ -157,31 +126,70 @@ $( document ).ready( function () {
                     var new_id = matches[ 1 ] + "_" + ( row_id );
                     var value = '';
 
-                    var new_input = $( '<input>' ).attr( {
-                        type: 'hidden',
-                        id: new_id,
-                        name: new_id
-                    } ).appendTo( new_tr );
-
                     if ( matches[ 1 ] == 'old_value_name' || matches[ 1 ] == 'record_data_row_name' ) {
-                        values[values.length] = 'new';
-                        inputs[inputs.length] = new_id
+                        value = 'new';
                     } else if ( matches[ 1 ] == 'record_data_table_id' ) {
-                        values[values.length] = table_object_id;
-                        inputs[inputs.length] = new_id
+                        value = table_object_id;
                     } else if ( matches[ 1 ] == 'record_data_table_name' ) {
-                        values[values.length] = target;
-                        inputs[inputs.length] = new_id
+                        value = target;
                     } else if ( 'old_value_' + link_column == matches[ 1 ] ) {
-                        values[values.length] = $( this ).val();
-                        inputs[inputs.length] = new_id
+                        value = $( this ).val( );
                     }
+
+                    var new_input = $( '<input>' ).attr( {
+                        style: 'display:none;',
+                        id: new_id,
+                        name: new_id,
+                        value: value
+                    } ).appendTo( new_tr );
                 }
             }
         )
 
-        for ( var i = 0; i < values.length; i++ )
-            document.getElementsByName( inputs[ i ] )[ 0 ].value = values[ i ];
+        new_tr.find( '.search-button' ).each(
+            function() {
+                $( this ).click(
+                    function( ) {
+                        $.fn.searchClick( $( this ) );
+                    }
+                );
+                var luid = $( this ).attr( "luid" ).match( /(\S+)_(\d+)/);
+                new_luid = luid[ 1 ] + "_" + row_id
+                $( this ).attr( "luid", new_luid );
+            }
+        );
+
+        new_tr.find( '.boolean-field' ).each(
+            function() {
+                $.fn.changeCheckBox( $( this ) );
+
+                $( this ).change(
+                    function( ) {
+                        $.fn.changeCheckBox( $( this ) );
+                    }
+                );
+            }
+        );
+
+        new_tr.find( '.datepicker-field' ).each(
+            function() {
+                $( this ).datepicker({
+                    format: 'yyyy-mm-dd',
+                    autoclose: true
+
+                });
+            }
+        );
+
+        new_tr.find( '.lookupfield' ).each(
+            function() {
+                $( this ).keydown(
+                    function ( e ) {
+                        return $.fn.keydownLookupField( e, $( this ) );
+                    }
+                );
+            }
+        );
     }
 
     $.fn.showModalDialog = function ( url, buttons, callback ) {

@@ -442,7 +442,7 @@ class OrganizationAccessControl:
                                 fk_id = self.get_foreign_key_data(field_data.foreign_key_table_object_id,
                                                                   {fk_display: row_data['data_entry'][field]})
 
-                            if len(fk_id) == 0:
+                            if len(fk_id) == 0 or len(fk_id[0]) == 0:
                                 setattr(instances[row_id], field, None)
                                 row_data['data_entry'][field] = None
                             else:
