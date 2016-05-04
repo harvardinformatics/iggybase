@@ -7,7 +7,9 @@ from sqlalchemy.engine import reflection
 from sqlalchemy.util.langhelpers import symbol
 from flask_mail import Attachment, Connection, Message, Mail
 
-"""# db_session and db should be passed to ActionManager when initiating.
+"""
+db_session and db should be passed to ActionManager when initiating.
+
 # These imports are backups.
 from database import db_session
 from database import db
@@ -21,24 +23,7 @@ def db_event_pitcher(sender, **kw):
     act_obj must have an execute method
     """
     sender.execute(**kw)
-
-def db_attr_event(target, value, oldvalue, initiator):
-    """
-    Find the appropriate object and verify. 
-    Dispatch if necessary.
-    """
-    op = 'new' if oldvalue == symbol('NO_VALUE') else 'dirty'
-
-    reg_key = 'database:%s:%s:%s' % (target.__tablename__, initiator.key, op)
-    actions = event_registry.get(reg_key, None)
-    import pdb
-    pdb.set_trace()
-    kwargs = {'newvalue': value, 'oldvalue': oldvalue}
-    if actions:
-        for action in actions:
-            if action.verify(target, op, **kwargs):
-                action.dispatch(target, op, **kwargs)
-    return target
+    return
 
 
 def db_event(session, stat, instances):
@@ -48,7 +33,6 @@ def db_event(session, stat, instances):
     def event_scan(session_itr):
         """Scans the event objects (db table create/update/delete actions).
         """
-        
         for obj in session_itr:
             evt_name = getattr(obj, '__tablename__', None)
             model_name = '%s:%s' % (evt_cat, evt_name)
@@ -62,27 +46,43 @@ def db_event(session, stat, instances):
                 actions = event_registry.get(kk, None)
 
                 # Shouldn't happen possible keys were anded with registry entries.
-                if not actions:  
+                if not actions:
                     continue
 
-            for action in actions:
-                if action.verify(obj, evt_type):
-                    action.dispatch(obj, event_type=evt_type)
-    
+                for action in actions:
+                    if action.verify(obj, evt_type):
+                        action.dispatch(obj, event_type=evt_type)
+
     evt_cat = 'database'
 
+
     if session.deleted:
-        print(session.deleted)
         evt_type = 'deleted'
         event_scan(session.deleted)
     if session.new:
-        print(session.new)
         evt_type = 'new'
-        event_scan(session.deleted)        
+        event_scan(session.new)
     if session.dirty:
-        print(session.dirty)
         evt_type = 'dirty'
         event_scan(session.dirty)
+
+
+def db_attr_event(target, value, oldvalue, initiator):
+    """
+    Find the appropriate object and verify.
+    Dispatch if necessary.
+    """
+    op = 'new' if oldvalue == symbol('NO_VALUE') else 'dirty'
+
+    reg_key = 'database:%s:%s:%s' % (target.__tablename__, initiator.key, op)
+    actions = event_registry.get(reg_key, None)
+    kwargs = {'newvalue': value, 'oldvalue': oldvalue}
+    if actions:
+        for action in actions:
+            if action.verify(target, op, **kwargs):
+                action.dispatch(target, op, **kwargs)
+
+    return target
 
 
 
@@ -91,14 +91,15 @@ def db_rollback(session):
 
 
 def init_app(app, session):
+    if hasattr(app, 'act_manager'):
+        return app.act_manager
     app.act_manager = ActionManager(app, session)
     act_manager = app.act_manager
-    return act_manager
 
-    
+
 class ActionManager(object):
     """
-    Instantiated after app initialization. Store instance globally and use it to 
+    Instantiated after app initialization. Store instance globally and use it to
     register actions. Session and app must be provided.
     """
     name = 'Action Manager'
@@ -110,15 +111,15 @@ class ActionManager(object):
         self.db_action_signal = signal('action_signal')
         self.db_action_signal.connect(db_event_pitcher)
 
-        #event.listen(self.session, 'before_flush', db_event)
+        event.listen(self.session, 'before_flush', db_event)
 
-        #event.listen(self.session, 'after_rollback', db_rollback)
+        event.listen(self.session, 'after_rollback', db_rollback)
 
-        
+
     def register_db_event(self, action):
         """Registers an action's event.
 
-        The event is identified by category, name, and type. The 
+        The event is identified by category, name, and type. The
         Categories are: database
         For database events:
              model,
@@ -147,14 +148,11 @@ class ActionManager(object):
 
         # The registry: keys are like: 'database-model-field_name-dirty'
         event_registry.setdefault(k, []).append(action)
-        
+
         # The listener needs the model.attribute such as: User.first_name
-        if action.model:
+        if action.model and action.display_name and action.event_type == 'dirty':
             collection = getattr(action.model, action.display_name)
-        else:
-            collection = eval(action.model)
-                                 
-        event.listen(collection, 'set', db_attr_event)
+            event.listen(collection, 'set', db_attr_event)
 
 
     def unregister(self, action):
@@ -194,7 +192,7 @@ class VerifyObject(object):
 
 
     def delete_param(self, tablename, fieldname, keyname):
-                      
+
         try:
             table_level = self.lookups[tablename]
             name_level = table_level[fieldname]
@@ -234,7 +232,7 @@ class VerifyObject(object):
         except KeyError:
             return 'not found'
 
-                
+
 
 
 class Action(object):
@@ -248,13 +246,13 @@ class Action(object):
     default: database
     """
     name = 'Action'
-    description = 'Base Action class for database events.'
-    
+    description = 'Base class for database events.'
+
     def __init__(self, cat='database', model=None, display_name=None,
                  event_type='dirty', **kwargs):
         """
-        verify_params (kwargs) are used by the verify method to further test the 
-        validity of an event. 
+        verify_params (kwargs) are used by the verify method to further test the
+        validity of an event.
         """
         if not cat:
             raise ValueError('category cannot be None')
@@ -267,12 +265,12 @@ class Action(object):
             raise ValueError('event_type cannut be null')
         else:
             self.event_type = event_type
-            
+
         if kwargs:
             for k,v in kwargs.items():
                 setattr(self, k, v)
         keys = kwargs.keys()
-        
+
         if 'tablename' in keys and 'fieldname' in keys and 'keyname' in keys \
            and 'rows' in keys:
             if self.tablename and self.fieldname and self.keyname and self.rows:
@@ -282,8 +280,8 @@ class Action(object):
 
 
     def verify(self, obj, evt_type, **kwargs):
-        """Validate event. 
-        Returning False means the event is a don't care. 
+        """Validate event.
+        Returning False means the event is a don't care.
         Otherwise, returning True (default)  validates the object.
         It can then be either call the execute method. Or, it can return True
         and the execute will be dispatched via a signal maybe in another thread.
@@ -306,11 +304,11 @@ class Action(object):
         else:
             raise ValueError('Missing params')
         return
-    
+
 
 
     def dispatch(self, obj, event_type, **kwargs):
-        """Enqueue the object for a signal. 
+        """Enqueue the object for a signal.
         False return means nothing enqueued.
         """
         kwargs['obj'] = obj
@@ -330,7 +328,7 @@ class EmailAction(Action):
     def __init__(self, *args, **kwargs):
         """kwargs may contain email Message fields.
 
-        If a message field is not provided as a parameter, that field's name, say - bcc, 
+        If a message field is not provided as a parameter, that field's name, say - bcc,
         can be derived by overidding the bcc method below or any one of the methods that
         corresponds to a Message field.
 
@@ -342,7 +340,7 @@ class EmailAction(Action):
         """
         Action.__init__(self, *args, **kwargs)
 
-        
+
     def get_subject(self, **kwargs):
         """
         Email subject string.
@@ -351,7 +349,7 @@ class EmailAction(Action):
         if hasattr(self, 'subject'):
             return getattr(self, 'subject', None)
         return None
-    
+
     def get_recipients(self, **kwargs):
         """
         Recipients list
@@ -393,7 +391,7 @@ class EmailAction(Action):
                 attchs.append(Attachment(attach))
             return attchs
         return None
-        
+
     def get_reply_to(self, **kwargs):
         if hasattr(self, 'reply_to'):
             return getattr(self, 'reply_to', None)
@@ -438,11 +436,11 @@ class EmailAction(Action):
 
         template = Template(ctx['text'])
         return template.render(ctx['context'])
-    
+
 
     def render_from_template(self, ctx, environ):
         """
-        Mail environment must be valid in order to find the 
+        Mail environment must be valid in order to find the
         template in the file system.
         ctx is { 'template': xxx.html, 'context': { ... } }
         """

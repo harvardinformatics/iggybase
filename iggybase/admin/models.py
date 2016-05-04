@@ -607,10 +607,12 @@ class WorkItem(Base):
     table_object_id = Column(Integer, ForeignKey('table_object.id'))
     row_id = Column(Integer)
     notes = Column(String(255))
+    parent_id = Column(Integer, ForeignKey('work_item.id'))
+
 
     work_item_work_item_group = relationship("WorkItemGroup", foreign_keys=[work_item_group_id])
-    work_item_table_object = relationship("TableObject",
-            foreign_keys=[table_object_id])
+    work_item_table_object = relationship("TableObject", foreign_keys=[table_object_id])
+    work_item_work_item = relation('WorkItem', remote_side="WorkItem.id", foreign_keys=[parent_id])
 
     def __repr__(self):
         return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \

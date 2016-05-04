@@ -97,7 +97,7 @@ class OrganizationAccessControl:
 
             if len(columns) == 0:
                 return results
-            
+
             criteria = [getattr(table_object, 'organization_id').in_(self.org_ids)]
 
             for key, value in params.items():
@@ -342,7 +342,7 @@ class OrganizationAccessControl:
                 current_field_data = table_field_data[table_id_field]
 
                 if row_id not in instances:
-                    if current_inst_name == 'new':
+                    if current_inst_name == 'new' or current_inst_name == '':
                         instances[row_id] = current_table_object()
                         setattr(instances[row_id], 'date_created', datetime.datetime.utcnow())
 
@@ -592,7 +592,7 @@ class OrganizationAccessControl:
             self.session.commit()
         return updated
 
-    def save_work_items(self, work_item_group_id, save_items):
+    def save_work_items(self, work_item_group_id, save_items, parent):
         table_model = util.get_table('work_item')
         work_item_table_object = self.session.query(models.TableObject).filter_by(name='work_item').first()
         table_object_id = None
@@ -601,9 +601,19 @@ class OrganizationAccessControl:
             for item in save_items:
                 table_object_id = self.session.query(models.TableObject.id).filter_by(name=item['table']).first()[0]
                 new_name = work_item_table_object.get_new_name()
+                if parent:
+                    parent_table_object_id = self.session.query(models.TableObject.id).filter_by(name=parent['table']).first()[0]
+                    filters = [
+                            (models.WorkItem.work_item_group_id == work_item_group_id),
+                            (models.WorkItem.table_object_id ==
+                                parent_table_object_id),
+                            (models.WorkItem.row_id == parent['id'])
+                    ]
+                    parent_id = self.session.query(models.WorkItem.id).filter(*filters).first()[0]
                 new_row = table_model(name= new_name, active=1,
                         organization_id=1, work_item_group_id = work_item_group_id,
-                        table_object_id = table_object_id, row_id = item['id'])
+                        table_object_id = table_object_id, row_id = item['id'],
+                        parent_id = parent_id)
                 self.session.add(new_row)
         except:
             print('rollback')

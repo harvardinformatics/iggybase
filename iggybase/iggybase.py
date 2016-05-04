@@ -54,7 +54,7 @@ def configure_extensions( app, db ):
     # Configure actions - the import statement has to be here since it
     # can't preceed the user datastor setup.
     from iggybase.admin.events import StartEvents
-    StartEvents().configure(db_session)
+    StartEvents(app).configure(db_session)
 
     return security, user_datastore
 
