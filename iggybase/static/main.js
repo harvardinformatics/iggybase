@@ -161,13 +161,13 @@ $( document ).ready( function () {
 
         new_tr.find( '.boolean-field' ).each(
             function() {
-                $.fn.changeCheckBox( $( this ) );
-
                 $( this ).change(
                     function( ) {
                         $.fn.changeCheckBox( $( this ) );
                     }
                 );
+
+                $.fn.changeCheckBox( $( this ) );
             }
         );
 

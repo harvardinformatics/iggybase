@@ -246,7 +246,7 @@ class OrganizationAccessControl:
 
         if table_data is not None:
             field_data = role_access_control.fields(table_data.id,
-                                                    {'field.field_name': search_display_name})
+                                                    {'field.display_name': search_display_name})
 
             if field_data is not None:
                 search_table = role_access_control.has_access('TableObject',
