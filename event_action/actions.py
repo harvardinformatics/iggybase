@@ -111,8 +111,13 @@ class ActionManager(object):
         self.db_action_signal = signal('action_signal')
         self.db_action_signal.connect(db_event_pitcher)
 
+        # Guarantee Idempotence
+        if event.contains(self.session, 'before_flush', db_event):
+            return
         event.listen(self.session, 'before_flush', db_event)
 
+        if event.contains(self.session, 'after_rollback', db_rollback):
+            return
         event.listen(self.session, 'after_rollback', db_rollback)
 
 
@@ -152,6 +157,9 @@ class ActionManager(object):
         # The listener needs the model.attribute such as: User.first_name
         if action.model and action.display_name and action.event_type == 'dirty':
             collection = getattr(action.model, action.display_name)
+            # Guarantee Idempotence by not repeateing this event.
+            if event.contains(collection, 'set', db_attr_event):
+                return
             event.listen(collection, 'set', db_attr_event)
 
 
@@ -249,7 +257,9 @@ class Action(object):
     description = 'Base class for database events.'
 
     def __init__(self, cat='database', model=None, display_name=None,
-                 event_type='dirty', **kwargs):
+                 event_type='dirty', 
+                 verify_callback=None,
+                 execute_callback=None, **kwargs):
         """
         verify_params (kwargs) are used by the verify method to further test the
         validity of an event.
@@ -265,6 +275,8 @@ class Action(object):
             raise ValueError('event_type cannut be null')
         else:
             self.event_type = event_type
+        self.verify_callback = verify_callback
+        self.execute_callback = execute_callback
 
         if kwargs:
             for k,v in kwargs.items():
@@ -286,7 +298,10 @@ class Action(object):
         It can then be either call the execute method. Or, it can return True
         and the execute will be dispatched via a signal maybe in another thread.
         """
-        return True
+        if self.verify_callback:
+            return self.verify_callback(obj, evt_type, **kwargs)
+        else:
+            return True
 
 
     def load_params(self, tablename, fieldname, keyname, rows):
@@ -317,7 +332,9 @@ class Action(object):
         pitcher.send(self, **kwargs)
 
     def execute(self, obj, **kwargs):
-        "execute the action"
+        """execute the action"""
+        if self.execute_callback:
+            self.execute_callback(obj, event_type, kwargs)
         return
 
 

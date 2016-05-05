@@ -375,88 +375,6 @@ class Permission(Base):
                (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
 
 
-'''class Event(Base):
-    """Events are triggered by one of: database action (new, updated, or deleted
-    records), workflow steps, or timed periodic. Each event has one or more assiciated
-    actions. Event is a base class for all types of events.
-    """
-    __tablename__ = 'event'
-    table_type = 'admin'
-    id = Column(Integer, primary_key=True)
-    name = Column(String(100), unique=True)
-    description = Column(String(255))
-    date_created = Column(DateTime, default=datetime.datetime.utcnow)
-    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
-    active = Column(Boolean)
-    organization_id = Column(Integer, ForeignKey('organization.id'))
-    order = Column(Integer)
-
-class DatabaseEvent(Event):
-    """Database events.
-    table_object - the table for the event is triggered.
-    field - the table's field.
-    field_value - a value that either changes or is created or even deleted.
-    action_type - selectable
-    """
-    __tablename__ = 'database_event'
-    table_type = 'admin'
-    id = Column(Integer, ForeignKey('event.id'), primary_key=True)
-    table_object_id = Column(Integer, ForeignKey('table_object.id'))
-    field_id = Column(Integer, ForeignKey('field.id'))
-    field_value = Column(String(255))  # eg. 'Turnbaugh' | 'Purchase_Order'
-
-    table_object = relationship("TableObject")
-    organization = relationship("Organization")
-
-    def __repr__(self):
-        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
-               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
-
-
-class Action(Base):
-    """Actions taken for a specific event. Events can have multiple actions
-    This is a base class.
-    """
-    __tablename__ = 'action'
-    table_type = 'admin'
-
-    def __repr__(self):
-        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
-               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
-
-    id = Column(Integer, ForeignKey('action.id'), primary_key=True)
-    text = Column(String(1024))
-    subject = Column(String(100))
-    email_recipients = Column(String(1024)) # csv email@addresses
-    email_cc = Column(String(1024)) # csv email@addresses
-    email_bcc = Column(String(1024))
-
-    def __repr__(self):
-        return "<EmailAction(name=%s, id=%s>" \
-            (self.name, self.id)
-
-
-class ActionValue(Base):
-    """Values used for creating context for text rendering.
-    For example, ... {{ name }} ... would have a context of
-    {'name': valueof(table_object.field)}.
-    """
-    __tablename__ = 'action_value'
-    table_type = 'admin'
-    id = Column(Integer, primary_key=True)
-    name = Column(String(100), unique=True)
-    description = Column(String(255))
-    date_created = Column(DateTime, default=datetime.datetime.utcnow)
-    last_modified = Column(DateTime, default=datetime.datetime.utcnow)
-    active = Column(Boolean)
-    action_id = Column(Integer, ForeignKey('action.id'))
-    table_object_id = Column(Integer, ForeignKey('table_object.id'))
-    field_id = Column(Integer, ForeignKey('field.id'))
-
-    def __repr__(self):
-        return "<ActionValue(name=%s, id=%d, action_id=%d, table_object_id=%d, field_id=%d)>" \
-               (self.name, self.id, self.action_id, self.table_object_id, self.field_id)
-'''
 
 
 class TableQuery(Base):
@@ -753,10 +671,10 @@ class DatabaseEvent(Event):
     field = relationship("Field")
 
     def __repr__(self):
-        return "<DatabaseEvent(id=%s, name=%s, description=%s, active=%s, table_object=%s, field=%s, event_type=%s" % \
-            (self.id, self.name,
+        return "<DatabaseEvent(id=%s, description=%s, table_object=%s, field.display_name=%s, event_type=%s" % \
+            (self.id, 
              repr(getattr(self, 'description', None)), self.active,
-             self.table_object.name, repr(getattr(self, 'field.name', None)),
+             self.table_object.name, repr(getattr(self, 'field.display_name', None)),
              self.event_type.name)
 
 
@@ -775,14 +693,18 @@ class Action(Base):
     table_type = 'admin'
     action_type_id = Column(Integer, ForeignKey('action_type.id'))
     event_id = Column(Integer, ForeignKey('event.id'))
-
+    verify_callback_func = Column(String(100), default=None)
+    execute_callback_func = Column(String(100), default=None)
+    callback_func_module = Column(String(255), default=None)
     action_type = relationship('ActionType')
+
     event = relationship("Event", backref='actions')
+    organization = relationship('Organization')
 
     def __repr__(self):
-        return "<Action(name=%s, id=%s, active=%s, organization=%s, table_object=%s" % \
-            (self.name, repr(self.active), self.organization.name,
-             self.table_object.name)
+        return "<Action(name=%s, id=%s, description=%s, organization=%s," % \
+            (self.name, self.id, self.description, self.organization.name)
+
 
 class EmailAction(Action):
     table_type = 'admin'
@@ -809,6 +731,7 @@ class ActionValue(Base):
     field_id = Column(Integer, ForeignKey('field.id'))
     action_id = Column(Integer, ForeignKey('action.id'))
 
+    table_object = relationship("TableObject")
     field = relationship("Field")
     action = relationship("Action", backref='action_values')
 
