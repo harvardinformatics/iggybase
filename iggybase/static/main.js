@@ -232,9 +232,13 @@ $( document ).ready( function () {
     $.fn.changeCheckBox = function ( ele ) {
         bool_id = 'bool_' + ele.attr( 'id' );
         if ( ele.is(':checked') ) {
-            $( "#" + bool_id ).val( 'y' ).attr( 'disabled', 'disabled' );
+            $( "#" + ele.attr( 'id' ) ).attr( 'value', 'y' )
+            $( "#" + bool_id ).attr( 'value', 'y' )
+            $( "#" + bool_id ).attr( 'disabled', 'disabled' );
         } else {
-            $( "#" + bool_id ).val( 'n' ).removeAttr( 'disabled' );
+            $( "#" + ele.attr( 'id' ) ).attr( 'value', 'n' )
+            $( "#" + bool_id ).attr( 'value', 'n' )
+            $( "#" + bool_id ).removeAttr( 'disabled' );
         }
     }
 

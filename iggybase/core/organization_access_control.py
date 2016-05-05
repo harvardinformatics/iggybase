@@ -303,6 +303,8 @@ class OrganizationAccessControl:
         for key in request.form:
             data = request.form.get(key)
 
+            # logging.info(key + ': ' + data)
+
             if key.startswith('bool_'):
                 key = key[key.index('_') + 1:]
 
