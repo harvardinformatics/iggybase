@@ -493,7 +493,6 @@ class Step(Base):
     table_type = 'admin'
     display_name = Column(String(100))
     workflow_id = Column(Integer, ForeignKey('workflow.id'))
-    status_id = Column(Integer)
     route_id = Column(Integer, ForeignKey('route.id'))
     table_object_id = Column(Integer, ForeignKey('table_object.id'))
     params = Column(String(255))
@@ -501,7 +500,6 @@ class Step(Base):
     dynamic_field = Column(Integer, ForeignKey('field.id'))
 
     step_workflow = relationship("Workflow", foreign_keys=[workflow_id])
-    #step_status = relationship("Status", foreign_keys=[status_id])
     step_route = relationship("Route", foreign_keys=[route_id])
     step_table_object = relationship("TableObject", foreign_keys=[table_object_id])
     step_dynamic_field = relationship("Field", foreign_keys=[dynamic_field])
@@ -517,7 +515,9 @@ class WorkItemGroup(Base):
     step_id = Column(Integer, ForeignKey('step.id'))
     assigned_to = Column(Integer, ForeignKey('user.id'))
     notes = Column(String(255))
+    status = Column(Integer, ForeignKey('select_list.id'))
 
+    work_item_group_select_list = relationship("SelectList", foreign_keys=[status])
     work_item_group_workflow = relationship("Workflow", foreign_keys=[workflow_id])
     work_item_group_step = relationship("Step", foreign_keys=[step_id])
     work_item_group_user = relationship("User", foreign_keys=[assigned_to])
@@ -679,7 +679,7 @@ class DatabaseEvent(Event):
 
     def __repr__(self):
         return "<DatabaseEvent(id=%s, description=%s, table_object=%s, field.display_name=%s, event_type=%s" % \
-            (self.id, 
+            (self.id,
              repr(getattr(self, 'description', None)), self.active,
              self.table_object.name, repr(getattr(self, 'field.display_name', None)),
              self.event_type.name)

@@ -580,22 +580,13 @@ class OrganizationAccessControl:
                 self.session.rollback()
         return updated
 
-    def update_step(self, group_id, step, workflow_id):
-        table_model = util.get_table('work_item_group')
+    def update_step(self, work_item_group_id, step, workflow_id):
         res = (self.session.query(models.Workflow, models.Step).
                join(models.Step).
                filter(models.Step.order == step, models.Workflow.id ==
                    workflow_id).first())
         step_id = res.Step.id
-        work_item_group = table_model.query.filter(table_model.id == group_id, getattr(table_model, 'organization_id').in_(self.org_ids)).first()
-        updated = False
-        try:
-            setattr(work_item_group, 'step_id', res.Step.id)
-            updated = True
-        except AttributeError:
-            pass
-        if updated:
-            self.session.commit()
+        updated = self.update_work_item_group(work_item_group_id, 'step_id', step_id)
         return updated
 
     def save_work_items(self, work_item_group_id, save_items, parent):
@@ -645,3 +636,16 @@ class OrganizationAccessControl:
         row = self.session.query(table_model).filter_by(id=row_id).first()
         return getattr(row, attr)
 
+    def update_work_item_group(self, work_item_group_id, attr, value):
+        table_model = util.get_table('work_item_group')
+        work_item_group = table_model.query.filter(table_model.id == work_item_group_id, getattr(table_model, 'organization_id').in_(self.org_ids)).first()
+        updated = False
+        try:
+            setattr(work_item_group, attr, value)
+            updated = True
+        except AttributeError:
+            pass
+        if updated:
+            self.session.commit()
+            current_app.cache.increment_version('work_item_group')
+        return updated

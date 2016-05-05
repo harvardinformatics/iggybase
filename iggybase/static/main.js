@@ -37,6 +37,10 @@ $( document ).ready( function () {
         }
     );
 
+    $('.disabled').click(function(e){
+        e.preventDefault();
+    });
+
     $('.change_role').click(function(){
         var currenturl = $.fn.parseURL(document.URL);
         var paths = currenturl.pathname.split("/");
