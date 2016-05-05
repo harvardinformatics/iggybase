@@ -58,6 +58,7 @@ class TableObject(Base):
     new_name_prefix = Column(String(10))
     new_name_id = Column(Integer)
     id_length = Column(Integer)
+    display_name = Column(String(50))
 
     def get_new_name(self):
         new_name = self.new_name_prefix + str(self.new_name_id).zfill(self.id_length)
@@ -164,6 +165,7 @@ class Route(Base):
     table_type = 'admin'
     module_id = Column(Integer, ForeignKey('module.id'))
     url_path = Column(String(512), unique=True)
+    display_name = Column(String(50))
 
     route_module = relationship("Module", foreign_keys=[module_id])
 
@@ -195,6 +197,7 @@ class RouteRole(Base):
     table_type = 'admin'
     role_id = Column(Integer, ForeignKey('role.id'))
     route_id = Column(Integer, ForeignKey('route.id'))
+    display_name = Column(String(50))
 
     route_role_role = relationship(
         "Role", foreign_keys=[role_id])
@@ -240,6 +243,7 @@ class PageForm(Base):
     page_header = Column(String(50))
     page_template = Column(String(100))
     parent_id = Column(Integer, ForeignKey('page_form.id'))
+    display_name = Column(String(50))
 
     parent = relation('PageForm', remote_side="PageForm.id", foreign_keys=[parent_id])
 
@@ -264,6 +268,7 @@ class PageFormRole(Base):
     table_type = 'admin'
     role_id = Column(Integer, ForeignKey('role.id'))
     page_form_id = Column(Integer, ForeignKey('page_form.id'))
+    display_name = Column(String(50))
 
     page_role_role = relationship("Role", foreign_keys=[role_id])
     page_role_page = relationship("PageForm", foreign_keys=[page_form_id])
@@ -283,6 +288,7 @@ class PageFormButton(Base):
     button_id = Column(String(100))
     special_props = Column(String(255))
     submit_action_url = Column(String(255))
+    display_name = Column(String(50))
 
     page_form_button_page_form = relationship("PageForm", foreign_keys=[page_form_id])
 
@@ -295,6 +301,7 @@ class PageFormButtonRole(Base):
     table_type = 'admin'
     role_id = Column(Integer, ForeignKey('role.id'))
     page_form_button_id = Column(Integer, ForeignKey('page_form_button.id'))
+    display_name = Column(String(50))
 
     page_form_button_role_role = relationship("Role", foreign_keys=[role_id])
     page_form_button_role_page_form = relationship("PageFormButton", foreign_keys=[page_form_button_id])
