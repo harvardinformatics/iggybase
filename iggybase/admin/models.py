@@ -699,11 +699,12 @@ class Action(Base):
     action_type = relationship('ActionType')
 
     event = relationship("Event", backref='actions')
+    organization = relationship('Organization')
 
     def __repr__(self):
-        return "<Action(name=%s, id=%s, active=%s, organization=%s, table_object=%s" % \
-            (self.name, repr(self.active), self.organization.name,
-             self.table_object.name)
+        return "<Action(name=%s, id=%s, description=%s, organization=%s," % \
+            (self.name, self.id, self.description, self.organization.name)
+
 
 class EmailAction(Action):
     table_type = 'admin'

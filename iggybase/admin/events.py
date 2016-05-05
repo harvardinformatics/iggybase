@@ -20,11 +20,6 @@ class StartEvents(object):
         """
         Look for events and register their actions.
         """
-        pass
-        '''
-        WAS getting error on start up so I commented this out for now
-
-
         db_events = db_session.query(DatabaseEvent).filter_by(active=True)
         for db_event in db_events.all():
             actions = db_event.actions
@@ -34,13 +29,14 @@ class StartEvents(object):
                 action_obj = EmailAction if act.action_type == 'email' else EventAction
                 
                 if act.action_type.name == 'email':
-                    for action_val in action_values:
+                    for action_val in act.action_values:
                         try:
-                            query_obj = get_table(action_valtable_object.name)
+                            query_obj = get_table(action_val.table_object.name)
                         except:
                             raise ValueError(' cannot load table %s' % table_object.name)
                         value = db_session.query(query_obj).first()
                         ctx[action_val.name] =  value
+
                     kwargs = {'body': {'text': act.text, 'context': ctx },
                               'subject': act.subject,
                               'email_recipients': act.email_recipients}
@@ -65,7 +61,7 @@ class StartEvents(object):
                 self.actions.append(new_action)
 
         for action in self.actions:
-            self.app.act_manager.register_db_event(action)'''
+            self.app.act_manager.register_db_event(action)
 
-
-
+                                   
+        
