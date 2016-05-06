@@ -533,31 +533,23 @@ class RoleAccessControl:
             return True
         return False
 
-    def work_item_group(self, work_item_group):
+    def workflow(self, workflow_name):
         res = None
-        if work_item_group:
-            res = (self.session.query(models.Workflow, models.WorkItemGroup, models.Step, models.TableObject, models.Route, models.Module, models.Field).
-                join(models.WorkItemGroup).
-                join(models.Step).
-                join(models.TableObject).
-                join(models.Route).
-                join(models.Module).
-                outerjoin(models.Field, models.Step.dynamic_field ==
-                    models.Field.id).
-                filter(models.WorkItemGroup.name == work_item_group).first())
-        return res
-
-    def work_items(self, work_item_group_id):
-        res = None
-        if work_item_group_id:
-            res = (self.session.query(models.WorkItem).
-                filter(models.WorkItem.work_item_group_id == work_item_group_id).all())
+        if workflow_name:
+            res = (self.session.query(models.Workflow).
+                filter(models.Workflow.name == workflow_name).first())
         return res
 
     def workflow_steps(self, workflow_id):
         res = None
         if workflow_id:
-            res = (self.session.query(models.Step).
+            res = (self.session.query(models.Step, models.TableObject,
+                models.Route, models.Module, models.Field).
+                join(models.TableObject).
+                join(models.Route).
+                join(models.Module).
+                outerjoin(models.Field, models.Step.dynamic_field ==
+                    models.Field.id).
                 filter(models.Step.workflow_id == workflow_id).
                 order_by(models.Step.order).all())
         return res
