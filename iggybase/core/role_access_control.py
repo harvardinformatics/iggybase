@@ -176,6 +176,7 @@ class RoleAccessControl:
             models.TableObjectRole
         ]
         orders = [
+            models.FieldRole.order,
             models.Field.order
         ]
         outerjoins = []
@@ -208,7 +209,7 @@ class RoleAccessControl:
                 join(
                 models.TableObject,
                 models.TableObject.id == models.Field.table_object_id
-            ).
+                ).
                 join(*joins).
                 outerjoin(*outerjoins).
                 filter(*filters).order_by(*orders).all()
@@ -300,27 +301,23 @@ class RoleAccessControl:
             subs = {}
         return subs
 
-    def page_forms(self, active=1):
-        page_forms = []
+    def page_form_ancestors(self, page_form_id, active = 1):
+        res = self.session.query(models.PageForm).filter_by(id=page_form_id). \
+            filter_by(active=active).first()
 
-        res = self.session.query(models.PageFormRole). \
-            filter_by(role_id=self.role.id).filter_by(active=active). \
-            order_by(models.PageFormRole.order, models.PageFormRole.id).all()
-        for row in res:
-            page_form = self.session.query(models.PageForm). \
-                filter_by(id=row.page_form_id).filter_by(active=active).first()
-            if page_form is not None:
-                page_forms.append(page_form)
-                break
+        page_form_ids = [page_form_id]
 
-        return page_forms
+        if res is not None and res.parent_id is not None:
+            page_form_ids += [self.page_form_ancestors(res.parent_id)]
+
+        return page_form_ids
 
     def page_form_buttons(self, page_form_id, active=1):
-        page_form_buttons = {}
-        page_form_buttons['top'] = []
-        page_form_buttons['bottom'] = []
+        page_form_ids = self.page_form_ancestors(page_form_id, active)
+
+        page_form_buttons = {'top': [], 'bottom': []}
         filters = [
-                models.PageFormButton.page_form_id == page_form_id,
+                models.PageFormButton.page_form_id.in_(page_form_ids),
                 models.PageFormButtonRole.role_id == self.role.id,
                 models.PageFormButton.active == active,
                 models.PageFormButtonRole.active == active,
@@ -337,7 +334,10 @@ class RoleAccessControl:
         return page_form_buttons
 
     def page_form_javascript(self, page_form_id, active=1):
-        res = self.session.query(models.PageFormJavascript).filter_by(page_form_id=page_form_id). \
+        page_form_ids = self.page_form_ancestors(page_form_id, active)
+
+        res = self.session.query(models.PageFormJavascript).\
+            filter(models.PageFormJavascript.page_form_id.in_(page_form_ids)). \
             filter_by(active=active).order_by(models.PageFormJavascript.order, models.PageFormJavascript.id).all()
 
         return res

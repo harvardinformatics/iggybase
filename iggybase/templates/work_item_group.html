@@ -1,24 +1,22 @@
 {% extends template %}
 {% import "bootstrap/wtf.html" as wtf %}
 {% import 'macros.html' as macros %}
-{% block styles %}
-    {{ super() }}
-    <link href="{{ url_for('static', filename='work_item_group.css') }}" rel="stylesheet">
-{%- endblock styles %}
 
 {% block title %}{{ page_title }}{% endblock %}
 {% block content_title -%}
     <div class="content_title">
         <h1>Workflow {{wig.Workflow.name|title}}</h1>
         <h2>Step
-            {% if wig.Step.order %}
-                {{wig.Step.order}}
-            {% endif %}
-            - {{wig.Step.name}}:
+        {{wig.show_step}}
         {% if table_name is defined %}
              {{ table_name.replace( '_',' ' )|title }} {{ page_header.replace( '_',' ' )|title }}</h2>
         {% else %}
             {{ page_header.replace( '_',' ' )|title }}</h1>
+        {% endif %}
+        {% if wig.is_complete() %}
+            <h4 class="red">Status Complete: any edits will overwrite existing work</h4>
+        {% elif wig.is_previous_step() %}
+            <h4 class="red">Step already done: any edits will overwrite existing work</h4>
         {% endif %}
     </div>
     <hr>
@@ -35,15 +33,5 @@
         </form>
     </div>
     <br><br>
-    <div>
-        <ul class='breadcrumbs'>
-            {% for name, step in wig.workflow_steps.items() %}
-            <li><a href='{{step['url']}}'
-                {% if step['current'] %}
-                    class='current'
-                {% endif %}
-                >{{step['num']}}</a></li>
-            {% endfor %}
-        </ul>
-    </div>
+    {{ macros.breadcrumbs( wig.get_breadcrumbs() ) }}
 {%- endblock bottombuttonbar %}

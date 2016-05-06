@@ -6,6 +6,7 @@ from iggybase.admin import models
 from iggybase import models as core_models
 from iggybase import utilities as util
 from sqlalchemy.orm import aliased
+from collections import OrderedDict
 import re
 import datetime
 import sys
@@ -303,6 +304,8 @@ class OrganizationAccessControl:
         for key in request.form:
             data = request.form.get(key)
 
+            # logging.info(key + ': ' + data)
+
             if key.startswith('bool_'):
                 key = key[key.index('_') + 1:]
 
@@ -320,6 +323,7 @@ class OrganizationAccessControl:
         #             logging.info(str(key1) + ' ' + str(key2) + ' ' + str(key3) + ': ' + str(value3))
 
         try:
+            # sorted to preserve screen order of elements
             for row_id in sorted(fields.keys()):
                 row_data = fields[row_id]
 
@@ -343,6 +347,8 @@ class OrganizationAccessControl:
 
                 if row_id not in instances:
                     if current_inst_name == 'new' or current_inst_name == '':
+                        row_modified[row_id] = 0
+
                         instances[row_id] = current_table_object()
                         setattr(instances[row_id], 'date_created', datetime.datetime.utcnow())
 
@@ -359,6 +365,8 @@ class OrganizationAccessControl:
 
                         row_data['data_entry']['name'] = current_inst_name
                     else:
+                        row_modified[row_id] = 1
+
                         instances[row_id] = self.session.query(current_table_object). \
                             filter_by(name=current_inst_name).first()
 
@@ -394,8 +402,6 @@ class OrganizationAccessControl:
                         row_org_id = org_data.id
 
                 row_data['data_entry']['organization_id'] = row_org_id
-
-                row_modified[row_id] = False
 
                 for field, field_data in current_field_data.items():
                     # only update fields that were on the form
@@ -472,7 +478,7 @@ class OrganizationAccessControl:
                                   row_data['data_entry'][field] is None)):
 
                         if not(row_data['record_data']['row_name'] == 'new' and field in ['name', 'organization_id']):
-                            row_modified[row_id] = True
+                            row_modified[row_id] = 2
 
                         # logging.info('field: ' + field + '  old vlaue: ' + str(row_data['old_value'][field]) +
                         #              '  new value: ' + str(row_data['data_entry'][field]))
@@ -494,17 +500,17 @@ class OrganizationAccessControl:
             self.session.add(history_data)
             self.session.flush()
 
-            row_names = {}
+            row_names = OrderedDict()
             table_names = set()
             for row_id in sorted(instances.keys()):
                 instance = instances[row_id]
-                if row_modified[row_id]:
+                if row_modified[row_id] == 2:
                     self.session.add(instance)
                     self.session.flush()
 
                     row_names[row_id] = {'name': instance.name, 'table': instance.__tablename__}
                     table_names.add(instance.__tablename__)
-                elif instance.name is not None:
+                elif row_modified[row_id] == 1:
                     row_names[row_id] = {'name': instance.name, 'table': instance.__tablename__}
                     table_names.add(instance.__tablename__)
 
@@ -578,22 +584,13 @@ class OrganizationAccessControl:
                 self.session.rollback()
         return updated
 
-    def update_step(self, group_id, step, workflow_id):
-        table_model = util.get_table('work_item_group')
+    def update_step(self, work_item_group_id, step, workflow_id):
         res = (self.session.query(models.Workflow, models.Step).
                join(models.Step).
                filter(models.Step.order == step, models.Workflow.id ==
                    workflow_id).first())
         step_id = res.Step.id
-        work_item_group = table_model.query.filter(table_model.id == group_id, getattr(table_model, 'organization_id').in_(self.org_ids)).first()
-        updated = False
-        try:
-            setattr(work_item_group, 'step_id', res.Step.id)
-            updated = True
-        except AttributeError:
-            pass
-        if updated:
-            self.session.commit()
+        updated = self.update_work_item_group(work_item_group_id, 'step_id', step_id)
         return updated
 
     def save_work_items(self, work_item_group_id, save_items, parent):
@@ -643,3 +640,16 @@ class OrganizationAccessControl:
         row = self.session.query(table_model).filter_by(id=row_id).first()
         return getattr(row, attr)
 
+    def update_work_item_group(self, work_item_group_id, attr, value):
+        table_model = util.get_table('work_item_group')
+        work_item_group = table_model.query.filter(table_model.id == work_item_group_id, getattr(table_model, 'organization_id').in_(self.org_ids)).first()
+        updated = False
+        try:
+            setattr(work_item_group, attr, value)
+            updated = True
+        except AttributeError:
+            pass
+        if updated:
+            self.session.commit()
+            current_app.cache.increment_version('work_item_group')
+        return updated

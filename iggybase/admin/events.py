@@ -28,7 +28,7 @@ class StartEvents(object):
             for act in actions:
                 ctx = {}
                 action_obj = EmailAction if act.action_type == 'email' else EventAction
-                
+
                 if act.action_type.name == 'email':
                     for action_val in act.action_values:
                         try:
@@ -47,12 +47,12 @@ class StartEvents(object):
                     if act.email_bcc:
                         kwargs['bcc'] = act.email_cc
 
-                verify_callback = get_func(action_obj.callback_func_module,
+                '''verify_callback = get_func(action_obj.callback_func_module,
                                            action_obj.verify_callback_func)
-                
+
                 execute_callback = get_func(action_obj.callback_func_module,
                                             action_obj.execute_callback_func)
-                    
+
                 new_action = action_obj(get_table(db_event.table_object.name),
                                         db_event.field.display_name,
                                         db_event.event_type.name,
@@ -62,6 +62,8 @@ class StartEvents(object):
                 self.actions.append(new_action)
 
         for action in self.actions:
+
             self.app.act_manager.register_db_event(action)
         """
         return
+
