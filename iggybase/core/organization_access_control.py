@@ -347,6 +347,8 @@ class OrganizationAccessControl:
 
                 if row_id not in instances:
                     if current_inst_name == 'new' or current_inst_name == '':
+                        row_modified[row_id] = 0
+
                         instances[row_id] = current_table_object()
                         setattr(instances[row_id], 'date_created', datetime.datetime.utcnow())
 
@@ -363,6 +365,8 @@ class OrganizationAccessControl:
 
                         row_data['data_entry']['name'] = current_inst_name
                     else:
+                        row_modified[row_id] = 1
+
                         instances[row_id] = self.session.query(current_table_object). \
                             filter_by(name=current_inst_name).first()
 
@@ -398,8 +402,6 @@ class OrganizationAccessControl:
                         row_org_id = org_data.id
 
                 row_data['data_entry']['organization_id'] = row_org_id
-
-                row_modified[row_id] = False
 
                 for field, field_data in current_field_data.items():
                     # only update fields that were on the form
@@ -476,7 +478,7 @@ class OrganizationAccessControl:
                                   row_data['data_entry'][field] is None)):
 
                         if not(row_data['record_data']['row_name'] == 'new' and field in ['name', 'organization_id']):
-                            row_modified[row_id] = True
+                            row_modified[row_id] = 2
 
                         # logging.info('field: ' + field + '  old vlaue: ' + str(row_data['old_value'][field]) +
                         #              '  new value: ' + str(row_data['data_entry'][field]))
@@ -502,13 +504,13 @@ class OrganizationAccessControl:
             table_names = set()
             for row_id in sorted(instances.keys()):
                 instance = instances[row_id]
-                if row_modified[row_id]:
+                if row_modified[row_id] == 2:
                     self.session.add(instance)
                     self.session.flush()
 
                     row_names[row_id] = {'name': instance.name, 'table': instance.__tablename__}
                     table_names.add(instance.__tablename__)
-                elif instance.name is not None:
+                elif row_modified[row_id] == 1:
                     row_names[row_id] = {'name': instance.name, 'table': instance.__tablename__}
                     table_names.add(instance.__tablename__)
 
