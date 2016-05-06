@@ -6,6 +6,7 @@ from iggybase.admin import models
 from iggybase import models as core_models
 from iggybase import utilities as util
 from sqlalchemy.orm import aliased
+from collections import OrderedDict
 import re
 import datetime
 import sys
@@ -322,6 +323,7 @@ class OrganizationAccessControl:
         #             logging.info(str(key1) + ' ' + str(key2) + ' ' + str(key3) + ': ' + str(value3))
 
         try:
+            # sorted to preserve screen order of elements
             for row_id in sorted(fields.keys()):
                 row_data = fields[row_id]
 
@@ -496,7 +498,7 @@ class OrganizationAccessControl:
             self.session.add(history_data)
             self.session.flush()
 
-            row_names = {}
+            row_names = OrderedDict()
             table_names = set()
             for row_id in sorted(instances.keys()):
                 instance = instances[row_id]
