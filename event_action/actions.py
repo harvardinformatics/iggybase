@@ -1,4 +1,5 @@
 from blinker import signal
+import logging
 import flask
 from flask import current_app
 
@@ -150,9 +151,18 @@ class ActionManager(object):
                               (action.event_type, k, str(valid_event_types)))
         k = k + ':' + action.event_type
 
-
         # The registry: keys are like: 'database-model-field_name-dirty'
-        event_registry.setdefault(k, []).append(action)
+        # Don't allow dupes. Make this idempotent.
+        print("one time through")
+        if k not in event_registry:
+            event_registry.setdefault(k, []).append(action)
+        else:
+            if action in event_registry[k]:
+                logging.debug('duplicate action register rejected, %s' % repr(action))
+            else:
+                event_registry[k].append(action)
+
+
 
         # The listener needs the model.attribute such as: User.first_name
         if action.model and action.display_name and action.event_type == 'dirty':
@@ -259,7 +269,8 @@ class Action(object):
     def __init__(self, cat='database', model=None, display_name=None,
                  event_type='dirty', 
                  verify_callback=None,
-                 execute_callback=None, **kwargs):
+                 execute_callback=None,
+                 **kwargs):
         """
         verify_params (kwargs) are used by the verify method to further test the
         validity of an event.
@@ -290,6 +301,14 @@ class Action(object):
                 self.lookups.load_params(self.tablename, self.fieldname,
                                                self.keyname, self.rows)
 
+                
+    def __eq__(self, obj):
+        if self.__dict__ == obj.__dict__:
+            return True
+        else:
+            return False
+
+                                      
 
     def verify(self, obj, evt_type, **kwargs):
         """Validate event.
@@ -328,11 +347,12 @@ class Action(object):
         """
         kwargs['obj'] = obj
         pitcher = signal('action_signal')
-        print('sending signal with kwargs=%s' % (kwargs))
+        logging.debug('sending signal with kwargs=%s' % (kwargs))
         pitcher.send(self, **kwargs)
 
     def execute(self, obj, **kwargs):
         """execute the action"""
+        logging.debug('obj=%s, kwargs=%s' % (repr(obj), repr(kwargs)))
         if self.execute_callback:
             self.execute_callback(obj, event_type, kwargs)
         return
