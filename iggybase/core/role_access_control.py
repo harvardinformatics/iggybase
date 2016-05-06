@@ -336,7 +336,8 @@ class RoleAccessControl:
     def page_form_javascript(self, page_form_id, active=1):
         page_form_ids = self.page_form_ancestors(page_form_id, active)
 
-        res = self.session.query(models.PageFormJavascript).filter(page_form_id.in_(page_form_ids)). \
+        res = self.session.query(models.PageFormJavascript).\
+            filter(models.PageFormJavascript.page_form_id.in_(page_form_ids)). \
             filter_by(active=active).order_by(models.PageFormJavascript.order, models.PageFormJavascript.id).all()
 
         return res
