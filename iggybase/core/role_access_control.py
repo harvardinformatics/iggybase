@@ -301,7 +301,11 @@ class RoleAccessControl:
             subs = {}
         return subs
 
-    def page_form_ancestors(self, page_form_id, active = 1):
+    def get_page_form_data(self, page_form_id, active=1):
+        page_forms = self.page_form_ancestors(page_form_id)
+        page_form_javascript = self.page_form_javascript(page_forms.keys(), active)
+        page_form_buttons = self.page_form_buttons(page_forms.keys(), active)
+
         res = self.session.query(models.PageForm).filter_by(id=page_form_id). \
             filter_by(active=active).first()
 
@@ -310,14 +314,23 @@ class RoleAccessControl:
         if res is not None and res.parent_id is not None:
             page_form_ids += [self.page_form_ancestors(res.parent_id)]
 
-        return page_form_ids
+        # return page_form, page_form_buttons, page_form_javascript
 
-    def page_form_buttons(self, page_form_id, active=1):
-        page_form_ids = self.page_form_ancestors(page_form_id, active)
+    def page_form_ancestors(self, page_form_id, page_forms = OrderedDict(), active = 1):
+        res = self.session.query(models.PageForm).filter_by(id=page_form_id). \
+            filter_by(active=active).first()
 
+        if res is not None and res.parent_id is not None:
+            page_forms = self.page_form_ancestors(res.parent_id, page_forms)
+        elif res is not None:
+            page_forms[page_form_id] = res
+
+        return page_forms
+
+    def page_form_buttons(self, page_form_ids, active=1):
         page_form_buttons = {'top': [], 'bottom': []}
         filters = [
-                models.PageFormButton.page_form_id.in_(page_form_ids),
+                models.PageFormButton.page_form_id == (page_form_ids),
                 models.PageFormButtonRole.role_id == self.role.id,
                 models.PageFormButton.active == active,
                 models.PageFormButtonRole.active == active,
@@ -333,11 +346,9 @@ class RoleAccessControl:
                 page_form_buttons[row.button_location].append(row)
         return page_form_buttons
 
-    def page_form_javascript(self, page_form_id, active=1):
-        page_form_ids = self.page_form_ancestors(page_form_id, active)
-
+    def page_form_javascript(self, page_form_ids, active=1):
         res = self.session.query(models.PageFormJavascript).\
-            filter(models.PageFormJavascript.page_form_id.in_(page_form_ids)). \
+            filter(models.PageFormJavascript.page_form_id==(page_form_ids)). \
             filter_by(active=active).order_by(models.PageFormJavascript.order, models.PageFormJavascript.id).all()
 
         return res
