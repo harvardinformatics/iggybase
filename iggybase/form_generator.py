@@ -9,6 +9,7 @@ from wtforms.validators import DataRequired, Length, email, Optional
 from iggybase.core.organization_access_control import OrganizationAccessControl
 from iggybase import utilities as util
 from iggybase import constants
+from iggybase.core.field_collection import FieldCollection
 from json import dumps, loads
 import datetime
 import logging
@@ -22,18 +23,13 @@ class FormGenerator():
         self.classattr = {}
         self.table_data = None
 
-    def input_field(self, field_data, row_name, control_id, control_type, value=None):
+    def input_field(self, field_data, display_name, row_name, control_id, control_type, value=None):
         kwargs = {}
         validators = []
 
         if value is not None:
             # logging.info('input_field value: ' + str(value))
             kwargs['default'] = value
-
-        if field_data.FieldRole.display_name == '':
-            display_name = field_data.Field.display_name
-        else:
-            display_name = field_data.FieldRole.display_name
 
         # no validators or classes attached to hidden fields, as it could cause issues
         # e.g. an empty hidden required field
@@ -131,7 +127,7 @@ class FormGenerator():
 
         self.table_data = self.role_access_control.has_access('TableObject', {'name': self.table_object})
 
-        fields = self.role_access_control.fields(self.table_data.id)
+        fields = FieldCollection(None, self.table_data.name)
 
         self.classattr['startmaintable_'+str(self.table_data.id)]=\
             HiddenField('startmaintable_'+str(self.table_data.id), default=self.table_data.name)
@@ -155,7 +151,7 @@ class FormGenerator():
 
         self.classattr = self.row_fields(1, row_name)
 
-        fields = self.role_access_control.fields(self.table_data.id)
+        fields = FieldCollection(None, self.table_data.name)
 
         self.classattr['startmaintable_'+str(self.table_data.id)]=\
             HiddenField('startmaintable_'+str(self.table_data.id), default=self.table_data.name)
@@ -184,7 +180,8 @@ class FormGenerator():
                 table_index_id = table_index * 1000
 
                 self.table_data = link_table
-                fields = self.role_access_control.fields(self.table_data.id)
+
+                fields = FieldCollection(None, self.table_data.name)
 
                 if link_type == 'child':
                     row_names = self.organization_access_control.\
@@ -258,14 +255,13 @@ class FormGenerator():
                 data = None
                 row_name = 'new'
 
-        for field in fields:
+        for field_display_name, field in fields.fields.items():
             # logging.info(str(field.Field.id) + " " + field.Field.field_name +': ' + field.FieldRole.display_name)
             value = None
-            field_display_name = util.get_field_attr(field.Field,
-                    field.FieldRole, 'display_name')
+
             if row_name != 'new' and data:
-                if  field_display_name in data.keys():
-                    value = data[data.keys().index(field_display_name)]
+                if  field.Field.display_name in data.keys():
+                    value = data[data.keys().index(field.Field.display_name)]
 
             if value is None:
                 # logging.info(field.Field.field_name+': None')
@@ -286,17 +282,16 @@ class FormGenerator():
                     HiddenField('old_value_'+field.Field.display_name+"_"+str(row_counter), default=value)
 
             control_id = 'data_entry_' + field.Field.display_name+"_"+str(row_counter)
-            self.classattr[control_id] = self.input_field(field, row_name, control_id, control_type, value)
+            self.classattr[control_id] = self.input_field(field, field_display_name, row_name, control_id,
+                                                          control_type, value)
 
         self.classattr['endrow_'+str(row_counter)]=\
             HiddenField('endrow_'+str(row_counter))
 
     def get_field_headers(self, fields):
         headers = ''
-        for field in fields:
-            if field.FieldRole.visible == 1:
-                field_display_name = util.get_field_attr(field.Field,
-                        field.FieldRole, 'display_name')
-                headers += field_display_name + '|'
+        for display_name, field in fields.fields.items():
+            if field.is_visible():
+                headers += display_name + '|'
 
         return dumps(headers[:-1])

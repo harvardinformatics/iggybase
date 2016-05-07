@@ -37,7 +37,6 @@ def get_table(table_name):
 
     return table_object
 
-
 def get_func(module_name, func_name):
     """Return function from it's name.
     Returns None if unsuccessful.
@@ -51,8 +50,6 @@ def get_func(module_name, func_name):
         func = None
 
     return func   # Possible None
-
-
 
 def get_field_attr(field, table_query_field, attr):
     if table_query_field and getattr(table_query_field, attr):

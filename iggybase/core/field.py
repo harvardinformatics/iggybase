@@ -12,7 +12,7 @@ class Field:
         self.TableQueryField = table_query_field
         self.TableQueryCalculation = calculation
 
-        self.display_name = util.get_field_attr(self.Field, self.TableQueryField, 'display_name')
+        self.display_name = self.get_field_display_name()
         self.rac = util.get_role_access_control()
         self.calculation_fields = self._get_calculation_fields(calculation)
         self.type = self._get_type()
@@ -34,6 +34,17 @@ class Field:
         if not visible:
             visible = False
         return visible
+
+    def get_field_display_name(self):
+        if self.TableQueryField and getattr(self.TableQueryField, 'display_name'):
+            display_name = getattr(self.TableQueryField, 'display_name')
+            return display_name.replace('_', ' ').title()
+        elif self.FieldRole.display_name != '':
+            return self.FieldRole.display_name.replace('_', ' ').title()
+        elif self.Field.display_name != '':
+            return self.Field.display_name.replace('_', ' ').title()
+        else:
+            return 'WHOA! Something is not right here. There is no display name for field ' + self.Field.name + "."
 
     def set_fk_field(self, fk_field = None):
         # if field instance exists it will be passed in,
