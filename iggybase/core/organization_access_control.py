@@ -91,10 +91,7 @@ class OrganizationAccessControl:
 
             columns = []
             for row in field_data:
-                field_display_name = util.get_field_attr(row.Field,
-                    row.FieldRole, 'display_name')
-                columns.append(getattr(table_object, row.Field.display_name).\
-                               label(field_display_name))
+                columns.append(getattr(table_object, row.Field.display_name))
 
             if len(columns) == 0:
                 return results

@@ -48,8 +48,8 @@ class Organization(Base):
     organization_organization_type = relationship("OrganizationType", foreign_keys=[organization_type_id])
 
     def __repr__(self):
-        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
-               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+        return "<%s(class=%s, name=%s, description=%s, id=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id)
 
 
 class TableObject(Base):
@@ -58,7 +58,6 @@ class TableObject(Base):
     new_name_prefix = Column(String(10))
     new_name_id = Column(Integer)
     id_length = Column(Integer)
-    display_name = Column(String(50))
 
     def get_new_name(self):
         new_name = self.new_name_prefix + str(self.new_name_id).zfill(self.id_length)
@@ -165,7 +164,6 @@ class Route(Base):
     table_type = 'admin'
     module_id = Column(Integer, ForeignKey('module.id'))
     url_path = Column(String(512), unique=True)
-    display_name = Column(String(50))
 
     route_module = relationship("Module", foreign_keys=[module_id])
 
@@ -197,7 +195,6 @@ class RouteRole(Base):
     table_type = 'admin'
     role_id = Column(Integer, ForeignKey('role.id'))
     route_id = Column(Integer, ForeignKey('route.id'))
-    display_name = Column(String(50))
 
     route_role_role = relationship(
         "Role", foreign_keys=[role_id])
@@ -243,7 +240,6 @@ class PageForm(Base):
     page_header = Column(String(50))
     page_template = Column(String(100))
     parent_id = Column(Integer, ForeignKey('page_form.id'))
-    display_name = Column(String(50))
 
     parent = relation('PageForm', remote_side="PageForm.id", foreign_keys=[parent_id])
 
@@ -268,7 +264,6 @@ class PageFormRole(Base):
     table_type = 'admin'
     role_id = Column(Integer, ForeignKey('role.id'))
     page_form_id = Column(Integer, ForeignKey('page_form.id'))
-    display_name = Column(String(50))
 
     page_role_role = relationship("Role", foreign_keys=[role_id])
     page_role_page = relationship("PageForm", foreign_keys=[page_form_id])
@@ -288,7 +283,6 @@ class PageFormButton(Base):
     button_id = Column(String(100))
     special_props = Column(String(255))
     submit_action_url = Column(String(255))
-    display_name = Column(String(50))
 
     page_form_button_page_form = relationship("PageForm", foreign_keys=[page_form_id])
 
@@ -301,7 +295,6 @@ class PageFormButtonRole(Base):
     table_type = 'admin'
     role_id = Column(Integer, ForeignKey('role.id'))
     page_form_button_id = Column(Integer, ForeignKey('page_form_button.id'))
-    display_name = Column(String(50))
 
     page_form_button_role_role = relationship("Role", foreign_keys=[role_id])
     page_form_button_role_page_form = relationship("PageFormButton", foreign_keys=[page_form_button_id])
@@ -493,6 +486,7 @@ class Step(Base):
     table_type = 'admin'
     display_name = Column(String(100))
     workflow_id = Column(Integer, ForeignKey('workflow.id'))
+    status_id = Column(Integer)
     route_id = Column(Integer, ForeignKey('route.id'))
     table_object_id = Column(Integer, ForeignKey('table_object.id'))
     params = Column(String(255))
@@ -500,6 +494,7 @@ class Step(Base):
     dynamic_field = Column(Integer, ForeignKey('field.id'))
 
     step_workflow = relationship("Workflow", foreign_keys=[workflow_id])
+    #step_status = relationship("Status", foreign_keys=[status_id])
     step_route = relationship("Route", foreign_keys=[route_id])
     step_table_object = relationship("TableObject", foreign_keys=[table_object_id])
     step_dynamic_field = relationship("Field", foreign_keys=[dynamic_field])
@@ -515,9 +510,7 @@ class WorkItemGroup(Base):
     step_id = Column(Integer, ForeignKey('step.id'))
     assigned_to = Column(Integer, ForeignKey('user.id'))
     notes = Column(String(255))
-    status = Column(Integer, ForeignKey('select_list.id'))
 
-    work_item_group_select_list = relationship("SelectList", foreign_keys=[status])
     work_item_group_workflow = relationship("Workflow", foreign_keys=[workflow_id])
     work_item_group_step = relationship("Step", foreign_keys=[step_id])
     work_item_group_user = relationship("User", foreign_keys=[assigned_to])
@@ -678,11 +671,10 @@ class DatabaseEvent(Event):
     field = relationship("Field")
 
     def __repr__(self):
-        return "<DatabaseEvent(id=%s, description=%s, table_object=%s, field.display_name=%s, event_type=%s" % \
-            (self.id,
-             repr(getattr(self, 'description', None)), self.active,
-             self.table_object.name, repr(getattr(self, 'field.display_name', None)),
-             self.event_type.name)
+        return "<DatabaseEvent(id=%s, table_object.name=%s, field.display_name=%s" % \
+            (self.id, 
+             self.table_object.name,
+             repr(getattr(self, 'field.display_name', None)))
 
 
 
@@ -690,7 +682,13 @@ class ActionType(Base):
     """Action types: 'email', 'alert', workflow_step, ...
     """
     table_type = 'admin'
+    table_object_id = Column(Integer, ForeignKey('table_object.id'), nullable=False)
 
+    table_object = relationship('TableObject')
+
+    def __repr__(self):
+        return "<ActionType (id=%d, name=%s, table_object_id=%d>" % \
+            (self.id, self.name, self.table_object_id)
 
 
 class Action(Base):
@@ -707,6 +705,7 @@ class Action(Base):
 
     event = relationship("Event", backref='actions')
     organization = relationship('Organization')
+    action_type = relationship('ActionType')
 
     def __repr__(self):
         return "<Action(name=%s, id=%s, description=%s, organization=%s," % \

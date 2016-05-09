@@ -41,6 +41,8 @@ def get_func(module_name, func_name):
     """Return function from it's name.
     Returns None if unsuccessful.
     """
+    if not module_name or not func_name:
+        return None
     try:
         module = import_module(module_name)
         func = getattr(module, func_name, None)
