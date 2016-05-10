@@ -19,6 +19,7 @@ class Field:
         self.is_foreign_key = (self.Field.foreign_key_table_object_id is not None)
         self.is_title_field = (self.TableObject.id == self.Field.table_object_id and self.Field.display_name == 'name')
         self.order = self.get_field_order()
+        self.fk_field = None
 
         # base visibility on original field, do not change if fk field
         self.visible = self.is_visible()
@@ -121,8 +122,10 @@ class Field:
                     self.is_title_field or
                     (
                         self.is_foreign_key and
-                        # cant get data on name and fk_display from oac query
-                        self.fk_field == 'name' and
+                        # since we're storing fk data once per field we don't have
+                        # data on both name and fk_display for same table from
+                        # oac query, this is rare and acceptable
+                        self.Field.display_name == 'name' and
                         self.TableObject.name != 'long_text' and
                         self.is_visible()
                     )
