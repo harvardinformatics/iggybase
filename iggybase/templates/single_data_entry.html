@@ -67,7 +67,8 @@
 
                 {% if maintable == 1 -%}
                     {% if not bootstrap_is_hidden_field( field ) -%}
-                        {{ macros.render_field( field ) }}
+                        {% set field_vars = field.id.split("_") %}
+                        {{ macros.render_field( field, field_vars[field_vars|length - 1] ) }}
                     {% endif -%}
                 {% else -%}
                     {% if field.id|truncate(7, True, '') == 'endrow_' -%}

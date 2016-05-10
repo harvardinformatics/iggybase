@@ -9,6 +9,11 @@ $( document ).ready( function () {
             $.fn.searchClick( $( this ) );
         }
     );
+    $( ".field_select_list" ).change(
+        function( ) {
+            $.fn.updateTableField( $( this ) )
+        }
+    );
     $( ".add_new_child_item" ).click(
         function( ) {
             $.fn.addChildTableRow( $( this ) );
@@ -137,7 +142,7 @@ $( document ).ready( function () {
                     } else if ( matches[ 1 ] == 'record_data_table_name' ) {
                         value = target;
                     } else if ( 'old_value_' + link_column == matches[ 1 ] ) {
-                        value = $( this ).val( );
+                        value = $( this ).attr( 'value' );
                     }
 
                     var new_input = $( '<input>' ).attr( {
@@ -172,6 +177,7 @@ $( document ).ready( function () {
                 );
 
                 $.fn.changeCheckBox( $( this ) );
+                $.fn.updateOldValue( $( this ) );
             }
         );
 
@@ -236,19 +242,57 @@ $( document ).ready( function () {
     $.fn.changeCheckBox = function ( ele ) {
         bool_id = 'bool_' + ele.attr( 'id' );
         if ( ele.is(':checked') ) {
-            $( "#" + ele.attr( 'id' ) ).attr( 'value', 'y' )
-            $( "#" + bool_id ).attr( 'value', 'y' )
+            $( "#" + ele.attr( 'id' ) ).attr( 'value', 'y' );
+            $( "#" + bool_id ).attr( 'value', 'y' );
             $( "#" + bool_id ).attr( 'disabled', 'disabled' );
         } else {
-            $( "#" + ele.attr( 'id' ) ).attr( 'value', 'n' )
-            $( "#" + bool_id ).attr( 'value', 'n' )
+            $( "#" + ele.attr( 'id' ) ).attr( 'value', 'n' );
+            $( "#" + bool_id ).attr( 'value', 'n' );
             $( "#" + bool_id ).removeAttr( 'disabled' );
         }
     }
 
+    $.fn.updateTableField = function ( ele ) {
+        var id = ele.attr( 'id' );
+        var matches = id.match( /data_entry_(\S+)_(\d+)/);
+        var row_id = matches[ 2 ];
+        input_type = ele.is( 'input' );
+        
+        if ( ( input_type && ele.attr( 'value' ) == '' ) ||
+                    ( !input_type && $( '#' + id + ' option:selected' ).text( ) == '' ) ) {
+            $( '#data_entry_foreign_key_table_object_id_' + row_id ).attr( 'readonly', false );
+            $( '#data_entry_foreign_key_field_id_' + row_id ).attr( 'readonly', false );
+            $( '#data_entry_foreign_key_table_object_id_' + row_id ).attr( 'value', '' );
+            $( '#data_entry_foreign_key_field_id_' + row_id ).attr( 'value', '' );
+            $( "#span_foreign_key_table_object_id_"+row_id ).css( "pointer-events", "auto" );
+            $( "#span_foreign_key_field_id_"+row_id ).css( "pointer-events", "auto" );
+        } else {
+            $( '#data_entry_foreign_key_table_object_id_' + row_id ).attr( 'readonly', true );
+            $( '#data_entry_foreign_key_field_id_' + row_id ).attr( 'readonly', true );
+            $( '#data_entry_foreign_key_table_object_id_' + row_id ).attr( 'value', 'select_list_item' );
+            $( '#data_entry_foreign_key_field_id_' + row_id ).attr( 'value', 'F001501' );
+            $( "#span_foreign_key_table_object_id_"+row_id ).css( "pointer-events", "none" );
+            $( "#span_foreign_key_field_id_"+row_id ).css( "pointer-events", "none" );
+        }
+    }
+
+    $.fn.updateOldValue = function ( ele ) {
+        id = ele.attr( 'id' );
+        new_id = id.replace( 'data_entry', 'old_value' );
+        if ( ele.attr( 'value' ) == 'y' )
+            $( "#" + new_id ).attr( 'value', 'True' );
+        else
+            $( "#" + new_id ).attr( 'value', 'False' );
+    }
+
     $.fn.addLookup = function ( ele ) {
+        var id = ele.attr( 'id' );
+        var matches = id.match( /data_entry_(\S+)_(\d+)/);
+        var new_id = "span_" + matches[ 1 ] + "_" + matches[ 2 ];
+
         var spancls = "ui-icon ui-icon-search search-button";
-        $('<span class="'+spancls+'" luid="'+ele.attr('id')+'"/>').appendTo(ele.parent());
+
+        $('<span id="'+new_id+'" name="'+new_id+'" class="'+spancls+'" luid="'+id+'"/>').appendTo(ele.parent());
     }
 
     $.fn.keydownLookupField = function ( e, ele ) {

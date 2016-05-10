@@ -7,6 +7,7 @@ from iggybase import models as core_models
 from iggybase import utilities as util
 from sqlalchemy.orm import aliased
 from collections import OrderedDict
+import json
 import re
 import datetime
 import sys
@@ -590,11 +591,12 @@ class OrganizationAccessControl:
         updated = self.update_work_item_group(work_item_group_id, 'step_id', step_id)
         return updated
 
-    def save_work_items(self, work_item_group_id, save_items, parent):
+    def insert_work_items(self, work_item_group_id, save_items, parent):
         table_model = util.get_table('work_item')
         work_item_table_object = self.session.query(models.TableObject).filter_by(name='work_item').first()
         table_object_id = None
         success = False
+        parent_id = None
         try:
             for item in save_items:
                 table_object_id = self.session.query(models.TableObject.id).filter_by(name=item['table']).first()[0]
@@ -608,8 +610,8 @@ class OrganizationAccessControl:
                             (models.WorkItem.row_id == parent['id'])
                     ]
                     parent_id = self.session.query(models.WorkItem.id).filter(*filters).first()[0]
-                new_row = table_model(name= new_name, active=1,
-                        organization_id=1, work_item_group_id = work_item_group_id,
+                new_row = table_model(name = new_name, active = 1,
+                        organization_id = self.current_org_id, work_item_group_id = work_item_group_id,
                         table_object_id = table_object_id, row_id = item['id'],
                         parent_id = parent_id)
                 self.session.add(new_row)
@@ -618,8 +620,8 @@ class OrganizationAccessControl:
             print('rollback')
             logging.info(
                 'save_work_item rollback- params: '
-                + ' work_item_group_id: ' + work_item_group_id
-                + ' parent: ' + parent
+                + ' work_item_group_id: ' + str(work_item_group_id)
+                + ' parent: ' + str(parent)
                 + ' save_items: ' + json.dumps(save_items)
             )
         else:
@@ -650,3 +652,43 @@ class OrganizationAccessControl:
             self.session.commit()
             current_app.cache.increment_version('work_item_group')
         return updated
+
+    def insert_work_item_group(self, workflow_id, step_num, status):
+        table_model = util.get_table('work_item_group')
+        work_item_group_table_object = self.session.query(models.TableObject).filter_by(name='work_item_group').first()
+        try:
+            step_id = self.session.query(models.Step.id).filter((models.Step.workflow_id == workflow_id), (models.Step.order == step_num)).first()[0]
+            print(step_id)
+            new_name = work_item_group_table_object.get_new_name()
+            new_row = table_model(name = new_name, active = 1,
+                    organization_id = self.current_org_id, workflow_id = workflow_id,
+                    step_id = step_id, status = status)
+            self.session.add(new_row)
+        except:
+            self.session.rollback()
+            print('rollback')
+            logging.info(
+                'insert_work_item_group rollback- params: '
+                + ' workflow_id: ' + str(workflow_id)
+                + ' step_num: ' + str(step_num)
+                + ' status: ' + str(status)
+            )
+        else:
+            print('commit')
+            self.session.commit()
+        return new_name
+
+    def work_item_group(self, work_item_group):
+        res = None
+        if work_item_group:
+            res = (self.session.query(models.WorkItemGroup).
+                filter(models.WorkItemGroup.name == work_item_group,
+                    models.WorkItemGroup.organization_id.in_(self.org_ids)).first())
+        return res
+
+    def work_items(self, work_item_group_id):
+        res = None
+        if work_item_group_id:
+            res = (self.session.query(models.WorkItem).
+                filter(models.WorkItem.work_item_group_id == work_item_group_id, models.WorkItem.organization_id.in_(self.org_ids)).all())
+        return res

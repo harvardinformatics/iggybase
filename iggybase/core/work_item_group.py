@@ -3,44 +3,53 @@ import json
 from collections import OrderedDict
 from iggybase.core.organization_access_control import OrganizationAccessControl
 from iggybase import utilities as util
+from .workflow import Workflow
 
-# Retreives and formats data based on table_query
+# Retreives work_item_group info and processes steps and actions
 class WorkItemGroup:
-    def __init__ (self, name, step = None):
-        self.name = name
+    def __init__ (self, work_item_group_name, workflow_name, step = None):
+        self.name = work_item_group_name  # can be new
         self.rac = util.get_role_access_control()
-        self.oac = None
+        self.oac = OrganizationAccessControl()
+        self.workflow = Workflow(workflow_name)
+
+        # sql alchemy results will populate these capitalized vars
         self.WorkItemGroup = None
-        self.Step = None
-        self.DynamicField = None
-        self.Workflow = None
-        self.TableObject = None
-        self.Route = None
-        self.Module = None
+        self.work_items = []
+        self.get_work_item_group()
+
+        # which step is the wig currently on
+        self.step = self.get_step()
+        self.step_num = self.step.Step.order
+
+        # which step is requested for show
+        if step:
+            self.show_step_num = int(step)
+        else:
+            self.show_step_num = self.step
+
+        # default set on init, actions can change this
+        self.next_step = self.step_num + 1
+
+        # not all steps are necessary depending on items
+        self.active_steps = self.get_active_steps(self.workflow.steps)
         self.buttons = []
         self.saved_rows = {}
-        self.get_work_item_group()
-        if step:
-            self.show_step = int(step)
-        else:
-            self.show_step = self.Step.order
-        self.work_items = self.rac.work_items(self.WorkItemGroup.id)
-        self.all_steps = self.rac.workflow_steps(self.Workflow.id)
-        # some steps may not be necessary
-        self.workflow_steps = self.get_workflow_steps(self.all_steps)
-        self.next_step = self.Step.order + 1
 
     def get_work_item_group(self):
-        wig = self.rac.work_item_group(self.name)
-        if wig:
-            self.WorkItemGroup = wig.WorkItemGroup
-            self.Step = wig.Step
-            self.Workflow = wig.Workflow
-            self.TableObject = wig.TableObject
-            self.Route = wig.Route
-            self.Module = wig.Module
-            if wig.Field:
-                self.DynamicField = wig.Field
+        if self.name != 'new':
+            wig = self.oac.work_item_group(self.name)
+            if wig:
+                self.WorkItemGroup = wig
+                self.work_items = self.oac.work_items(self.WorkItemGroup.id)
+
+    def get_step(self):
+        # which step is the wig currently on
+        if self.WorkItemGroup:
+            step = self.workflow.get_step_by_id(self.WorkItemGroup.step_id)
+        else:
+            step = self.workflow.steps[1]
+        return step
 
     def get_buttons(self, context_btns = None):
         submit_btn = False
@@ -57,7 +66,7 @@ class WorkItemGroup:
                 'special_props': None,
                 'submit_action_url': None
             }
-            if len(self.workflow_steps) == self.show_step: # last step
+            if len(self.active_steps) == self.show_step_num: # last step
                 workflow_button['button_value'] = 'Complete'
                 workflow_button['button_id'] = 'complete'
 
@@ -68,21 +77,26 @@ class WorkItemGroup:
 
     def update_step(self):
         # next_step can be altered by actions, by default it is incremented by one
-        if not self.is_complete() and self.next_step != self.Step.order:
-            success = self.get_oac().update_step(self.WorkItemGroup.id, self.next_step, self.Workflow.id)
+        if not self.is_complete() and self.next_step != self.step_num:
+            success = self.oac.update_step(self.WorkItemGroup.id, self.next_step, self.workflow.id)
             if not success:
                 logging.error('Workflow: next step failed.  Work Item Group: ' +
-                        self.WorkItemGroup.name + ' Step: ' + self.Step.name)
-        if self.is_complete and self.Step.order == self.show_step:
-            url = self.get_complete_url()
+                        self.name + ' Step: ' + self.step.Step.name)
+        if self.is_complete() and self.step_num == self.show_step_num:
+            url = self.workflow.get_complete_url(self.name)
         else:
-            url = self.get_url(self.Module.name, g.facility, 'work_item_group', self.Workflow.name, self.next_step, self.WorkItemGroup.name)
+            url = self.workflow.get_step_url(self.next_step, self.name)
         return url
 
     def do_step_actions(self):
         # first perform any actions on this step
         if not self.is_complete():
-            actions = self.get_oac().get_step_actions(self.Step.id)
+            # if new then insert work_item_group
+            if self.step_num == 1 and self.name == 'new':
+                self.name = self.oac.insert_work_item_group(self.workflow.id,
+                        self.step_num, status.IN_PROGRESS)
+                self.get_work_item_group()
+            actions = self.oac.get_step_actions(self.step.Step.id)
             for action in actions:
                 if hasattr(self, action.function):
                     func = getattr(self, action.function)
@@ -91,20 +105,15 @@ class WorkItemGroup:
                         params = json.loads(action.params)
                     func(**params)
 
-    def get_oac(self):
-        if not self.oac:
-            self.oac = OrganizationAccessControl()
-        return self.oac
-
     def set_dynamic_params(self):
         dynamic_params = {}
-        dynamic_params['table_name'] = self.TableObject.name
+        dynamic_params['table_name'] = self.step.TableObject.name
         dynamic_params['facility_name'] = g.facility
-        if self.DynamicField:
+        if self.step.Field:
             item_tbl_ids = set()
             for item in self.work_items:
-                if item.table_object_id == self.DynamicField.table_object_id:
-                    name = self.get_oac().get_attr_from_id(item.table_object_id,
+                if item.table_object_id == self.step.Field.table_object_id:
+                    name = self.oac.get_attr_from_id(item.table_object_id,
                             item.row_id, 'name')
                     if name:
                         dynamic_params['row_name'] = name
@@ -114,72 +123,53 @@ class WorkItemGroup:
             dynamic_params['row_name'] = 'new'
         return dynamic_params
 
-    def get_workflow_steps(self, all_steps):
+    def get_active_steps(self, all_steps):
         work_steps = OrderedDict()
-        for step in all_steps:
-            url = self.get_url(self.Module.name, g.facility, 'work_item_group', self.Workflow.name, step.order, self.WorkItemGroup.name)
+        for num, step in all_steps.items():
+            url = self.workflow.get_step_url(num, self.name)
             classes = []
-            if step.order == self.show_step:
+            if num == self.show_step_num:
                 classes.append('current')
-            if step.order > self.Step.order:
+            if num > self.step_num:
                 classes.append('disabled')
-            work_steps[step.name] = {'url': url, 'value':step.order,
+            work_steps[step.Step.name] = {'url': url, 'value':num,
                     'class':' '.join(classes)}
-            if self.is_complete() and self.Step.order == step.order:
+            if self.is_complete() and self.step_num == num:
                 break # show no optional steps if complete
         return work_steps
 
-    def get_complete_url(self):
-        return self.get_url(self.Module.name, g.facility, 'workflow_complete',
-                self.Workflow.name, None, self.WorkItemGroup.name)
-
-    def get_summary_url(self):
-        return self.get_url(self.Module.name, g.facility, 'workflow',
-                self.Workflow.name)
-
-    def get_url(self, module, facility, table, workflow, step = None, work_item_group = None):
-        endpoint = module + '.' + table
-        values = {
-                'facility_name': facility,
-                'workflow_name': workflow
-                }
-        if step:
-            values['step'] = step
-        if work_item_group:
-            values['work_item_group'] = work_item_group
-        return url_for(endpoint, **values)
-
     def is_complete(self):
-        if self.WorkItemGroup.status == status.COMPLETE:
+        if self.WorkItemGroup and self.WorkItemGroup.status == status.COMPLETE:
             return True
         else:
             return False
 
     def is_previous_step(self):
-        if self.show_step < self.Step.order:
+        if self.show_step_num < self.step_num:
             return True
         else:
             return False
 
     def is_future_step(self, step):
-        if step > self.Step.order:
+        if step > self.step_num:
             return True
         else:
             return False
 
     def unnecessary_steps(self):
         unnecessary_steps = []
-        if self.is_complete() and self.Step.order < len(self.all_steps):
-            for step in self.all_steps:
-                if step.order > self.Step.order:
-                    unnecessary_steps.append(step.order)
+        if self.is_complete() and self.step_num < len(self.workflow.steps):
+            for step in self.workflow.steps:
+                if step > self.step_num:
+                    unnecessary_steps.append(step)
         return unnecessary_steps
 
-    def get_breadcrumbs(self):
+    def get_breadcrumbs(self, skip_steps = False):
         breadcrumbs = OrderedDict()
-        breadcrumbs['workflow_summary'] = {'url': self.get_summary_url(),
+        breadcrumbs['workflow_summary'] = {'url': self.workflow.get_summary_url(),
                 'value':'Back to Summary'}
-        breadcrumbs.update(self.workflow_steps)
+        if not skip_steps:
+            breadcrumbs.update(self.active_steps)
         return breadcrumbs
 
     '''
@@ -194,17 +184,17 @@ class WorkItemGroup:
                 if parent and parent in self.saved_rows:
                     # assume there will only be one parent
                     parent = self.saved_rows[parent][0]
-                success = self.get_oac().save_work_items(self.WorkItemGroup.id, tbl_items, parent)
+                success = self.oac.insert_work_items(self.WorkItemGroup.id, tbl_items, parent)
         return success
 
     def check_item_type(self, item, type):
         if item in self.saved_rows:
             work_item = self.saved_rows[item][0]
-            res = self.get_oac().get_row(item, {'id': work_item['id']})
+            res = self.oac.get_row(item, {'id': work_item['id']})
             if res:
                 if res.quantity == 2: # TODO: replace with type check
-                    self.next_step = self.Step.order
-                    self.get_oac().update_work_item_group(self.WorkItemGroup.id, 'status', status.COMPLETE)
+                    self.next_step = self.step_num
+                    self.oac.update_work_item_group(self.WorkItemGroup.id, 'status', status.COMPLETE)
 
 class status:
     IN_PROGRESS = 2

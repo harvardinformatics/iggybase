@@ -482,6 +482,19 @@ class Workflow(Base):
         return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
                (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
 
+class WorkflowRole(Base):
+    table_type = 'admin'
+    display_name = Column(String(100))
+    role_id = Column(Integer, ForeignKey('role.id'))
+    workflow_id = Column(Integer, ForeignKey('workflow.id'))
+
+    workflow_role_role = relationship("Role", foreign_keys=[role_id])
+    workflow_role_workflow = relationship("Workflow", foreign_keys=[workflow_id])
+
+    def __repr__(self):
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+
 class Step(Base):
     table_type = 'admin'
     display_name = Column(String(100))
@@ -514,6 +527,7 @@ class WorkItemGroup(Base):
     work_item_group_workflow = relationship("Workflow", foreign_keys=[workflow_id])
     work_item_group_step = relationship("Step", foreign_keys=[step_id])
     work_item_group_user = relationship("User", foreign_keys=[assigned_to])
+    work_item_group_status = relationship("SelectList", foreign_keys=[status])
 
     def __repr__(self):
         return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
@@ -672,7 +686,11 @@ class DatabaseEvent(Event):
 
     def __repr__(self):
         return "<DatabaseEvent(id=%s, table_object.name=%s, field.display_name=%s" % \
+<<<<<<< HEAD
             (self.id, 
+=======
+            (self.id,
+>>>>>>> 14d8a333581a2a6590f599446064fb37f5b83e42
              self.table_object.name,
              repr(getattr(self, 'field.display_name', None)))
 
