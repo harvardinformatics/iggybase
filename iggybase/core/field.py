@@ -12,13 +12,14 @@ class Field:
         self.TableQueryField = table_query_field
         self.TableQueryCalculation = calculation
 
-        self.display_name = util.get_field_attr(self.Field, self.TableQueryField, 'display_name')
+        self.display_name = self.get_field_display_name()
         self.rac = util.get_role_access_control()
         self.calculation_fields = self._get_calculation_fields(calculation)
         self.type = self._get_type()
-        self.is_foreign_key = (self.Field.foreign_key_table_object_id != None)
-        self.is_title_field = (self.TableObject.name == self.display_name)
-        self.order = order
+        self.is_foreign_key = (self.Field.foreign_key_table_object_id is not None)
+        self.is_title_field = (self.TableObject.id == self.Field.table_object_id and self.Field.display_name == 'name')
+        self.order = self.get_field_order()
+        self.fk_field = None
 
         # base visibility on original field, do not change if fk field
         self.visible = self.is_visible()
@@ -27,13 +28,36 @@ class Field:
         return (self.TableQueryCalculation != None)
 
     def is_visible(self):
+        visible = False
+
         if self.TableQueryField:
             visible = self.TableQueryField.visible
         else:
             visible = self.FieldRole.visible
-        if not visible:
-            visible = False
+
         return visible
+
+    def get_field_display_name(self):
+        if self.TableQueryField and getattr(self.TableQueryField, 'display_name'):
+            display_name = getattr(self.TableQueryField, 'display_name')
+            return display_name.replace('_', ' ').title()
+        elif self.FieldRole.display_name != '':
+            return self.FieldRole.display_name.replace('_', ' ').title()
+        elif self.Field.display_name != '':
+            return self.Field.display_name.replace('_', ' ').title()
+        else:
+            return 'WHOA! Something is not right here. There is no display name for field ' + self.Field.name + "."
+
+    def get_field_order(self):
+        if self.TableQueryField and self.TableQueryField.order is not None:
+            return self.TableQueryField.order
+        elif self.FieldRole.order is not None:
+            return self.FieldRole.order
+        elif self.Field.order is not None:
+            return self.Field.order
+        else:
+            # end of row, order alphabetically
+            return 10000
 
     def set_fk_field(self, fk_field = None):
         # if field instance exists it will be passed in,
@@ -98,8 +122,10 @@ class Field:
                     self.is_title_field or
                     (
                         self.is_foreign_key and
-                        # cant get data on name and fk_display from oac query
-                        self.fk_field == 'name' and
+                        # since we're storing fk data once per field we don't have
+                        # data on both name and fk_display for same table from
+                        # oac query, this is rare and acceptable
+                        self.Field.display_name == 'name' and
                         self.TableObject.name != 'long_text' and
                         self.is_visible()
                     )

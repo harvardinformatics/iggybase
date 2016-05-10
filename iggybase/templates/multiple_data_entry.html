@@ -39,10 +39,11 @@
                     {% endif %}
                 {%- endfor %}
             </tr>
-            <tr>
+            <tr row_id="1">
                 {%- for field in form %}
                     {% if field.id|truncate(7, True, '') == 'endrow_' %}
-                        </tr><tr>
+                        {% set field_vars = field.id.split("_") %}
+                        </tr><tr row_id="{{ ( field_vars[field_vars|length - 1]|int )  + 1 }}">
                     {% endif %}
                     {% if not bootstrap_is_hidden_field( field ) -%}
                         <td>{{ macros.table_field( field ) }}</td>
