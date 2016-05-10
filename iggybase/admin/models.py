@@ -637,38 +637,26 @@ class UserOrganization(Base):
                (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
 
 
-class EventType(Base):
-    """Event types: database, cron, ...
-    """
-    table_type = 'admin'
-
-
 class Event(Base):
-    """Events are triggered by one of: database action (new, updated, or deleted
-    records), workflow steps, or timed periodic. Each event has one or more assiciated
-    actions. Event is a base class for all types of events.
-    """
     table_type = 'admin'
-    event_type_id = Column(Integer, ForeignKey('event_type.id'))
 
-    event_type = relationship("EventType")
-
-
-class DatabaseEvent(Event):
+class DatabaseEvent(Base):
     """Database events.
-    table_object - the table for the event is triggered.
-    field - the table's field.
-    field_value - a value that either changes or is created or even deleted.
-    action_type - selectable
+    table_object - the table object for the model.
+    field - the model's field.
+    field_value - a value that verifies the event (or null).
+    actions - the actions to be taken when the event occurs.
     """
     table_type = 'admin'
-    id = Column(Integer, ForeignKey('event.id'), primary_key=True)
+    event_id = Column(Integer, ForeignKey('event.id'))
+    event_type_id = Column(Integer, ForeignKey('select_list_item.id'))
     table_object_id = Column(Integer, ForeignKey('table_object.id'))
     field_id = Column(Integer, ForeignKey('field.id'))
     field_value = Column(String(255))  # eg. 'Turnbaugh' | 'Purchase_Order'
 
     table_object = relationship("TableObject")
     field = relationship("Field")
+    event_type = relationship("SelectListItem")
 
     def __repr__(self):
         return "<DatabaseEvent(id=%s, table_object.name=%s, field.display_name=%s" % \
@@ -677,49 +665,37 @@ class DatabaseEvent(Event):
              repr(getattr(self, 'field.display_name', None)))
 
 
-
-class ActionType(Base):
-    """Action types: 'email', 'alert', workflow_step, ...
-    """
-    table_type = 'admin'
-    table_object_id = Column(Integer, ForeignKey('table_object.id'), nullable=False)
-
-    table_object = relationship('TableObject')
-
-    def __repr__(self):
-        return "<ActionType (id=%d, name=%s, table_object_id=%d>" % \
-            (self.id, self.name, self.table_object_id)
-
-
 class Action(Base):
     """Actions taken for a specific event. Events can have multiple actions
     This is a base class.
     """
     table_type = 'admin'
-    action_type_id = Column(Integer, ForeignKey('action_type.id'))
     event_id = Column(Integer, ForeignKey('event.id'))
+    event_type_id = Column(Integer, ForeignKey('select_list_item.id'))
     verify_callback_func = Column(String(100), default=None)
     execute_callback_func = Column(String(100), default=None)
     callback_func_module = Column(String(255), default=None)
-    action_type = relationship('ActionType')
 
-    event = relationship("Event", backref='actions')
     organization = relationship('Organization')
-    action_type = relationship('ActionType')
+    action_type = relationship('SelectListItem')
+    event_type = relationship('SelectListItem')
+                        
 
     def __repr__(self):
         return "<Action(name=%s, id=%s, description=%s, organization=%s," % \
             (self.name, self.id, self.description, self.organization.name)
 
 
-class EmailAction(Action):
+class EmailAction(Base):
     table_type = 'admin'
-    id = Column(Integer, ForeignKey('action.id'), primary_key=True)
+    action_id = Column(Integer, ForeignKey('action.id'))
     text = Column(String(1024))
     subject = Column(String(100))
     email_recipients = Column(String(1024)) # csv email@addresses
     email_cc = Column(String(1024)) # csv email@addresses
     email_bcc = Column(String(1024))
+
+    action = relationship("Action")
 
     def __repr__(self):
         return "<EmailAction(name=%s, id=%s>" % \
@@ -729,13 +705,15 @@ class EmailAction(Action):
 class ActionValue(Base):
     """Values used for creating context for text rendering.
     For example, ... {{ name }} ... would have a context of
-    {'name': valueof(table_object.field)}.
+    {'name': valueof(table_object.field where pk = pk_value)}.
     """
     table_type = 'admin'
     action_id = Column(Integer, ForeignKey('action.id'))
     table_object_id = Column(Integer, ForeignKey('table_object.id'))
     field_id = Column(Integer, ForeignKey('field.id'))
-    action_id = Column(Integer, ForeignKey('action.id'))
+    # If the field has no pk value than a query for this value will use
+    # the action object's primary key value.
+    pk_value = Column(Integer, default=0)
 
     table_object = relationship("TableObject")
     field = relationship("Field")
