@@ -324,7 +324,7 @@ def workflow_summary_ajax(facility_name, workflow_name, page_form='summary',
 @login_required
 @templated()
 def workflow_complete(facility_name, workflow_name, work_item_group):
-    wig = WorkItemGroup(work_item_group)
+    wig = WorkItemGroup(work_item_group, workflow_name)
     template = 'workflow_complete'
     return templating.page_template_context(template,
                                     module_name=MODULE_NAME,
@@ -333,7 +333,7 @@ def workflow_complete(facility_name, workflow_name, work_item_group):
 @core.route('/workflow/<workflow_name>/<step>/<work_item_group>', methods=['GET', 'POST'])
 @login_required
 def work_item_group(facility_name, workflow_name, step, work_item_group):
-    wig = WorkItemGroup(work_item_group, step)
+    wig = WorkItemGroup(work_item_group, workflow_name, step)
     if 'next_step' in request.form:
         wig.set_saved(json.loads(request.form['saved_rows']))
         wig.do_step_actions()
@@ -347,7 +347,7 @@ def work_item_group(facility_name, workflow_name, step, work_item_group):
     dynamic_vars = {}
     table_name = ''
     dynamic_params = wig.set_dynamic_params()
-    func = globals()[wig.Route.url_path]
+    func = globals()[wig.step.Route.url_path]
     context = func(**dynamic_params)
     wig.get_buttons(context['bottom_buttons'])
     if 'saved_rows' in context:

@@ -22,6 +22,7 @@ $(document).ready(function(){
     });
     $( '#continue' ).click( function(){ return $.fn.continueSelected(table);} );
     $("#update_table").click(function(){$.fn.updateTable(table);});
+    $("#new").click(function(){$.fn.openNew(table);});
     $.fn.updateButtonText();
 } );
 
@@ -83,5 +84,9 @@ $(document).ready(function(){
         } else {
             alert("No rows selected.  Select rows to edit by clicking.");
         }
+    }
+    $.fn.openNew = function (table) {
+        var url = window.location.href + '1/new';
+        window.location = (url);
     }
 } ) ( jQuery );
