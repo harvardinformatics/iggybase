@@ -533,24 +533,31 @@ class RoleAccessControl:
             return True
         return False
 
-    def workflow(self, workflow_name):
+    def workflow(self, workflow_name, active = 1):
         res = None
         if workflow_name:
             res = (self.session.query(models.Workflow).
-                filter(models.Workflow.name == workflow_name).first())
+                    join(models.WorkflowRole).
+                filter(models.Workflow.name == workflow_name).
+                filter(models.Workflow.active == active).
+                filter(models.WorkflowRole.role_id == self.role.id).first())
         return res
 
-    def workflow_steps(self, workflow_id):
+    def workflow_steps(self, workflow_id, active = 1):
         res = None
         if workflow_id:
             res = (self.session.query(models.Step, models.TableObject,
                 models.Route, models.Module, models.Field).
                 join(models.TableObject).
                 join(models.Route).
+                join(models.RouteRole).
                 join(models.Module).
                 outerjoin(models.Field, models.Step.dynamic_field ==
                     models.Field.id).
                 filter(models.Step.workflow_id == workflow_id).
+                filter(models.RouteRole.role_id == self.role.id).
+                filter(models.Step.active == active).
+                filter(models.Route.active == active).
                 order_by(models.Step.order).all())
         return res
 

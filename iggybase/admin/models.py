@@ -482,6 +482,19 @@ class Workflow(Base):
         return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
                (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
 
+class WorkflowRole(Base):
+    table_type = 'admin'
+    display_name = Column(String(100))
+    role_id = Column(Integer, ForeignKey('role.id'))
+    workflow_id = Column(Integer, ForeignKey('workflow.id'))
+
+    workflow_role_role = relationship("Role", foreign_keys=[role_id])
+    workflow_role_workflow = relationship("Workflow", foreign_keys=[workflow_id])
+
+    def __repr__(self):
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+
 class Step(Base):
     table_type = 'admin'
     display_name = Column(String(100))

@@ -685,12 +685,13 @@ class OrganizationAccessControl:
         res = None
         if work_item_group:
             res = (self.session.query(models.WorkItemGroup).
-                filter(models.WorkItemGroup.name == work_item_group).first())
+                filter(models.WorkItemGroup.name == work_item_group,
+                    models.WorkItemGroup.organization_id.in_(self.org_ids)).first())
         return res
 
     def work_items(self, work_item_group_id):
         res = None
         if work_item_group_id:
             res = (self.session.query(models.WorkItem).
-                filter(models.WorkItem.work_item_group_id == work_item_group_id).all())
+                filter(models.WorkItem.work_item_group_id == work_item_group_id, models.WorkItem.organization_id.in_(self.org_ids)).all())
         return res
