@@ -257,22 +257,28 @@ $( document ).ready( function () {
         var matches = id.match( /data_entry_(\S+)_(\d+)/);
         var row_id = matches[ 2 ];
         input_type = ele.is( 'input' );
-        
+
         if ( ( input_type && ele.attr( 'value' ) == '' ) ||
                     ( !input_type && $( '#' + id + ' option:selected' ).text( ) == '' ) ) {
             $( '#data_entry_foreign_key_table_object_id_' + row_id ).attr( 'readonly', false );
             $( '#data_entry_foreign_key_field_id_' + row_id ).attr( 'readonly', false );
+            $( '#data_entry_foreign_key_display_' + row_id ).attr( 'readonly', false );
             $( '#data_entry_foreign_key_table_object_id_' + row_id ).attr( 'value', '' );
             $( '#data_entry_foreign_key_field_id_' + row_id ).attr( 'value', '' );
+            $( '#data_entry_foreign_key_display_' + row_id ).attr( 'value', '' );
             $( "#span_foreign_key_table_object_id_"+row_id ).css( "pointer-events", "auto" );
             $( "#span_foreign_key_field_id_"+row_id ).css( "pointer-events", "auto" );
+            $( "#span_foreign_key_display_"+row_id ).css( "pointer-events", "auto" );
         } else {
             $( '#data_entry_foreign_key_table_object_id_' + row_id ).attr( 'readonly', true );
             $( '#data_entry_foreign_key_field_id_' + row_id ).attr( 'readonly', true );
+            $( '#data_entry_foreign_key_display_' + row_id ).attr( 'readonly', true );
             $( '#data_entry_foreign_key_table_object_id_' + row_id ).attr( 'value', 'select_list_item' );
             $( '#data_entry_foreign_key_field_id_' + row_id ).attr( 'value', 'F001501' );
+            $( '#data_entry_foreign_key_display_' + row_id ).attr( 'value', '' );
             $( "#span_foreign_key_table_object_id_"+row_id ).css( "pointer-events", "none" );
             $( "#span_foreign_key_field_id_"+row_id ).css( "pointer-events", "none" );
+            $( "#span_foreign_key_display_"+row_id ).css( "pointer-events", "none" );
         }
     }
 
