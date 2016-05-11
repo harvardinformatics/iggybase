@@ -9,7 +9,7 @@ def page_template_context(page_form_name, **context):
     context['url_root'] = request.url_root
 
     # add button, nav bar, side bar
-    page_form = access_ctrl.has_access("PageForm", {'name': page_form_name})
+    page_form, buttons, scripts = access_ctrl.get_page_form_data(page_form_name, True)
 
     if page_form is None:
         abort(403)
@@ -18,7 +18,6 @@ def page_template_context(page_form_name, **context):
     context['page_header'] = page_form.page_header
     context['page_title'] = page_form.page_title
 
-    buttons = access_ctrl.page_form_buttons(page_form.id)
     context['top_buttons'] = buttons['top']
     submit_action_url = page_button_action(
         buttons['top']
@@ -31,7 +30,6 @@ def page_template_context(page_form_name, **context):
 
     submit_action_url = submit_action_url.replace('<facility>', g.facility)
 
-    scripts = access_ctrl.page_form_javascript(page_form.id)
     context['scripts'] = page_scripts(scripts)
     if not 'hidden_fields' in context:
         context['hidden_fields'] = {}

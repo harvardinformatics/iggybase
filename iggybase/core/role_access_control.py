@@ -301,36 +301,43 @@ class RoleAccessControl:
             subs = {}
         return subs
 
-    def get_page_form_data(self, page_form_id, active=1):
-        page_forms = self.page_form_ancestors(page_form_id)
-        page_form_javascript = self.page_form_javascript(page_forms.keys(), active)
-        page_form_buttons = self.page_form_buttons(page_forms.keys(), active)
+    def get_page_form_data(self, page_form_name, active=1):
+        page = self.has_access("PageForm", {'name': page_form_name})
 
+        if page is None:
+            return None
+
+        page_forms = self.page_form_ancestors(page.id)
+
+        page_form_ids = []
+        page_form = page_forms[0][1]
+        for pf in page_forms:
+            page_form_ids.append(pf[0])
+            if pf[1] != page_form:
+                for a in dir(pf[1]) if not a.startswith('__') and not callable(getattr(pf[1], a))
+
+        page_form_javascript = self.page_form_javascript(page_form_ids, active)
+        page_form_buttons = self.page_form_buttons(page_form_ids, active)
+
+        return page_form, page_form_buttons, page_form_javascript
+
+    def page_form_ancestors(self, page_form_id, active = 1):
         res = self.session.query(models.PageForm).filter_by(id=page_form_id). \
             filter_by(active=active).first()
 
-        page_form_ids = [page_form_id]
-
-        if res is not None and res.parent_id is not None:
-            page_form_ids += [self.page_form_ancestors(res.parent_id)]
-
-        # return page_form, page_form_buttons, page_form_javascript
-
-    def page_form_ancestors(self, page_form_id, page_forms = OrderedDict(), active = 1):
-        res = self.session.query(models.PageForm).filter_by(id=page_form_id). \
-            filter_by(active=active).first()
-
-        if res is not None and res.parent_id is not None:
-            page_forms = self.page_form_ancestors(res.parent_id, page_forms)
-        elif res is not None:
-            page_forms[page_form_id] = res
-
-        return page_forms
+        if res is None:
+            # in theory this should not be reached...
+            return [(None,None)]
+        elif res.parent_id is None:
+            # base case
+            return [(res.id, res)]
+        else:
+            return [(res.id, res)] + self.page_form_ancestors(res.parent_id, active)
 
     def page_form_buttons(self, page_form_ids, active=1):
         page_form_buttons = {'top': [], 'bottom': []}
         filters = [
-                models.PageFormButton.page_form_id == (page_form_ids),
+                models.PageFormButton.page_form_id.in_(page_form_ids),
                 models.PageFormButtonRole.role_id == self.role.id,
                 models.PageFormButton.active == active,
                 models.PageFormButtonRole.active == active,
@@ -348,7 +355,7 @@ class RoleAccessControl:
 
     def page_form_javascript(self, page_form_ids, active=1):
         res = self.session.query(models.PageFormJavascript).\
-            filter(models.PageFormJavascript.page_form_id==(page_form_ids)). \
+            filter(models.PageFormJavascript.page_form_id.in_(page_form_ids)). \
             filter_by(active=active).order_by(models.PageFormJavascript.order, models.PageFormJavascript.id).all()
 
         return res

@@ -267,7 +267,7 @@ $( document ).ready( function () {
         var matches = id.match( /data_entry_(\S+)_(\d+)/);
         var row_id = matches[ 2 ];
         input_type = ele.is( 'input' );
-        
+
         if ( ( input_type && ele.attr( 'value' ) == '' ) ||
                     ( !input_type && $( '#' + id + ' option:selected' ).text( ) == '' ) ) {
             $( '#data_entry_foreign_key_table_object_id_' + row_id ).attr( 'readonly', false );
