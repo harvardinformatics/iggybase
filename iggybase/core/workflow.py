@@ -5,6 +5,7 @@ from iggybase import utilities as util
 
 class Workflow:
     def __init__ (self, name):
+        print('workflow')
         self.name = name
         self.rac = util.get_role_access_control()
         self.oac = None
