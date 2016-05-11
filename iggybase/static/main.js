@@ -9,11 +9,6 @@ $( document ).ready( function () {
             $.fn.searchClick( $( this ) );
         }
     );
-    $( ".field_select_list" ).change(
-        function( ) {
-            $.fn.updateTableField( $( this ) )
-        }
-    );
     $( ".add_new_child_item" ).click(
         function( ) {
             $.fn.addChildTableRow( $( this ) );
@@ -39,6 +34,11 @@ $( document ).ready( function () {
     $( ".boolean-field" ).change(
         function( ) {
             $.fn.changeCheckBox( $( this ) );
+        }
+    );
+    $( ".field_select_list" ).change(
+        function( ) {
+            $.fn.updateTableField( $( this ) )
         }
     );
 
@@ -163,19 +163,23 @@ $( document ).ready( function () {
                     }
                 );
                 var luid = $( this ).attr( "luid" ).match( /(\S+)_(\d+)/);
-                new_luid = luid[ 1 ] + "_" + row_id
-                $( this ).attr( "luid", new_luid );
+                var new_luid = luid[ 1 ] + "_" + row_id
+                var id = $( this ).attr( "id" ).match( /(\S+)_(\d+)/);
+                var new_id = id[ 1 ] + "_" + row_id
+                $( this ).attr( "luid", new_luid ).attr( "id", new_id ).attr( "name",  new_id );
             }
         );
 
-        new_tr.find( '.boolean-field' ).each(
+        new_tr.find( '.boolean-field' ).change(
             function() {
                 $( this ).change(
                     function( ) {
                         $.fn.changeCheckBox( $( this ) );
                     }
                 );
-
+            }
+        ).each(
+            function() {
                 $.fn.changeCheckBox( $( this ) );
                 $.fn.updateOldValue( $( this ) );
             }
@@ -198,6 +202,12 @@ $( document ).ready( function () {
                         return $.fn.keydownLookupField( e, $( this ) );
                     }
                 );
+            }
+        );
+
+        new_tr.find( ".field_select_list" ).change(
+            function( ) {
+                $.fn.updateTableField( $( this ) )
             }
         );
     }
@@ -257,7 +267,7 @@ $( document ).ready( function () {
         var matches = id.match( /data_entry_(\S+)_(\d+)/);
         var row_id = matches[ 2 ];
         input_type = ele.is( 'input' );
-
+        
         if ( ( input_type && ele.attr( 'value' ) == '' ) ||
                     ( !input_type && $( '#' + id + ' option:selected' ).text( ) == '' ) ) {
             $( '#data_entry_foreign_key_table_object_id_' + row_id ).attr( 'readonly', false );

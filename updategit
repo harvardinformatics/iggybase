@@ -1,8 +1,8 @@
 cd /n/informatics/iggybase/dev/iggybase
 
-git merge master
-
 git pull origin master
+
+sleep 10 
 
 git add -A
 
