@@ -307,11 +307,11 @@ class RoleAccessControl:
         if page_form is None:
             return None
 
-        page_forms = self.page_form_ancestors(page_form.id)
-
         if page_form.parent_id is None:
             page_form_ids = [page_form.id]
         else:
+            page_forms = self.page_form_ancestors(page_form.id)
+
             page_form_ids = []
             for pf in page_forms:
                 page_form_ids.append(pf[0])
