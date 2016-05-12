@@ -302,26 +302,24 @@ class RoleAccessControl:
         return subs
 
     def get_page_form_data(self, page_form_name, active=1):
-        page = self.has_access("PageForm", {'name': page_form_name})
+        page_form = self.has_access("PageForm", {'name': page_form_name})
 
-        if page is None:
+        if page_form is None:
             return None
 
-        page_forms = self.page_form_ancestors(page.id)
+        page_forms = self.page_form_ancestors(page_form.id)
 
-        if page.parent_id is None:
-            page_form_ids = [page.id]
-            page_form = page
+        if page_form.parent_id is None:
+            page_form_ids = [page_form.id]
         else:
             page_form_ids = []
-            page_form = page_forms[0][1]
             for pf in page_forms:
                 page_form_ids.append(pf[0])
-                if pf[1] != page_form:
-                    for a in dir(pf[1]):
-                        if not a.startswith('__') and not callable(getattr(pf[1], a)):
-                            if getattr(page_form, a) == "" and getattr(pf[1], a) != "":
-                                setattr(page_form, a, getattr(pf[1],a))
+                if pf[1].id != page_form.id:
+                    for attr, value in pf[1].__dict__.items():
+                        if not attr.startswith('__') and not callable(value):
+                            if getattr(page_form, attr) == "" and value != "":
+                                setattr(page_form, attr, value)
 
         page_form_javascript = self.page_form_javascript(page_form_ids, active)
         page_form_buttons = self.page_form_buttons(page_form_ids, active)
