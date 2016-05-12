@@ -192,7 +192,6 @@ class OrganizationAccessControl:
             # don't include criteria for self foreign keys
             if criteria_key in criteria and not (field.is_foreign_key and
                     field.TableObject.name == first_table_named):
-            #if criteria_key in criteria:
                 if type(criteria[criteria_key]) is list:
                     wheres.append(col.in_(criteria[criteria_key]))
                 else:

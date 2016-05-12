@@ -310,13 +310,14 @@ def workflow(facility_name, workflow_name):
     table_name = 'work_item_group'
     page_form = 'summary'
     template = 'workflow_summary'
-    return build_summary(table_name, page_form, template)
+    context = {'btn_overrides': {'bottom':{'new':{'button_value':('New ' + workflow_name.title())}}}}
+    return build_summary(table_name, page_form, template, context)
 
 @core.route('/workflow/<workflow_name>/ajax')
 @login_required
 def workflow_summary_ajax(facility_name, workflow_name, page_form='summary',
                         criteria={}):
-    criteria = {'work_item_group.workflow':workflow_name}
+    criteria = {('workflow', 'name'):workflow_name}
     table_name = 'work_item_group'
     return action_summary_ajax(facility_name, table_name, page_form, criteria)
 
@@ -344,11 +345,9 @@ def work_item_group(facility_name, workflow_name, step, work_item_group):
         wig.do_step_actions()
         complete_url = wig.get_complete_url()
         return redirect(complete_url)
-    dynamic_vars = {}
     table_name = ''
-    dynamic_params = wig.set_dynamic_params()
     func = globals()[wig.step.Route.url_path]
-    context = func(**dynamic_params)
+    context = func(**wig.dynamic_params)
     wig.get_buttons(context['bottom_buttons'])
     if 'saved_rows' in context:
         wig.set_saved(context['saved_rows'])
@@ -359,7 +358,7 @@ def work_item_group(facility_name, workflow_name, step, work_item_group):
 """ helper functions start """
 
 
-def build_summary(table_name, page_form, template, form=None):
+def build_summary(table_name, page_form, template, context = {}):
     tqc = TableQueryCollection(page_form, table_name)
     tq = tqc.get_first()
     # if nothing to display then page not found
@@ -367,9 +366,8 @@ def build_summary(table_name, page_form, template, form=None):
         abort(404)
     return templating.page_template_context(template,
                                     module_name=MODULE_NAME,
-                                    form=form,
                                     table_name=table_name,
-                                    table_query=tq)
+                                    table_query=tq, **context)
 
 
 def build_summary_ajax(table_name, page_form, criteria):

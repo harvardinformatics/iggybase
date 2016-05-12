@@ -6,6 +6,9 @@
 {% block content_title -%}
     <div class="content_title">
         <h1>Workflow {{wig.workflow.name|title}}</h1>
+        {% if wig.workflow.Workflow.notes %}
+            <p>{{ wig.workflow.Workflow.notes }}</p>
+        {% endif %}
         <h2>Step
         {{wig.show_step}}
         {% if table_name is defined %}
@@ -18,9 +21,12 @@
         {% elif wig.is_previous_step() %}
             <h4 class="red">Step already done: any edits will overwrite existing work</h4>
         {% endif %}
-    </div>
-    <div>
-        <p>{{ wig.step.Step.notes }}</p>
+        {% if wig.step.Step.notes %}
+            <p>{{ wig.step.Step.notes }}</p>
+        {% endif %}
+        {% if wig.WorkItemGroup.notes %}
+            <br><p>{{ wig.WorkItemGroup.notes }}</p>
+        {% endif %}
     </div>
     <hr>
 {%- endblock content_title %}
@@ -38,3 +44,7 @@
     <br><br>
     {{ macros.breadcrumbs( wig.get_breadcrumbs() ) }}
 {%- endblock bottombuttonbar %}
+{% block scripts %}
+    {{ super() }}
+    <script>var $AJAX_ROUTE = {{ wig.url|tojson|safe }};</script>
+{%- endblock scripts %}

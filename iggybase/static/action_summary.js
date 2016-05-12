@@ -3,11 +3,17 @@ $(document).ready(function(){
     $('th').each(function(){
         columns.push({data: $(this).data('name')});
     });
+    var ajax_url = '';
+    if($AJAX_ROUTE) {
+        ajax_url = $AJAX_ROUTE + 'ajax'
+    } else {
+        ajax_url = 'ajax'
+    }
     var table = $('.summary_table').DataTable({
         deferRender:true,
         scrollX:true,
         ajax:{
-            'url':'ajax',
+            'url':ajax_url,
             'data': function(d) { d.search = window.location.search;}
         },
         columns: columns,

@@ -1,4 +1,4 @@
-from flask import request, g, url_for
+from flask import request, g, url_for, session
 import json
 from collections import OrderedDict
 from iggybase.core.organization_access_control import OrganizationAccessControl
@@ -21,6 +21,11 @@ class WorkItemGroup:
         # which step is the wig currently on
         self.step = self.get_step()
         self.step_num = self.step.Step.order
+
+        # set the url for current step
+        self.endpoint = self.step.Module.name + '.' + self.step.Route.url_path
+        self.dynamic_params = self.set_dynamic_params()
+        self.url = url_for(self.endpoint, **self.dynamic_params)
 
         # which step is requested for show
         if step:
@@ -106,21 +111,27 @@ class WorkItemGroup:
                     func(**params)
 
     def set_dynamic_params(self):
+        args = []
+        if self.endpoint in session['routes']:
+            args = session['routes'][self.endpoint]
         dynamic_params = {}
-        dynamic_params['table_name'] = self.step.TableObject.name
-        dynamic_params['facility_name'] = g.facility
-        if self.step.Field:
-            item_tbl_ids = set()
-            for item in self.work_items:
-                if item.table_object_id == self.step.Field.table_object_id:
-                    name = self.oac.get_attr_from_id(item.table_object_id,
-                            item.row_id, 'name')
-                    if name:
-                        dynamic_params['row_name'] = name
-                        break
-                item_tbl_ids.add(item.table_object_id)
-        if not 'row_name' in dynamic_params:
-            dynamic_params['row_name'] = 'new'
+        if 'table_name' in args:
+            dynamic_params['table_name'] = self.step.TableObject.name
+        if 'facility_name' in args:
+            dynamic_params['facility_name'] = g.facility
+        if 'row_name' in args:
+            if self.step.Field:
+                item_tbl_ids = set()
+                for item in self.work_items:
+                    if item.table_object_id == self.step.Field.table_object_id:
+                        name = self.oac.get_attr_from_id(item.table_object_id,
+                                item.row_id, 'name')
+                        if name:
+                            dynamic_params['row_name'] = name
+                            break
+                    item_tbl_ids.add(item.table_object_id)
+            if not 'row_name' in dynamic_params:
+                dynamic_params['row_name'] = 'new'
         return dynamic_params
 
     def get_active_steps(self, all_steps):
