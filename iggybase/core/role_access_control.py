@@ -309,12 +309,19 @@ class RoleAccessControl:
 
         page_forms = self.page_form_ancestors(page.id)
 
-        page_form_ids = []
-        page_form = page_forms[0][1]
-        for pf in page_forms:
-            page_form_ids.append(pf[0])
-            if pf[1] != page_form:
-                for a in dir(pf[1]) if not a.startswith('__') and not callable(getattr(pf[1], a))
+        if page.parent_id is None:
+            page_form_ids = [page.id]
+            page_form = page
+        else:
+            page_form_ids = []
+            page_form = page_forms[0][1]
+            for pf in page_forms:
+                page_form_ids.append(pf[0])
+                if pf[1] != page_form:
+                    for a in dir(pf[1]):
+                        if not a.startswith('__') and not callable(getattr(pf[1], a)):
+                            if getattr(page_form, a) == "" and getattr(pf[1], a) != "":
+                                setattr(page_form, a, getattr(pf[1],a))
 
         page_form_javascript = self.page_form_javascript(page_form_ids, active)
         page_form_buttons = self.page_form_buttons(page_form_ids, active)
