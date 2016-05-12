@@ -40,11 +40,11 @@ class Field:
     def get_field_display_name(self):
         if self.TableQueryField and getattr(self.TableQueryField, 'display_name'):
             display_name = getattr(self.TableQueryField, 'display_name')
-            return display_name.replace('_', ' ').title()
-        elif self.FieldRole.display_name != '':
-            return self.FieldRole.display_name.replace('_', ' ').title()
-        elif self.Field.display_name != '':
-            return self.Field.display_name.replace('_', ' ').title()
+            return display_name
+        elif self.FieldRole.display_name:
+            return self.FieldRole.display_name
+        elif self.Field.display_name:
+            return self.Field.display_name
         else:
             return 'WHOA! Something is not right here. There is no display name for field ' + self.Field.name + "."
 

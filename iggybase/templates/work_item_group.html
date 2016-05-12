@@ -19,6 +19,9 @@
             <h4 class="red">Step already done: any edits will overwrite existing work</h4>
         {% endif %}
     </div>
+    <div>
+        <p>{{ wig.step.Step.notes }}</p>
+    </div>
     <hr>
 {%- endblock content_title %}
 {% block bottombuttonbar -%}

@@ -256,6 +256,7 @@ class FormGenerator():
                 row_name = 'new'
 
         for field_display_name, field in fields.fields.items():
+            field_display_name = field_display_name.replace('_', '').title()
             # logging.info(str(field.Field.id) + " " + field.Field.field_name +': ' + field.FieldRole.display_name)
             value = None
 

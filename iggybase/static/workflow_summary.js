@@ -32,12 +32,8 @@ $(document).ready(function(){
     //, function (i) { return $(i['name']).text()});
         if (row.length > 0) {
             row = row[0]
-            console.log(row);
-            console.log(row.step_id);
-            var step = 'SP000001';
             var hidden_fields = $("#hidden_fields");
             var url = window.location.href + row.step_id + '/' + $(row.name).text();
-            console.log(url);
             if ( url.length > 2000 )
                 alert("You are overly ambitious, please select fewer items.");
             else
