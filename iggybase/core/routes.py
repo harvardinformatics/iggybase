@@ -256,7 +256,6 @@ def multiple_entry(facility_name, table_name, row_names):
 
     fg = form_generator.FormGenerator(table_name)
     form = fg.default_multiple_entry_form(row_names)
-
     if form.validate_on_submit() and len(form.errors) == 0 and len(row_names) == 0:
         oac = OrganizationAccessControl()
         row_names = oac.save_form()

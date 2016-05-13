@@ -120,19 +120,25 @@ class WorkItemGroup:
         if 'facility_name' in args:
             dynamic_params['facility_name'] = g.facility
         if 'row_name' in args:
-            if self.step.Field:
-                item_tbl_ids = set()
-                for item in self.work_items:
-                    if item.table_object_id == self.step.Field.table_object_id:
-                        name = self.oac.get_attr_from_id(item.table_object_id,
-                                item.row_id, 'name')
-                        if name:
-                            dynamic_params['row_name'] = name
-                            break
-                    item_tbl_ids.add(item.table_object_id)
-            if not 'row_name' in dynamic_params:
+            params = self.get_dynamic_param_from_items()
+            if params:
+                dynamic_params['row_name'] = params[0]
+            else:
                 dynamic_params['row_name'] = 'new'
+        if 'row_names' in args:
+            dynamic_params['row_names'] = json.dumps(self.get_dynamic_param_from_items())
         return dynamic_params
+
+    def get_dynamic_param_from_items(self):
+        params = []
+        if self.step.Field:
+            for item in self.work_items:
+                if item.table_object_id == self.step.Field.table_object_id:
+                    name = self.oac.get_attr_from_id(item.table_object_id,
+                            item.row_id, 'name')
+                    if name:
+                        params.append(name)
+        return params
 
     def get_active_steps(self, all_steps):
         work_steps = OrderedDict()

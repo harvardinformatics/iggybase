@@ -565,12 +565,13 @@ class RoleAccessControl:
     def workflow_steps(self, workflow_id, active = 1):
         res = None
         if workflow_id:
-            res = (self.session.query(models.Step, models.TableObject,
-                models.Route, models.Module, models.Field).
-                join(models.TableObject).
+            res = (self.session.query(models.Step,
+                models.Route, models.Module, models.Field, models.TableObject).
                 join(models.Route).
                 join(models.RouteRole).
                 join(models.Module).
+                outerjoin(models.TableObject, models.Step.table_object_id ==
+                    models.TableObject.id).
                 outerjoin(models.Field, models.Step.dynamic_field ==
                     models.Field.id).
                 filter(models.Step.workflow_id == workflow_id).
