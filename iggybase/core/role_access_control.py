@@ -305,7 +305,7 @@ class RoleAccessControl:
         page_form = self.has_access("PageForm", {'name': page_form_name})
 
         if page_form is None:
-            return None
+            return None, None, None
 
         if page_form.parent_id is None:
             page_form_ids = [page_form.id]

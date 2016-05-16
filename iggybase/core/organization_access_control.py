@@ -542,16 +542,17 @@ class OrganizationAccessControl:
 
         return result
 
-    def get_child_row_names(self, child_table_name, child_link_field_id, parent_id):
+    def get_child_row_names(self, child_table_name, child_link_field_id, parent_ids):
         field = self.session.query(models.Field).filter_by(id=child_link_field_id).first()
 
         child_table = util.get_table(child_table_name)
+        parent_column = getattr(child_table, field.display_name)
 
-        rows = self.session.query(child_table).filter(getattr(child_table, field.display_name) == parent_id).all( )
+        rows = self.session.query(child_table).filter(parent_column.in_(parent_ids)).all( )
 
-        names = []
+        names = {}
         for row in rows:
-            names.append(row.name)
+            names[row.id] = row.name
 
         return names
 
