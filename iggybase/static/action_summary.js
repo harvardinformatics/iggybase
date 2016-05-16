@@ -4,10 +4,10 @@ $(document).ready(function(){
         columns.push({data: $(this).data('name')});
     });
     var ajax_url = '';
-    if($AJAX_ROUTE) {
-        ajax_url = $AJAX_ROUTE + 'ajax'
+    if(typeof $AJAX_ROUTE !== 'undefined') {
+        ajax_url = $AJAX_ROUTE + 'ajax';
     } else {
-        ajax_url = 'ajax'
+        ajax_url = 'ajax';
     }
     var table = $('.summary_table').DataTable({
         deferRender:true,
@@ -33,6 +33,7 @@ $(document).ready(function(){
 
 ( function( $ ) {
     $.fn.editSelected = function (table) {
+        var test = table.rows('.selected').data();
         var names = $.map(table.rows('.selected').data(), function (i) { return $(i['name']).text()});
         if (names.length > 0) {
             var hidden_fields = $("#hidden_fields");
@@ -40,7 +41,7 @@ $(document).ready(function(){
             url += hidden_fields.find('input[name=facility]').val()
                 + '/' + hidden_fields.find('input[name=mod]').val()
                 + '/multiple_entry/' + hidden_fields.find('input[name=table]').val()
-                + '?row_names=' + JSON.stringify(names);
+                + '/' + JSON.stringify(names);
             if ( url.length > 2000 )
                 alert("You are overly ambitious, please select fewer items.");
             else

@@ -38,13 +38,15 @@ class Field:
         return visible
 
     def get_field_display_name(self):
+        # this should be lowercase for consistancy, templates responsible for
+        # capitalization of title displays
         if self.TableQueryField and getattr(self.TableQueryField, 'display_name'):
             display_name = getattr(self.TableQueryField, 'display_name')
-            return display_name
+            return display_name.lower()
         elif self.FieldRole.display_name:
-            return self.FieldRole.display_name
+            return self.FieldRole.display_name.lower()
         elif self.Field.display_name:
-            return self.Field.display_name
+            return self.Field.display_name.lower()
         else:
             return 'WHOA! Something is not right here. There is no display name for field ' + self.Field.name + "."
 

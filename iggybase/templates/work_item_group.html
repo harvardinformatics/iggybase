@@ -45,6 +45,6 @@
     {{ macros.breadcrumbs( wig.get_breadcrumbs() ) }}
 {%- endblock bottombuttonbar %}
 {% block scripts %}
-    {{ super() }}
     <script>var $AJAX_ROUTE = {{ wig.url|tojson|safe }};</script>
+    {{ super() }}
 {%- endblock scripts %}

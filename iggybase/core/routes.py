@@ -242,17 +242,17 @@ def data_entry(facility_name, table_name, row_name):
                                     module_name=module_name, form=form, table_name=table_name)
 
 
-@core.route('/multiple_entry/<table_name>/', methods=['GET','POST'])
+@core.route('/multiple_entry/<table_name>/<row_names>', methods=['GET','POST'])
 @login_required
 @templated()
-def multiple_entry(facility_name, table_name):
+def multiple_entry(facility_name, table_name, row_names):
     module_name = MODULE_NAME
     rac = util.get_role_access_control()
     table_data = rac.has_access('TableObject', {'name': table_name})
 
     if not table_data:
         abort(403)
-    row_names = json.loads(request.args.get('row_names'))
+    row_names = json.loads(row_names)
 
     fg = form_generator.FormGenerator(table_name)
     form = fg.default_multiple_entry_form(row_names)
