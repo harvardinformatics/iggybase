@@ -30,6 +30,14 @@ def page_template_context(page_form_name, **context):
 
     submit_action_url = submit_action_url.replace('<facility>', g.facility)
 
+    if 'btn_overrides' in context:
+        if 'top' in context['btn_overrides']:
+            buttons['top'] = btn_overrides(buttons['top'],
+            context['btn_overrides']['top'])
+        elif 'bottom' in context['btn_overrides']:
+            buttons['bottom'] = btn_overrides(buttons['bottom'],
+            context['btn_overrides']['bottom'])
+
     context['scripts'] = page_scripts(scripts)
     if not 'hidden_fields' in context:
         context['hidden_fields'] = {}
@@ -80,4 +88,10 @@ def page_scripts(scripts):
 
     return scpts
 
+def btn_overrides(buttons, overrides):
+    for btn in buttons:
+        if btn.button_id in overrides:
+            for key, val in overrides[btn.button_id].items():
+                if hasattr(btn, key):
+                    setattr(btn, key, val)
 

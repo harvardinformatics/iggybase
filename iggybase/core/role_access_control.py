@@ -1,5 +1,5 @@
 from collections import OrderedDict as OrderedDict
-from flask import g, request, session
+from flask import g, request, session, current_app
 from iggybase.database import db_session
 from iggybase.admin import models
 from iggybase.admin import constants as admin_consts
@@ -235,7 +235,7 @@ class RoleAccessControl:
         return criteria
 
     def set_routes(self):
-        self.routes = []
+        self.routes = {}
         res = (self.session.query(models.Route, models.RouteRole, models.Module,
             models.ModuleFacility)
                 .join(models.RouteRole, models.Route.id==models.RouteRole.route_id)
@@ -246,15 +246,22 @@ class RoleAccessControl:
             models.RouteRole.active == 1,
             models.ModuleFacility.facility_id == self.facility.id
         ).all())
+        rules = {}
+        for rule in current_app.url_map._rules:
+            rules[rule.endpoint] = list(rule.arguments)
         for row in res:
             path =  self.facility.name + '/' + row.Module.name + '/' + row.Route.url_path
-            self.routes.append(path)
+            endpoint = row.Module.name + '.' + row.Route.url_path
+            args = []
+            if endpoint in rules:
+                args = rules[endpoint]
+            self.routes[endpoint] = args
         session['routes'] = self.routes
 
     def route_access(self, route):
         route = route.strip('/')
         route = route.split('/')
-        route = '/'.join(route[:3])
+        route = '.'.join(route[1:3])
         if route in self.routes:
             return True
         else:
