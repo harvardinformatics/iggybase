@@ -31,9 +31,7 @@
     <hr>
 {%- endblock content_title %}
 {% block bottombuttonbar -%}
-    <div class="bottom_buttons">
-        {{ macros.render_buttons( bottom_buttons ) }}
-    </div>
+    {{super()}}
     <hr>
     <div class="workflow_buttons">
         <form id="wig_data" action="" enctype="multipart/form-data" class="form form-horizontal" method="post" role="form">

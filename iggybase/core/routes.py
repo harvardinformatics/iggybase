@@ -14,6 +14,7 @@ from iggybase.core.organization_access_control import OrganizationAccessControl
 from .table_query_collection import TableQueryCollection
 from .work_item_group import WorkItemGroup
 import logging
+from importlib import import_module
 
 MODULE_NAME = 'core'
 
@@ -256,7 +257,7 @@ def multiple_entry(facility_name, table_name, row_names):
 
     fg = form_generator.FormGenerator(table_name)
     form = fg.default_multiple_entry_form(row_names)
-    if form.validate_on_submit() and len(form.errors) == 0 and len(row_names) == 0:
+    if form.validate_on_submit() and len(form.errors) == 0 and len(row_names) != 0:
         oac = OrganizationAccessControl()
         row_names = oac.save_form()
 
@@ -345,7 +346,11 @@ def work_item_group(facility_name, workflow_name, step, work_item_group):
         complete_url = wig.get_complete_url()
         return redirect(complete_url)
     table_name = ''
-    func = globals()[wig.step.Route.url_path]
+    if wig.step.Module.name == MODULE_NAME:
+        func = globals()[wig.step.Route.url_path]
+    else:
+        module = import_module('iggybase.' + wig.step.Module.name + '.routes')
+        func = getattr(module, wig.step.Route.url_path)
     context = func(**wig.dynamic_params)
     wig.get_buttons(context['bottom_buttons'])
     if 'saved_rows' in context:
