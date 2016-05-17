@@ -1,5 +1,4 @@
 from flask import g, url_for
-from iggybase.core.organization_access_control import OrganizationAccessControl
 from collections import OrderedDict
 from iggybase import utilities as util
 
@@ -7,7 +6,6 @@ class Workflow:
     def __init__ (self, name):
         self.name = name
         self.rac = util.get_role_access_control()
-        self.oac = None
         self.Workflow = self.rac.workflow(self.name)
         self.id = self.Workflow.id
         self.steps, self.steps_by_id = self.get_steps()

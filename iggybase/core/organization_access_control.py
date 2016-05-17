@@ -25,12 +25,13 @@ class OrganizationAccessControl:
         self.session = db_session()
 
         if g.user is not None and not g.user.is_anonymous:
-            role_access_control = util.get_role_access_control()
-
             self.user =  self.session.query(models.User).filter_by(id=g.user.id).first()
+
+            # must distinguish user level orgs from group level org ids
             query = self.session.query(models.Organization.parent_id.distinct().label('parent_id'))
             self.parent_orgs = [row.parent_id for row in query.all()]
 
+            role_access_control = util.get_role_access_control()
             facility_root_org_id = role_access_control.facility.root_organization_id
 
             user_orgs = self.session.query(models.UserOrganization).filter_by(active=1, user_id=self.user.id).all()
@@ -45,13 +46,13 @@ class OrganizationAccessControl:
             self.current_org_id = user_org
             min_level = None
             for user_org, level in facility_orgs.items():
-                # logging.info('facility_orgs: ' + str(user_org))
+                # levels are ordered from high to low, hightest has order = 1
                 if min_level is None or (level < min_level and user_org != self.user.organization_id):
+                    # TODO: do we really want min level.id or do we want the lowest
+                    # level.order
                     min_level = level
                     self.current_org_id = user_org
                 self.get_child_organization(user_org)
-
-            # logging.info('self.current_org_id: ' + str(self.current_org_id))
         else:
             self.user = None
 

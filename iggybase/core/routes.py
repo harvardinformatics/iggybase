@@ -377,9 +377,12 @@ def build_summary(table_name, page_form, template, context = {}):
 def build_summary_ajax(table_name, page_form, criteria):
     start = time.time()
     route = util.get_path(util.ROUTE)
+    # TODO: we don't want oac instantiated multiple times
+    oac = OrganizationAccessControl()
     key = current_app.cache.make_key(
             route,
             g.rac.role.id,
+            oac.current_org_id,
             table_name
     )
     ret = current_app.cache.get(key)
