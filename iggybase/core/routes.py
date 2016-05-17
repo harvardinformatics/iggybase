@@ -343,7 +343,7 @@ def work_item_group(facility_name, workflow_name, step, work_item_group):
     elif 'complete' in request.form:
         wig.set_saved(json.loads(request.form['saved_rows']))
         wig.do_step_actions()
-        complete_url = wig.get_complete_url()
+        complete_url = wig.workflow.get_complete_url(wig.name)
         return redirect(complete_url)
     table_name = ''
     if wig.step.Module.name == MODULE_NAME:
