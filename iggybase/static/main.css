@@ -157,3 +157,39 @@ pre {
 .breadcrumbs .current::after{
     background: #abe0ef;
 }
+.banner {
+    height: 100px;
+    line-height: 100px;
+}
+.banner-img-wrapper {
+    height: 75px;
+    vertical-align: middle;
+    float: left;
+    padding-left: 20px;
+    padding-right: 20px;
+}
+.banner-img {
+    vertical-align: middle;
+    max-height: 100%;
+}
+.banner-title {
+    height: 75px;
+    vertical-align: middle;
+    max-height: 100%;
+    display: inline-block;
+}
+.banner-title h1 {
+    margin-top: 1%;
+    margin-bottom: 1%;
+}
+
+.banner-title h3 {
+    margin-top: 1%;
+    margin-bottom: 1%;
+}
+.logout {
+    margin: 5%;
+}
+.container-fluid {
+    clear: both;
+}

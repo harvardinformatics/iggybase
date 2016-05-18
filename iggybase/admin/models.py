@@ -137,6 +137,10 @@ class Role(Base, RoleMixin):
 class Facility(Base):
     table_type = 'admin'
     root_organization_id = Column(Integer)
+    banner_img = Column(String(255))
+    banner_title = Column(String(255))
+    banner_subtitle = Column(String(255))
+    css = Column(String(255))
 
     def __repr__(self):
         return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
