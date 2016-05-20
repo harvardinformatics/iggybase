@@ -92,7 +92,7 @@
                 {% endif %}
                 {% for name, field in table_query.fc.fields.items() %}
                     {% if field.visible %}
-                    <th data-name="{{name}}">{{ name.replace('_', ' ')|title }}</th>
+                    <th data-name="{{field.display_name}}">{{ field.display_name|title }}</th>
                     {% endif %}
                 {% endfor %}
         </tr></thead>

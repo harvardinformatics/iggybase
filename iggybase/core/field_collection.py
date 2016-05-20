@@ -32,7 +32,7 @@ class FieldCollection:
                     order,
                     table_query_field,
                     calculation)
-            field_dict[field.display_name] = field
+            field_dict[field.name] = field
 
             if field.type == 4:
                 self.date_fields[field.display_name] = order

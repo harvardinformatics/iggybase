@@ -275,8 +275,8 @@ class FormGenerator():
         self.classattr['startrow_'+str(row_counter)]=\
             HiddenField('startrow_'+str(row_counter))
 
-        for field_display_name, field in fields.fields.items():
-            field_display_name = field_display_name.replace('_', '').title()
+        for field_name, field in fields.fields.items():
+            field_display_name = field.display_name.title()
             # logging.info(str(field.Field.id) + " " + field.Field.field_name +': ' + field.FieldRole.display_name)
             value = None
 
@@ -311,8 +311,8 @@ class FormGenerator():
 
     def get_field_headers(self, fields):
         headers = ''
-        for display_name, field in fields.fields.items():
+        for name, field in fields.fields.items():
             if field.is_visible():
-                headers += display_name + '|'
+                headers += field.display_name + '|'
 
         return dumps(headers[:-1])

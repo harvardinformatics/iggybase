@@ -12,7 +12,8 @@ class Field:
         self.TableQueryField = table_query_field
         self.TableQueryCalculation = calculation
 
-        self.display_name = self.get_field_display_name()
+        self.name = self.Field.display_name # name from field
+        self.display_name = self.get_field_display_name() # name from role or tq
         self.rac = util.get_role_access_control()
         self.calculation_fields = self._get_calculation_fields(calculation)
         self.type = self._get_type()
@@ -42,13 +43,13 @@ class Field:
         # capitalization of title displays
         if self.TableQueryField and getattr(self.TableQueryField, 'display_name'):
             display_name = getattr(self.TableQueryField, 'display_name')
-            return display_name.lower()
         elif self.FieldRole.display_name:
-            return self.FieldRole.display_name.lower()
+            display_name = self.FieldRole.display_name
         elif self.Field.display_name:
-            return self.Field.display_name.lower()
+            display_name = self.Field.display_name
         else:
             return 'WHOA! Something is not right here. There is no display name for field ' + self.Field.name + "."
+        return display_name.replace('_', '').lower()
 
     def get_field_order(self):
         if self.TableQueryField and self.TableQueryField.order is not None:
