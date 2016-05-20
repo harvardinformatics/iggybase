@@ -259,7 +259,7 @@ class FormGenerator():
     def get_row(self, fields, row_name, row_counter, control_type):
         # logging.info('row_name: ' + row_name)
         if row_name != 'new':
-            data = self.organization_access_control.get_entry_data(self.table_data.name, {'name': str(row_name)})
+            data = self.organization_access_control.get_entry_data(fields.fields, self.table_data.name, {'name': str(row_name)})
             if data:
                 # logging.info('data is true')
                 data = data[0]

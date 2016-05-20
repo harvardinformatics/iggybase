@@ -10,6 +10,7 @@ from iggybase import utilities as util
 from iggybase.decorators import cached, templated
 from iggybase import forms
 import iggybase.templating as templating
+from iggybase.core.field_collection import FieldCollection
 from iggybase.core.organization_access_control import OrganizationAccessControl
 from .table_query_collection import TableQueryCollection
 from .work_item_group import WorkItemGroup
@@ -117,8 +118,9 @@ def search(facility_name):
     input_id = request.args.get('input_id')
     table_name = table_object.replace("_", " ").title()
 
-    oac = OrganizationAccessControl()
-    search_table, search_fields = oac.get_search_field_data(table_object, display_name)
+    criteria = {'display_name': display_name}
+    fc = FieldCollection(None, table_name, criteria)
+    fc.set_fk_fields()
 
     modal_html = '<div class="modal-header">'
     modal_html += '<button type="button" class="close_modal">&times;</button>'
@@ -127,14 +129,17 @@ def search(facility_name):
     modal_html += '<div class="modal-body">'
     modal_html += '<input id="modal_input_id" value="' + input_id + '" type="hidden">'
     modal_html += '<input id="modal_table_object" value="' + table_object + '" type="hidden">'
-    modal_html += '<input id="modal_search_table" value="' + search_table + '" type="hidden">'
+    modal_html += '<input id="modal_search_table" value="' + fc.fields[display_name].TableObject.name + '" type="hidden">'
     modal_html += '<input id="modal_field_name" value="' + display_name + '" type="hidden">'
     modal_html += '<p>All search inputs can use partial values</p>'
     modal_html += '<table>'
-    if search_fields:
-        for row in search_fields:
-            modal_html += '<tr><td><label>' + row.FieldRole.display_name.replace("_", " ").title() + '</label></td>'
-            modal_html += '<td><input id="search_' + row.Field.display_name + '"></input></td></tr>'
+    if display_name in fc.fields:
+        field = fc.fields[display_name]
+        search_fc = FieldCollection(None, field.TableObject.name)
+        for name, row in search_fc.fields.items():
+            if row.FieldRole.search_field:
+                modal_html += '<tr><td><label>' + row.display_name + '</label></td>'
+                modal_html += '<td><input id="search_' + name + '"></input></td></tr>'
     else:
         modal_html += '<tr><td><label>' + display_name.replace("_", " ").title() + '</label></td>'
         modal_html += '<td><input id="search_name"></input></td></tr>'
@@ -164,11 +169,14 @@ def search_results(facility_name):
                 search_params[key[7:]] = value
 
     if search_table == '':
-        search_table, search_fields = oac.get_search_field_data(table_object, display_name)
-
-        for row in search_fields:
-            if row.Field.display_name not in fields:
-                fields.append(row.Field.display_name)
+        criteria = {'display_name': display_name}
+        fc = FieldCollection(None, table_name, criteria)
+        fc.set_fk_fields()
+        search_table = fc.fields[display_name].TableOjbect.name
+        search_fc = FieldCollection(None, search_table)
+        for name, row in search_fc.fields.items():
+            if row.name not in fields:
+                fields.append(row.name)
 
     search_results = oac.get_search_results(search_table, search_params)
 

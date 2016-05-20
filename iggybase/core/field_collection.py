@@ -5,18 +5,23 @@ import logging
 
 class FieldCollection:
     # either a table_name or a table_query_id must be supplied
-    def __init__ (self, table_query_id = None, table_name = None):
+    def __init__ (self, table_query_id = None, table_name = None, criteria = {}):
         self.table_name = table_name
         self.table_query_id = table_query_id
         self.date_fields = {}
         self.rac = util.get_role_access_control()
-        self.fields = self._populate_fields()
         self.fields_by_id = {} # for setting fk_field
+        self.criteria = criteria
+
+        # get all the fields
+        self.fields = self._populate_fields()
 
     def _get_fields(self):
         field_res = self.rac.table_query_fields(
             self.table_query_id,
-            self.table_name
+            self.table_name,
+            None,
+            self.criteria
         )
         return field_res
 

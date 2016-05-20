@@ -69,20 +69,16 @@ class Field:
             fk_to = self.Field.foreign_key_table_object_id
             if fk_to:
                 if self.Field.foreign_key_display:
-                    fk_field = self.rac.table_query_fields(
-                            None,
-                            None,
-                            fk_to,
-                            None,
-                            self.Field.foreign_key_display
-                        )
+                    criteria = {'id': self.Field.foreign_key_display}
                 else:
-                    fk_field = self.rac.table_query_fields(
-                        None,
-                        None,
-                        fk_to,
-                        'name' # if fk then we want the human readable name
-                    )
+                    criteria = {'display_name': 'name'}
+
+                fk_field = self.rac.table_query_fields(
+                    None,
+                    None,
+                    fk_to,
+                    criteria
+                )
                 if fk_field:
                     fk_field = fk_field[0]
         if fk_field:

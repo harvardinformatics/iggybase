@@ -36,10 +36,6 @@ class RoleAccessControl:
                              .join(models.UserRole)
                              .filter(models.UserRole.id==self.user.current_user_role_id).first())
 
-            # TODO check if current user role is set, if not set
-            self.role = (self.session.query(models.Role)
-                         .join(models.UserRole)
-                         .filter(models.UserRole.id == self.user.current_user_role_id).first())
             g.role_id = self.role.id
             facility_res = (self.session.query(models.Facility, models.Role,
                                                models.Level)
@@ -58,6 +54,7 @@ class RoleAccessControl:
                 if fac.Role.id == self.role.id:
                     self.facility = fac.Facility
                     self.level_id = fac.Role.level_id
+                    g.root_org_id = fac.Facility.root_organization_id
 
             if 'routes' in session and session['routes']:
                 self.routes = session['routes']
@@ -156,8 +153,7 @@ class RoleAccessControl:
         )
         return res
 
-    def table_query_fields(self, table_query_id, table_name=None, table_id=None, display_name=None, field_id=None,
-                           active=1):
+    def table_query_fields(self, table_query_id, table_name=None, table_id=None, criteria = {}, active=1):
         filters = [
             (models.FieldRole.role_id == self.role.id),
             (models.TableObjectRole.role_id == self.role.id),
@@ -199,10 +195,11 @@ class RoleAccessControl:
             filters.append((models.TableObject.id == table_id))
 
         # add any field_name filter
-        if display_name:
-            filters.append((models.Field.display_name == display_name))
-        elif field_id:
-            filters.append((models.Field.id == field_id))
+        if criteria:
+            for key, val in criteria.items():
+                crit_field = getattr(models.Field, key, None)
+                if crit_field:
+                    filters.append((crit_field == val))
 
         res = (
             self.session.query(*selects).
