@@ -1,9 +1,9 @@
 from flask import render_template, abort, request, g
-from iggybase import utilities as util
+from iggybase import g_helper
 import logging
 
 def page_template_context(page_form_name, **context):
-    access_ctrl = util.get_role_access_control()
+    access_ctrl = g_helper.get_role_access_control()
 
     context['page_form_name'] = page_form_name
     context['url_root'] = request.url_root

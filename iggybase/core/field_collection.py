@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from iggybase import utilities as util
+from iggybase import g_helper
 from .field import Field
 import logging
 
@@ -9,7 +9,7 @@ class FieldCollection:
         self.table_name = table_name
         self.table_query_id = table_query_id
         self.date_fields = {}
-        self.rac = util.get_role_access_control()
+        self.rac = g_helper.get_role_access_control()
         self.fields_by_id = {} # for setting fk_field
         self.criteria = criteria
 

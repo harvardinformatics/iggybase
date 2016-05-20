@@ -1,7 +1,7 @@
 from flask import request, g
 from collections import OrderedDict
-from iggybase.core.organization_access_control import OrganizationAccessControl
 from iggybase import utilities as util
+from iggybase import g_helper
 from .field_collection import FieldCollection
 
 # Retreives and formats data based on table_query
@@ -13,7 +13,7 @@ class TableQuery:
         self.table_name = table_name
         self.table_dict = {} # results indexed by row id and field display_name
         self.criteria = criteria
-        self.rac = util.get_role_access_control()
+        self.rac = g_helper.get_role_access_control()
         # fields will be decided with id or table_name
         self.fc = FieldCollection(id, table_name)
 
@@ -23,7 +23,7 @@ class TableQuery:
         self.fc.set_fk_fields()
         results = []
         self.criteria = self._add_table_query_criteria(self.criteria)
-        self.oac = OrganizationAccessControl()
+        self.oac = g_helper.get_org_access_control()
         self.results = self.oac.get_table_query_data(
                 self.fc.fields,
                 self.criteria

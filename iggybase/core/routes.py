@@ -7,11 +7,11 @@ import time
 from . import core
 import iggybase.form_generator as form_generator
 from iggybase import utilities as util
+from iggybase import g_helper
 from iggybase.decorators import cached, templated
 from iggybase import forms
 import iggybase.templating as templating
 from iggybase.core.field_collection import FieldCollection
-from iggybase.core.organization_access_control import OrganizationAccessControl
 from .table_query_collection import TableQueryCollection
 from .work_item_group import WorkItemGroup
 import logging
@@ -153,7 +153,7 @@ def search(facility_name):
 def search_results(facility_name):
     search_vals = json.loads(request.args.get('search_vals'))
 
-    oac = OrganizationAccessControl()
+    oac = g_helper.get_org_access_control()
 
     input_id = search_vals['modal_input_id']
     table_object = search_vals['modal_table_object']
@@ -222,7 +222,7 @@ def search_results(facility_name):
 @login_required
 def change_role(facility_name):
     role_id = request.json['role_id']
-    rac = util.get_role_access_control()
+    rac = g_helper.get_role_access_control()
     success = rac.change_role(role_id)
     return json.dumps({'success': success})
 
@@ -232,7 +232,7 @@ def change_role(facility_name):
 @templated()
 def data_entry(facility_name, table_name, row_name):
     module_name = MODULE_NAME
-    rac = util.get_role_access_control()
+    rac = g_helper.get_role_access_control()
     table_data = rac.has_access('TableObject', {'name': table_name})
 
     if not table_data:
@@ -242,7 +242,7 @@ def data_entry(facility_name, table_name, row_name):
     form = fg.default_data_entry_form(table_data, row_name)
 
     if form.validate_on_submit() and len(form.errors) == 0:
-        oac = OrganizationAccessControl()
+        oac = g_helper.get_org_access_control()
         row_names = oac.save_form()
 
         return saved_data(facility_name, module_name, table_name, row_names)
@@ -256,7 +256,7 @@ def data_entry(facility_name, table_name, row_name):
 @templated()
 def multiple_entry(facility_name, table_name, row_names):
     module_name = MODULE_NAME
-    rac = util.get_role_access_control()
+    rac = g_helper.get_role_access_control()
     table_data = rac.has_access('TableObject', {'name': table_name})
 
     if not table_data:
@@ -266,7 +266,7 @@ def multiple_entry(facility_name, table_name, row_names):
     fg = form_generator.FormGenerator(table_name)
     form = fg.default_multiple_entry_form(row_names)
     if form.validate_on_submit() and len(form.errors) == 0 and len(row_names) != 0:
-        oac = OrganizationAccessControl()
+        oac = g_helper.get_org_access_control()
         row_names = oac.save_form()
 
         return saved_data(facility_name, module_name, table_name, row_names)
@@ -386,7 +386,7 @@ def build_summary_ajax(table_name, page_form, criteria):
     start = time.time()
     route = util.get_path(util.ROUTE)
     # TODO: we don't want oac instantiated multiple times
-    oac = OrganizationAccessControl()
+    oac = g_helper.get_org_access_control()
     key = current_app.cache.make_key(
             route,
             g.rac.role.id,

@@ -6,8 +6,7 @@ from iggybase.iggybase_form_fields import IggybaseBooleanField, IggybaseDateFiel
     IggybaseFileField, IggybasePasswordField
 from wtforms import HiddenField
 from wtforms.validators import DataRequired, Length, email, Optional
-from iggybase.core.organization_access_control import OrganizationAccessControl
-from iggybase import utilities as util
+from iggybase import g_helper
 from iggybase import constants
 from iggybase.core.field_collection import FieldCollection
 from json import dumps, loads
@@ -17,8 +16,8 @@ import logging
 
 class FormGenerator():
     def __init__(self, table_object):
-        self.organization_access_control = OrganizationAccessControl()
-        self.role_access_control = util.get_role_access_control()
+        self.organization_access_control = g_helper.get_org_access_control()
+        self.role_access_control = g_helper.get_role_access_control()
         self.table_object = table_object
         self.classattr = {}
         self.table_data = None

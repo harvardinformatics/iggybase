@@ -1,4 +1,4 @@
-from iggybase import utilities as util
+from iggybase import g_helper
 from .calculation import get_calculation
 import logging
 
@@ -14,7 +14,7 @@ class Field:
 
         self.name = self.Field.display_name # name from field
         self.display_name = self.get_field_display_name() # name from role or tq
-        self.rac = util.get_role_access_control()
+        self.rac = g_helper.get_role_access_control()
         self.calculation_fields = self._get_calculation_fields(calculation)
         self.type = self._get_type()
         self.is_foreign_key = (self.Field.foreign_key_table_object_id is not None)

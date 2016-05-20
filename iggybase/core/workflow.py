@@ -1,11 +1,11 @@
 from flask import g, url_for
 from collections import OrderedDict
-from iggybase import utilities as util
+from iggybase import g_helper
 
 class Workflow:
     def __init__ (self, name):
         self.name = name
-        self.rac = util.get_role_access_control()
+        self.rac = g_helper.get_role_access_control()
         self.Workflow = self.rac.workflow(self.name)
         self.id = self.Workflow.id
         self.steps, self.steps_by_id = self.get_steps()

@@ -1,16 +1,16 @@
 from flask import request, g, url_for, session
 import json
 from collections import OrderedDict
-from iggybase.core.organization_access_control import OrganizationAccessControl
 from iggybase import utilities as util
+from iggybase import g_helper
 from .workflow import Workflow
 
 # Retreives work_item_group info and processes steps and actions
 class WorkItemGroup:
     def __init__ (self, work_item_group_name, workflow_name, step = None):
         self.name = work_item_group_name  # can be new
-        self.rac = util.get_role_access_control()
-        self.oac = OrganizationAccessControl()
+        self.rac = g_helper.get_role_access_control()
+        self.oac = g_helper.get_org_access_control()
         self.workflow = Workflow(workflow_name)
 
         # sql alchemy results will populate these capitalized vars

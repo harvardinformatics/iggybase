@@ -1,4 +1,5 @@
 from iggybase import utilities as util
+from iggybase import g_helper
 from .table_query import TableQuery
 import logging
 
@@ -7,7 +8,7 @@ class TableQueryCollection:
         self.table_name = table_name
         self.page_form = page_form
         self.criteria = criteria
-        self.rac = util.get_role_access_control()
+        self.rac = g_helper.get_role_access_control()
         self.queries = self._get_queries()
 
     def get_results(self):
