@@ -124,7 +124,7 @@ def search(facility_name):
     input_id = request.args.get('input_id')
 
     criteria = {'display_name': display_name}
-    fc = FieldCollection(None, table_name.replace("_","").title().replace(" ", ""), criteria)
+    fc = FieldCollection(None, table_name, criteria)
     fc.set_fk_fields()
 
     modal_html = '<div class="modal-header">'
@@ -175,7 +175,7 @@ def search_results(facility_name):
 
     if search_table == '':
         criteria = {'display_name': display_name}
-        fc = FieldCollection(None, table_name.replace("_","").title().replace(" ", ""), criteria)
+        fc = FieldCollection(None, table_name, criteria)
         fc.set_fk_fields()
         search_table = fc.fields[display_name].TableOjbect.name
         search_fc = FieldCollection(None, search_table)
@@ -330,8 +330,8 @@ def workflow(facility_name, workflow_name, page_context):
     page_form = 'summary'
     template = 'workflow_summary'
 
-    # context = {'btn_overrides': {'bottom':{'new':{'button_value':('New ' + workflow_name.title())}}}}
-    return build_summary(table_name, page_form, template, {'page_context': page_context.split(',')})
+    context = {'btn_overrides': {'bottom':{'new':{'button_value':('New ' + workflow_name.title())}}}}
+    return build_summary(table_name, page_form, template, context)
 
 
 @core.route('/workflow/<workflow_name>/ajax')

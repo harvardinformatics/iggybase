@@ -211,6 +211,7 @@ class RoleAccessControl:
                 outerjoin(*outerjoins).
                 filter(*filters).order_by(*orders).all()
         )
+        logging.info(res)
         return res
 
     def table_query_criteria(self, table_query_id):
