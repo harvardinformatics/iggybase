@@ -49,7 +49,7 @@ class DB_Factory:
         self.app = None
 
 
-engine = create_engine(conf.SQLALCHEMY_DATABASE_URI + conf.DATA_DB_NAME, pool_recycle=3600, echo=True)
+engine = create_engine(conf.SQLALCHEMY_DATABASE_URI + conf.DATA_DB_NAME, pool_recycle=3600)
 db_session = scoped_session(sessionmaker(autocommit=False, autoflush=False, bind=engine))
 Base = declarative_base(cls=IggybaseBase)
 Base.query = db_session.query_property()

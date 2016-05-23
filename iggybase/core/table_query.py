@@ -66,13 +66,13 @@ class TableQuery:
         calc_fields = []
         invisible_fields = []
         url_root = request.url_root
-        for display_name, field in self.fc.fields.items():
+        for field in self.fc.fields.values():
             if field.link_visible() and allow_links:
-                link_fields[display_name] = self.get_link(url_root, 'detail', field.TableObject.name)
+                link_fields[field.display_name] = self.get_link(url_root, 'detail', field.TableObject.name)
             if field.is_calculation():
-                calc_fields.append(display_name)
+                calc_fields.append(field.display_name)
             if not field.visible:
-                invisible_fields.append(display_name)
+                invisible_fields.append(field.display_name)
 
         # create dictionary for each row
         for i, row in enumerate(self.results):
