@@ -262,7 +262,7 @@ class OrganizationAccessControl:
         # keeps track of the table object data for tables that store the child data used for generating the auto IDs
         table_objects = {}
         # all the data to be saved as an instance of the sqlalchemy table
-        instances = {}
+        instances = OrderedDict()
         # tracks whether a row was modified
         row_modified = {}
 
@@ -469,8 +469,7 @@ class OrganizationAccessControl:
 
             row_names = OrderedDict()
             table_names = set()
-            for row_id in sorted(instances.keys()):
-                instance = instances[row_id]
+            for row_id, instance in instances.items():
                 if row_modified[row_id] == 2:
                     self.session.add(instance)
                     self.session.flush()

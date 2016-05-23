@@ -152,7 +152,7 @@
     {% for button in buttons -%}
         <input value="{{button.button_value}}" id="{{button.button_id}}"
             name="{{button.button_id}}" type="{{button.button_type}}"
-            class="{{button.button_class}}"
+            class="{{button.button_class}} {{page_context|join(' ')}}"
             {% if button.special_props %}
                 {{ button.special_props}}
             {% endif %}

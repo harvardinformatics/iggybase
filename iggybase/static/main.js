@@ -90,7 +90,9 @@ $( document ).ready( function () {
         var new_tr = $( "#" + target + " tr:last" ).clone( );
 
         var old_id = new_tr.attr( 'row_id' );
-        var row_id = parseInt( old_id ) + 1;
+
+        var row_id = $( '#row_counter' ).val( );
+        $( '#row_counter' ).val( parseInt( row_id ) + 1 );
 
         new_tr.attr( 'row_id', row_id );
 

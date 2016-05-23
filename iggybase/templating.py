@@ -8,8 +8,11 @@ def page_template_context(page_form_name, **context):
     context['page_form_name'] = page_form_name
     context['url_root'] = request.url_root
 
+    if 'page_context' not in context:
+        context['page_context'] = ['base-context']
+
     # add button, nav bar, side bar
-    page_form, buttons, scripts = access_ctrl.get_page_form_data(page_form_name, True)
+    page_form, buttons, scripts = access_ctrl.get_page_form_data(page_form_name, context['page_context'], True)
 
     if page_form is None:
         abort(403)

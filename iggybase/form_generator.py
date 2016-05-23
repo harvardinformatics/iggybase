@@ -88,7 +88,11 @@ class FormGenerator():
                     if value is not None:
                         value = self.organization_access_control.\
                             get_foreign_key_data(field_data.Field.foreign_key_table_object_id, {'id': value})
-                        kwargs['default'] = value[1][1]
+
+                        if len(value) == 1:
+                            kwargs['default'] = value[0][1]
+                        else:
+                            kwargs['default'] = value[1][1]
 
                     return IggybaseLookUpField(display_name, **kwargs)
                 else:
@@ -160,16 +164,19 @@ class FormGenerator():
         self.classattr['endtable_'+str(self.table_data.id)]=\
             HiddenField('endtable_'+str(self.table_data.id), default=self.table_data.name)
 
+        row_counter = 2
         if row_name != 'new':
             link_data, link_tables = self.role_access_control.get_link_tables(self.table_data.id)
 
-            self.linked_data(link_tables, link_data, row_name)
+            row_counter = self.linked_data(link_tables, link_data, row_name, row_counter)
+
+        self.classattr['row_counter'] = HiddenField('row_counter', default=row_counter)
 
         newclass = new_class('SingleForm', (Form,), {}, lambda ns: ns.update(self.classattr))
 
         return newclass()
 
-    def linked_data(self, tables, table_data, row_name, row_counter = 2, child_row_ids = []):
+    def linked_data(self, tables, table_data, row_name, row_counter, child_row_ids = []):
         parent_name = self.table_data.name
         parent_id = self.organization_access_control.get_row_id(self.table_data.name, {'name': row_name})
 
@@ -276,7 +283,7 @@ class FormGenerator():
 
         for field_name, field in fields.fields.items():
             field_display_name = field.display_name.title()
-            # logging.info(str(field.Field.id) + " " + field.Field.field_name +': ' + field.FieldRole.display_name)
+            # logging.info(str(field.Field.id) + " " + field.Field.display_name +': ' + field.FieldRole.display_name)
             value = None
 
             if row_name != 'new' and data:

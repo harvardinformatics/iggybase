@@ -264,6 +264,20 @@ class PageFormJavascript(Base):
                (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
 
 
+class PageFormContext(Base):
+    table_type = 'admin'
+    page_form_id = Column(Integer, ForeignKey('page_form.id'))
+    context = Column(String(250))
+    table_query_filters = Column(String(250))
+    hidden_fields = Column(String(250))
+
+    page_role_page = relationship("PageForm", foreign_keys=[page_form_id])
+
+    def __repr__(self):
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+
+
 class PageFormRole(Base):
     table_type = 'admin'
     role_id = Column(Integer, ForeignKey('role.id'))
@@ -281,7 +295,7 @@ class PageFormButton(Base):
     table_type = 'admin'
     page_form_id = Column(Integer, ForeignKey('page_form.id'))
     button_type = Column(String(100))
-    button_location = Column(String(100))
+    button_location_id = Column(Integer, ForeignKey('select_list_item.id'))
     button_class = Column(String(100))
     button_value = Column(String(100))
     button_id = Column(String(100))
@@ -289,6 +303,7 @@ class PageFormButton(Base):
     submit_action_url = Column(String(255))
 
     page_form_button_page_form = relationship("PageForm", foreign_keys=[page_form_id])
+    page_form_button_page_form = relationship("SelectListItem", foreign_keys=[button_location_id])
 
     def __repr__(self):
         return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
@@ -302,6 +317,19 @@ class PageFormButtonRole(Base):
 
     page_form_button_role_role = relationship("Role", foreign_keys=[role_id])
     page_form_button_role_page_form = relationship("PageFormButton", foreign_keys=[page_form_button_id])
+
+    def __repr__(self):
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+
+
+class PageFormButtonContext(Base):
+    table_type = 'admin'
+    page_form_button_id = Column(Integer, ForeignKey('page_form_button.id'))
+    page_form_context_id = Column(Integer, ForeignKey('page_form_context.id'))
+
+    page_form_button_role_page_form = relationship("PageFormButton", foreign_keys=[page_form_button_id])
+    page_form_button_role_page_form = relationship("PageFormContext", foreign_keys=[page_form_context_id])
 
     def __repr__(self):
         return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \

@@ -19,18 +19,20 @@ from importlib import import_module
 
 MODULE_NAME = 'core'
 
+
 @core.route('/')
 @login_required
 def default(facility_name):
     return templating.page_template('index.html')
 
 
-@core.route('/summary/<table_name>/')
+@core.route('/summary/<table_name>/', defaults={'page_context': 'base-context'})
+@core.route('/summary/<table_name>/<page_context>')
 @login_required
 @templated()
-def summary(facility_name, table_name):
+def summary(facility_name, table_name, page_context):
     page_form = template = 'summary'
-    return build_summary(table_name, page_form, template)
+    return build_summary(table_name, page_form, template, {'page_context': page_context.split(',')})
 
 
 @core.route('/summary/<table_name>/ajax')
@@ -39,13 +41,14 @@ def summary_ajax(facility_name, table_name, page_form='summary', criteria={}):
     return build_summary_ajax(table_name, page_form, criteria)
 
 
-@core.route('/action_summary/<table_name>/', methods=['GET', 'POST'])
+@core.route('/action_summary/<table_name>/', defaults={'page_context': 'base-context'}, methods=['GET', 'POST'])
+@core.route('/action_summary/<table_name>/<page_context>', methods=['GET', 'POST'])
 @login_required
 @templated()
-def action_summary(facility_name, table_name):
+def action_summary(facility_name, table_name, page_context):
     page_form = 'summary'
     template = 'action_summary'
-    return build_summary(table_name, page_form, template)
+    return build_summary(table_name, page_form, template, {'page_context': page_context.split(',')})
 
 
 @core.route('/action_summary/<table_name>/ajax')
@@ -54,10 +57,12 @@ def action_summary_ajax(facility_name, table_name, page_form='summary',
                         criteria={}):
     return build_summary_ajax(table_name, page_form, criteria)
 
-@core.route('/detail/<table_name>/<row_name>')
+
+@core.route('/detail/<table_name>/<row_name>', defaults={'page_context': 'base-context'})
+@core.route('/detail/<table_name>/<row_name>/<page_context>/')
 @login_required
 @templated()
-def detail(facility_name, table_name, row_name):
+def detail(facility_name, table_name, row_name, page_context):
     page_form = template = 'detail'
     criteria = {(table_name, 'name'): row_name}
     tqc = TableQueryCollection(page_form,
@@ -76,7 +81,8 @@ def detail(facility_name, table_name, row_name):
         table_name=table_name,
         row_name=row_name,
         table_queries=tqc,
-        hidden_fields=hidden_fields
+        hidden_fields=hidden_fields,
+        page_context=page_context.split(',')
     )
 
 
@@ -97,7 +103,7 @@ def summary_download(facility_name, table_name):
 @core.route('/update_table_rows/<table_name>', methods=['GET', 'POST'])
 @login_required
 def update_table_rows(facility_name, table_name):
-    #TODO: protect this by checking the rows ageninst org_ids
+    # TODO: protect this by checking the rows ageninst org_ids
     updates = request.json['updates']
     message_fields = request.json['message_fields']
     ids = request.json['ids']
@@ -227,10 +233,11 @@ def change_role(facility_name):
     return json.dumps({'success': success})
 
 
-@core.route('/data_entry/<table_name>/<row_name>/', methods=['GET', 'POST'])
+@core.route('/data_entry/<table_name>/<row_name>', defaults={'page_context': 'base-context'}, methods=['GET', 'POST'])
+@core.route('/data_entry/<table_name>/<row_name>/<page_context>', methods=['GET', 'POST'])
 @login_required
 @templated()
-def data_entry(facility_name, table_name, row_name):
+def data_entry(facility_name, table_name, row_name, page_context):
     module_name = MODULE_NAME
     rac = g_helper.get_role_access_control()
     table_data = rac.has_access('TableObject', {'name': table_name})
@@ -245,13 +252,14 @@ def data_entry(facility_name, table_name, row_name):
         oac = g_helper.get_org_access_control()
         row_names = oac.save_form()
 
-        return saved_data(facility_name, module_name, table_name, row_names)
+        return saved_data(facility_name, module_name, table_name, row_names, page_context)
 
     return templating.page_template_context('single_data_entry',
-                                    module_name=module_name, form=form, table_name=table_name)
+                                            module_name=module_name, form=form, table_name=table_name,
+                                            page_context=page_context.split(','))
 
 
-@core.route('/multiple_entry/<table_name>/<row_names>', methods=['GET','POST'])
+@core.route('/multiple_entry/<table_name>/<row_names>', methods=['GET', 'POST'])
 @login_required
 @templated()
 def multiple_entry(facility_name, table_name, row_names):
@@ -271,9 +279,11 @@ def multiple_entry(facility_name, table_name, row_names):
 
         return saved_data(facility_name, module_name, table_name, row_names)
 
-    return templating.page_template_context('multiple_data_entry', module_name=module_name, form=form, table_name=table_name)
+    return templating.page_template_context('multiple_data_entry', module_name=module_name, form=form,
+                                            table_name=table_name)
 
-@core.route('/cache/', methods=['GET','POST'])
+
+@core.route('/cache/', methods=['GET', 'POST'])
 @login_required
 @templated()
 def cache(facility_name):
@@ -289,9 +299,9 @@ def cache(facility_name):
         elif 'set_key' in request.form and request.form['set_key']:
             if form.data['key'] and form.data['value']:
                 current_app.cache.set(form.data['key'], form.data['value'],
-                        None, None, False)
+                                      None, None, False)
                 value = ('successfully set key ' + form.data['key'] + ' = ' +
-                    form.data['value'])
+                         form.data['value'])
         elif 'get_version' in request.form and request.form['get_version']:
             if form.data['refresh_obj']:
                 value = str(current_app.cache.get_version(form.data['refresh_obj']))
@@ -305,29 +315,34 @@ def cache(facility_name):
                 else:
                     value = 'failed to '
                 value += ('set version ' + form.data['refresh_obj'] + ' = ' +
-                    form.data['version'])
+                          form.data['version'])
 
     return templating.page_template_context('cache', module_name=module_name,
-            form=form,
-            value=value)
+                                            form=form,
+                                            value=value)
 
-@core.route('/workflow/<workflow_name>/')
+
+@core.route('/workflow/<workflow_name>/', defaults={'page_context': 'new-workflow'})
+@core.route('/workflow/<workflow_name>/<page_context>')
 @login_required
 @templated()
-def workflow(facility_name, workflow_name):
+def workflow(facility_name, workflow_name, page_context):
     table_name = 'work_item_group'
     page_form = 'summary'
     template = 'workflow_summary'
-    context = {'btn_overrides': {'bottom':{'new':{'button_value':('New ' + workflow_name.title())}}}}
-    return build_summary(table_name, page_form, template, context)
+
+    # context = {'btn_overrides': {'bottom':{'new':{'button_value':('New ' + workflow_name.title())}}}}
+    return build_summary(table_name, page_form, template, {'page_context': page_context.split(',')})
+
 
 @core.route('/workflow/<workflow_name>/ajax')
 @login_required
 def workflow_summary_ajax(facility_name, workflow_name, page_form='summary',
-                        criteria={}):
-    criteria = {('workflow', 'name'):workflow_name}
+                          criteria={}):
+    criteria = {('workflow', 'name'): workflow_name}
     table_name = 'work_item_group'
     return action_summary_ajax(facility_name, table_name, page_form, criteria)
+
 
 @core.route('/workflow/<workflow_name>/<work_item_group>')
 @login_required
@@ -336,8 +351,9 @@ def workflow_complete(facility_name, workflow_name, work_item_group):
     wig = WorkItemGroup(work_item_group, workflow_name)
     template = 'workflow_complete'
     return templating.page_template_context(template,
-                                    module_name=MODULE_NAME,
-                                    wig=wig)
+                                            module_name=MODULE_NAME,
+                                            wig=wig)
+
 
 @core.route('/workflow/<workflow_name>/<step>/<work_item_group>', methods=['GET', 'POST'])
 @login_required
@@ -370,16 +386,18 @@ def work_item_group(facility_name, workflow_name, step, work_item_group):
 """ helper functions start """
 
 
-def build_summary(table_name, page_form, template, context = {}):
+def build_summary(table_name, page_form, template, context={}):
     tqc = TableQueryCollection(page_form, table_name)
     tq = tqc.get_first()
+    logging.info('context')
+    logging.info(context)
     # if nothing to display then page not found
     if not tq.fc.fields:
         abort(404)
     return templating.page_template_context(template,
-                                    module_name=MODULE_NAME,
-                                    table_name=table_name,
-                                    table_query=tq, **context)
+                                            module_name=MODULE_NAME,
+                                            table_name=table_name,
+                                            table_query=tq, **context)
 
 
 def build_summary_ajax(table_name, page_form, criteria):
@@ -388,10 +406,10 @@ def build_summary_ajax(table_name, page_form, criteria):
     # TODO: we don't want oac instantiated multiple times
     oac = g_helper.get_org_access_control()
     key = current_app.cache.make_key(
-            route,
-            g.rac.role.id,
-            oac.current_org_id,
-            table_name
+        route,
+        g.rac.role.id,
+        oac.current_org_id,
+        table_name
     )
     ret = current_app.cache.get(key)
     if not ret:
@@ -414,7 +432,8 @@ def build_summary_ajax(table_name, page_form, criteria):
         current_app.cache.set(key, ret, (24 * 60 * 60), [table_name])
     return ret
 
-def saved_data(facility_name, module_name, table_name, row_names):
+
+def saved_data(facility_name, module_name, table_name, row_names, page_context):
     msg = 'Saved: '
     error = False
     saved_rows = {}
@@ -432,13 +451,16 @@ def saved_data(facility_name, module_name, table_name, row_names):
             if not table in saved_rows:
                 saved_rows[table] = []
             saved_rows[table].append({
-                    'column': 'name',
-                    'value': name,
-                    'id': id,
-                    'table': table
+                'column': 'name',
+                'value': name,
+                'id': id,
+                'table': table
             })
     msg = msg[:-1]
     if error:
-        return templating.page_template_context('error_message', module_name=module_name, table_name=table_name, page_msg=msg)
+        return templating.page_template_context('error_message', module_name=module_name, table_name=table_name,
+                                                page_msg=msg, page_context=page_context.split(','))
     else:
-        return templating.page_template_context('save_message', module_name=module_name, table_name=table_name, page_msg=msg, saved_rows=json.dumps(saved_rows))
+        return templating.page_template_context('save_message', module_name=module_name, table_name=table_name,
+                                                page_msg=msg, saved_rows=json.dumps(saved_rows),
+                                                page_context=page_context.split(','))

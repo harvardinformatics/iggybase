@@ -305,7 +305,7 @@ class RoleAccessControl:
             subs = {}
         return subs
 
-    def get_page_form_data(self, page_form_name, active=1):
+    def get_page_form_data(self, page_form_name, page_context = [], active=1):
         page_form = self.has_access("PageForm", {'name': page_form_name})
 
         if page_form is None:
@@ -326,7 +326,7 @@ class RoleAccessControl:
                                 setattr(page_form, attr, value)
 
         page_form_javascript = self.page_form_javascript(page_form_ids, active)
-        page_form_buttons = self.page_form_buttons(page_form_ids, active)
+        page_form_buttons = self.page_form_buttons(page_form_ids, page_context, active)
 
         return page_form, page_form_buttons, page_form_javascript
 
@@ -343,23 +343,32 @@ class RoleAccessControl:
         else:
             return [(res.id, res)] + self.page_form_ancestors(res.parent_id, active)
 
-    def page_form_buttons(self, page_form_ids, active=1):
+    def page_form_buttons(self, page_form_ids, page_context=[], active=1):
         page_form_buttons = {'top': [], 'bottom': []}
         filters = [
                 models.PageFormButton.page_form_id.in_(page_form_ids),
                 models.PageFormButtonRole.role_id == self.role.id,
                 models.PageFormButton.active == active,
                 models.PageFormButtonRole.active == active,
+                models.PageFormButtonContext.active == active,
+                models.PageFormContext.active == active,
+                models.PageFormContext.context.in_(page_context)
         ]
-        res = (self.session.query(models.PageFormButton)
+
+        res = (self.session.query(models.PageFormButton, models.SelectListItem)
                 .join(models.PageFormButtonRole,
-                    models.PageFormButtonRole.page_form_button_id ==
-                    models.PageFormButton.id)
+                    models.PageFormButtonRole.page_form_button_id == models.PageFormButton.id)
+                .join(models.PageFormButtonContext,
+                    models.PageFormButtonContext.page_form_button_id == models.PageFormButton.id)
+                .join(models.PageFormContext,
+                    models.PageFormButtonContext.page_form_context_id == models.PageFormContext.id)
+                .join(models.SelectListItem,
+                    models.SelectListItem.id == models.PageFormButton.button_location_id)
             .filter(*filters)
             .order_by(models.PageFormButton.order, models.PageFormButton.id).all())
         for row in res:
-            if row.button_location in ['top', 'bottom']:
-                page_form_buttons[row.button_location].append(row)
+            page_form_buttons[row.SelectListItem.display_name].append(row.PageFormButton)
+
         return page_form_buttons
 
     def page_form_javascript(self, page_form_ids, active=1):
