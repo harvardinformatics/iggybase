@@ -95,12 +95,12 @@ class RoleAccessControl:
         else:
             return res
 
-    def table_queries(self, page_form, table_name=None, active=1):
+    def table_queries(self, route, table_name=None, active=1):
         """Get the table queries
         """
         filters = [
-            (models.PageForm.name == page_form),
-            (models.PageFormRole.role_id == self.role.id),
+            (models.Route.url_path == route),
+            (models.RouteRole.role_id == self.role.id),
             (models.TableQuery.active == active)
         ]
         if table_name:
@@ -113,8 +113,8 @@ class RoleAccessControl:
                 models.TableQueryRender,
                 models.TableQuery
             ).
-                join(models.PageFormRole).
-                join(models.PageForm).
+                join(models.RouteRole).
+                join(models.Route).
                 join(models.TableQuery).
                 join(models.TableQueryTableObject).
                 join(
@@ -307,9 +307,11 @@ class RoleAccessControl:
         return subs
 
     def get_page_form_data(self, page_form_name, page_context = [], active=1):
-        page_form = self.has_access("PageForm", {'name': page_form_name})
-
-        if page_form is None:
+        page_form = None
+        if page_form_name:
+            page_form = (self.session.query(models.PageForm).
+                filter(models.PageForm.name == page_form_name).first())
+        if not page_form:
             return None, None, None
 
         if page_form.parent_id is None:

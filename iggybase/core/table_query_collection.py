@@ -4,9 +4,8 @@ from .table_query import TableQuery
 import logging
 
 class TableQueryCollection:
-    def __init__ (self, page_form, table_name = None, criteria = {}):
+    def __init__ (self, table_name = None, criteria = {}):
         self.table_name = table_name
-        self.page_form = page_form
         self.criteria = criteria
         self.rac = g_helper.get_role_access_control()
         self.queries = self._get_queries()
@@ -19,7 +18,8 @@ class TableQueryCollection:
         filters = util.get_filters()
         table_queries_info = []
         if not 'all' in filters: # all overrides table_query, shows all fields
-            table_queries_info = self.rac.table_queries(self.page_form, self.table_name)
+            route = util.get_path(2)
+            table_queries_info = self.rac.table_queries(route, self.table_name)
         queries = []
         if table_queries_info: # if table_query defined, use id
             for query in table_queries_info: # page can have multiple

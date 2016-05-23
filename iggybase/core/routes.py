@@ -65,8 +65,7 @@ def action_summary_ajax(facility_name, table_name, page_form='summary',
 def detail(facility_name, table_name, row_name, page_context):
     page_form = template = 'detail'
     criteria = {(table_name, 'name'): row_name}
-    tqc = TableQueryCollection(page_form,
-                               table_name, criteria)
+    tqc = TableQueryCollection(table_name, criteria)
     tqc.get_results()
     add_row_id = False
     tqc.format_results(add_row_id)
@@ -92,7 +91,7 @@ def summary_download(facility_name, table_name):
     page_form = 'summary'
     add_row_id = False
     allow_links = False
-    tqc = TableQueryCollection(page_form, table_name)
+    tqc = TableQueryCollection(table_name)
     tqc.get_results()
     tqc.format_results(add_row_id, allow_links)
     tq = tqc.get_first()
@@ -108,7 +107,7 @@ def update_table_rows(facility_name, table_name):
     message_fields = request.json['message_fields']
     ids = request.json['ids']
 
-    tqc = TableQueryCollection('update', table_name,
+    tqc = TableQueryCollection(table_name,
                                {(table_name, 'id'): ids})
     tqc.get_results()
     tqc.format_results(True)
@@ -386,7 +385,7 @@ def work_item_group(facility_name, workflow_name, step, work_item_group):
 
 
 def build_summary(table_name, page_form, template, context={}):
-    tqc = TableQueryCollection(page_form, table_name)
+    tqc = TableQueryCollection(table_name)
     tq = tqc.get_first()
     logging.info('context')
     logging.info(context)
@@ -411,8 +410,9 @@ def build_summary_ajax(table_name, page_form, criteria):
         table_name
     )
     ret = current_app.cache.get(key)
+
     if not ret:
-        tqc = TableQueryCollection(page_form, table_name, criteria)
+        tqc = TableQueryCollection(table_name, criteria)
         current = time.time()
         print(str(current - start))
         tqc.get_results()

@@ -278,19 +278,6 @@ class PageFormContext(Base):
                (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
 
 
-class PageFormRole(Base):
-    table_type = 'admin'
-    role_id = Column(Integer, ForeignKey('role.id'))
-    page_form_id = Column(Integer, ForeignKey('page_form.id'))
-
-    page_role_role = relationship("Role", foreign_keys=[role_id])
-    page_role_page = relationship("PageForm", foreign_keys=[page_form_id])
-
-    def __repr__(self):
-        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
-               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
-
-
 class PageFormButton(Base):
     table_type = 'admin'
     page_form_id = Column(Integer, ForeignKey('page_form.id'))
@@ -421,11 +408,11 @@ class TableQueryRender(Base):
     table_type = 'admin'
     table_query_id = Column(Integer, ForeignKey('table_query.id'))
     table_object_id = Column(Integer, ForeignKey('table_object.id'))
-    page_form_role_id = Column(Integer, ForeignKey(
-        'page_form_role.id'))
+    route_role_id = Column(Integer, ForeignKey(
+        'route_role.id'))
 
-    table_query_render_page_form_role = relationship("PageFormRole",
-                                                     foreign_keys=[page_form_role_id])
+    table_query_render_route_role = relationship("RouteRole",
+                                                     foreign_keys=[route_role_id])
     table_query_render_table_query = relationship("TableQuery", foreign_keys=[table_query_id])
     table_query_render_table_object = relationship("TableObject", foreign_keys=[table_object_id])
 
