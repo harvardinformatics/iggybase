@@ -119,13 +119,12 @@ def update_table_rows(facility_name, table_name):
 
 @core.route('/search', methods=['GET', 'POST'])
 def search(facility_name):
-    table_object = request.args.get('table_object')
+    table_name = request.args.get('table_object')
     display_name = request.args.get('field_name')
     input_id = request.args.get('input_id')
-    table_name = table_object.replace("_", " ").title()
 
     criteria = {'display_name': display_name}
-    fc = FieldCollection(None, table_name, criteria)
+    fc = FieldCollection(None, table_name.replace("_","").title().replace(" ", ""), criteria)
     fc.set_fk_fields()
 
     modal_html = '<div class="modal-header">'
@@ -134,7 +133,7 @@ def search(facility_name):
     modal_html += '</div>'
     modal_html += '<div class="modal-body">'
     modal_html += '<input id="modal_input_id" value="' + input_id + '" type="hidden">'
-    modal_html += '<input id="modal_table_object" value="' + table_object + '" type="hidden">'
+    modal_html += '<input id="modal_table_object" value="' + table_name + '" type="hidden">'
     modal_html += '<input id="modal_search_table" value="' + fc.fields[display_name].TableObject.name + '" type="hidden">'
     modal_html += '<input id="modal_field_name" value="' + display_name + '" type="hidden">'
     modal_html += '<p>All search inputs can use partial values</p>'
@@ -162,7 +161,7 @@ def search_results(facility_name):
     oac = g_helper.get_org_access_control()
 
     input_id = search_vals['modal_input_id']
-    table_object = search_vals['modal_table_object']
+    table_name = search_vals['modal_table_object']
     display_name = search_vals['modal_field_name']
     search_table = search_vals['modal_search_table']
 
@@ -176,7 +175,7 @@ def search_results(facility_name):
 
     if search_table == '':
         criteria = {'display_name': display_name}
-        fc = FieldCollection(None, table_name, criteria)
+        fc = FieldCollection(None, table_name.replace("_","").title().replace(" ", ""), criteria)
         fc.set_fk_fields()
         search_table = fc.fields[display_name].TableOjbect.name
         search_fc = FieldCollection(None, search_table)
@@ -192,7 +191,7 @@ def search_results(facility_name):
     modal_html += '</div>'
     modal_html += '<div class="modal-body">'
     modal_html += '<input id="modal_input_id" value="' + input_id + '" type="hidden">'
-    modal_html += '<input id="modal_table_object" value="' + table_object + '" type="hidden">'
+    modal_html += '<input id="modal_table_object" value="' + table_name + '" type="hidden">'
     modal_html += '<input id="modal_field_name" value="' + display_name + '" type="hidden">'
     modal_html += '<input id="modal_search_table" value="' + search_table + '" type="hidden">'
     modal_html += '<table class="table-sm table-striped"><tr><td>Name</td>'
