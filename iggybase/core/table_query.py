@@ -68,11 +68,11 @@ class TableQuery:
         url_root = request.url_root
         for field in self.fc.fields.values():
             if field.link_visible() and allow_links:
-                link_fields[field.display_name] = self.get_link(url_root, 'detail', field.TableObject.name)
+                link_fields[field.name] = self.get_link(url_root, 'detail', field.TableObject.name)
             if field.is_calculation():
-                calc_fields.append(field.display_name)
+                calc_fields.append(field.name)
             if not field.visible:
-                invisible_fields.append(field.display_name)
+                invisible_fields.append(field.name)
 
         # create dictionary for each row
         for i, row in enumerate(self.results):
@@ -111,7 +111,9 @@ class TableQuery:
 
     def get_list_of_list(self): # for download
         table_list = []
-        keys = list(self.get_first().keys())
+        keys = []
+        for key in self.get_first().keys():
+            keys.append(self.get_display_name(key))
         table_list.append(keys)
         for row in self.table_dict.values():
             table_list.append(list(row.values()))
@@ -139,3 +141,7 @@ class TableQuery:
             else:
                 updated_info.append('no ' + ', '.join(message_fields) + ' for id = ' + str(i))
         return updated_info
+
+    def get_display_name(self, name):
+        # change name (table_name | field_name) to the field obj dispaly_name
+        return self.fc.fields[name].display_name

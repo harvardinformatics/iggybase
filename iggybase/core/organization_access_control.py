@@ -173,12 +173,12 @@ class OrganizationAccessControl:
                 ))
                 col = getattr(aliases[alias_name],
                     field.Field.display_name)
-                columns.append(col.label(field.display_name))
+                columns.append(col.label(field.name))
 
             else:  # non-fk field
                 tables.add(table_model)
                 col = getattr(table_model, field.Field.display_name)
-                columns.append(col.label(field.display_name))
+                columns.append(col.label(field.name))
                                 # add to joins if not first table, avoid joining to self
                 if (not first_table_named
                     or (first_table_named == field.TableObject.name)):

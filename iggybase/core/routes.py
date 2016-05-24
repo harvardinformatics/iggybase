@@ -120,6 +120,7 @@ def update_table_rows(facility_name, table_name):
 def search(facility_name):
     table_name = request.args.get('table_object')
     display_name = request.args.get('field_name')
+    field_index = table_name + '|' + display_name
     input_id = request.args.get('input_id')
 
     criteria = {'display_name': display_name}
@@ -133,17 +134,17 @@ def search(facility_name):
     modal_html += '<div class="modal-body">'
     modal_html += '<input id="modal_input_id" value="' + input_id + '" type="hidden">'
     modal_html += '<input id="modal_table_object" value="' + table_name + '" type="hidden">'
-    modal_html += '<input id="modal_search_table" value="' + fc.fields[display_name].TableObject.name + '" type="hidden">'
+    modal_html += '<input id="modal_search_table" value="' + fc.fields[field_index].TableObject.name + '" type="hidden">'
     modal_html += '<input id="modal_field_name" value="' + display_name + '" type="hidden">'
     modal_html += '<p>All search inputs can use partial values</p>'
     modal_html += '<table>'
-    if display_name in fc.fields:
-        field = fc.fields[display_name]
+    if field_index in fc.fields:
+        field = fc.fields[field_index]
         search_fc = FieldCollection(None, field.TableObject.name)
         for name, row in search_fc.fields.items():
             if row.FieldRole.search_field:
                 modal_html += '<tr><td><label>' + row.display_name + '</label></td>'
-                modal_html += '<td><input id="search_' + name + '"></input></td></tr>'
+                modal_html += '<td><input id="search_' + search_fc.fields[name].Field.display_name + '"></input></td></tr>'
     else:
         modal_html += '<tr><td><label>' + display_name.replace("_", " ").title() + '</label></td>'
         modal_html += '<td><input id="search_name"></input></td></tr>'
@@ -413,6 +414,7 @@ def build_summary_ajax(table_name, page_form, criteria):
             table_name
         )
         ret = current_app.cache.get(key)
+        ret = None
     if not ret:
         tqc = TableQueryCollection(table_name, criteria)
         current = time.time()

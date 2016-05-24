@@ -50,7 +50,7 @@ class Field:
             display_name = self.Field.display_name
         else:
             return 'WHOA! Something is not right here. There is no display name for field ' + self.Field.name + "."
-        return display_name.replace('_', ' ').lower()
+        return display_name.replace('_', ' ').title()
 
     def get_field_order(self):
         if self.TableQueryField and self.TableQueryField.order is not None:

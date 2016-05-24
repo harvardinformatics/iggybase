@@ -92,7 +92,7 @@
                 {% endif %}
                 {% for name, field in table_query.fc.fields.items() %}
                     {% if field.visible %}
-                    <th data-name="{{field.display_name}}">{{ field.display_name|title }}</th>
+                    <th data-name="{{field.name}}">{{ field.display_name }}</th>
                     {% endif %}
                 {% endfor %}
         </tr></thead>
@@ -131,13 +131,13 @@
     {% endif %}
 {%- endmacro %}
 
-{% macro render_detail(table_row) -%}
+{% macro render_detail(tq) -%}
     <div class="detail">
-    {% if table_row %}
+    {% if tq.get_first() %}
         <table id="detail_table">
-        {% for name, value in table_row.items() %}
+        {% for name, value in tq.get_first().items() %}
             <tr>
-                <td><b>{{ name.replace('_', ' ')|title }}</b></td>
+                <td><b>{{ tq.get_display_name(name) }}</b></td>
                 <td>{{value|safe}}</td>
             </tr>
         {% endfor %}
