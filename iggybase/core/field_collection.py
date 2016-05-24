@@ -44,7 +44,7 @@ class FieldCollection:
         return field_dict
 
     def set_fk_fields(self):
-        for display_name, field in self.fields.items():
+        for field in self.fields.values():
             if field.is_foreign_key:
                 # when possible reuse the same field to avoid extra queries, this is great when a query has
                 # many long text for example

@@ -153,14 +153,15 @@ class RoleAccessControl:
         )
         return res
 
-    def table_query_fields(self, table_query_id, table_name=None, table_id=None, criteria = {}, active=1):
+    def table_query_fields(self, table_query_id, table_name=None, table_id=None, criteria = {}, role_filter = True, active=1):
         filters = [
-            (models.FieldRole.role_id == self.role.id),
-            (models.TableObjectRole.role_id == self.role.id),
             (models.Field.active == active),
             (models.FieldRole.active == active),
             (models.TableObject.active == active)
         ]
+        if role_filter: # filters not needed for name of fk_field
+            filters.append((models.TableObjectRole.role_id == self.role.id))
+            filters.append((models.FieldRole.role_id == self.role.id))
         selects = [
             models.Field,
             models.TableObject,

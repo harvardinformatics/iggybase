@@ -78,7 +78,9 @@ class Field:
                     None,
                     None,
                     fk_to,
-                    criteria
+                    criteria,
+                    # we don't need role on fk table or field
+                    role_filter = False
                 )
                 if fk_field:
                     fk_field = fk_field[0]

@@ -126,7 +126,6 @@ def search(facility_name):
     criteria = {'display_name': display_name}
     fc = FieldCollection(None, table_name, criteria)
     fc.set_fk_fields()
-
     modal_html = '<div class="modal-header">'
     modal_html += '<button type="button" class="close_modal">&times;</button>'
     modal_html += '<h4 class="modal-title">' + table_name + ' Search</h4>'
@@ -141,6 +140,7 @@ def search(facility_name):
     if field_index in fc.fields:
         field = fc.fields[field_index]
         search_fc = FieldCollection(None, field.TableObject.name)
+        # TODO: there is a bug here, if you don't have a role for the fk table
         for name, row in search_fc.fields.items():
             if row.FieldRole.search_field:
                 modal_html += '<tr><td><label>' + row.display_name + '</label></td>'
