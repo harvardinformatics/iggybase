@@ -114,7 +114,7 @@ class WorkItemGroup:
         args = []
         if self.endpoint in session['routes']:
             args = session['routes'][self.endpoint]
-        dynamic_params = {}
+        dynamic_params = {'page_context':'base-context'}
         if 'table_name' in args:
             dynamic_params['table_name'] = self.step.TableObject.name
         if 'facility_name' in args:
@@ -127,6 +127,7 @@ class WorkItemGroup:
                 dynamic_params['row_name'] = 'new'
         if 'row_names' in args:
             dynamic_params['row_names'] = json.dumps(self.get_dynamic_param_from_items())
+        print(dynamic_params)
         return dynamic_params
 
     def get_dynamic_param_from_items(self):
@@ -138,6 +139,7 @@ class WorkItemGroup:
                             item.row_id, 'name')
                     if name:
                         params.append(name)
+        print(params)
         return params
 
     def get_active_steps(self, all_steps):
@@ -205,6 +207,7 @@ class WorkItemGroup:
         return success
 
     def check_item_type(self, item, type):
+        print('check')
         if item in self.saved_rows:
             work_item = self.saved_rows[item][0]
             res = self.oac.get_row(item, {'id': work_item['id']})
@@ -212,6 +215,7 @@ class WorkItemGroup:
                 if res.quantity == 2: # TODO: replace with type check
                     self.next_step = self.step_num
                     self.oac.update_work_item_group(self.WorkItemGroup.id, 'status', status.COMPLETE)
+                    print('complete')
 
 class status:
     IN_PROGRESS = 2

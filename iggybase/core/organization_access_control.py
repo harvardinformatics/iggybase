@@ -628,7 +628,6 @@ class OrganizationAccessControl:
         work_item_group_table_object = self.session.query(models.TableObject).filter_by(name='work_item_group').first()
         try:
             step_id = self.session.query(models.Step.id).filter((models.Step.workflow_id == workflow_id), (models.Step.order == step_num)).first()[0]
-            print(step_id)
             new_name = work_item_group_table_object.get_new_name()
             new_row = table_model(name = new_name, active = 1,
                     organization_id = self.current_org_id, workflow_id = workflow_id,

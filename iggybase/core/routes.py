@@ -440,7 +440,7 @@ def saved_data(facility_name, module_name, table_name, row_names, page_context):
     msg = 'Saved: '
     error = False
     saved_rows = {}
-    for id, row_info in row_names.items():
+    for row_info in row_names.values():
         if row_info['name'] == 'error':
 
             msg = 'Error: %s,' % str(row_info['table']).replace('<', '').replace('>', '')
@@ -456,7 +456,7 @@ def saved_data(facility_name, module_name, table_name, row_names, page_context):
             saved_rows[table].append({
                 'column': 'name',
                 'value': name,
-                'id': id,
+                'id': row_info['id'],
                 'table': table
             })
     msg = msg[:-1]
