@@ -330,6 +330,7 @@ def workflow(facility_name, workflow_name, page_context):
     template = 'workflow_summary'
 
     context = {'btn_overrides': {'bottom':{'new':{'button_value':('New ' + workflow_name.title())}}}}
+    context['workflow_name'] = workflow_name
     return build_summary(table_name, page_form, template, context)
 
 
@@ -403,14 +404,15 @@ def build_summary_ajax(table_name, page_form, criteria):
     route = util.get_path(util.ROUTE)
     # TODO: we don't want oac instantiated multiple times
     oac = g_helper.get_org_access_control()
-    key = current_app.cache.make_key(
-        route,
-        g.rac.role.id,
-        oac.current_org_id,
-        table_name
-    )
-    ret = current_app.cache.get(key)
-
+    ret = None
+    if not criteria:
+        key = current_app.cache.make_key(
+            route,
+            g.rac.role.id,
+            oac.current_org_id,
+            table_name
+        )
+        ret = current_app.cache.get(key)
     if not ret:
         tqc = TableQueryCollection(table_name, criteria)
         current = time.time()
@@ -428,7 +430,8 @@ def build_summary_ajax(table_name, page_form, criteria):
         current = time.time()
         print(str(current - start))
         ret = jsonify({'data': json_rows})
-        current_app.cache.set(key, ret, (24 * 60 * 60), [table_name])
+        if not criteria:
+            current_app.cache.set(key, ret, (24 * 60 * 60), [table_name])
     return ret
 
 

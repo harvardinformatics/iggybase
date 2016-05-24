@@ -12,7 +12,8 @@ class Field:
         self.TableQueryField = table_query_field
         self.TableQueryCalculation = calculation
 
-        self.name = self.Field.display_name # name from field
+        # unique name, table.field
+        self.name = self.TableObject.name + '|' + self.Field.display_name
         self.display_name = self.get_field_display_name() # name from role or tq
         self.rac = g_helper.get_role_access_control()
         self.calculation_fields = self._get_calculation_fields(calculation)

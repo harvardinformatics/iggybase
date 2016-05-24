@@ -11,7 +11,7 @@ class TableQuery:
         self.order = order
         self.display_name = display_name
         self.table_name = table_name
-        self.table_dict = {} # results indexed by row id and field display_name
+        self.table_dict = {} # results indexed by row id and table|field name
         self.criteria = criteria
         self.rac = g_helper.get_role_access_control()
         # fields will be decided with id or table_name

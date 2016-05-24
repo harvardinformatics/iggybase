@@ -31,7 +31,8 @@ $(document).ready(function(){
         var row = table.rows('.selected').data();
     //, function (i) { return $(i['name']).text()});
         if (row.length > 0) {
-            row = row[0]
+            row = row[0];
+            console.log(row);
             var hidden_fields = $("#hidden_fields");
             var url = window.location.href + row.step_id + '/' + $(row.name).text();
             if ( url.length > 2000 )

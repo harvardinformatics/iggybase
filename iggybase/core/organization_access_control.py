@@ -173,7 +173,6 @@ class OrganizationAccessControl:
                 ))
                 col = getattr(aliases[alias_name],
                     field.Field.display_name)
-                # TODO: validate that tablequeries don't allow dup display names
                 columns.append(col.label(field.display_name))
 
             else:  # non-fk field
