@@ -321,6 +321,8 @@ class OrganizationAccessControl:
                         if 'name' in row_data['data_entry'].keys() and row_data['data_entry']['name'] != '' and \
                                         row_data['data_entry']['name'] != 'new':
                             current_inst_name = row_data['data_entry']['name']
+                            # name was modified
+                            row_modified[row_id] = 2
                         elif current_table_data.new_name_prefix is not None and \
                                         current_table_data.new_name_prefix != "":
                             current_inst_name = current_table_data.get_new_name()
@@ -473,10 +475,10 @@ class OrganizationAccessControl:
                     self.session.add(instance)
                     self.session.flush()
 
-                    row_names[row_id] = {'name': instance.name, 'table': instance.__tablename__}
+                    row_names[row_id] = {'id': instance.id, 'name': instance.name, 'table': instance.__tablename__}
                     table_names.add(instance.__tablename__)
                 elif row_modified[row_id] == 1:
-                    row_names[row_id] = {'name': instance.name, 'table': instance.__tablename__}
+                    row_names[row_id] = {'id': instance.id, 'name': instance.name, 'table': instance.__tablename__}
                     table_names.add(instance.__tablename__)
 
             self.session.commit()
