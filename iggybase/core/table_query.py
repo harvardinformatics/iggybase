@@ -143,5 +143,5 @@ class TableQuery:
         return updated_info
 
     def get_display_name(self, name):
-        # change name (table_name | field_name) to the field obj dispaly_name
+        # get field obj display name from table_name|field_name
         return self.fc.fields[name].display_name
