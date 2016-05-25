@@ -12,6 +12,7 @@ class FieldCollection:
         self.rac = g_helper.get_role_access_control()
         self.fields_by_id = {} # for setting fk_field
         self.criteria = criteria
+        self.role_filter = role_filter # used to ignore role for FK search
 
         # get all the fields
         self.fields = self._populate_fields()
@@ -21,7 +22,8 @@ class FieldCollection:
             self.table_query_id,
             self.table_name,
             None,
-            self.criteria
+            self.criteria,
+            self.role_filter
         )
         return field_res
 

@@ -139,7 +139,9 @@ def search(facility_name):
     modal_html += '<table>'
     if field_index in fc.fields:
         field = fc.fields[field_index]
-        search_fc = FieldCollection(None, field.TableObject.name)
+        role_filter = False # ignore role filter since this is for FK
+        search_fc = FieldCollection(None, field.TableObject.name, None,
+                role_filter)
         # TODO: there is a bug here, if you don't have a role for the fk table
         for name, row in search_fc.fields.items():
             if row.FieldRole.search_field:
