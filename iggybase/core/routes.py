@@ -251,6 +251,9 @@ def data_entry(facility_name, table_name, row_name, page_context):
     form = fg.default_data_entry_form(table_data, row_name)
 
     if form.validate_on_submit() and len(form.errors) == 0:
+        if request.files:
+            save_files(request.files)
+
         oac = g_helper.get_org_access_control()
         row_names = oac.save_form()
 
@@ -473,3 +476,7 @@ def saved_data(facility_name, module_name, table_name, row_names, page_context):
         return templating.page_template_context('save_message', module_name=module_name, table_name=table_name,
                                                 page_msg=msg, saved_rows=json.dumps(saved_rows),
                                                 page_context=page_context.split(','))
+
+
+def save_files(files):
+    logging.info('save files')
