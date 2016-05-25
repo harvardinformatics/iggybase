@@ -5,7 +5,7 @@ import logging
 
 class FieldCollection:
     # either a table_name or a table_query_id must be supplied
-    def __init__ (self, table_query_id = None, table_name = None, criteria = {}):
+    def __init__ (self, table_query_id = None, table_name = None, criteria = {}, role_filter = True):
         self.table_name = table_name
         self.table_query_id = table_query_id
         self.date_fields = {}
