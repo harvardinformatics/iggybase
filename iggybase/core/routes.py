@@ -258,10 +258,11 @@ def data_entry(facility_name, table_name, row_name, page_context):
                                             page_context=page_context.split(','))
 
 
-@core.route('/multiple_entry/<table_name>/<row_names>', methods=['GET', 'POST'])
+@core.route('/multiple_entry/<table_name>/<row_names>', defaults={'page_context': 'base-context'}, methods=['GET', 'POST'])
+@core.route('/multiple_entry/<table_name>/<row_names>/<page_context>', methods=['GET', 'POST'])
 @login_required
 @templated()
-def multiple_entry(facility_name, table_name, row_names):
+def multiple_entry(facility_name, table_name, row_names, page_context):
     module_name = MODULE_NAME
     rac = g_helper.get_role_access_control()
     table_data = rac.has_access('TableObject', {'name': table_name})
@@ -276,7 +277,8 @@ def multiple_entry(facility_name, table_name, row_names):
         oac = g_helper.get_org_access_control()
         row_names = oac.save_form()
 
-        return saved_data(facility_name, module_name, table_name, row_names)
+        return saved_data(facility_name, module_name, table_name, row_names,
+                page_context)
 
     return templating.page_template_context('multiple_data_entry', module_name=module_name, form=form,
                                             table_name=table_name)
@@ -344,7 +346,7 @@ def workflow_summary_ajax(facility_name, workflow_name, page_form='summary',
     return action_summary_ajax(facility_name, table_name, page_form, criteria)
 
 
-@core.route('/workflow/<workflow_name>/<work_item_group>')
+@core.route('/workflow/<workflow_name>/<work_item_group>/complete')
 @login_required
 @templated()
 def workflow_complete(facility_name, workflow_name, work_item_group):
@@ -367,6 +369,7 @@ def work_item_group(facility_name, workflow_name, step, work_item_group):
     elif 'complete' in request.form:
         wig.set_saved(json.loads(request.form['saved_rows']))
         wig.do_step_actions()
+        wig.set_complete()
         complete_url = wig.workflow.get_complete_url(wig.name)
         return redirect(complete_url)
     table_name = ''

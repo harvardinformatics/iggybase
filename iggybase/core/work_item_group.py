@@ -189,6 +189,10 @@ class WorkItemGroup:
             breadcrumbs.update(self.active_steps)
         return breadcrumbs
 
+    def set_complete(self):
+        if self.WorkItemGroup.status != status.COMPLETE:
+            self.oac.update_work_item_group(self.WorkItemGroup.id, 'status', status.COMPLETE)
+
     '''
     below are workflow action functions
     '''
