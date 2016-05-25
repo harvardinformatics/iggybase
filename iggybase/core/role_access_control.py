@@ -56,7 +56,6 @@ class RoleAccessControl:
                     self.level_id = fac.Role.level_id
                     g.root_org_id = fac.Facility.root_organization_id
 
-            self.set_routes()
             if 'routes' in session and session['routes']:
                 self.routes = session['routes']
                 self.set_routes()
