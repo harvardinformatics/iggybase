@@ -244,6 +244,7 @@ def data_entry(facility_name, table_name, row_name, page_context):
     table_data = rac.has_access('TableObject', {'name': table_name})
 
     if not table_data:
+        logging.info('routes core not table_data')
         abort(403)
 
     fg = form_generator.FormGenerator(table_name)

@@ -1,5 +1,6 @@
 from flask import current_app, request, g, render_template
 from functools import wraps
+import logging
 import sys
 import inspect
 

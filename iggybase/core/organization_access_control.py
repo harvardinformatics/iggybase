@@ -303,7 +303,9 @@ class OrganizationAccessControl:
                     for field in temp_field_data:
                         table_field_data[table_id_field][field.Field.display_name] = field.Field
 
+                    logging.info('table_name_field: ' + table_name_field)
                     table_objects[table_id_field] = util.get_table(table_name_field)
+                    logging.info('continue: ' + table_name_field)
                     table_defs[table_id_field] = self.session.query(models.TableObject).\
                         filter_by(name=table_objects[table_id_field].__tablename__).first()
 

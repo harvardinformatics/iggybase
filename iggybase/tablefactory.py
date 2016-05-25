@@ -26,12 +26,12 @@ class TableFactory:
         if not table_object_cols:
             return None
 
-        #logging.info( 'table name: ' + class_name )
+        # logging.info( 'table name: ' + class_name )
         for col in table_object_cols:
             if col.display_name in self.predefined_columns:
                 continue
 
-            #logging.info( col.field_name )
+            # logging.info( col.field_name )
             if col.foreign_key_table_object_id is not None:
                 foreign_table =  self.session.query(TableObject).filter_by(id=col.foreign_key_table_object_id).first()
                 foreign_column = self.session.query(Field).filter_by(id=col.foreign_key_field_id).first()
@@ -58,11 +58,17 @@ class TableFactory:
     def create_column(self, attributes, foreign_table_name=None, foreign_column_name=None):
         datatype = self.session.query(DataType).filter_by(id=attributes.data_type_id).filter_by(active=1).first()
 
-        dtcname = getattr(sqlalchemy, datatype.name)
-        if attributes.data_type_id == 2:
-            dtinst = dtcname(attributes.length)
+        if attributes.data_type_id == 6:
+            # file datatype
+            dtcname = getattr(sqlalchemy, 'String')
+            dtinst = dtcname(250)
         else:
-            dtinst = dtcname()
+            dtcname = getattr(sqlalchemy, datatype.name)
+            if attributes.data_type_id == 2:
+                #string datatype
+                dtinst = dtcname(attributes.length)
+            else:
+                dtinst = dtcname()
 
         arg = {}
 

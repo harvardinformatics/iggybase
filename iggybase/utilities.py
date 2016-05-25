@@ -22,6 +22,8 @@ def get_table(table_name):
             module_model = import_module('iggybase.admin.models')
         else:
             module_model = import_module('iggybase.models')
+
+        logging.info('after if  ' + table_name)
         table_object = getattr(module_model, to_camel_case(table_name))
     except AttributeError:
         logging.info('abort ' + table_name)
