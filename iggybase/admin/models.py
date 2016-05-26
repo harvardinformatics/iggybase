@@ -651,7 +651,15 @@ class UserOrganization(Base):
 
 
 class Event(Base):
+    """The only thing that this table does is to map actions to database and other 
+    types of events.
+    """
     table_type = 'admin'
+
+
+class EventType(Base):
+    table_type = 'admin'
+    
 
 class DatabaseEvent(Base):
     """Database events.

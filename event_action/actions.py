@@ -1,36 +1,48 @@
 from blinker import signal
+from threading import Timer, Semaphore
+from datetime import datetime, date, timedelta
+from collections import OrderedDict
 import logging
 import flask
-from flask import current_app
 
 from sqlalchemy import event
 from sqlalchemy.engine import reflection
 from sqlalchemy.util.langhelpers import symbol
 from flask_mail import Attachment, Connection, Message, Mail
 
-"""
-db_session and db should be passed to ActionManager when initiating.
-
-# These imports are backups.
-from database import db_session
-from database import db
-"""
-
 event_registry = {}
-act_manager = None
 
-def db_event_pitcher(sender, **kw):
+_hb = {'interval': 15, 'func': None}
+
+_pv_semaphore = Semaphore()
+
+def _event_pitcher(sender, **kw):
     """Dispatches databse events to be processed
     act_obj must have an execute method
     """
+    _pv_semaphore.acquire()
     sender.execute(**kw)
+    _pv_semaphore.release()
     return
 
+
+def _heartbeat():
+    """
+    Called in a separate thread every basic interval (_hb['interval']).
+    periodic actions are dispatched by an internal action (HBAction).
+    The event_registry is accessed by means of PV semaphores
+    """
+    _pv_semaphore.acquire()
+    evt = event_registry.get('heartbeat-action', None)[0]   # Should only be one.
+    t = Timer(_hb['interval'], _hb['func'])
+    t.start()
+    _pv_semaphore.release()        
+
+    evt.dispatch(obj=evt, event_type='heartbeat-action')
 
 def db_event(session, stat, instances):
     """Dispatcher for database events
     """
-
     def event_scan(session_itr):
         """Scans the event objects (db table create/update/delete actions).
         """
@@ -38,14 +50,17 @@ def db_event(session, stat, instances):
             evt_name = getattr(obj, '__tablename__', None)
             model_name = '%s:%s' % (evt_cat, evt_name)
             specific = '%s:%s:%s' % (evt_cat, evt_name, evt_type)
-
+            _pv_semaphore.acquire()
             key_combo = set([evt_cat, model_name, specific])
+
             registry_keys = set(event_registry.keys())
+            _pv_semaphore.release()
             outcomes = list(key_combo & registry_keys)
 
             for kk in outcomes:
+                _pv_semaphore.acquire()                
                 actions = event_registry.get(kk, None)
-
+                _pv_semaphore.release()
                 # Shouldn't happen possible keys were anded with registry entries.
                 if not actions:
                     continue
@@ -55,7 +70,6 @@ def db_event(session, stat, instances):
                         action.dispatch(obj, event_type=evt_type)
 
     evt_cat = 'database'
-
 
     if session.deleted:
         evt_type = 'deleted'
@@ -76,7 +90,9 @@ def db_attr_event(target, value, oldvalue, initiator):
     op = 'new' if oldvalue == symbol('NO_VALUE') else 'dirty'
 
     reg_key = 'database:%s:%s:%s' % (target.__tablename__, initiator.key, op)
+    _pv_semaphore.acquire()    
     actions = event_registry.get(reg_key, None)
+    _pv_semaphore.release()    
     kwargs = {'newvalue': value, 'oldvalue': oldvalue}
     if actions:
         for action in actions:
@@ -95,6 +111,7 @@ def init_app(app, session):
     if hasattr(app, 'act_manager'):
         return app.act_manager
     app.act_manager = ActionManager(app, session)
+    app.act_manager
     act_manager = app.act_manager
 
 
@@ -106,13 +123,16 @@ class ActionManager(object):
     name = 'Action Manager'
     description = 'Base Action Manager'
 
+
     def __init__(self, app, session):
         self.app = app
         self.session = session
-        self.db_action_signal = signal('action_signal')
-        self.db_action_signal.connect(db_event_pitcher)
+        self._action_signal = signal('action_signal')
+        self._action_signal.connect(_event_pitcher)
+        if not hasattr(app, 'act_manager'):
+            app.act_manager = self
 
-        # Guarantee Idempotence
+        # Guarantee Idempotence. Database events
         if event.contains(self.session, 'before_flush', db_event):
             return
         event.listen(self.session, 'before_flush', db_event)
@@ -120,6 +140,22 @@ class ActionManager(object):
         if event.contains(self.session, 'after_rollback', db_rollback):
             return
         event.listen(self.session, 'after_rollback', db_rollback)
+
+        # Don't need to worry about threads yet since the _heartbeat thread
+        # isn't running.
+        _ha = HeartbeatAction()
+        if not _ha:
+            raise ValueError()
+        
+        event_registry.setdefault('heartbeat-action', []).append(_ha)
+
+        # Periodic events. Smallest periodic interval is 15 seconds. Could be
+        # configurable.
+        _hb['func'] = _heartbeat
+        t = Timer(_hb['interval'], _hb['func'])
+        t.start()
+        
+        
 
 
     def register_db_event(self, action):
@@ -143,8 +179,8 @@ class ActionManager(object):
         else:
             raise ValueError('%s must be a valid model' % action.model)
 
-        if action.display_name:
-            k = k + ':' + action.display_name
+        if action.field_name:
+            k = k + ':' + action.field_name
 
         if action.event_type not in valid_event_types:
             raise ValueError( '%s is not a valid event type %s, %s' % \
@@ -153,24 +189,44 @@ class ActionManager(object):
 
         # The registry: keys are like: 'database-model-field_name-dirty'
         # Don't allow dupes. Make this idempotent.
-        print("one time through")
+        _pv_semaphore.acquire()
         if k not in event_registry:
             event_registry.setdefault(k, []).append(action)
         else:
-            if action in event_registry[k]:
+            if self.action in event_registry[k]:
                 logging.debug('duplicate action register rejected, %s' % repr(action))
             else:
+                logging.info('action registered, %s' % action.name)
                 event_registry[k].append(action)
-
+        _pv_semaphore.release()
 
 
         # The listener needs the model.attribute such as: User.first_name
-        if action.model and action.display_name and action.event_type == 'dirty':
-            collection = getattr(action.model, action.display_name)
+        if action.model and action.field_name and action.event_type == 'dirty':
+            collection = getattr(action.model, action.field_name)
             # Guarantee Idempotence by not repeateing this event.
             if event.contains(collection, 'set', db_attr_event):
                 return
             event.listen(collection, 'set', db_attr_event)
+
+
+        
+
+
+    def register_periodic_event(self, action):
+        """
+        Register a periodic action.
+        """
+        sod = datetime.now().date()
+        sod = datetime(sod.year, sod.month, sod.day)
+        action.next_p =  sod + action.from_time
+        action.latest_p = sod +  action.to_time
+        #register the action, it's times and trigger count.
+        aa = {'action': action, 'count': 0, 'nxt': action.next_p, 'latest': action.latest_p}
+        reg = OrderedDict(aa)
+        _pv_semaphore.acquire()        
+        event_registry.setdefault('periodic', []).append(reg)
+        _pv_semaphore.release()            
 
 
     def unregister(self, action):
@@ -258,7 +314,7 @@ class Action(object):
     Events are database, cron, or application specified.
     For database events, names are:
         model - the model. There no other way to import it.
-        field_name
+        field_name - field_name
         event_type - new, delete, or dirty.
 
     default: database
@@ -266,7 +322,7 @@ class Action(object):
     name = 'Action'
     description = 'Base class for database events.'
 
-    def __init__(self, cat='database', model=None, display_name=None,
+    def __init__(self, cat='database', model=None, field_name=None,
                  event_type='dirty', 
                  verify_callback=None,
                  execute_callback=None,
@@ -275,31 +331,41 @@ class Action(object):
         verify_params (kwargs) are used by the verify method to further test the
         validity of an event.
         """
-        if not cat:
-            raise ValueError('category cannot be None')
-        self.event_category = cat
-        if not model:
-            raise ValueError('model cannot be None')
-        self.model = model
-        self.display_name = display_name
-        if event_type not in ['new', 'dirty', 'delete']:
-            raise ValueError('event_type cannut be null')
-        else:
-            self.event_type = event_type
-        self.verify_callback = verify_callback
-        self.execute_callback = execute_callback
+        if not hasattr(self, 'cat'):
+            if not cat:
+                raise ValueError('category cannot be None')
+            self.event_category = cat
 
-        if kwargs:
-            for k,v in kwargs.items():
-                setattr(self, k, v)
-        keys = kwargs.keys()
+        if cat == 'database':
 
-        if 'tablename' in keys and 'fieldname' in keys and 'keyname' in keys \
-           and 'rows' in keys:
-            if self.tablename and self.fieldname and self.keyname and self.rows:
-                self.lookups = VerifyObject()
-                self.lookups.load_params(self.tablename, self.fieldname,
-                                               self.keyname, self.rows)
+            if not hasattr(self, 'model'):
+                self.model = model
+
+            if not hasattr(self, 'field_name'):
+                self.field_name = field_name
+
+            if not hasattr(self, 'event_type'):
+                if event_type not in ['new', 'dirty', 'delete']:
+                    raise ValueError('event_type cannut be null')
+                else:
+                    self.event_type = event_type
+            if not hasattr(self, 'verify_callback'):
+                self.verify_callback = verify_callback
+
+            if not hasattr(self, 'execute_callback'):
+                self.execute_callback = execute_callback
+
+            if kwargs:
+                for k,v in kwargs.items():
+                    setattr(self, k, v)
+            keys = kwargs.keys()
+
+            if 'tablename' in keys and 'fieldname' in keys and 'keyname' in keys \
+               and 'rows' in keys:
+                if self.tablename and self.fieldname and self.keyname and self.rows:
+                    self.lookups = VerifyObject()
+                    self.lookups.load_params(self.tablename, self.fieldname,
+                                                   self.keyname, self.rows)
 
                 
     def __eq__(self, obj):
@@ -317,7 +383,7 @@ class Action(object):
         It can then be either call the execute method. Or, it can return True
         and the execute will be dispatched via a signal maybe in another thread.
         """
-        if self.verify_callback:
+        if hasattr(self, 'verify_callback') and self.verify_callback:
             return self.verify_callback(obj, evt_type, **kwargs)
         else:
             return True
@@ -353,9 +419,88 @@ class Action(object):
     def execute(self, obj, **kwargs):
         """execute the action"""
         logging.debug('obj=%s, kwargs=%s' % (repr(obj), repr(kwargs)))
-        if self.execute_callback:
+        if hasattr(self, 'execute_callback') and self.execute_callback:
             self.execute_callback(obj, event_type, kwargs)
         return
+
+
+class HeartbeatAction(Action):
+    """
+    Used to dispatch periodic (heartbeat) inspired events.
+    """
+    name = 'Heartbeat Action'
+    description = 'Dispatches periodic actions.'
+    cat = 'heartbeat-action'
+    
+    def execute(self, obj, **kwargs):
+        """
+        Dispatch periodic events. Events should be locked out
+        while actions are dispatched.
+        """
+        evts = event_registry.get('periodic', [])
+
+        for evt in evts:
+            import pdb
+            pdb.set_trace()
+            action, count, nxt, latest = evt.values()
+            print(action, count, nxt, latest)
+            now = datetime.now()
+            if count <= action.count and now >= nxt and now <= latest:
+                if action.verify(action, **evt):
+                    print('dispatching %s' % evt)
+                    action.dispatch(**evt)
+                    action.count += 1
+                    action.previous_p = nxt
+                    action.next_p += action.interval
+                    evt['nxt'] = action.next_p
+                    evt['count'] += 1
+
+        
+    
+
+
+class PeriodicAction(Action):
+    """Class for actions taken based on periodic intervals, starting and ending
+    between two timedeltas from the beginning of a day. For example: every hour
+    starting at 2:30 until 16:30.
+    """
+    name = 'Periodic Action'
+    description = 'Action triggered by time periods.'
+    cat = 'periodic'
+
+    period = 1
+    period_unit = 'hour'
+    from_time = timedelta(0)
+    to_time = timedelta(hours=23, minutes=59, seconds=59)
+
+    dispatch_count = 0
+    previous_p = None
+    next_p = None
+    latest_p = None
+    interval = None
+
+    
+    def __init__(self, *args, **kwargs):
+        """
+        """
+        super(PeriodicAction,self).__init__(cat=self.cat, *args, **kwargs)
+        if self.period_unit == 'sec':
+            base = 1
+        elif self.period_unit == 'minute':
+            base = 60
+        elif self.period_unit == 'hour':
+            base = 60*60
+        else:                # Make it a day.
+            base = 60*60*24      
+
+        self.interval = timedelta(seconds=base*self.period)
+
+
+        
+
+
+    
+
 
 
 class EmailAction(Action):
@@ -366,10 +511,10 @@ class EmailAction(Action):
         """kwargs may contain email Message fields.
 
         If a message field is not provided as a parameter, that field's name, say - bcc,
-        can be derived by overidding the bcc method below or any one of the methods that
-        corresponds to a Message field.
+        can be derived by overidding the get_bcc method below or any one of the 'get_' 
+        methods that corresponds to a Message field.
 
-        Fields not now supported: html, extra_headers, mail_options, rcpt_options.
+        Fields not supported: html, extra_headers, mail_options, rcpt_options.
         Permitted fields are get_* method names below with "get_" removed such as:
             subject
             recipients
@@ -444,25 +589,32 @@ class EmailAction(Action):
         """
         Send email message
         """
-        msg = Message(sender=current_app.config['DEFAULT_MAIL_SENDER'])
-        for func in [getattr(self, aa) for aa in dir(self) if aa.startswith('get_')]:
-            result = func()
-            if result:
-                head, sep, tail = func.__name__.partition('_')
-                if tail == 'attachments':
-                    for attachment in result:
-                        msg.add_attachment(attachment)
-                else:
-                    setattr(msg, tail, result)
+        from . import actions
+        with act_manager.app.app_context():
+            if act_manager.app.debug == True:
+                msg = Message(sender='localhost')  #Debug only
+                msg = Message(sender='reuven@koblick.com')
+            else:
+                msg = Message(sender=act_manager.app.config['MAIL_SERVER'])
+            for func in [getattr(self, aa) for aa in dir(self) if aa.startswith('get_')]:
+                result = func(**kwargs)
+                if result:
+                    head, sep, tail = func.__name__.partition('_')
+                    if tail == 'attachments':
+                        for attachment in result:
+                            msg.add_attachment(attachment)
+                    else:
+                        setattr(msg, tail, result)
 
-        mail = Mail(current_app)
-        mail.connect()
-        mail.send(msg)
-        if self.log_mail:
-            """
-            Log email to a table with a timestamp. Note, for attachements, don't only log the
-            file name and content_type, not the data.
-            """
+            mail = Mail(act_manager.app)
+            mail.connect()
+            mail.send(msg)
+            if self.log_mail:
+                """
+                Log email to a table with a timestamp. Note, for attachements, don't only log the
+                file name and content_type, not the data.
+                """
+                pass
         return
 
     def render_from_text(self, ctx):
