@@ -7,6 +7,7 @@ from iggybase import models as core_models
 from iggybase import utilities as util
 from sqlalchemy.orm import aliased
 from collections import OrderedDict
+from iggybase.core.role_access_control import RoleAccessControl
 import json
 import re
 import datetime
@@ -25,13 +26,12 @@ class OrganizationAccessControl:
         self.session = db_session()
 
         if g.user is not None and not g.user.is_anonymous:
-            role_access_control = util.get_role_access_control()
-
             self.user =  self.session.query(models.User).filter_by(id=g.user.id).first()
+
+            # must distinguish user level orgs from group level org ids
             query = self.session.query(models.Organization.parent_id.distinct().label('parent_id'))
             self.parent_orgs = [row.parent_id for row in query.all()]
-
-            facility_root_org_id = role_access_control.facility.root_organization_id
+            facility_root_org_id = g.root_org_id
 
             user_orgs = self.session.query(models.UserOrganization).filter_by(active=1, user_id=self.user.id).all()
 
@@ -45,13 +45,13 @@ class OrganizationAccessControl:
             self.current_org_id = user_org
             min_level = None
             for user_org, level in facility_orgs.items():
-                # logging.info('facility_orgs: ' + str(user_org))
+                # levels are ordered from high to low, hightest has order = 1
                 if min_level is None or (level < min_level and user_org != self.user.organization_id):
+                    # TODO: do we really want min level.id or do we want the lowest
+                    # level.order
                     min_level = level
                     self.current_org_id = user_org
                 self.get_child_organization(user_org)
-
-            # logging.info('self.current_org_id: ' + str(self.current_org_id))
         else:
             self.user = None
 
@@ -84,14 +84,13 @@ class OrganizationAccessControl:
                 self.org_ids.append(child_org.id)
         return
 
-    def get_entry_data(self, table_name, params):
-        field_data = self.get_field_data(table_name)
+    def get_entry_data(self, field_data, table_name, params):
         results = None
         if field_data is not None:
             table_object = util.get_table(table_name)
 
             columns = []
-            for row in field_data:
+            for row in field_data.values():
                 columns.append(getattr(table_object, row.Field.display_name))
 
             if len(columns) == 0:
@@ -174,13 +173,12 @@ class OrganizationAccessControl:
                 ))
                 col = getattr(aliases[alias_name],
                     field.Field.display_name)
-                # TODO: validate that tablequeries don't allow dup display names
-                columns.append(col.label(field.display_name))
+                columns.append(col.label(field.name))
 
             else:  # non-fk field
                 tables.add(table_model)
                 col = getattr(table_model, field.Field.display_name)
-                columns.append(col.label(field.display_name))
+                columns.append(col.label(field.name))
                                 # add to joins if not first table, avoid joining to self
                 if (not first_table_named
                     or (first_table_named == field.TableObject.name)):
@@ -228,37 +226,6 @@ class OrganizationAccessControl:
                 'name': res.TableObject.name
                 }
 
-    def get_field_data(self, table_name):
-        role_access_control = util.get_role_access_control()
-        table_data = role_access_control.has_access('TableObject', {'name': table_name})
-        field_data = None
-
-        if table_data is not None:
-            field_data = role_access_control.fields(table_data.id)
-
-        return field_data
-
-    def get_search_field_data(self, table_name, search_display_name):
-        role_access_control = util.get_role_access_control()
-        table_data = role_access_control.has_access('TableObject', {'name': table_name})
-
-        if table_data is not None:
-            field_data = role_access_control.fields(table_data.id,
-                                                    {'field.display_name': search_display_name})
-
-            if field_data is not None:
-                search_table = role_access_control.has_access('TableObject',
-                                                              {'id': field_data[0].Field.foreign_key_table_object_id})
-
-                if search_table is not None:
-                    search_table_data = self.foreign_key(search_table.id)
-                    search_field_data = role_access_control.fields(search_table.id,
-                                                                   {'field_role.search_field': 1})
-
-                    return search_table_data['name'], search_field_data
-
-        return None, None, None
-
     def get_search_results(self, table_name, params):
         table = util.get_table(table_name)
         filters = []
@@ -277,7 +244,9 @@ class OrganizationAccessControl:
         return table.query.filter_by(id=lt_id).first()
 
     def save_form(self):
-        role_access_control = util.get_role_access_control()
+        # TODO: refactor this function so that we don't need role access inside
+        # organization access
+        role_access_control = RoleAccessControl()
 
         long_text_data = models.TableObject.query.filter_by(name='long_text').first()
 
@@ -292,7 +261,7 @@ class OrganizationAccessControl:
         # keeps track of the table object data for tables that store the child data used for generating the auto IDs
         table_objects = {}
         # all the data to be saved as an instance of the sqlalchemy table
-        instances = {}
+        instances = OrderedDict()
         # tracks whether a row was modified
         row_modified = {}
 
@@ -334,7 +303,9 @@ class OrganizationAccessControl:
                     for field in temp_field_data:
                         table_field_data[table_id_field][field.Field.display_name] = field.Field
 
+                    logging.info('table_name_field: ' + table_name_field)
                     table_objects[table_id_field] = util.get_table(table_name_field)
+                    logging.info('continue: ' + table_name_field)
                     table_defs[table_id_field] = self.session.query(models.TableObject).\
                         filter_by(name=table_objects[table_id_field].__tablename__).first()
 
@@ -352,6 +323,8 @@ class OrganizationAccessControl:
                         if 'name' in row_data['data_entry'].keys() and row_data['data_entry']['name'] != '' and \
                                         row_data['data_entry']['name'] != 'new':
                             current_inst_name = row_data['data_entry']['name']
+                            # name was modified
+                            row_modified[row_id] = 2
                         elif current_table_data.new_name_prefix is not None and \
                                         current_table_data.new_name_prefix != "":
                             current_inst_name = current_table_data.get_new_name()
@@ -499,16 +472,15 @@ class OrganizationAccessControl:
 
             row_names = OrderedDict()
             table_names = set()
-            for row_id in sorted(instances.keys()):
-                instance = instances[row_id]
+            for row_id, instance in instances.items():
                 if row_modified[row_id] == 2:
                     self.session.add(instance)
                     self.session.flush()
 
-                    row_names[row_id] = {'name': instance.name, 'table': instance.__tablename__}
+                    row_names[row_id] = {'id': instance.id, 'name': instance.name, 'table': instance.__tablename__}
                     table_names.add(instance.__tablename__)
                 elif row_modified[row_id] == 1:
-                    row_names[row_id] = {'name': instance.name, 'table': instance.__tablename__}
+                    row_names[row_id] = {'id': instance.id, 'name': instance.name, 'table': instance.__tablename__}
                     table_names.add(instance.__tablename__)
 
             self.session.commit()
@@ -541,16 +513,17 @@ class OrganizationAccessControl:
 
         return result
 
-    def get_child_row_names(self, child_table_name, child_link_field_id, parent_id):
+    def get_child_row_names(self, child_table_name, child_link_field_id, parent_ids):
         field = self.session.query(models.Field).filter_by(id=child_link_field_id).first()
 
         child_table = util.get_table(child_table_name)
+        parent_column = getattr(child_table, field.display_name)
 
-        rows = self.session.query(child_table).filter(getattr(child_table, field.display_name) == parent_id).all( )
+        rows = self.session.query(child_table).filter(parent_column.in_(parent_ids)).all( )
 
-        names = []
+        names = {}
         for row in rows:
-            names.append(row.name)
+            names[row.id] = row.name
 
         return names
 
@@ -657,7 +630,6 @@ class OrganizationAccessControl:
         work_item_group_table_object = self.session.query(models.TableObject).filter_by(name='work_item_group').first()
         try:
             step_id = self.session.query(models.Step.id).filter((models.Step.workflow_id == workflow_id), (models.Step.order == step_num)).first()[0]
-            print(step_id)
             new_name = work_item_group_table_object.get_new_name()
             new_row = table_model(name = new_name, active = 1,
                     organization_id = self.current_org_id, workflow_id = workflow_id,

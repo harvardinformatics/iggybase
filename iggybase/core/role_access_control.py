@@ -36,10 +36,6 @@ class RoleAccessControl:
                              .join(models.UserRole)
                              .filter(models.UserRole.id==self.user.current_user_role_id).first())
 
-            # TODO check if current user role is set, if not set
-            self.role = (self.session.query(models.Role)
-                         .join(models.UserRole)
-                         .filter(models.UserRole.id == self.user.current_user_role_id).first())
             g.role_id = self.role.id
             facility_res = (self.session.query(models.Facility, models.Role,
                                                models.Level)
@@ -58,7 +54,9 @@ class RoleAccessControl:
                 if fac.Role.id == self.role.id:
                     self.facility = fac.Facility
                     self.level_id = fac.Role.level_id
+                    g.root_org_id = fac.Facility.root_organization_id
 
+            self.set_routes()
             if 'routes' in session and session['routes']:
                 self.routes = session['routes']
                 self.set_routes()
@@ -98,12 +96,12 @@ class RoleAccessControl:
         else:
             return res
 
-    def table_queries(self, page_form, table_name=None, active=1):
+    def table_queries(self, route, table_name=None, active=1):
         """Get the table queries
         """
         filters = [
-            (models.PageForm.name == page_form),
-            (models.PageFormRole.role_id == self.role.id),
+            (models.Route.url_path == route),
+            (models.RouteRole.role_id == self.role.id),
             (models.TableQuery.active == active)
         ]
         if table_name:
@@ -116,8 +114,8 @@ class RoleAccessControl:
                 models.TableQueryRender,
                 models.TableQuery
             ).
-                join(models.PageFormRole).
-                join(models.PageForm).
+                join(models.RouteRole).
+                join(models.Route).
                 join(models.TableQuery).
                 join(models.TableQueryTableObject).
                 join(
@@ -156,15 +154,15 @@ class RoleAccessControl:
         )
         return res
 
-    def table_query_fields(self, table_query_id, table_name=None, table_id=None, display_name=None, field_id=None,
-                           active=1):
+    def table_query_fields(self, table_query_id, table_name=None, table_id=None, criteria = {}, role_filter = True, active=1):
         filters = [
-            (models.FieldRole.role_id == self.role.id),
-            (models.TableObjectRole.role_id == self.role.id),
             (models.Field.active == active),
             (models.FieldRole.active == active),
             (models.TableObject.active == active)
         ]
+        if role_filter: # filters not needed for name of fk_field
+            filters.append((models.TableObjectRole.role_id == self.role.id))
+            filters.append((models.FieldRole.role_id == self.role.id))
         selects = [
             models.Field,
             models.TableObject,
@@ -199,10 +197,11 @@ class RoleAccessControl:
             filters.append((models.TableObject.id == table_id))
 
         # add any field_name filter
-        if display_name:
-            filters.append((models.Field.display_name == display_name))
-        elif field_id:
-            filters.append((models.Field.id == field_id))
+        if criteria:
+            for key, val in criteria.items():
+                crit_field = getattr(models.Field, key, None)
+                if crit_field:
+                    filters.append((crit_field == val))
 
         res = (
             self.session.query(*selects).
@@ -214,6 +213,7 @@ class RoleAccessControl:
                 outerjoin(*outerjoins).
                 filter(*filters).order_by(*orders).all()
         )
+
         return res
 
     def table_query_criteria(self, table_query_id):
@@ -308,11 +308,13 @@ class RoleAccessControl:
             subs = {}
         return subs
 
-    def get_page_form_data(self, page_form_name, active=1):
-        page_form = self.has_access("PageForm", {'name': page_form_name})
-
-        if page_form is None:
-            return None
+    def get_page_form_data(self, page_form_name, page_context = [], active=1):
+        page_form = None
+        if page_form_name:
+            page_form = (self.session.query(models.PageForm).
+                filter(models.PageForm.name == page_form_name).first())
+        if not page_form:
+            return None, None, None
 
         if page_form.parent_id is None:
             page_form_ids = [page_form.id]
@@ -329,7 +331,7 @@ class RoleAccessControl:
                                 setattr(page_form, attr, value)
 
         page_form_javascript = self.page_form_javascript(page_form_ids, active)
-        page_form_buttons = self.page_form_buttons(page_form_ids, active)
+        page_form_buttons = self.page_form_buttons(page_form_ids, page_context, active)
 
         return page_form, page_form_buttons, page_form_javascript
 
@@ -346,23 +348,32 @@ class RoleAccessControl:
         else:
             return [(res.id, res)] + self.page_form_ancestors(res.parent_id, active)
 
-    def page_form_buttons(self, page_form_ids, active=1):
+    def page_form_buttons(self, page_form_ids, page_context=[], active=1):
         page_form_buttons = {'top': [], 'bottom': []}
         filters = [
                 models.PageFormButton.page_form_id.in_(page_form_ids),
                 models.PageFormButtonRole.role_id == self.role.id,
                 models.PageFormButton.active == active,
                 models.PageFormButtonRole.active == active,
+                models.PageFormButtonContext.active == active,
+                models.PageFormContext.active == active,
+                models.PageFormContext.context.in_(page_context)
         ]
-        res = (self.session.query(models.PageFormButton)
+
+        res = (self.session.query(models.PageFormButton, models.SelectListItem)
                 .join(models.PageFormButtonRole,
-                    models.PageFormButtonRole.page_form_button_id ==
-                    models.PageFormButton.id)
+                    models.PageFormButtonRole.page_form_button_id == models.PageFormButton.id)
+                .join(models.PageFormButtonContext,
+                    models.PageFormButtonContext.page_form_button_id == models.PageFormButton.id)
+                .join(models.PageFormContext,
+                    models.PageFormButtonContext.page_form_context_id == models.PageFormContext.id)
+                .join(models.SelectListItem,
+                    models.SelectListItem.id == models.PageFormButton.button_location_id)
             .filter(*filters)
             .order_by(models.PageFormButton.order, models.PageFormButton.id).all())
         for row in res:
-            if row.button_location in ['top', 'bottom']:
-                page_form_buttons[row.button_location].append(row)
+            page_form_buttons[row.SelectListItem.display_name].append(row.PageFormButton)
+
         return page_form_buttons
 
     def page_form_javascript(self, page_form_ids, active=1):
@@ -565,12 +576,13 @@ class RoleAccessControl:
     def workflow_steps(self, workflow_id, active = 1):
         res = None
         if workflow_id:
-            res = (self.session.query(models.Step, models.TableObject,
-                models.Route, models.Module, models.Field).
-                join(models.TableObject).
+            res = (self.session.query(models.Step,
+                models.Route, models.Module, models.Field, models.TableObject).
                 join(models.Route).
                 join(models.RouteRole).
                 join(models.Module).
+                outerjoin(models.TableObject, models.Step.table_object_id ==
+                    models.TableObject.id).
                 outerjoin(models.Field, models.Step.dynamic_field ==
                     models.Field.id).
                 filter(models.Step.workflow_id == workflow_id).

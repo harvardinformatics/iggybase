@@ -90,7 +90,9 @@ $( document ).ready( function () {
         var new_tr = $( "#" + target + " tr:last" ).clone( );
 
         var old_id = new_tr.attr( 'row_id' );
-        var row_id = parseInt( old_id ) + 1;
+
+        var row_id = $( '#row_counter' ).val( );
+        $( '#row_counter' ).val( parseInt( row_id ) + 1 );
 
         new_tr.attr( 'row_id', row_id );
 
@@ -329,7 +331,9 @@ $( document ).ready( function () {
             search_vals['modal_field_name'] = display_name;
             search_vals['modal_search_table'] = '';
 
-            var formurl = $URL_ROOT + "system/core/search_results?search_vals=" + JSON.stringify(search_vals);
+            var hidden_fields = $("#hidden_fields");
+            var facility = hidden_fields.find('input[name=facility]').val()
+            var formurl = $URL_ROOT + facility + "/core/search_results?search_vals=" + JSON.stringify(search_vals);
 
             $.fn.showModalDialog( formurl, {}, $.fn.searchLinks );
 
@@ -345,7 +349,9 @@ $( document ).ready( function () {
 
         var display_name = matches[ 1 ];
 
-        var formurl = $URL_ROOT + "system/core/search?table_object=" + table_object + "&input_id=" + input_id + "&field_name=" + display_name;
+        var hidden_fields = $("#hidden_fields");
+        var facility = hidden_fields.find('input[name=facility]').val()
+        var formurl = $URL_ROOT + facility + "/core/search?table_object=" + table_object + "&input_id=" + input_id + "&field_name=" + display_name;
 
         var buttons = {};
         buttons[ "Search" ] = $.fn.searchResults;
@@ -363,7 +369,9 @@ $( document ).ready( function () {
             search_vals[$(this).attr('id')] = $(this).val();
         });
 
-        var formurl = $URL_ROOT + "system/core/search_results?search_vals=" + JSON.stringify(search_vals);
+        var hidden_fields = $("#hidden_fields");
+        var facility = hidden_fields.find('input[name=facility]').val()
+        var formurl = $URL_ROOT + facility + "/core/search_results?search_vals=" + JSON.stringify(search_vals);
 
         $.fn.showModalDialog( formurl, {}, $.fn.searchLinks );
     }

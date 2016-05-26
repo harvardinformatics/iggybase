@@ -1,4 +1,4 @@
-from iggybase import utilities as util
+from iggybase import g_helper
 from .calculation import get_calculation
 import logging
 
@@ -12,8 +12,10 @@ class Field:
         self.TableQueryField = table_query_field
         self.TableQueryCalculation = calculation
 
-        self.display_name = self.get_field_display_name()
-        self.rac = util.get_role_access_control()
+        # unique name, table|field
+        self.name = self.TableObject.name + '|' + self.Field.display_name
+        self.display_name = self.get_field_display_name() # name from role or tq
+        self.rac = g_helper.get_role_access_control()
         self.calculation_fields = self._get_calculation_fields(calculation)
         self.type = self._get_type()
         self.is_foreign_key = (self.Field.foreign_key_table_object_id is not None)
@@ -38,15 +40,17 @@ class Field:
         return visible
 
     def get_field_display_name(self):
+        # this should be lowercase for consistancy, templates responsible for
+        # capitalization of title displays
         if self.TableQueryField and getattr(self.TableQueryField, 'display_name'):
             display_name = getattr(self.TableQueryField, 'display_name')
-            return display_name
         elif self.FieldRole.display_name:
-            return self.FieldRole.display_name
+            display_name = self.FieldRole.display_name
         elif self.Field.display_name:
-            return self.Field.display_name
+            display_name = self.Field.display_name
         else:
             return 'WHOA! Something is not right here. There is no display name for field ' + self.Field.name + "."
+        return display_name.replace('_', ' ').title()
 
     def get_field_order(self):
         if self.TableQueryField and self.TableQueryField.order is not None:
@@ -66,20 +70,18 @@ class Field:
             fk_to = self.Field.foreign_key_table_object_id
             if fk_to:
                 if self.Field.foreign_key_display:
-                    fk_field = self.rac.table_query_fields(
-                            None,
-                            None,
-                            fk_to,
-                            None,
-                            self.Field.foreign_key_display
-                        )
+                    criteria = {'id': self.Field.foreign_key_display}
                 else:
-                    fk_field = self.rac.table_query_fields(
-                        None,
-                        None,
-                        fk_to,
-                        'name' # if fk then we want the human readable name
-                    )
+                    criteria = {'display_name': 'name'}
+
+                fk_field = self.rac.table_query_fields(
+                    None,
+                    None,
+                    fk_to,
+                    criteria,
+                    # we don't need role on fk table or field
+                    role_filter = False
+                )
                 if fk_field:
                     fk_field = fk_field[0]
         if fk_field:

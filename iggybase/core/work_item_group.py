@@ -1,16 +1,16 @@
 from flask import request, g, url_for, session
 import json
 from collections import OrderedDict
-from iggybase.core.organization_access_control import OrganizationAccessControl
 from iggybase import utilities as util
+from iggybase import g_helper
 from .workflow import Workflow
 
 # Retreives work_item_group info and processes steps and actions
 class WorkItemGroup:
     def __init__ (self, work_item_group_name, workflow_name, step = None):
         self.name = work_item_group_name  # can be new
-        self.rac = util.get_role_access_control()
-        self.oac = OrganizationAccessControl()
+        self.rac = g_helper.get_role_access_control()
+        self.oac = g_helper.get_org_access_control()
         self.workflow = Workflow(workflow_name)
 
         # sql alchemy results will populate these capitalized vars
@@ -114,25 +114,31 @@ class WorkItemGroup:
         args = []
         if self.endpoint in session['routes']:
             args = session['routes'][self.endpoint]
-        dynamic_params = {}
+        dynamic_params = {'page_context':'base-context'}
         if 'table_name' in args:
             dynamic_params['table_name'] = self.step.TableObject.name
         if 'facility_name' in args:
             dynamic_params['facility_name'] = g.facility
         if 'row_name' in args:
-            if self.step.Field:
-                item_tbl_ids = set()
-                for item in self.work_items:
-                    if item.table_object_id == self.step.Field.table_object_id:
-                        name = self.oac.get_attr_from_id(item.table_object_id,
-                                item.row_id, 'name')
-                        if name:
-                            dynamic_params['row_name'] = name
-                            break
-                    item_tbl_ids.add(item.table_object_id)
-            if not 'row_name' in dynamic_params:
+            params = self.get_dynamic_param_from_items()
+            if params:
+                dynamic_params['row_name'] = params[0]
+            else:
                 dynamic_params['row_name'] = 'new'
+        if 'row_names' in args:
+            dynamic_params['row_names'] = json.dumps(self.get_dynamic_param_from_items())
         return dynamic_params
+
+    def get_dynamic_param_from_items(self):
+        params = []
+        if self.step.Field:
+            for item in self.work_items:
+                if item.table_object_id == self.step.Field.table_object_id:
+                    name = self.oac.get_attr_from_id(item.table_object_id,
+                            item.row_id, 'name')
+                    if name:
+                        params.append(name)
+        return params
 
     def get_active_steps(self, all_steps):
         work_steps = OrderedDict()
@@ -182,6 +188,10 @@ class WorkItemGroup:
         if not skip_steps:
             breadcrumbs.update(self.active_steps)
         return breadcrumbs
+
+    def set_complete(self):
+        if self.WorkItemGroup.status != status.COMPLETE:
+            self.oac.update_work_item_group(self.WorkItemGroup.id, 'status', status.COMPLETE)
 
     '''
     below are workflow action functions

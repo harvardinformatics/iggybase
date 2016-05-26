@@ -14,10 +14,10 @@
     {%- endblock topbuttonbar %}
     {% block page_content %}
         <div>
-            {% if table_query.date_fields: %}
+            {% if table_query.fc.date_fields: %}
             <form>
                 <fieldset>
-                {{ macros.render_select(table_query.date_fields, 'date_field_select')}}
+                {{ macros.render_select(table_query.fc.date_fields, 'date_field_select')}}
                 Min Date:<input type="text" class="datepicker" id="min_date">
                 Max Date:<input type="text" class="datepicker" id="max_date">
                 </fieldset>

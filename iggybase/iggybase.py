@@ -126,16 +126,20 @@ def configure_hook( app ):
             # set module in g
             if len(path) > 2:
                 g.module = path[2]
+
             role_access = rac.RoleAccessControl()
             g.rac = role_access
+            role_access.set_routes()
             access = role_access.has_facility_access(path[1])
             if not access:
                 if path[1] in role_access.facilities:
                     role_access.change_role(role_access.facilities[path[1]])
                 else:
                     abort(404)
+
             g.facility = path[1]
             route_access = role_access.route_access(request.path)
+
             if not route_access:
                 abort(404)
 

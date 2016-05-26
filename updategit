@@ -1,6 +1,10 @@
 cd /n/informatics/iggybase/dev/iggybase
 
+git stash
+
 git pull origin master
+
+git stash pop
 
 sleep 10 
 

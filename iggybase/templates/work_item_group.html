@@ -31,13 +31,11 @@
     <hr>
 {%- endblock content_title %}
 {% block bottombuttonbar -%}
-    <div class="bottom_buttons">
-        {{ macros.render_buttons( bottom_buttons ) }}
-    </div>
+    {{super()}}
     <hr>
     <div class="workflow_buttons">
-        <form action="" enctype="multipart/form-data" class="form form-horizontal" method="post" role="form">
-            <input type="hidden" name="saved_rows" value="{{wig.saved_rows}}">
+        <form id="wig_data" action="" enctype="multipart/form-data" class="form form-horizontal" method="post" role="form">
+            <input id="saved_rows" type="hidden" name="saved_rows" value="{{wig.saved_rows}}">
             {{ macros.render_buttons( wig.buttons ) }}
         </form>
     </div>
@@ -45,6 +43,8 @@
     {{ macros.breadcrumbs( wig.get_breadcrumbs() ) }}
 {%- endblock bottombuttonbar %}
 {% block scripts %}
-    {{ super() }}
     <script>var $AJAX_ROUTE = {{ wig.url|tojson|safe }};</script>
+    {{ super() }}
+    <script type="text/javascript"
+        src="{{ url_for('static', filename='work_item_group.js')}}"></script>
 {%- endblock scripts %}

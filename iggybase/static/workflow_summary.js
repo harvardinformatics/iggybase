@@ -29,11 +29,10 @@ $(document).ready(function(){
 ( function( $ ) {
     $.fn.continueSelected = function (table) {
         var row = table.rows('.selected').data();
-    //, function (i) { return $(i['name']).text()});
         if (row.length > 0) {
-            row = row[0]
+            row = row[0];
             var hidden_fields = $("#hidden_fields");
-            var url = window.location.href + row.step_id + '/' + $(row.name).text();
+            var url = window.location.href + row['work_item_group|step_id'] + '/' + $(row['work_item_group|name']).text();
             if ( url.length > 2000 )
                 alert("You are overly ambitious, please select fewer items.");
             else

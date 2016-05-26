@@ -10,7 +10,7 @@
 {% block title %}Iggybase - {{ table_name.replace( '_',' ' ) }}{% endblock %}
 
 {% block content %}
-    <h1>{{page_form_name.replace('_',' ')|title}} {{ table_name.replace( '_', ' ' )|title }}s</h1>
+    <h1>{{page_form_name.replace('_',' ')|title}} {{ workflow_name.replace( '_', ' ' )|title }}</h1>
     <div id="page_message">
             <p>
                 {{ page_msg|safe }}

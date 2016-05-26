@@ -19,7 +19,7 @@
     {%- endblock topbuttonbar %}
     {% block page_content %}
         {% if table_queries.queries[0] %}
-            {{ macros.render_detail( table_queries.queries[0].get_first() ) }}
+            {{ macros.render_detail( table_queries.get_first() ) }}
         {% endif %}
 
         {% if table_queries.queries[1] %}

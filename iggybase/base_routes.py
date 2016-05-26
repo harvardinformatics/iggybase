@@ -1,6 +1,7 @@
 import iggybase.templating as templating
 from flask import g, redirect, url_for
 from iggybase.decorators import templated
+import logging
 
 def index():
     return templating.render_template( 'index.html' )
@@ -19,6 +20,7 @@ def forbidden():
 
 @templated()
 def page_not_found():
+    logging.info('page_not_found')
     return templating.page_template_context('not_authorized')
 
 def home():

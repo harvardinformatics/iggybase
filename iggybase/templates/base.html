@@ -22,6 +22,9 @@
 
             <link href="{{ url_for('static', filename='main.css') }}" rel="stylesheet">
             <link href="{{ url_for('static', filename='bootstrap_datepicker/css/bootstrap-datepicker.min.css') }}" rel="stylesheet">
+            {% if g.rac and g.rac.facility.css %}
+                <link href="{{ url_for('static', filename='css/' + g.rac.facility.css) }}" rel="stylesheet">
+            {% endif %}
             {%- endblock styles %}
         {%- endblock head %}
         </head>
@@ -35,11 +38,33 @@
                 </div>
             </div>
 
-            <div class="banner" id="banner">
-                <a  href="{{ url_for('index') }}"> <img src="{{ url_for('static', filename='iggybase.gif') }}"></a>
+            <div class="row banner" id="banner">
+                {% if g.rac and (g.rac.facility.banner_img or g.rac.facility.banner_title) %}
+                    {% if g.rac.facility.banner_img %}
+                    <div class="col-md-1">
+                        <div class="banner-img-wrapper">
+                            <a href="{{ url_for('index') }}"> <img class="banner-img" src="{{ url_for('static', filename='images/' + g.rac.facility.banner_img) }}"></a>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% if g.rac.facility.banner_title %}
+                    <div class="col-md-5">
+                        <div class="banner-title">
+                                <h1>{{g.rac.facility.banner_title}}</h1>
+                        {% if g.rac.facility.banner_subtitle %}
+                                <h3>{{g.rac.facility.banner_subtitle}}</h3>
+                        {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                {% else %}
+                    <div class="banner-img-wrapper">
+                        <a  href="{{ url_for('index') }}"> <img class="banner-img" src="{{ url_for('static', filename='iggybase.gif') }}"></a>
+                    </div>
+                {% endif %}
                 {% if current_user.is_authenticated %}
-                    <div id="logout" class="text-align-right">
-                        <a class="inline-block" href="{{ url_for('security.logout') }}">Logout</a>
+                    <div id="logout" class="col-md-1 right">
+                        <a class="logout right" href="{{ url_for('security.logout') }}">Logout</a>
                     </div>
                 {% endif %}
             </div>

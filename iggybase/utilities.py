@@ -1,8 +1,7 @@
-from flask import abort, request, g
+from flask import abort, request
 from importlib import import_module
 from iggybase.admin.models import TableObject
 from iggybase.database import db_session
-from iggybase.core.role_access_control import RoleAccessControl
 import logging
 
 FACILITY = 0
@@ -10,14 +9,11 @@ MODULE = 1
 ROUTE = 2
 DYNAMIC = 3
 
-def get_role_access_control():
-    if 'role_access' not in g:
-        g.role_access = RoleAccessControl()
-    return g.role_access
 
 def get_column(module, table_name, display_name):
     table_model = get_table(table_name)
     return getattr(table_model, display_name)
+
 
 def get_table(table_name):
     session = db_session()
@@ -28,6 +24,8 @@ def get_table(table_name):
             module_model = import_module('iggybase.admin.models')
         else:
             module_model = import_module('iggybase.models')
+
+        # logging.info('after if  ' + table_name)
         table_object = getattr(module_model, to_camel_case(table_name))
     except AttributeError:
         logging.info('abort ' + table_name)
@@ -36,6 +34,7 @@ def get_table(table_name):
         session.commit()
 
     return table_object
+
 
 def get_func(module_name, func_name):
     """Return function from it's name.
@@ -51,7 +50,8 @@ def get_func(module_name, func_name):
         logging.info('could not import module_name ' + module_name)
         func = None
 
-    return func   # Possible None
+    return func  # Possible None
+
 
 def get_field_attr(field, table_query_field, attr):
     if table_query_field and getattr(table_query_field, attr):
@@ -59,6 +59,7 @@ def get_field_attr(field, table_query_field, attr):
     else:
         value = getattr(field, attr)
     return value
+
 
 def get_filters():
     req = dict(request.args)
@@ -77,15 +78,22 @@ def get_filters():
     filters.update(req)
     return filters
 
+
 def to_camel_case(snake_str):
     components = snake_str.split('_')
 
     return "".join(x.title() for x in components)
 
+
 def get_path(part):
     path = request.path.strip('/')
     path = path.split('/')
     return path[part]
+
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1] in application.config.ALLOWED_EXTENSIONS
+
 
 class DictObject(dict):
     def __init__(self, dict):

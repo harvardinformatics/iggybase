@@ -58,8 +58,8 @@ class Cache:
                 self.version[obj] = self.VERSION_MIN
             logging.info('Increment version: ' + obj + ' to: ' + str(self.version[obj]))
 
-    def make_key(self, route, role, dynamic = None, criteria = None):
-        key = route + '|' + str(role)
+    def make_key(self, route, role, org_id, dynamic = None, criteria = None):
+        key = route + '|' + str(role) + '|' + str(org_id)
         if dynamic:
             key += '|' + dynamic
         if criteria:

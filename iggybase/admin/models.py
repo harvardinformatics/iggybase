@@ -137,6 +137,10 @@ class Role(Base, RoleMixin):
 class Facility(Base):
     table_type = 'admin'
     root_organization_id = Column(Integer)
+    banner_img = Column(String(255))
+    banner_title = Column(String(255))
+    banner_subtitle = Column(String(255))
+    css = Column(String(255))
 
     def __repr__(self):
         return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
@@ -260,12 +264,13 @@ class PageFormJavascript(Base):
                (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
 
 
-class PageFormRole(Base):
+class PageFormContext(Base):
     table_type = 'admin'
-    role_id = Column(Integer, ForeignKey('role.id'))
     page_form_id = Column(Integer, ForeignKey('page_form.id'))
+    context = Column(String(250))
+    table_query_filters = Column(String(250))
+    hidden_fields = Column(String(250))
 
-    page_role_role = relationship("Role", foreign_keys=[role_id])
     page_role_page = relationship("PageForm", foreign_keys=[page_form_id])
 
     def __repr__(self):
@@ -277,7 +282,7 @@ class PageFormButton(Base):
     table_type = 'admin'
     page_form_id = Column(Integer, ForeignKey('page_form.id'))
     button_type = Column(String(100))
-    button_location = Column(String(100))
+    button_location_id = Column(Integer, ForeignKey('select_list_item.id'))
     button_class = Column(String(100))
     button_value = Column(String(100))
     button_id = Column(String(100))
@@ -285,6 +290,7 @@ class PageFormButton(Base):
     submit_action_url = Column(String(255))
 
     page_form_button_page_form = relationship("PageForm", foreign_keys=[page_form_id])
+    page_form_button_page_form = relationship("SelectListItem", foreign_keys=[button_location_id])
 
     def __repr__(self):
         return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
@@ -298,6 +304,19 @@ class PageFormButtonRole(Base):
 
     page_form_button_role_role = relationship("Role", foreign_keys=[role_id])
     page_form_button_role_page_form = relationship("PageFormButton", foreign_keys=[page_form_button_id])
+
+    def __repr__(self):
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+
+
+class PageFormButtonContext(Base):
+    table_type = 'admin'
+    page_form_button_id = Column(Integer, ForeignKey('page_form_button.id'))
+    page_form_context_id = Column(Integer, ForeignKey('page_form_context.id'))
+
+    page_form_button_role_page_form = relationship("PageFormButton", foreign_keys=[page_form_button_id])
+    page_form_button_role_page_form = relationship("PageFormContext", foreign_keys=[page_form_context_id])
 
     def __repr__(self):
         return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
@@ -389,11 +408,11 @@ class TableQueryRender(Base):
     table_type = 'admin'
     table_query_id = Column(Integer, ForeignKey('table_query.id'))
     table_object_id = Column(Integer, ForeignKey('table_object.id'))
-    page_form_role_id = Column(Integer, ForeignKey(
-        'page_form_role.id'))
+    route_role_id = Column(Integer, ForeignKey(
+        'route_role.id'))
 
-    table_query_render_page_form_role = relationship("PageFormRole",
-                                                     foreign_keys=[page_form_role_id])
+    table_query_render_route_role = relationship("RouteRole",
+                                                     foreign_keys=[route_role_id])
     table_query_render_table_query = relationship("TableQuery", foreign_keys=[table_query_id])
     table_query_render_table_object = relationship("TableObject", foreign_keys=[table_object_id])
 
