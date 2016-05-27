@@ -39,14 +39,21 @@ def get_connection(user, password, host, database):
 
 def get_map(tbl, prefix, is_list = False):
     map_name = prefix + '_map'
-    map = getattr(config, ('base_' + map_name))
+    base_map_name = 'base_' + map_name
+    base_map = getattr(config, base_map_name)
     map_by_table = getattr(config, map_name)
+    if is_list:
+        ret_map = []
+        ret_map.extend(base_map)
+    else:
+        ret_map = {}
+        ret_map.update(base_map)
     if tbl in map_by_table:
         if is_list:
-            map.extend(map_by_table[tbl])
+            ret_map.extend(map_by_table[tbl])
         else:
-            map.update(map_by_table[tbl])
-    return map
+            ret_map.update(map_by_table[tbl])
+    return ret_map
 
 def make_dict(data, tbl):
     col_name_map = get_map(tbl, 'col_name')
@@ -119,6 +126,7 @@ def do_insert(tbl, row_dict):
         insert = iggy_db.cursor()
         insert.execute(sql)
         iggy_db.commit()
+
         if insert.lastrowid:
             row_id = insert.lastrowid
             try:
@@ -198,48 +206,6 @@ def pk_exists(pk, name, tbl):
         row_id = None
     return row_id
 
-def migrate_table(mini_table, thing, new_tbl):
-    global iggy_db
-    global cli
-    print("Table: " + mini_table + " thing: " + thing)
-    pks = iggy_db.cursor()
-    sql = "select distinct name from " + mini_table + " where thing = '" + thing + "'"
-    if 'limit' in cli:
-        sql += ' limit ' + cli['limit']
-    pks.execute(sql)
-    pks_rows = pks.fetchall()
-    if 'start' in cli:
-        pks_rows = pks_rows[int(cli['start']):]
-    print('found rows: ' + str(len(pks_rows)))
-    no_skip = False
-    if 'no_skip' in cli:
-        if cli['no_skip'] == '1':
-            no_skip = True
-    for row_num, row in enumerate(pks_rows):
-        pk = row[0]
-        if pk in config.keys_to_skip:
-            continue
-        print("\t" + str(row_num) + " Working on name: " + pk)
-        tbl_name = thing
-        print("\t\tMapping data for: " + tbl_name + ' into: ' + new_tbl)
-        id_exists = pk_exists(pk, 'name', new_tbl, )
-        if id_exists and not no_skip:
-            print("\t\tSkipping because " + pk + " already exists: " +
-                    str(id_exists))
-        else:
-            data  = iggy_db.cursor()
-            sql = (
-                "select * from " + mini_table
-                + " where name='" + pk
-                + "' and thing='" + tbl_name + "'"
-            )
-            data.execute(sql)
-            data = data.fetchall()
-            row_dict = make_dict(data, tbl_name)
-            row = do_insert(new_tbl, row_dict)
-        print('\tCompleted work on name: ' + pk + "\n\n")
-    print('Completed table: ' + mini_table + " thing: " + thing + "\n\n\n\n")
-
 def insert_metadata(table_name, new_name_prefix, role_list):
     global iggy_db
     global cli
@@ -260,87 +226,104 @@ def insert_metadata(table_name, new_name_prefix, role_list):
         else:
             print("Table NOT inserted, ABORTING: " + table_name)
             return False
+    add_roles('table_object', table_object_id, role_list)
+    print("\tTry to get Fields")
+    fields = show_cols(table_name)
+    for i, field in enumerate(fields):
+        if field:
+            col = field[0]
+            print("\t\tCheck Field: " + col)
+            field_row = select_row('field', {'display_name': col,
+                'table_object_id':table_object_id})
+            if field_row:
+                field_id = field_row[0]
+                print("\t\tField found: " + str(field_id))
+                add_roles('field', field_id, role_list)
+            else:
+                print("\t\tField not found, inserting")
+                type_map = {
+                        'int':1,
+                        'varchar':2,
+                        'tinyint':3,
+                        'datetime':4,
+                        'decimal':9,
+                        'float':10
+                }
+                f_name, f_next_num = get_next_name('field')
+                order = i
+                data = re.split('[\(\)]', field[1])
+                data_type_id = type_map[data[0]]
+                unique = 0
+                pk = 0
+                if field[3] == 'PRI':
+                    pk = 1
+                elif field[3] == 'UNI':
+                    unique = 1
+                field_cols = {'table_object_id': table_object_id, 'display_name': col,
+                        'name': f_name, 'order': order,
+                        'data_type_id':data_type_id, 'unique':unique, 'primary_key':pk}
 
-    print("\tCheck for TableRoles: " + json.dumps(role_list))
+                if data_type_id != 4 and 1 in data:
+                    field_cols['length'] = data[1]
+                foreign_key_table_object_id = None
+                foreign_key_field_id = None
+                if '_id' in col:
+                    fk_tbl = col.split('_id')[0]
+                    fk_table_object = select_row('table_object', {'name': fk_tbl})
+                    if fk_table_object:
+                        foreign_key_table_object_id = fk_table_object[0]
+                        fk_field = select_row('field', {'table_object_id':
+                            foreign_key_table_object_id, 'display_name':'id'})
+                        if fk_field:
+                            foreign_key_field_id = fk_field[0]
+                if foreign_key_table_object_id:
+                    field_cols['foreign_key_table_object_id'] = foreign_key_table_object_id
+                if foreign_key_field_id:
+                    field_cols['foreign_key_field_id'] = foreign_key_field_id
+                field_id = insert_row('field', field_cols)
+                if field_id:
+                    print("\tField inserted: " + str(field_id))
+                    field_to = select_row('table_object',
+                    {'name':'field'})
+                    field_to_id = field_to[0]
+                    updated = update_row('table_object', {'id':
+                        field_to_id}, {'new_name_id': f_next_num})
+                    add_roles('field', field_id, role_list)
+                else:
+                    print("\tField NOT inserted: " + str(col))
+
+    print("Completed Table: " + table_name + "\n\n\n")
+
+def add_roles(tbl_name, tbl_id, role_list):
+    print("\tCheck for " + tbl_name + "Role: " + json.dumps(role_list))
     for role in role_list:
         print("\tCheck for Role: " + str(role))
-        table_object_role = select_row('table_object_role', {'table_object_id':
-            table_object_id, 'role_id':role})
+        table_object_role = select_row((tbl_name + '_role'), {(tbl_name + '_id'):
+            tbl_id, 'role_id':role})
         if table_object_role:
             table_object_role_id = table_object_role[0]
-            print("\tTableRole found, id: " + str(table_object_role_id))
+            print("\t" + tbl_name + "Role found, id: " + str(table_object_role_id))
         else:
-            print("\tTableRole not found, inserting: " + str(role))
-            name, next_num = get_next_name('table_object_role')
-            cols = {'table_object_id': table_object_id, 'role_id': role, 'name':
+            print("\t" + tbl_name + "Role not found, inserting: " + str(role))
+            name, next_num = get_next_name((tbl_name + '_role'))
+            cols = {(tbl_name + '_id'): tbl_id, 'role_id': role, 'name':
                     name}
-            table_object_role_id = insert_row('table_object_role', cols)
+            table_object_role_id = insert_row((tbl_name + '_role'), cols)
             if table_object_role_id:
-                print("\tTableRole inserted: " + str(table_object_role_id))
+                print("\t" + tbl_name + "Role inserted: " + str(table_object_role_id))
                 role_to = select_row('table_object',
-                {'name':'table_object_role'})
+                {'name':(tbl_name + '_role')})
                 role_to_id = role_to[0]
                 updated = update_row('table_object', {'id':
                     role_to_id}, {'new_name_id': next_num})
             else:
-                print("TableRole NOT inserted: " + str(role))
-    print("\tTry to get Fields")
-    #fields = select_row(table_name, {}, 1, True)
-    fields = show_cols(table_name)
-    for i, field in enumerate(fields):
-        type_map = {
-                'int':1,
-                'varchar':2,
-                'tinyint':3,
-                'datetime':4
-        }
-        col = field[0]
-        print("\t\tTry to insert Field: " + col)
-        f_name, f_next_num = get_next_name('field')
-        order = i
-        data = re.split('[\(\)]', field[1])
-        data_type_id = type_map[data[0]]
-        length = data[1]
-        unique = 0
-        pk = 0
-        if field[3] == 'PRI':
-            pk = 1
-        elif field[3] == 'UNI':
-            unique = 1
-        field_cols = {'table_object_id': table_object_id, 'display_name': col,
-                'name': f_name, 'order': order, 'length':length,
-                'data_type_id':data_type_id, 'unique':unique, 'primary_key':pk}
-        foreign_key_table_object_id = None
-        foreign_key_field_id = None
-        '''if col == 'organization_id':
-            foreign_key_table_object_id = 4
-            foreign_key_field_id = 28'''
-        field_id = insert_row('field', field_cols)
-        print(field_id)
-        print(test)
-
-    print(db_tbl)
-    print(test)
-    #field_ids = insert_rows('field', 'table_object_id',
-    #        table_object_ids[0])
-    for i, f in enumerate(table_model.__table__.columns):
-        field = str(f).split('.')[1]
-        print(field)
-        field_id = select_row('field',
-                {'table_object_id':table_object_id,
-                    'field_name': field})
-        if not field_id and insert_mode:
-            field_id = insert_row('field',
-                {'table_object_id':table_object_id,
-                    'field_name': field, 'order':i})
-
-    print('Completed model: ' + table_name + "\n\n\n\n")
+                print(tbl_name + "Role NOT inserted: " + str(role))
 
 def get_next_name(table_name):
     table_meta = select_row('table_object', {'name':
     table_name})
     name = table_meta[9]
-    num = table_meta[10] + 1
+    num = table_meta[10]
     next_num = num + 1
     dig = table_meta[11] - len(str(num))
     for i in range(0,dig):
@@ -356,9 +339,7 @@ def insert_row(tbl, cols):
         sql = 'insert into ' + tbl
         for key, val in cols.items():
             if 'func_' in str(val):
-                print(val)
                 func_name = val.replace('func_', '')
-                print(func_name)
                 if func_name in globals():
                     criteria['insert_table'] = insert_table
                     fields[key] =  globals()[func_name](key, criteria)
@@ -397,7 +378,8 @@ def show_cols(tbl):
     print(pks_row)
     return pks_row
 
-def select_row(insert_table, criteria, limit = None):
+# TODO: compare with pk_exists
+def select_row(insert_table, criteria, limit = 1):
     pks = iggy_db.cursor()
     sql = "select * from " + insert_table
     wheres = []
@@ -432,18 +414,18 @@ for arg in args:
     if len(pair) > 1:
         val = pair[1]
     cli[name.replace('--','')] = val
-'''if 'semantic_source' in cli and 'from_tbl' in cli and 'to_tbl' in cli:
-    print(("Semantic Source: " + cli['semantic_source'] + " from_tbl: " +
-            cli['from_tbl'] + ' to_tbl: ' + cli['to_tbl']))
-else:
-    print("Please enter the following required parameters\n\n")
-    if 'semantic_source' not in cli:
-        cli['semantic_source'] = raw_input("Enter the semantic source table:\n")
-    if 'from_tbl' not in cli:
-        cli['from_tbl'] = raw_input("Enter the value representing the semantic group for this table:\n")
-    if 'to_tbl' not in cli:
-        cli['to_tbl'] = raw_input("Enter the name table to migrate to:\n")'''
 print(cli)
 
-insert_metadata('unit', 'U', [1, 63])
-#migrate_table(cli['semantic_source'], cli['from_tbl'], cli['to_tbl'])
+#insert_metadata('unit', 'U', [1, 63])
+#insert_metadata('reagent', 'R', [1, 63])
+#insert_metadata('illumina_adapter', 'R', [1, 63])
+#insert_metadata('sequencing_price', 'SP', [1, 63])
+#insert_metadata('project', 'PR', [1, 63])
+#insert_metadata('invoice_template', 'IT', [1, 63])
+#insert_metadata('machine', 'MN', [1, 63])
+#insert_metadata('purchase_order', 'PO', [1, 63])
+#insert_metadata('line_item', 'LI', [1, 63])
+#insert_metadata('illumina_bclconversion_analysis', 'BCL', [1, 63])
+#insert_metadata('illumina_run', 'IR', [1, 63])
+#insert_metadata('sample', 'SA', [1, 63])
+insert_metadata('sample', 'SA', [1, 63])

@@ -1,9 +1,5 @@
 # db connection information
 
-PROJECT = "iggybase"
-DB_PASS = 'nK9[@=H3}Wf./)9K'
-DB_HOST = 'db-internal.rc.fas.harvard.edu'
-
 db = {
     'from': {
         #'user':Config.MYSQL_MPM_USER,
@@ -68,10 +64,11 @@ col_value_map = {
     'table_object':{
         'module_id':10,
         'id_length': 6,
-        'admin_table':1,
+        'admin_table':0,
         'new_name_id':1
         },
-    'table_object_role':{
+    'field_role':{
+        'visible':1
         },
     'invoice':{
         'line_item':'func_get_fk',
@@ -306,7 +303,8 @@ add_cols_map = {
 base_int_col_map = ['active', 'organization_id', 'note_id', 'user_id',
 'department_id', 'machine_id', 'project_id', 'role_id', 'table_object_id',
 'illumina_bclconversion_analysis_id','illumina_run_id','illumina_flowcell_id',
-'sample_sheet_id', 'reagent_request_id', 'sequencing_price_id']
+'sample_sheet_id', 'reagent_request_id', 'sequencing_price_id', 'order',
+'field_id']
 # by table
 int_col_map = {
         'table_object':[
@@ -320,18 +318,16 @@ int_col_map = {
             'cost',
             'quantity'
             ],
-        'sample_sheet':[
-            'iemfile_version',
-            'read_length_1',
-            'investigator',
-            'read_length_2',
-
+        'field':[
+            'length',
+            'data_type_id',
+            'unique',
+            'primary_key',
+            'foreign_key_table_object_id',
+            'foreign_key_field_id',
             ],
-        'illumina_flowcell':[
-            'swath_count',
-            'surface_count',
-            'lane_count',
-            'tile_count'
+        'field_role':[
+            'visible',
             ],
         'illumina_run':[
             'read_1_cycles',

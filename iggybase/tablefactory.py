@@ -62,6 +62,9 @@ class TableFactory:
             # file datatype
             dtcname = getattr(sqlalchemy, 'String')
             dtinst = dtcname(250)
+        elif attributes.data_type_id == 9 or attributes.data_type_id == 10:
+            dtcname = getattr(sqlalchemy, 'Numeric')
+            dtinst = dtcname(10, 2)
         else:
             dtcname = getattr(sqlalchemy, datatype.name)
             if attributes.data_type_id == 2:
