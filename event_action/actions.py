@@ -1,7 +1,6 @@
 from blinker import signal
 from threading import Timer, Semaphore
 from datetime import datetime, date, timedelta
-from collections import OrderedDict
 import logging
 import flask
 
@@ -111,8 +110,7 @@ def init_app(app, session):
     if hasattr(app, 'act_manager'):
         return app.act_manager
     app.act_manager = ActionManager(app, session)
-    app.act_manager
-    act_manager = app.act_manager
+
 
 
 class ActionManager(object):
@@ -168,6 +166,8 @@ class ActionManager(object):
              field_name,
              event_type is one of new|delete|dirty
         """
+        action.act_manager = self
+        
         valid_categories = ['database']
         valid_event_types = ['new', 'deleted', 'dirty']
 
@@ -217,13 +217,13 @@ class ActionManager(object):
         """
         Register a periodic action.
         """
+        action.act_manager = self
         sod = datetime.now().date()
         sod = datetime(sod.year, sod.month, sod.day)
         action.next_p =  sod + action.from_time
         action.latest_p = sod +  action.to_time
         #register the action, it's times and trigger count.
-        aa = {'action': action, 'count': 0, 'nxt': action.next_p, 'latest': action.latest_p}
-        reg = OrderedDict(aa)
+        reg = {'action': action, 'count': 0, 'nxt': action.next_p, 'latest': action.latest_p}
         _pv_semaphore.acquire()        
         event_registry.setdefault('periodic', []).append(reg)
         _pv_semaphore.release()            
@@ -321,6 +321,7 @@ class Action(object):
     """
     name = 'Action'
     description = 'Base class for database events.'
+    act_manager = None  # Assigned when registered to an event.
 
     def __init__(self, cat='database', model=None, field_name=None,
                  event_type='dirty', 
@@ -426,7 +427,7 @@ class Action(object):
 
 class HeartbeatAction(Action):
     """
-    Used to dispatch periodic (heartbeat) inspired events.
+    Used to dispatch periodic (heartbeat) events.
     """
     name = 'Heartbeat Action'
     description = 'Dispatches periodic actions.'
@@ -434,22 +435,27 @@ class HeartbeatAction(Action):
     
     def execute(self, obj, **kwargs):
         """
-        Dispatch periodic events. Events should be locked out
-        while actions are dispatched.
+        Dispatch periodic events. Periodic events are locked out
+        while actions are dispatched. 
         """
         evts = event_registry.get('periodic', [])
 
         for evt in evts:
-            import pdb
-            pdb.set_trace()
-            action, count, nxt, latest = evt.values()
+            action = evt['action']
+            count = evt['count']
+            nxt = evt['nxt']
+            latest = evt['latest']
             print(action, count, nxt, latest)
             now = datetime.now()
-            if count <= action.count and now >= nxt and now <= latest:
-                if action.verify(action, **evt):
+            if count <= action.dispatch_count and now >= nxt and now <= latest:
+                if action.verify(evt, evt_type='periodic', **kwargs):
                     print('dispatching %s' % evt)
-                    action.dispatch(**evt)
-                    action.count += 1
+                    try:  
+                        action.dispatch(**evt)
+                    except:
+                        # return even if ther was an error so the thread releases.
+                        return
+                    action.dispatch_count += 1
                     action.previous_p = nxt
                     action.next_p += action.interval
                     evt['nxt'] = action.next_p
@@ -495,11 +501,6 @@ class PeriodicAction(Action):
 
         self.interval = timedelta(seconds=base*self.period)
 
-
-        
-
-
-    
 
 
 
@@ -590,12 +591,9 @@ class EmailAction(Action):
         Send email message
         """
         from . import actions
-        with act_manager.app.app_context():
-            if act_manager.app.debug == True:
-                msg = Message(sender='localhost')  #Debug only
+        with self.act_manager.app.app_context():
+            if self.act_manager.app.debug == True:
                 msg = Message(sender='reuven@koblick.com')
-            else:
-                msg = Message(sender=act_manager.app.config['MAIL_SERVER'])
             for func in [getattr(self, aa) for aa in dir(self) if aa.startswith('get_')]:
                 result = func(**kwargs)
                 if result:
@@ -606,7 +604,7 @@ class EmailAction(Action):
                     else:
                         setattr(msg, tail, result)
 
-            mail = Mail(act_manager.app)
+            mail = Mail(self.act_manager.app)
             mail.connect()
             mail.send(msg)
             if self.log_mail:

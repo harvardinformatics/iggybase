@@ -20,9 +20,10 @@ class StartEvents(object):
         my_actions.append(NewUserNotify())
         my_actions.append(UserEmailChange())
 
+        """ For testing only.
         for new_action in my_actions:
             self.app.act_manager.register_db_event(new_action)
-
+        """
                                    
         
 class NewUserNotify(EmailAction):
