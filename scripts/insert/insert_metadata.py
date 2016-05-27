@@ -206,7 +206,7 @@ def pk_exists(pk, name, tbl):
         row_id = None
     return row_id
 
-def insert_metadata(table_name, new_name_prefix, role_list):
+def insert_metadata(table_name, new_name_prefix, role_list, order):
     global iggy_db
     global cli
     print("Starting on Table: " + table_name + ' and role_list: ' +
@@ -218,7 +218,8 @@ def insert_metadata(table_name, new_name_prefix, role_list):
         print("\tTable found, id: " + str(table_object_id))
     else:
         print("\tTable not found, inserting: " + table_name)
-        cols = {'name': table_name, 'new_name_prefix': new_name_prefix}
+        cols = {'name': table_name, 'new_name_prefix': new_name_prefix,
+                'order':order}
         table_object_id = insert_row('table_object', cols)
         if table_object_id:
             print("\tTable inserted: " + table_name + " has id: " +
@@ -428,4 +429,18 @@ print(cli)
 #insert_metadata('illumina_bclconversion_analysis', 'BCL', [1, 63])
 #insert_metadata('illumina_run', 'IR', [1, 63])
 #insert_metadata('sample', 'SA', [1, 63])
-insert_metadata('sample', 'SA', [1, 63])
+#insert_metadata('sample_sheet', 'SS', [1, 63])
+#insert_metadata('reagent_request', 'RR', [1, 63], 31)
+#insert_metadata('illumina_flowcell', 'IF', [1, 63], 32)
+#insert_metadata('invoice', 'IV', [1, 63], 33)
+#insert_metadata('charge_method_type', 'CMT', [1, 63], 34)
+#insert_metadata('charge_method', 'CM', [1, 63], 35)
+#insert_metadata('invoice_item', 'II', [1, 63], 36)
+#insert_metadata('invoice_template', 'IT', [1, 63], 37)
+#insert_metadata('order_charge_method', 'OCM', [1, 63], 38)
+#insert_metadata('price_category', 'PC', [1, 63], 39)
+#insert_metadata('price_list', 'PL', [1, 63], 40)
+#insert_metadata('sample_sheet_item', 'SI', [1, 63], 41)
+#insert_metadata('select_list', 'SL', [1, 63], 42)
+#insert_metadata('select_list_item', 'SLI', [1, 63], 43)
+insert_metadata('transaction_type', 'TT', [1, 63], 45)
