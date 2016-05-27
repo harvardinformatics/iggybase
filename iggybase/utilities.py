@@ -28,6 +28,7 @@ def get_table(table_name):
         # logging.info('after if  ' + table_name)
         table_object = getattr(module_model, to_camel_case(table_name))
     except AttributeError:
+        print('Abort' + table_name)
         logging.info('abort ' + table_name)
         abort(403)
     finally:
