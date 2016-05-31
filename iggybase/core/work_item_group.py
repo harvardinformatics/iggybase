@@ -49,6 +49,7 @@ class WorkItemGroup:
                 self.work_items = self.oac.work_items(self.WorkItemGroup.id)
 
     def get_step(self):
+        # TODO: make this take optional step param
         # which step is the wig currently on
         if self.WorkItemGroup:
             step = self.workflow.get_step_by_id(self.WorkItemGroup.step_id)
