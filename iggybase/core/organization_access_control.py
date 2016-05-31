@@ -8,6 +8,7 @@ from iggybase import utilities as util
 from sqlalchemy.orm import aliased
 from collections import OrderedDict
 from iggybase.core.role_access_control import RoleAccessControl
+from werkzeug.utils import secure_filename
 import json
 import re
 import datetime
@@ -15,6 +16,7 @@ import sys
 import logging
 import time
 import random
+import os
 
 
 # Controls access to the data db data based on organization
@@ -288,6 +290,21 @@ class OrganizationAccessControl:
         #         for key3, value3 in value2.items():
         #             logging.info(str(key1) + ' ' + str(key2) + ' ' + str(key3) + ': ' + str(value3))
 
+        if request.files:
+            files = request.files
+
+            # http://werkzeug.pocoo.org/docs/0.11/datastructures/#werkzeug.datastructures.FileStorage
+            for key in request.files:
+                if files[key] and util.allowed_file(files[key].filename):
+                    field_id = field_pattern.match(files[key].name)
+
+                    filename = secure_filename(files[key].filename)
+
+                    if field_id.group(2) not in fields[field_id.group(3)][field_id.group(1)]:
+                        fields[field_id.group(3)][field_id.group(1)][field_id.group(2)] = {}
+
+                    fields[field_id.group(3)][field_id.group(1)][field_id.group(2)][filename] = files[key]
+
         try:
             # sorted to preserve screen order of elements
             for row_id in sorted(fields.keys()):
@@ -301,7 +318,7 @@ class OrganizationAccessControl:
                     table_field_data[table_id_field] = {}
                     temp_field_data = role_access_control.fields(table_id_field)
                     for field in temp_field_data:
-                        table_field_data[table_id_field][field.Field.display_name] = field.Field
+                        table_field_data[table_id_field][field.Field.display_name] = field
 
                     logging.info('table_name_field: ' + table_name_field)
                     table_objects[table_id_field] = util.get_table(table_name_field)
@@ -358,7 +375,7 @@ class OrganizationAccessControl:
                     row_org_id = 1
 
                 if not isinstance(row_org_id, int):
-                    if current_field_data['organization_id'].foreign_key_display is None:
+                    if current_field_data.Field['organization_id'].foreign_key_display is None:
                         org_display = 'name'
                     else:
                         org_display = field_data[table_id_field]['organization_id'].Field.foreign_key_display
@@ -373,13 +390,15 @@ class OrganizationAccessControl:
 
                 row_data['data_entry']['organization_id'] = row_org_id
 
-                for field, field_data in current_field_data.items():
+                for field in current_field_data.items():
                     # only update fields that were on the form
                     if field not in row_data['data_entry'].keys():
                         if field in row_data['old_value'].keys():
                             row_data['data_entry'][field] = row_data['old_value'][field]
                         else:
                             continue
+
+                    field_data = current_field_data[field].Field
 
                     if field_data.foreign_key_table_object_id == long_text_data.id and \
                                     row_data['data_entry'][field] != '':
@@ -424,6 +443,20 @@ class OrganizationAccessControl:
                             else:
                                 setattr(instances[row_id], field, fk_id[1][0])
                                 row_data['data_entry'][field] = fk_id[1][0]
+                    elif current_field_data[field].DataType.name.lower() == 'file' and row_data['data_entry'][field]:
+                        directory = os.join(current_app.config['UPLOAD_FOLDER'],current_table_data.name,
+                                            current_inst_name)
+                        if not os.path.exists(directory):
+                            os.makedirs(directory)
+
+                        filenames = ''
+                        for filename, file in row_data['data_entry'][field]:
+                            file.save(os.join(directory, filename))
+                            filenames += filename + "|"
+
+                        if filenames != '':
+                            filenames = filenames[:-1]
+                            setattr(instances[row_id], field, filenames)
                     elif field != 'id' and field != 'last_modified' and field != 'date_created':
                         if row_data['data_entry'][field] is None or row_data['data_entry'][field] == '':
                             setattr(instances[row_id], field, None)

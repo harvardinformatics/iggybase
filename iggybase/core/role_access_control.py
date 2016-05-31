@@ -86,7 +86,9 @@ class RoleAccessControl:
                 else:
                     filters.append((getattr(models.FieldRole, field_data[1]) == value))
 
-        res = self.session.query(models.Field, models.FieldRole).join(models.FieldRole). \
+        res = self.session.query(models.Field, models.FieldRole, models.DataType). \
+            join(models.FieldRole). \
+            join(models.DataType). \
             filter(*filters). \
             order_by(models.FieldRole.order, models.FieldRole.display_name).all()
 

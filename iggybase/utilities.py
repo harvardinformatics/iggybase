@@ -1,4 +1,4 @@
-from flask import abort, request
+from flask import abort, request, current_app
 from importlib import import_module
 from iggybase.admin.models import TableObject
 from iggybase.database import db_session
@@ -93,7 +93,7 @@ def get_path(part):
 
 
 def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1] in application.config.ALLOWED_EXTENSIONS
+    return '.' in filename and filename.rsplit('.', 1)[1] in current_app.config['ALLOWED_EXTENSIONS']
 
 
 class DictObject(dict):

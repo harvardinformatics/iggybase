@@ -230,6 +230,8 @@ class IggybaseFileField(FileField):
         if self.readonly:
             kwargs.setdefault('readonly', True)
 
+        kwargs.setdefault('multiple', True)
+
         return super(IggybaseFileField, self).__call__(*args, **kwargs)
 
 
