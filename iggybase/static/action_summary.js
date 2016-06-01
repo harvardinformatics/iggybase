@@ -17,10 +17,12 @@ $(document).ready(function(){
             'data': function(d) { d.search = window.location.search;}
         },
         columns: columns,
-        dom:'Bfrtip',
+        dom:"<'row'<'col-md-6'B><'col-md-6'f>><'row'<'col-md-12't>><'row'<'col-md-12'i>><'row'<'col-md-6'l><'col-md-6'p>>",
+        lengthMenu:[[10,25,50,100,-1],[10,25,50,100,'All']],
         buttons:[
             'selectAll',
-            'selectNone'
+            'selectNone',
+            'csv'
         ],
         select: {
             style:'multi'
