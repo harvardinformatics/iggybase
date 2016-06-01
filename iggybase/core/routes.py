@@ -1,9 +1,10 @@
-from flask import request, jsonify, abort, g, render_template, current_app, redirect
+from flask import request, jsonify, abort, g, render_template, current_app, redirect, send_from_directory
 from flask.ext.security import login_required
 from flask.ext import excel
 import json
 import urllib
 import time
+import os
 from . import core
 import iggybase.form_generator as form_generator
 from iggybase import utilities as util
@@ -223,6 +224,13 @@ def search_results(facility_name):
     modal_html += '</div>'
 
     return modal_html
+
+
+@core.route('/uploads/<table_name>/<row_name>/<filename>')
+@login_required
+def uploaded_file(facility_name, table_name, row_name, filename):
+    upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], table_name, row_name)
+    return send_from_directory(upload_dir, filename)
 
 
 @core.route('/change_role', methods=['POST'])

@@ -44,7 +44,7 @@ def configure_extensions( app, db ):
     bootstrap.init_app( app )
     lm.init_app( app )
     mail.init_app( app )
-    init_act_mgr(app, db_session)
+    #init_act_mgr(app, db_session)
 
     # configure Flask Security
     user_datastore = SQLAlchemyUserDatastore(db, models.User, models.Role)

@@ -285,16 +285,11 @@ class OrganizationAccessControl:
 
                 fields[field_id.group(3)][field_id.group(1)][field_id.group(2)] = data
 
-        # for key1, value1 in fields.items():
-        #     for key2, value2 in value1.items():
-        #         for key3, value3 in value2.items():
-        #             logging.info(str(key1) + ' ' + str(key2) + ' ' + str(key3) + ': ' + str(value3))
-
         if request.files:
             files = request.files
 
             # http://werkzeug.pocoo.org/docs/0.11/datastructures/#werkzeug.datastructures.FileStorage
-            for key in request.files:
+            for key in files:
                 if files[key] and util.allowed_file(files[key].filename):
                     field_id = field_pattern.match(files[key].name)
 
@@ -304,6 +299,11 @@ class OrganizationAccessControl:
                         fields[field_id.group(3)][field_id.group(1)][field_id.group(2)] = {}
 
                     fields[field_id.group(3)][field_id.group(1)][field_id.group(2)][filename] = files[key]
+
+        # for key1, value1 in fields.items():
+        #     for key2, value2 in value1.items():
+        #         for key3, value3 in value2.items():
+        #            logging.info(str(key1) + ' ' + str(key2) + ' ' + str(key3) + ': ' + str(value3))
 
         try:
             # sorted to preserve screen order of elements
@@ -320,9 +320,9 @@ class OrganizationAccessControl:
                     for field in temp_field_data:
                         table_field_data[table_id_field][field.Field.display_name] = field
 
-                    logging.info('table_name_field: ' + table_name_field)
+                    # logging.info('table_name_field: ' + table_name_field)
                     table_objects[table_id_field] = util.get_table(table_name_field)
-                    logging.info('continue: ' + table_name_field)
+                    # logging.info('continue: ' + table_name_field)
                     table_defs[table_id_field] = self.session.query(models.TableObject).\
                         filter_by(name=table_objects[table_id_field].__tablename__).first()
 
@@ -375,7 +375,7 @@ class OrganizationAccessControl:
                     row_org_id = 1
 
                 if not isinstance(row_org_id, int):
-                    if current_field_data.Field['organization_id'].foreign_key_display is None:
+                    if current_field_data['organization_id'].Field.foreign_key_display is None:
                         org_display = 'name'
                     else:
                         org_display = field_data[table_id_field]['organization_id'].Field.foreign_key_display
@@ -390,7 +390,9 @@ class OrganizationAccessControl:
 
                 row_data['data_entry']['organization_id'] = row_org_id
 
-                for field in current_field_data.items():
+                logging.info('for field in current_field_data.items(): ')
+                for field, meta_data in current_field_data.items():
+                    # logging.info('field: ' + field)
                     # only update fields that were on the form
                     if field not in row_data['data_entry'].keys():
                         if field in row_data['old_value'].keys():
@@ -398,7 +400,7 @@ class OrganizationAccessControl:
                         else:
                             continue
 
-                    field_data = current_field_data[field].Field
+                    field_data = meta_data.Field
 
                     if field_data.foreign_key_table_object_id == long_text_data.id and \
                                     row_data['data_entry'][field] != '':
@@ -443,20 +445,23 @@ class OrganizationAccessControl:
                             else:
                                 setattr(instances[row_id], field, fk_id[1][0])
                                 row_data['data_entry'][field] = fk_id[1][0]
-                    elif current_field_data[field].DataType.name.lower() == 'file' and row_data['data_entry'][field]:
-                        directory = os.join(current_app.config['UPLOAD_FOLDER'],current_table_data.name,
+                    elif meta_data.DataType.name.lower() == 'file' :
+                        directory = os.path.join(current_app.config['UPLOAD_FOLDER'],current_table_data.name,
                                             current_inst_name)
                         if not os.path.exists(directory):
                             os.makedirs(directory)
 
+                        logging.info('current_inst_name: ' + current_inst_name)
                         filenames = ''
-                        for filename, file in row_data['data_entry'][field]:
-                            file.save(os.join(directory, filename))
+                        for filename, file in row_data['data_entry'][field].items():
+                            logging.info('filename: ' + filename)
+                            file.save(os.path.join(directory, filename))
                             filenames += filename + "|"
 
                         if filenames != '':
                             filenames = filenames[:-1]
                             setattr(instances[row_id], field, filenames)
+                            row_data['data_entry'][field] = filenames
                     elif field != 'id' and field != 'last_modified' and field != 'date_created':
                         if row_data['data_entry'][field] is None or row_data['data_entry'][field] == '':
                             setattr(instances[row_id], field, None)
