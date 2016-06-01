@@ -20,8 +20,7 @@ def update_ordered_ajax(facility_name, table_name):
 @templated()
 def update_ordered(facility_name, table_name):
     # update ordered to received
-    page_form = 'update'
-    table_queries = tqc.TableQueryCollection(page_form, table_name,
+    table_queries = tqc.TableQueryCollection(table_name,
             {('status', 'name'):'ordered'})
     tq = table_queries.get_first()
     hidden_fields = {}
@@ -50,8 +49,7 @@ def update_requested_ajax(facility_name, table_name):
 @templated()
 def update_requested(facility_name, table_name):
     # update requested to ordered
-    page_form = 'update'
-    table_queries = tqc.TableQueryCollection(page_form, table_name,
+    table_queries = tqc.TableQueryCollection(table_name,
             {('name', 'status'):'requested'})
     tq = table_queries.get_first()
     hidden_fields = {}
@@ -77,8 +75,7 @@ def cancel_ajax(facility_name, table_name):
 @templated()
 def cancel(facility_name, table_name):
     # update ordered to received
-    page_form = 'update'
-    table_queries = tqc.TableQueryCollection(page_form, table_name,
+    table_queries = tqc.TableQueryCollection(table_name,
             {('status', 'name'):['ordered', 'requested']})
     tq = table_queries.get_first()
     hidden_fields = {}

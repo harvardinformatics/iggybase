@@ -1,44 +1,6 @@
-{% extends "base.html" %}
+{% extends "summary_base.html" %}
 {% import "bootstrap/wtf.html" as wtf %}
-{% block styles %}
-    {{ super() }}
-    <link href="{{ url_for('static', filename='jquery/DataTables/media/css/jquery.dataTables.min.css') }}" rel="stylesheet">
-    <link href="{{ url_for('static', filename='jquery/DataTables/extensions/Select/css/select.dataTables.min.css') }}" rel="stylesheet">
-    <link href="{{ url_for('static', filename='jquery/DataTables/extensions/Buttons/css/buttons.dataTables.min.css') }}" rel="stylesheet">
-    <link href="{{ url_for('static', filename='summary.css') }}" rel="stylesheet">
-{%- endblock styles %}
-{% block title %}Iggybase - {{ table_name.replace( '_',' ' ) }}{% endblock %}
 
-{% block content %}
+{% block content_title %}
     <h1>{{page_form_name.replace('_',' ')|title}} {{ table_name.replace( '_', ' ' )|title }}s</h1>
-    <div id="page_message">
-            <p>
-                {{ page_msg|safe }}
-            </p>
-        </div>
-    {% block hidden_fields -%}
-        {{super()}}
-    {%- endblock hidden_fields %}
-    {% block topbuttonbar %}
-        {{ super() }}
-        {{ macros.render_buttons(top_buttons)}}
-    {%- endblock topbuttonbar %}
-    {% block page_content %}
-        <div class={{ table_name ~ "_table" }}>
-            {{ macros.render_table_headers(table_query) }}
-        </div>
-    {%- endblock page_content %}
-    {% block bottombuttonbar %}
-        {{ super() }}
-        {{ macros.render_buttons(bottom_buttons)}}
-    {%- endblock bottombuttonbar %}
-{%- endblock content %}
-{% block scripts %}
-    {{ super() }}
-    <script type="text/javascript"
-        src="{{ url_for('static', filename='jquery/DataTables/media/js/jquery.dataTables.min.js')}}"></script>
-    <script type="text/javascript"
-        src="{{ url_for('static', filename='jquery/DataTables/extensions/Select/js/dataTables.select.min.js')}}"></script>
-    <script type="text/javascript"
-        src="{{ url_for('static', filename='jquery/DataTables/extensions/Buttons/js/dataTables.buttons.min.js')}}"></script>
-{%- endblock scripts %}
+{%- endblock content_title %}

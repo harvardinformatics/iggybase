@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+{% block styles %}
+    {{ super() }}
+    <link href="{{ url_for('static', filename='jquery/DataTables/media/css/jquery.dataTables.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='jquery/DataTables/extensions/Select/css/select.dataTables.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='jquery/DataTables/extensions/Buttons/css/buttons.dataTables.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='summary.css') }}" rel="stylesheet">
+{%- endblock styles %}
+{% block title %}Iggybase - {{ table_name.replace( '_',' ' ) }}{% endblock %}
+
+{% block page_msg %}
+    <div id="page_message">
+            <p>
+                {{ page_msg|safe }}
+            </p>
+        </div>
+{%- endblock page_msg -%}
+{% block topbuttonbar %}
+    {{ super() }}
+    {{ macros.render_buttons(top_buttons)}}
+{%- endblock topbuttonbar %}
+{% block page_content %}
+    <div class={{ table_name ~ "_table" }}>
+        {{ macros.render_table_headers(table_query) }}
+    </div>
+{%- endblock page_content %}
+{% block bottombuttonbar %}
+    {{ super() }}
+    {{ macros.render_buttons(bottom_buttons)}}
+{%- endblock bottombuttonbar %}
+{% block scripts %}
+    {{ super() }}
+    <script type="text/javascript"
+        src="{{ url_for('static', filename='jquery/DataTables/media/js/jquery.dataTables.min.js')}}"></script>
+    <script type="text/javascript"
+        src="{{ url_for('static', filename='jquery/DataTables/extensions/Select/js/dataTables.select.min.js')}}"></script>
+    <script type="text/javascript"
+        src="{{ url_for('static', filename='jquery/DataTables/extensions/Buttons/js/dataTables.buttons.min.js')}}"></script>
+{%- endblock scripts %}
