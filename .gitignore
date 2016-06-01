@@ -6,3 +6,4 @@ __pycache__
 iggybase_env/
 .idea/
 config.py
+iggybase/files/

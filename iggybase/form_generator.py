@@ -35,6 +35,9 @@ class FormGenerator():
         if field_data.FieldRole.visible != constants.VISIBLE:
             return HiddenField(field_data.FieldRole.display_name, **kwargs)
 
+        if field_data.Field.description != "":
+            kwargs['title'] = field_data.Field.description
+
         if field_data.FieldRole.required == constants.REQUIRED:
             validators.append(DataRequired())
         else:

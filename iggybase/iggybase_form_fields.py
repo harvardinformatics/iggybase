@@ -4,6 +4,10 @@ from wtforms import StringField, IntegerField, BooleanField, DateField, TextArea
 
 class IggybaseLookUpField(StringField):
     def __init__(self, *args, **kwargs):
+        if 'title' in kwargs:
+            self.title = kwargs['title']
+            del kwargs['title']
+
         if 'iggybase_class' in kwargs:
             self.iggybase_class = 'lookupfield form-control-lookup ' + kwargs['iggybase_class']
             temp_class = kwargs['iggybase_class']
@@ -19,12 +23,19 @@ class IggybaseLookUpField(StringField):
         super(IggybaseLookUpField, self).__init__(*args, **kwargs)
 
     def __call__(self, *args, **kwargs):
+        if self.title is not None:
+            kwargs['title'] = self.title
+
         kwargs['class'] = self.iggybase_class
         return super(IggybaseLookUpField, self).__call__(*args, **kwargs)
 
 
 class IggybaseSelectField(SelectField):
     def __init__(self, *args, **kwargs):
+        if 'title' in kwargs:
+            self.title = kwargs['title']
+            del kwargs['title']
+
         if 'iggybase_class' in kwargs:
             self.iggybase_class = kwargs['iggybase_class']
             del kwargs['iggybase_class']
@@ -37,6 +48,9 @@ class IggybaseSelectField(SelectField):
         super(IggybaseSelectField, self).__init__(*args, **kwargs)
 
     def __call__(self, *args, **kwargs):
+        if self.title is not None:
+            kwargs['title'] = self.title
+
         if self.iggybase_class is not None:
             kwargs['class'] = self.iggybase_class
 
@@ -48,6 +62,10 @@ class IggybaseSelectField(SelectField):
 
 class IggybaseBooleanField(BooleanField):
     def __init__(self, *args, **kwargs):
+        if 'title' in kwargs:
+            self.title = kwargs['title']
+            del kwargs['title']
+
         if 'iggybase_class' in kwargs:
             self.iggybase_class = 'boolean-field ' + kwargs['iggybase_class']
             del kwargs['iggybase_class']
@@ -60,6 +78,9 @@ class IggybaseBooleanField(BooleanField):
         super(IggybaseBooleanField, self).__init__(*args, **kwargs)
 
     def __call__(self, *args, **kwargs):
+        if self.title is not None:
+            kwargs['title'] = self.title
+
         kwargs['class'] = self.iggybase_class
 
         if self.readonly:
@@ -70,6 +91,10 @@ class IggybaseBooleanField(BooleanField):
 
 class IggybaseDateField(DateField):
     def __init__(self, *args, **kwargs):
+        if 'title' in kwargs:
+            self.title = kwargs['title']
+            del kwargs['title']
+
         if 'iggybase_class' in kwargs:
             self.iggybase_class = 'datepicker-field ' + kwargs['iggybase_class']
             temp_class = kwargs['iggybase_class']
@@ -87,6 +112,9 @@ class IggybaseDateField(DateField):
         super(IggybaseDateField, self).__init__(*args, **kwargs)
 
     def __call__(self, *args, **kwargs):
+        if self.title is not None:
+            kwargs['title'] = self.title
+
         kwargs['class'] = self.iggybase_class
 
         if self.readonly:
@@ -97,6 +125,10 @@ class IggybaseDateField(DateField):
 
 class IggybaseTextAreaField(TextAreaField):
     def __init__(self, *args, **kwargs):
+        if 'title' in kwargs:
+            self.title = kwargs['title']
+            del kwargs['title']
+
         if 'iggybase_class' in kwargs:
             self.iggybase_class = kwargs['iggybase_class']
             del kwargs['iggybase_class']
@@ -109,6 +141,9 @@ class IggybaseTextAreaField(TextAreaField):
         super(IggybaseTextAreaField, self).__init__(*args, **kwargs)
 
     def __call__(self, *args, **kwargs):
+        if self.title is not None:
+            kwargs['title'] = self.title
+
         if self.iggybase_class is not None:
             kwargs['class'] = self.iggybase_class
 
@@ -120,6 +155,10 @@ class IggybaseTextAreaField(TextAreaField):
 
 class IggybaseFloatField(FloatField):
     def __init__(self, *args, **kwargs):
+        if 'title' in kwargs:
+            self.title = kwargs['title']
+            del kwargs['title']
+
         if 'iggybase_class' in kwargs:
             self.iggybase_class = kwargs['iggybase_class']
             del kwargs['iggybase_class']
@@ -132,6 +171,9 @@ class IggybaseFloatField(FloatField):
         super(IggybaseFloatField, self).__init__(*args, **kwargs)
 
     def __call__(self, *args, **kwargs):
+        if self.title is not None:
+            kwargs['title'] = self.title
+
         if self.iggybase_class is not None:
             kwargs['class'] = self.iggybase_class
 
@@ -143,6 +185,10 @@ class IggybaseFloatField(FloatField):
 
 class IggybaseDecimalField(DecimalField):
     def __init__(self, *args, **kwargs):
+        if 'title' in kwargs:
+            self.title = kwargs['title']
+            del kwargs['title']
+
         if 'iggybase_class' in kwargs:
             self.iggybase_class = kwargs['iggybase_class']
             del kwargs['iggybase_class']
@@ -155,6 +201,9 @@ class IggybaseDecimalField(DecimalField):
         super(IggybaseDecimalField, self).__init__(*args, **kwargs)
 
     def __call__(self, *args, **kwargs):
+        if self.title is not None:
+            kwargs['title'] = self.title
+
         if self.iggybase_class is not None:
             kwargs['class'] = self.iggybase_class
 
@@ -166,6 +215,10 @@ class IggybaseDecimalField(DecimalField):
 
 class IggybaseIntegerField(IntegerField):
     def __init__(self, *args, **kwargs):
+        if 'title' in kwargs:
+            self.title = kwargs['title']
+            del kwargs['title']
+
         if 'iggybase_class' in kwargs:
             self.iggybase_class = kwargs['iggybase_class']
             del kwargs['iggybase_class']
@@ -178,6 +231,9 @@ class IggybaseIntegerField(IntegerField):
         super(IggybaseIntegerField, self).__init__(*args, **kwargs)
 
     def __call__(self, *args, **kwargs):
+        if self.title is not None:
+            kwargs['title'] = self.title
+            
         if self.iggybase_class is not None:
             kwargs['class'] = self.iggybase_class
 
@@ -189,6 +245,10 @@ class IggybaseIntegerField(IntegerField):
 
 class IggybaseStringField(StringField):
     def __init__(self, *args, **kwargs):
+        if 'title' in kwargs:
+            self.title = kwargs['title']
+            del kwargs['title']
+
         if 'iggybase_class' in kwargs:
             self.iggybase_class = kwargs['iggybase_class']
             del kwargs['iggybase_class']
@@ -201,6 +261,9 @@ class IggybaseStringField(StringField):
         super(IggybaseStringField, self).__init__(*args, **kwargs)
 
     def __call__(self, *args, **kwargs):
+        if self.title is not None:
+            kwargs['title'] = self.title
+
         if self.iggybase_class is not None:
             kwargs['class'] = self.iggybase_class
 
@@ -212,6 +275,10 @@ class IggybaseStringField(StringField):
 
 class IggybaseFileField(FileField):
     def __init__(self, *args, **kwargs):
+        if 'title' in kwargs:
+            self.title = kwargs['title']
+            del kwargs['title']
+
         if 'iggybase_class' in kwargs:
             self.iggybase_class = kwargs['iggybase_class']
             del kwargs['iggybase_class']
@@ -224,6 +291,9 @@ class IggybaseFileField(FileField):
         super(IggybaseFileField, self).__init__(*args, **kwargs)
 
     def __call__(self, *args, **kwargs):
+        if self.title is not None:
+            kwargs['title'] = self.title
+
         if self.iggybase_class is not None:
             kwargs['class'] = self.iggybase_class
 
@@ -237,6 +307,10 @@ class IggybaseFileField(FileField):
 
 class IggybasePasswordField(PasswordField):
     def __init__(self, *args, **kwargs):
+        if 'title' in kwargs:
+            self.title = kwargs['title']
+            del kwargs['title']
+
         if 'iggybase_class' in kwargs:
             self.iggybase_class = kwargs['iggybase_class']
             del kwargs['iggybase_class']
@@ -249,6 +323,9 @@ class IggybasePasswordField(PasswordField):
         super(IggybasePasswordField, self).__init__(*args, **kwargs)
 
     def __call__(self, *args, **kwargs):
+        if self.title is not None:
+            kwargs['title'] = self.title
+
         if self.iggybase_class is not None:
             kwargs['class'] = self.iggybase_class
 
