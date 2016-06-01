@@ -29,7 +29,7 @@ class FormGenerator():
 
         if value is not None:
             kwargs['default'] = value
-            
+
         # no validators or classes attached to hidden fields, as it could cause issues
         # e.g. an empty hidden required field
         if field_data.FieldRole.visible != constants.VISIBLE:
@@ -65,7 +65,8 @@ class FormGenerator():
             if long_text.id == field_data.Field.foreign_key_table_object_id:
                 if value is not None:
                     lt_row = self.organization_access_control.get_long_text(value)
-                    kwargs['default'] = lt_row.long_text
+                    if lt_row is not None:
+                        kwargs['default'] = lt_row.long_text
 
                 return IggybaseTextAreaField(field_data.FieldRole.display_name, **kwargs)
             else:

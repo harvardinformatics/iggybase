@@ -359,12 +359,12 @@ class OrganizationAccessControl:
 
                 if field_data[table_id_field][column_name].Field.foreign_key_table_object_id == long_text_data.id and \
                                 data != '':
-                    if old_fields[field_id] == '':
+                    if old_fields[field] == '':
                         lt = core_models.LongText()
                         setattr(lt, 'name', long_text_data.get_new_name())
                         setattr(lt, 'date_created', datetime.datetime.utcnow())
                     else:
-                        lt_id = old_fields[field_id]
+                        lt_id = old_fields[field]
                         lt = self.session.query(core_models.LongText).filter_by(id=lt_id).first()
 
                     setattr(lt, 'organization_id', row_org_id[row_id])
