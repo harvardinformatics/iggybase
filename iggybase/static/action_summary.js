@@ -6,15 +6,18 @@ $(document).ready(function(){
             'url':'ajax',
             'data': function(d) { d.search = window.location.search;}
         },
-        dom:'Bfrtip',
+        dom:"<'row'<'col-md-6'B><'col-md-6'f>><'row'<'col-md-12't>><'row'<'col-md-12'i>><'row'<'col-md-6'l><'col-md-6'p>>",
         buttons:[
             'selectAll',
-            'selectNone'
+            'selectNone',
+            'csv'
         ],
+        lengthMenu:[[10,25,50,100,-1],[10,25,50,100,'All']],
         select: {
             style:'multi'
         }
     });
+    console.log('test');
     $("#edit").click(function(){$.fn.editSelected(table);});
     $("#update_table").click(function(){$.fn.updateTable(table);});
     $.fn.updateButtonText();
