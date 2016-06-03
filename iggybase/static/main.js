@@ -105,7 +105,7 @@ $( document ).ready( function () {
                     $( this ).remove( );
                 } else {
                     var id = $(this).attr( 'id' );
-                    var matches = id.match( /(\S+)_(\d+)/);
+                    var matches = id.match( /(\S+)_(\d+)/ );
 
                     if ( matches && matches.length > 1 ) {
                         var td = $( this ).closest( 'td' );

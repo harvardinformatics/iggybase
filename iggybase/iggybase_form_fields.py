@@ -7,6 +7,8 @@ class IggybaseLookUpField(StringField):
         if 'title' in kwargs:
             self.title = kwargs['title']
             del kwargs['title']
+        else:
+            self.title = None
 
         if 'iggybase_class' in kwargs:
             self.iggybase_class = 'lookupfield form-control-lookup ' + kwargs['iggybase_class']
@@ -35,6 +37,8 @@ class IggybaseSelectField(SelectField):
         if 'title' in kwargs:
             self.title = kwargs['title']
             del kwargs['title']
+        else:
+            self.title = None
 
         if 'iggybase_class' in kwargs:
             self.iggybase_class = kwargs['iggybase_class']
@@ -65,6 +69,8 @@ class IggybaseBooleanField(BooleanField):
         if 'title' in kwargs:
             self.title = kwargs['title']
             del kwargs['title']
+        else:
+            self.title = None
 
         if 'iggybase_class' in kwargs:
             self.iggybase_class = 'boolean-field ' + kwargs['iggybase_class']
@@ -94,6 +100,8 @@ class IggybaseDateField(DateField):
         if 'title' in kwargs:
             self.title = kwargs['title']
             del kwargs['title']
+        else:
+            self.title = None
 
         if 'iggybase_class' in kwargs:
             self.iggybase_class = 'datepicker-field ' + kwargs['iggybase_class']
@@ -128,6 +136,8 @@ class IggybaseTextAreaField(TextAreaField):
         if 'title' in kwargs:
             self.title = kwargs['title']
             del kwargs['title']
+        else:
+            self.title = None
 
         if 'iggybase_class' in kwargs:
             self.iggybase_class = kwargs['iggybase_class']
@@ -158,6 +168,8 @@ class IggybaseFloatField(FloatField):
         if 'title' in kwargs:
             self.title = kwargs['title']
             del kwargs['title']
+        else:
+            self.title = None
 
         if 'iggybase_class' in kwargs:
             self.iggybase_class = kwargs['iggybase_class']
@@ -188,6 +200,8 @@ class IggybaseDecimalField(DecimalField):
         if 'title' in kwargs:
             self.title = kwargs['title']
             del kwargs['title']
+        else:
+            self.title = None
 
         if 'iggybase_class' in kwargs:
             self.iggybase_class = kwargs['iggybase_class']
@@ -218,6 +232,8 @@ class IggybaseIntegerField(IntegerField):
         if 'title' in kwargs:
             self.title = kwargs['title']
             del kwargs['title']
+        else:
+            self.title = None
 
         if 'iggybase_class' in kwargs:
             self.iggybase_class = kwargs['iggybase_class']
@@ -248,6 +264,8 @@ class IggybaseStringField(StringField):
         if 'title' in kwargs:
             self.title = kwargs['title']
             del kwargs['title']
+        else:
+            self.title = None
 
         if 'iggybase_class' in kwargs:
             self.iggybase_class = kwargs['iggybase_class']
@@ -278,6 +296,8 @@ class IggybaseFileField(FileField):
         if 'title' in kwargs:
             self.title = kwargs['title']
             del kwargs['title']
+        else:
+            self.title = None
 
         if 'iggybase_class' in kwargs:
             self.iggybase_class = kwargs['iggybase_class']
@@ -310,6 +330,8 @@ class IggybasePasswordField(PasswordField):
         if 'title' in kwargs:
             self.title = kwargs['title']
             del kwargs['title']
+        else:
+            self.title = None
 
         if 'iggybase_class' in kwargs:
             self.iggybase_class = kwargs['iggybase_class']

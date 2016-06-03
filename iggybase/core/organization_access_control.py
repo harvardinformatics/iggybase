@@ -456,7 +456,10 @@ class OrganizationAccessControl:
                             old_files = row_data['old_value'][field].split("|")
 
                         for filename, file in row_data['data_entry'][field].items():
-                            if filename not in old_files:
+                            if os.path.exists(os.path.join(directory, filename)):
+                                os.remove(os.path.join(directory, filename))
+                                file.save(os.path.join(directory, filename))
+                            else:
                                 file.save(os.path.join(directory, filename))
                                 old_files.append(filename)
 
