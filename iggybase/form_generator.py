@@ -146,10 +146,6 @@ class FormGenerator():
 
         newclass = new_class('MultipleForm', (Form,), {}, lambda ns: ns.update(self.classattr))
 
-        # tmp = newclass()
-        # for field in tmp:
-        #     logging.info(field.id +": "+str(field.data))
-
         return newclass()
 
     def default_data_entry_form(self, table_data, row_name='new'):

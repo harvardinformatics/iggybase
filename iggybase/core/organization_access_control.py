@@ -451,15 +451,17 @@ class OrganizationAccessControl:
                         if not os.path.exists(directory):
                             os.makedirs(directory)
 
-                        logging.info('current_inst_name: ' + current_inst_name)
-                        filenames = ''
-                        for filename, file in row_data['data_entry'][field].items():
-                            logging.info('filename: ' + filename)
-                            file.save(os.path.join(directory, filename))
-                            filenames += filename + "|"
+                        old_files = []
+                        if row_data['old_value'][field] != "":
+                            old_files = row_data['old_value'][field].split("|")
 
-                        if filenames != '':
-                            filenames = filenames[:-1]
+                        for filename, file in row_data['data_entry'][field].items():
+                            if filename not in old_files:
+                                file.save(os.path.join(directory, filename))
+                                old_files.append(filename)
+
+                        if len(old_files) > 0:
+                            filenames = "|".join(old_files)
                             setattr(instances[row_id], field, filenames)
                             row_data['data_entry'][field] = filenames
                     elif field != 'id' and field != 'last_modified' and field != 'date_created':

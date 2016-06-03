@@ -228,7 +228,7 @@ def search_results(facility_name):
 
 @core.route('/uploads/<table_name>/<row_name>/<filename>')
 @login_required
-def uploaded_file(facility_name, table_name, row_name, filename):
+def uploads(facility_name, table_name, row_name, filename):
     upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], table_name, row_name)
     return send_from_directory(upload_dir, filename)
 

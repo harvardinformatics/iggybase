@@ -67,7 +67,7 @@
     </ul>
 {%- endmacro %}
 
-{% macro render_field(field, row_id) -%}
+{% macro render_field(field, row_id, table_name, row_name) -%}
     <tr row_id="{{ row_id }}"><td>
     <label for="{{ field.id }}" class="control-label">{{ field.label }}:</label>
     </td>
@@ -76,6 +76,12 @@
     {% if field.errors -%}
         {% for e in field.errors -%}
             <p class="help-block">{{ e }}</p>
+        {% endfor -%}
+    {% endif -%}
+    {% if field.type == "IggybaseFileField" %}
+        {% set files = field.data.split('|') -%}
+        {% for file in files -%}
+            <a href="/{{ g.facility }}/core/uploads/{{ table_name }}/{{ row_name }}/{{ file }}">{{ file }}</a>
         {% endfor -%}
     {% endif -%}
     </td></tr>

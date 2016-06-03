@@ -74,12 +74,22 @@
                         <th>{{ header }}</th>
                     {% endfor -%}
                     </tr>
+                {% elif "record_data_row_name_" in field.id -%}
+                    {% set row_name = field.data %}
                 {% elif not bootstrap_is_hidden_field( field ) -%}
                     {% if maintable == 1 -%}
                         {% set field_vars = field.id.split("_") %}
-                        {{ macros.render_field( field, field_vars[field_vars|length - 1] ) }}
+                        {{ macros.render_field( field, field_vars[field_vars|length - 1], table_name, row_name ) }}
                     {% else -%}
-                        <td>{{ macros.table_field( field ) }}</td>
+                        <td>
+                            {{ macros.table_field( field ) }}
+                            {% if field.type == "IggybaseFileField" %}
+                                {% set files = field.data.split('|') -%}
+                                {% for file in files -%}
+                                    <a href="/{{ g.facility }}/core/uploads/{{ table_name }}/{{ row_name }}/{{ file }}">{{ file }}</a>
+                                {% endfor -%}
+                            {% endif -%}
+                        </td>
                     {%- endif -%}
                 {% endif -%}
             {%- endfor -%}
