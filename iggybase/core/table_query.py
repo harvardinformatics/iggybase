@@ -94,7 +94,7 @@ class TableQuery:
                     col_str = str(col)
                     col = ('<a href="' + link_fields[name] + col_str + '">' +
                             col_str + '</a>')
-                elif col and self.fc.fields[name].type == 9:
+                elif col != None and self.fc.fields[name].type == 9:
                     col = int(col)
 
                 row_dict[name] = col

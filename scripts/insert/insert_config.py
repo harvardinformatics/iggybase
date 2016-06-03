@@ -318,6 +318,12 @@ int_col_map = {
             'cost',
             'quantity'
             ],
+        'price_list':[
+            'price_per_unit'
+            ],
+        'price_item':[
+            'minimum_quantity'
+            ],
         'field':[
             'length',
             'data_type_id',
@@ -417,7 +423,7 @@ int_col_map = {
 
 # date cols
 base_date_col_map = ['last_modified', 'date_created', 'entry_date',
-'valid_from_date', 'invoice_month', 'run_date']
+'valid_from_date', 'invoice_month', 'run_date', 'start_date', 'end_date']
 # by table
 date_col_map = {
     'oligo_order': [
