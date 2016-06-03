@@ -20,9 +20,6 @@ class Workflow:
             steps_by_id[row.Step.id] = row
         return steps, steps_by_id
 
-    def get_step_by_id(self, step_id):
-        return self.steps_by_id[step_id]
-
     def get_complete_url(self, work_item_group_name):
         return self.get_url('workflow_complete', self.name, None, work_item_group_name)
 

@@ -371,7 +371,7 @@ def workflow_complete(facility_name, workflow_name, work_item_group):
 @core.route('/workflow/<workflow_name>/<step>/<work_item_group>', methods=['GET', 'POST'])
 @login_required
 def work_item_group(facility_name, workflow_name, step, work_item_group):
-    wig = WorkItemGroup(work_item_group, workflow_name, step)
+    wig = WorkItemGroup(work_item_group, workflow_name, int(step))
     if 'next_step' in request.form:
         wig.set_saved(json.loads(request.form['saved_rows']))
         wig.do_step_actions()

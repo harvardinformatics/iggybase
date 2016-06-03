@@ -7,7 +7,7 @@ from .workflow import Workflow
 
 # Retreives work_item_group info and processes steps and actions
 class WorkItemGroup:
-    def __init__ (self, work_item_group_name, workflow_name, step = None):
+    def __init__ (self, work_item_group_name, workflow_name, show_step = None):
         self.name = work_item_group_name  # can be new
         self.rac = g_helper.get_role_access_control()
         self.oac = g_helper.get_org_access_control()
@@ -22,16 +22,17 @@ class WorkItemGroup:
         self.step = self.get_step()
         self.step_num = self.step.Step.order
 
+        # which step is requested for show
+        if show_step and show_step != self.step_num:
+            self.show_step_num = int(show_step)
+            self.step = self.get_step(show_step)
+        else:
+            self.show_step_num = self.step_num
+
         # set the url for current step
         self.endpoint = self.step.Module.name + '.' + self.step.Route.url_path
         self.dynamic_params = self.set_dynamic_params()
         self.url = url_for(self.endpoint, **self.dynamic_params)
-
-        # which step is requested for show
-        if step:
-            self.show_step_num = int(step)
-        else:
-            self.show_step_num = self.step
 
         # default set on init, actions can change this
         self.next_step = self.step_num + 1
@@ -48,10 +49,12 @@ class WorkItemGroup:
                 self.WorkItemGroup = wig
                 self.work_items = self.oac.work_items(self.WorkItemGroup.id)
 
-    def get_step(self):
+    def get_step(self, step_num = None):
         # which step is the wig currently on
-        if self.WorkItemGroup:
-            step = self.workflow.get_step_by_id(self.WorkItemGroup.step_id)
+        if self.WorkItemGroup and step_num:
+            step = self.workflow.steps[step_num]
+        elif self.WorkItemGroup:
+            step = self.workflow.steps_by_id[self.WorkItemGroup.step_id]
         else:
             step = self.workflow.steps[1]
         return step
