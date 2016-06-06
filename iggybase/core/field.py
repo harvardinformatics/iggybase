@@ -10,6 +10,11 @@ class Field:
         self.TableObject = table_object
         self.FieldRole = field_role
 
+        # FK data will be set when set_fk_field is called
+        self.FK_Field = None
+        self.FK_TableObject = None
+        self.FK_FieldRole = None
+
         # None if table_query by table_name rather than id
         self.TableQueryField = table_query_field
         self.TableQueryCalculation = calculation
@@ -23,10 +28,9 @@ class Field:
         self.is_foreign_key = (self.Field.foreign_key_table_object_id is not None)
         self.is_title_field = (self.TableObject.id == self.Field.table_object_id and self.Field.display_name == 'name')
         self.order = self.get_field_order()
-        self.fk_field = None
 
         # base visibility on original field, do not change if fk field
-        self.visible = self.is_visible()
+        self.visible = self.set_visiblity()
 
         # can be set by set_default()
         self.default = None
@@ -34,22 +38,21 @@ class Field:
     def is_calculation(self):
         return (self.TableQueryCalculation != None)
 
-    def is_visible(self):
+    def set_visiblity(self):
         visible = False
-
         if self.TableQueryField:
             visible = self.TableQueryField.visible
         else:
             visible = self.FieldRole.visible
-
         return visible
+
 
     def set_default(self, fk_defaults):
         default = None
         # set fk_default if there is one
         if (self.is_foreign_key
-                and self.TableObject.name in fk_defaults):
-            default = fk_defaults[self.TableObject.name]
+                and self.FK_TableObject.name in fk_defaults):
+            default = fk_defaults[self.FK_TableObject.name]
         else: # set default from field
             if self.Field.default == 'now':
                 default = datetime.datetime.utcnow()
@@ -61,7 +64,6 @@ class Field:
                 default = g.current_org_id
             elif self.Field.default is not None:
                 default = self.Field.default
-        print(default)
         self.default = default
 
     def get_field_display_name(self):
@@ -110,11 +112,9 @@ class Field:
                 if fk_field:
                     fk_field = fk_field[0]
         if fk_field:
-            self.fk_field = self.Field # field to which this is fk
-            self.fk_table = self.TableObject
-            self.Field = fk_field.Field
-            self.TableObject = fk_field.TableObject
-            self.FieldRole = fk_field.FieldRole
+            self.FK_Field = fk_field.Field
+            self.FK_FieldRole = fk_field.FieldRole
+            self.FK_TableObject = fk_field.TableObject
         else:
             self.is_foreign_key = False # maybe no role access
 
@@ -152,9 +152,9 @@ class Field:
                         # since we're storing fk data once per field we don't have
                         # data on both name and fk_display for same table from
                         # oac query, this is rare and acceptable
-                        self.Field.display_name == 'name' and
-                        self.TableObject.name != 'long_text' and
-                        self.is_visible()
+                        self.FK_Field.display_name == 'name' and
+                        self.FK_TableObject.name != 'long_text' and
+                        self.visible
                     )
                 )
             )

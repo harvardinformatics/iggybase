@@ -24,7 +24,6 @@ class FormGenerator():
     def input_field(self, field_data, display_name, row_name, control_id, control_type, value=None):
         kwargs = {}
         validators = []
-
         if value is not None:
             # logging.info('input_field value: ' + str(value))
             kwargs['default'] = value
@@ -68,13 +67,11 @@ class FormGenerator():
             kwargs['coerce'] = int
             kwargs['choices'] = choices
 
-            if value is not None:
-                kwargs['default'] = value
-
             return IggybaseSelectField(display_name, **kwargs)
-        elif field_data.Field.foreign_key_table_object_id is not None:
+        elif field_data.is_foreign_key:
             long_text = self.role_access_control.has_access("TableObject", {'name': 'long_text'})
-            if long_text.id == field_data.Field.foreign_key_table_object_id:
+
+            if long_text.id == field_data.FK_TableObject.id:
                 if value is not None:
                     lt_row = self.organization_access_control.get_long_text(value)
                     kwargs['default'] = lt_row.long_text
@@ -82,14 +79,17 @@ class FormGenerator():
                 return IggybaseTextAreaField(display_name, **kwargs)
             else:
                 choices = self.organization_access_control.\
-                    get_foreign_key_data(field_data.Field.foreign_key_table_object_id)
+                    get_foreign_key_data(field_data.FK_TableObject.id)
 
                 if len(choices) > 25:
                     kwargs['iggybase_class'] = control_type
 
+                    # TODO: I'm not sure what this is doing, but FK data is now
+                    # available in field class to use, FK_TableObject.name for
+                    # example
                     if value is not None:
                         value = self.organization_access_control.\
-                            get_foreign_key_data(field_data.Field.foreign_key_table_object_id, {'id': value})
+                            get_foreign_key_data(field_data.FK_TableObject.id, {'id': value})
 
                         if len(value) == 1:
                             kwargs['default'] = value[0][1]
@@ -133,6 +133,7 @@ class FormGenerator():
         self.table_data = self.role_access_control.has_access('TableObject', {'name': self.table_object})
 
         fields = FieldCollection(None, self.table_data.name)
+        fields.set_fk_fields()
         fields.set_defaults()
 
         self.classattr['startmaintable_'+str(self.table_data.id)]=\
@@ -154,6 +155,7 @@ class FormGenerator():
         self.classattr = self.row_fields(1, row_name)
 
         fields = FieldCollection(None, self.table_data.name)
+        fields.set_fk_fields()
         fields.set_defaults()
 
         self.classattr['startmaintable_'+str(self.table_data.id)]=\
@@ -300,19 +302,7 @@ class FormGenerator():
 
                 if row_name == 'new' and (field.default is not None and field.default != ''):
                     # logging.info(field.Field.field_name + ': setting default')
-                    # TODO: move this logic to the field class and here just set
-                    # the value
                     value = field.default
-                    '''if field.Field.default == 'now':
-                        value = datetime.datetime.utcnow()
-                    elif field.Field.default == 'today':
-                        value = datetime.date.today()
-                    elif field.Field.default == 'user':
-                        value = g.user.id
-                    elif field.Field.default == 'org':
-                        value = self.organization_access_control.current_org_id
-                    elif field.Field.default is not None:
-                        value = field.Field.default'''
             else:
                 # logging.info(field.Field.field_name+': '+str(value))
                 self.classattr['old_value_'+field.Field.display_name+"_"+str(row_counter)]=\
@@ -328,7 +318,7 @@ class FormGenerator():
     def get_field_headers(self, fields):
         headers = ''
         for name, field in fields.fields.items():
-            if field.is_visible():
+            if field.visible:
                 headers += field.display_name + '|'
 
         return dumps(headers[:-1])

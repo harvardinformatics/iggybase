@@ -155,28 +155,36 @@ class OrganizationAccessControl:
         wheres = []
         first_table_named = None  # set to first table name, dont add to joins
         for field in field_dict.values():
-            if field.TableObject.name in table_models:
-                table_model = table_models[field.TableObject.name]
-            else:
-                table_model = util.get_table(field.TableObject.name)
-                table_models[field.TableObject.name] = table_model
+            # Get the table to display, fk table for fks
             if field.is_foreign_key:
-                if field.fk_table.name in table_models:
-                    fk_table_model = table_models[field.fk_table.name]
+                table_name = field.FK_TableObject.name
+            else:
+                table_name = field.TableObject.name
+            if table_name in table_models:
+                table_model = table_models[table_name]
+            else:
+                table_model = util.get_table(table_name)
+                table_models[table_name] = table_model
+
+            # handle fks
+            if field.is_foreign_key:
+                if field.TableObject.name in table_models:
+                    fk_table_model = table_models[field.TableObject.name]
                 else:
-                    fk_table_model = util.get_table(field.fk_table.name)
-                    table_models[field.fk_table.name] = fk_table_model
+                    fk_table_model = util.get_table(field.TableObject.name)
+                    table_models[field.TableObject.name] = fk_table_model
                 # create alias to the fk table
                 # solves the case of more than one join to same table
-                alias_name = field.fk_field.display_name + '_' + field.TableObject.name + '_' + field.Field.display_name
+                alias_name = field.Field.display_name + '_' + field.FK_TableObject.name + '_' + field.FK_Field.display_name
                 aliases[alias_name] = aliased(table_model)
                 outer_joins.append((
                     aliases[alias_name],
-                    getattr(fk_table_model, field.fk_field.display_name) == aliases[alias_name].id
+                    getattr(fk_table_model, field.Field.display_name) == aliases[alias_name].id
                 ))
                 col = getattr(aliases[alias_name],
-                    field.Field.display_name)
+                    field.FK_Field.display_name)
                 columns.append(col.label(field.name))
+                criteria_key = (field.FK_TableObject.name, field.FK_Field.display_name)
 
             else:  # non-fk field
                 tables.add(table_model)
@@ -188,8 +196,8 @@ class OrganizationAccessControl:
                     first_table_named = field.TableObject.name
                 else:
                     joins.add(table_model)
+                criteria_key = (field.TableObject.name, field.Field.display_name)
 
-            criteria_key = (field.TableObject.name, field.Field.display_name)
             # don't include criteria for self foreign keys
             if criteria_key in criteria and not (field.is_foreign_key and
                     field.TableObject.name == first_table_named):

@@ -68,7 +68,10 @@ class TableQuery:
         url_root = request.url_root
         for field in self.fc.fields.values():
             if field.link_visible() and allow_links:
-                link_fields[field.name] = self.get_link(url_root, 'detail', field.TableObject.name)
+                if field.is_foreign_key:
+                    link_fields[field.name] = self.get_link(url_root, 'detail', field.FK_TableObject.name)
+                else:
+                    link_fields[field.name] = self.get_link(url_root, 'detail', field.TableObject.name)
             if field.is_calculation():
                 calc_fields.append(field.name)
             if not field.visible:
