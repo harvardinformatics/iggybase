@@ -298,8 +298,12 @@ class FormGenerator():
                     # logging.info(field.Field.field_name + ': setting default')
                     if field.Field.default == 'now':
                         value = datetime.datetime.utcnow()
+                    elif field.Field.default == 'today':
+                        value = datetime.date.today()
                     elif field.Field.default == 'user':
                         value = g.user.id
+                    elif field.Field.default == 'org':
+                        value = self.organization_access_control.current_org_id
                     elif field.Field.default is not None:
                         value = field.Field.default
             else:

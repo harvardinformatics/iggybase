@@ -42,7 +42,7 @@ $( document ).ready( function () {
                     data: { spinal_code: spinal_code },
                     success: function ( resp ) {
                         if ( resp == 'NOT_FOUND' )
-                            alert('code was not verified in Spinal, it may still be valid.\n\nPlease confirm the code.');
+                            alert('code was not verified in Spinal.\n\nPlease confirm the code.');
                         else if ( resp == 'INACTIVE' )
                             alert('code is not active in Spinal.\n\nPlease confirm the code.');
                         else if ( resp == 'EXPIRED' )
