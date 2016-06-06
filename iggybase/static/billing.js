@@ -35,15 +35,20 @@ $( document ).ready( function () {
 
                 var hidden_fields = $("#hidden_fields");
                 var facility = hidden_fields.find('input[name=facility]').val()
-                var url = $URL_ROOT + facility + "/core/check_harvard_code";
+                var url = $URL_ROOT + facility + "/interfaces/check_harvard_code";
 
                 $.ajax( {
                     url: url,
-                    data: { spinal_code: spinal_code }
+                    data: { spinal_code: spinal_code },
                     success: function ( resp ) {
-                        if ( resp != 'found' ) {
+                        if ( resp == 'NOT_FOUND' )
                             alert('code was not verified in Spinal, it may still be valid.\n\nPlease confirm the code.');
-                        }
+                        else if ( resp == 'INACTIVE' )
+                            alert('code is not active in Spinal.\n\nPlease confirm the code.');
+                        else if ( resp == 'EXPIRED' )
+                            alert('code is expired in Spinal.\n\nPlease confirm the code.');
+                        else if ( resp == 'PREMATURE' )
+                            alert('code has not reached its start date in Spinal.\n\nPlease confirm the code.');
                     }
                 } );
             }
