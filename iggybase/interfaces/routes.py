@@ -12,9 +12,7 @@ MODULE_NAME = 'interfaces'
 @interfaces.route('/check_harvard_code', methods=['POST', 'GET'])
 @login_required
 def check_harvard_code(facility_name):
-    logging.info('check_harvard_code')
     spinal_code = request.args.get('spinal_code')
-    logging.info('spinal_code: ' + spinal_code)
 
     spinal_session = spinal_db_session()
     spinal_rec = spinal_session.query(models.ExpenseCodesExpensecode).filter_by(fullcode = spinal_code).first()
