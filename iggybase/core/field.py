@@ -1,5 +1,7 @@
 from iggybase import g_helper
+from flask import g
 from .calculation import get_calculation
+import datetime
 import logging
 
 class Field:
@@ -26,6 +28,9 @@ class Field:
         # base visibility on original field, do not change if fk field
         self.visible = self.is_visible()
 
+        # can be set by set_default()
+        self.default = None
+
     def is_calculation(self):
         return (self.TableQueryCalculation != None)
 
@@ -38,6 +43,26 @@ class Field:
             visible = self.FieldRole.visible
 
         return visible
+
+    def set_default(self, fk_defaults):
+        default = None
+        # set fk_default if there is one
+        if (self.is_foreign_key
+                and self.TableObject.name in fk_defaults):
+            default = fk_defaults[self.TableObject.name]
+        else: # set default from field
+            if self.Field.default == 'now':
+                default = datetime.datetime.utcnow()
+            elif self.Field.default == 'today':
+                default = datetime.date.today()
+            elif self.Field.default == 'user':
+                default = g.user.id
+            elif self.Field.default == 'org':
+                default = g.current_org_id
+            elif self.Field.default is not None:
+                default = self.Field.default
+        print(default)
+        self.default = default
 
     def get_field_display_name(self):
         # this should be lowercase for consistancy, templates responsible for

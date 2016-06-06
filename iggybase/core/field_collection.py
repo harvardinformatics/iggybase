@@ -55,3 +55,8 @@ class FieldCollection:
                     field_obj = self.fields_by_id[(field.Field.foreign_key_table_object_id, field.Field.foreign_key_display)]
                 field.set_fk_field(field_obj)
             self.fields_by_id[(field.TableObject.id, field.Field.id)] = field
+
+    def set_defaults(self, fk_defaults = {}):
+        for field in self.fields.values():
+            field.set_default(fk_defaults)
+

@@ -54,6 +54,7 @@ class OrganizationAccessControl:
                     min_level = level
                     self.current_org_id = user_org
                 self.get_child_organization(user_org)
+            g.current_org_id = self.current_org_id
         else:
             self.user = None
 
@@ -374,6 +375,12 @@ class OrganizationAccessControl:
                 else:
                     row_org_id = 1
 
+                # convert to an int if numeric
+                if row_org_id.isdigit():
+                    row_org_id = int(row_org_id)
+
+                # TODO: accepting only a numeric organization would prevent
+                # confusion and potential error
                 if not isinstance(row_org_id, int):
                     if current_field_data['organization_id'].Field.foreign_key_display is None:
                         org_display = 'name'

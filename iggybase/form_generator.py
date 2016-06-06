@@ -10,7 +10,6 @@ from iggybase import g_helper
 from iggybase import constants
 from iggybase.core.field_collection import FieldCollection
 from json import dumps, loads
-import datetime
 import logging
 
 
@@ -111,7 +110,7 @@ class FormGenerator():
         elif field_data.Field.data_type_id == constants.FLOAT:
             return IggybaseFloatField(display_name, **kwargs)
         elif field_data.Field.data_type_id == constants.BOOLEAN:
-            self.classattr['bool_' + control_id]=HiddenField('bool_' + control_id, default=value)
+            self.classattr['bool_' + control_id]=HiddenField('bool_' + control_id, default=bool(value))
             return IggybaseBooleanField(display_name, **kwargs)
         elif field_data.Field.data_type_id == constants.DATE:
             return IggybaseDateField(display_name, **kwargs)
@@ -134,6 +133,7 @@ class FormGenerator():
         self.table_data = self.role_access_control.has_access('TableObject', {'name': self.table_object})
 
         fields = FieldCollection(None, self.table_data.name)
+        fields.set_defaults()
 
         self.classattr['startmaintable_'+str(self.table_data.id)]=\
             HiddenField('startmaintable_'+str(self.table_data.id), default=self.table_data.name)
@@ -154,6 +154,7 @@ class FormGenerator():
         self.classattr = self.row_fields(1, row_name)
 
         fields = FieldCollection(None, self.table_data.name)
+        fields.set_defaults()
 
         self.classattr['startmaintable_'+str(self.table_data.id)]=\
             HiddenField('startmaintable_'+str(self.table_data.id), default=self.table_data.name)
@@ -186,6 +187,10 @@ class FormGenerator():
                 self.table_data = link_table
 
                 fields = FieldCollection(None, self.table_data.name)
+                fields.set_fk_fields()
+                # default parent fk to parent id
+                fk_defaults = {parent_name: parent_id}
+                fields.set_defaults(fk_defaults)
 
                 child_data = None
 
@@ -288,15 +293,17 @@ class FormGenerator():
             if row_name != 'new' and data:
                 if  field.Field.display_name in data.keys():
                     value = data[data.keys().index(field.Field.display_name)]
-
             if value is None:
                 # logging.info(field.Field.field_name+': None')
                 self.classattr['old_value_'+field.Field.display_name+"_"+str(row_counter)]=\
                     HiddenField('old_value_'+field.Field.display_name+"_"+str(row_counter))
 
-                if row_name == 'new' and (field.Field.default is not None and field.Field.default != ''):
+                if row_name == 'new' and (field.default is not None and field.default != ''):
                     # logging.info(field.Field.field_name + ': setting default')
-                    if field.Field.default == 'now':
+                    # TODO: move this logic to the field class and here just set
+                    # the value
+                    value = field.default
+                    '''if field.Field.default == 'now':
                         value = datetime.datetime.utcnow()
                     elif field.Field.default == 'today':
                         value = datetime.date.today()
@@ -305,7 +312,7 @@ class FormGenerator():
                     elif field.Field.default == 'org':
                         value = self.organization_access_control.current_org_id
                     elif field.Field.default is not None:
-                        value = field.Field.default
+                        value = field.Field.default'''
             else:
                 # logging.info(field.Field.field_name+': '+str(value))
                 self.classattr['old_value_'+field.Field.display_name+"_"+str(row_counter)]=\
