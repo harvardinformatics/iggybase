@@ -15,7 +15,7 @@ class WorkItemGroup:
 
         # sql alchemy results will populate these capitalized vars
         self.WorkItemGroup = None
-        self.work_items = []
+        self.work_items = {}
         self.get_work_item_group()
 
         # which step is the wig currently on
@@ -47,7 +47,14 @@ class WorkItemGroup:
             wig = self.oac.work_item_group(self.name)
             if wig:
                 self.WorkItemGroup = wig
-                self.work_items = self.oac.work_items(self.WorkItemGroup.id)
+                work_items = self.oac.work_items(self.WorkItemGroup.id)
+                # store work_items by table
+                for item in work_items:
+                    if item.TableObject.name in self.work_items:
+                        self.work_items[item.TableObject.name].append(item)
+                    else:
+                        self.work_items[item.TableObject.name] = [item]
+
 
     def get_step(self, step_num = None):
         # which step is the wig currently on
@@ -98,20 +105,19 @@ class WorkItemGroup:
 
     def do_step_actions(self):
         # first perform any actions on this step
-        if not self.is_complete():
-            # if new then insert work_item_group
-            if self.step_num == 1 and self.name == 'new':
-                self.name = self.oac.insert_work_item_group(self.workflow.id,
-                        self.step_num, status.IN_PROGRESS)
-                self.get_work_item_group()
-            actions = self.oac.get_step_actions(self.step.Step.id)
-            for action in actions:
-                if hasattr(self, action.function):
-                    func = getattr(self, action.function)
-                    params = {}
-                    if action.params:
-                        params = json.loads(action.params)
-                    func(**params)
+        # if new then insert work_item_group
+        if self.step_num == 1 and self.name == 'new' and not self.is_complete():
+            self.name = self.oac.insert_work_item_group(self.workflow.id,
+                    self.step_num, status.IN_PROGRESS)
+            self.get_work_item_group()
+        actions = self.oac.get_step_actions(self.step.Step.id)
+        for action in actions:
+            if hasattr(self, action.function):
+                func = getattr(self, action.function)
+                params = {}
+                if action.params:
+                    params = json.loads(action.params)
+                func(**params)
 
     def set_dynamic_params(self):
         args = []
@@ -129,16 +135,25 @@ class WorkItemGroup:
             else:
                 dynamic_params['row_name'] = 'new'
         if 'row_names' in args:
-            dynamic_params['row_names'] = json.dumps(self.get_dynamic_param_from_items())
+            params = self.get_dynamic_param_from_items()
+            if params:
+                dynamic_params['row_names'] = json.dumps(params)
+            else:
+                dynamic_params['row_names'] = json.dumps(['new','new','new'])
         return dynamic_params
 
     def get_dynamic_param_from_items(self):
         params = []
         if self.step.Field:
-            for item in self.work_items:
-                if item.table_object_id == self.step.Field.table_object_id:
-                    name = self.oac.get_attr_from_id(item.table_object_id,
-                            item.row_id, 'name')
+            field_table = self.oac.get_table_by_id(self.step.Field.table_object_id)
+            if field_table.name in self.work_items:
+                items = self.work_items[field_table.name]
+                for item in items:
+                    if item.WorkItem.row_id:
+                        name = self.oac.get_attr_from_id(item.WorkItem.table_object_id,
+                                item.WorkItem.row_id, 'name')
+                    else:
+                        name = 'new'
                     if name:
                         params.append(name)
         return params
@@ -208,25 +223,38 @@ class WorkItemGroup:
                 if parent and parent in self.saved_rows:
                     # assume there will only be one parent
                     parent = self.saved_rows[parent][0]
-                success = self.oac.insert_work_items(self.WorkItemGroup.id, tbl_items, parent)
+                if tbl in self.work_items: # already saved, update
+                    success = self.oac.set_work_items(self.WorkItemGroup.id, tbl_items, parent, self.work_items[tbl])
+                else: # insert new
+                    success = self.oac.set_work_items(self.WorkItemGroup.id, tbl_items, parent)
         return success
 
-    def check_item_type(self, item, type):
+    def check_item_field_value(self, item, field, name):
         if item in self.saved_rows:
             work_items = self.saved_rows[item]
             # get the price_item_id for sample
-            sam = self.oac.get_row('price_item', {'name': 'sample'})
+            table = field.replace('_id', '')
+            sam = self.oac.get_row(table, {'name': name})
             if sam:
                 skip_step = True
                 # see if any items are samples
                 for work_item in work_items:
                     res = self.oac.get_row(item, {'id': work_item['id']})
-                    if res and res.price_item_id == sam.id:
+                    if res and getattr(res, field) == sam.id:
                         skip_step = False
 
                 if skip_step: # if there are no samples
                     self.next_step = self.step_num
                     self.oac.update_work_item_group(self.WorkItemGroup.id, 'status', status.COMPLETE)
+                else:
+                    none_list = []
+                    if res.quantity:
+                        for i in range(0, res.quantity):
+                            new_sample = {'table': 'sample', 'id': None }
+                            none_list.append(new_sample)
+                        parent_item = {'table': item, 'id': res.id}
+                        success = self.oac.set_work_items(self.WorkItemGroup.id, none_list, parent_item)
+
 
 class status:
     IN_PROGRESS = 2

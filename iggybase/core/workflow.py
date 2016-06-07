@@ -10,7 +10,6 @@ class Workflow:
         self.id = self.Workflow.id
         self.steps, self.steps_by_id = self.get_steps()
 
-
     def get_steps(self):
         res = self.rac.workflow_steps(self.Workflow.id)
         steps = OrderedDict()

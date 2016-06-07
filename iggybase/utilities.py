@@ -20,7 +20,7 @@ def get_table(table_name):
     table = session.query(TableObject).filter_by(name=table_name).first()
 
     try:
-        if table.admin_table == 1:
+        if hasattr(table, 'admin_table') and table.admin_table == 1:
             module_model = import_module('iggybase.admin.models')
         else:
             module_model = import_module('iggybase.models')
