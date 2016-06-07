@@ -134,14 +134,14 @@ def search(facility_name):
     modal_html += '<div class="modal-body">'
     modal_html += '<input id="modal_input_id" value="' + input_id + '" type="hidden">'
     modal_html += '<input id="modal_table_object" value="' + table_name + '" type="hidden">'
-    modal_html += '<input id="modal_search_table" value="' + fc.fields[field_index].TableObject.name + '" type="hidden">'
+    modal_html += '<input id="modal_search_table" value="' + fc.fields[field_index].FK_TableObject.name + '" type="hidden">'
     modal_html += '<input id="modal_field_name" value="' + display_name + '" type="hidden">'
     modal_html += '<p>All search inputs can use partial values</p>'
     modal_html += '<table>'
     if field_index in fc.fields:
         field = fc.fields[field_index]
         role_filter = False # ignore role filter since this is for FK
-        search_fc = FieldCollection(None, field.TableObject.name, None,
+        search_fc = FieldCollection(None, field.FK_TableObject.name, None,
                 role_filter)
         # TODO: there is a bug here, if you don't have a role for the fk table
         for name, row in search_fc.fields.items():
@@ -180,7 +180,7 @@ def search_results(facility_name):
         criteria = {'display_name': display_name}
         fc = FieldCollection(None, table_name, criteria)
         fc.set_fk_fields()
-        search_table = fc.fields[display_name].TableOjbect.name
+        search_table = fc.fields[display_name].FK_TableOjbect.name
         search_fc = FieldCollection(None, search_table)
         for name, row in search_fc.fields.items():
             if row.name not in fields:
