@@ -213,10 +213,18 @@ class WorkItemGroup:
 
     def check_item_type(self, item, type):
         if item in self.saved_rows:
-            work_item = self.saved_rows[item][0]
-            res = self.oac.get_row(item, {'id': work_item['id']})
-            if res:
-                if res.quantity == 2: # TODO: replace with type check
+            work_items = self.saved_rows[item]
+            # get the price_item_id for sample
+            sam = self.oac.get_row('price_item', {'name': 'sample'})
+            if sam:
+                skip_step = True
+                # see if any items are samples
+                for work_item in work_items:
+                    res = self.oac.get_row(item, {'id': work_item['id']})
+                    if res and res.price_item_id == sam.id:
+                        skip_step = False
+
+                if skip_step: # if there are no samples
                     self.next_step = self.step_num
                     self.oac.update_work_item_group(self.WorkItemGroup.id, 'status', status.COMPLETE)
 

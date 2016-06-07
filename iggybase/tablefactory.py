@@ -1,6 +1,6 @@
 from iggybase.admin.models import DataType, TableObject, Field
 from sqlalchemy.orm import relationship
-from sqlalchemy import Column, ForeignKey, UniqueConstraint
+from sqlalchemy import Column, ForeignKey, UniqueConstraint, or_
 import sqlalchemy
 from iggybase.database import db_session, Base
 from types import new_class
@@ -104,7 +104,8 @@ class TableFactory:
 
         res = self.session.query(TableObject). \
             filter(TableObject.active==active). \
-            filter(TableObject.admin_table!=1). \
+            filter(or_(TableObject.admin_table==0, TableObject.admin_table is
+                None)). \
             order_by(TableObject.order).all()
         for row in res:
             table_objects.append(row)
