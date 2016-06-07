@@ -35,14 +35,15 @@ $(document).ready(function(){
 
 ( function( $ ) {
     $.fn.editSelected = function (table) {
-        var test = table.rows('.selected').data();
-        var names = $.map(table.rows('.selected').data(), function (i) { return $(i['name']).text()});
+        var hidden_fields = $("#hidden_fields");
+        var table_name = hidden_fields.find('input[name=table]').val();
+        var column_name = table_name + '|name';
+        var names = $.map(table.rows('.selected').data(), function (i) { return $(i[column_name]).text()});
         if (names.length > 0) {
-            var hidden_fields = $("#hidden_fields");
             var url = $URL_ROOT;
             url += hidden_fields.find('input[name=facility]').val()
                 + '/' + hidden_fields.find('input[name=mod]').val()
-                + '/multiple_entry/' + hidden_fields.find('input[name=table]').val()
+                + '/multiple_entry/' + table_name
                 + '/' + JSON.stringify(names);
             if ( url.length > 2000 )
                 alert("You are overly ambitious, please select fewer items.");
