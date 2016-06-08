@@ -193,3 +193,8 @@ pre {
 .container-fluid {
     clear: both;
 }
+.required:after {
+    content:'*';
+    color: red;
+    font-weight:bold;
+}

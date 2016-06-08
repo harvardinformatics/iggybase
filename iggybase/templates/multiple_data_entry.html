@@ -37,9 +37,7 @@
                         {% set firstrow = 0 %}
                     {% endif %}
 
-                    {% if not bootstrap_is_hidden_field( field ) %}
-                        <th>{{ field.label }}</th>
-                    {% endif %}
+                    {{ macros.form_field_th( field ) }}
                 {%- endfor %}
             </tr>
             {% set row_name = '' %}
