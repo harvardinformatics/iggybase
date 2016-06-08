@@ -407,7 +407,7 @@ class OrganizationAccessControl:
 
                 row_data['data_entry']['organization_id'] = row_org_id
 
-                logging.info('for field in current_field_data.items(): ')
+                # logging.info('for field in current_field_data.items(): ')
                 for field, meta_data in current_field_data.items():
                     # logging.info('field: ' + field)
                     # only update fields that were on the form
@@ -492,7 +492,7 @@ class OrganizationAccessControl:
                         elif field_data.data_type_id == 8:
                             setattr(instances[row_id], field, float(row_data['data_entry'][field]))
                         elif field_data.data_type_id == 3:
-                            logging.info('boolean: ' + field + '    value: ' + str(row_data['data_entry'][field]))
+                            # logging.info('boolean: ' + field + '    value: ' + str(row_data['data_entry'][field]))
                             if row_data['data_entry'][field] == 'y' or row_data['data_entry'][field] == 'True':
                                 setattr(instances[row_id], field, 1)
                                 row_data['data_entry'][field] = True
