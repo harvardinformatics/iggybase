@@ -79,7 +79,7 @@ class FormGenerator():
                 return IggybaseTextAreaField(display_name, **kwargs)
             else:
                 choices = self.organization_access_control.\
-                    get_foreign_key_data(field_data.FK_TableObject.id)
+                    get_foreign_key_data(field_data.FK_TableObject.id, field_data.Field.foreign_key_display)
 
                 if len(choices) > 25:
                     kwargs['iggybase_class'] = control_type
@@ -89,7 +89,8 @@ class FormGenerator():
                     # example
                     if value is not None:
                         value = self.organization_access_control.\
-                            get_foreign_key_data(field_data.FK_TableObject.id, {'id': value})
+                            get_foreign_key_data(field_data.FK_TableObject.id, field_data.Field.foreign_key_display,
+                                                 {'id': value})
 
                         if len(value) == 1:
                             kwargs['default'] = value[0][1]
@@ -110,7 +111,7 @@ class FormGenerator():
         elif field_data.Field.data_type_id == constants.FLOAT:
             return IggybaseFloatField(display_name, **kwargs)
         elif field_data.Field.data_type_id == constants.BOOLEAN:
-            self.classattr['bool_' + control_id]=HiddenField('bool_' + control_id, default=bool(value))
+            self.classattr['bool_' + control_id]=HiddenField('bool_' + control_id, default=value)
             return IggybaseBooleanField(display_name, **kwargs)
         elif field_data.Field.data_type_id == constants.DATE:
             return IggybaseDateField(display_name, **kwargs)
@@ -149,7 +150,7 @@ class FormGenerator():
 
         return newclass()
 
-    def default_data_entry_form(self, table_data, row_name='new'):
+    def default_data_entry_form(self, table_data, row_name='new', depth = 2):
         self.table_data = table_data
 
         self.classattr = self.row_fields(1, row_name)
@@ -170,7 +171,7 @@ class FormGenerator():
         if row_name != 'new':
             link_data, link_tables = self.role_access_control.get_link_tables(self.table_data.id)
 
-            row_counter = self.linked_data(link_tables, link_data, row_name, row_counter)
+            row_counter = self.linked_data(link_tables, link_data, row_name, row_counter, depth)
 
         self.classattr['row_counter'] = HiddenField('row_counter', default=row_counter)
 
@@ -178,7 +179,7 @@ class FormGenerator():
 
         return newclass()
 
-    def linked_data(self, tables, table_data, row_name, row_counter, child_row_ids = []):
+    def linked_data(self, tables, table_data, row_name, row_counter, depth, child_row_ids = [], current_depth = 0):
         parent_name = self.table_data.name
         parent_id = self.organization_access_control.get_row_id(self.table_data.name, {'name': row_name})
 
@@ -195,26 +196,24 @@ class FormGenerator():
                 fields.set_defaults(fk_defaults)
 
                 child_data = None
+                if link_type == 'child':
+                    if current_depth == 0:
+                        self.classattr['startchildtable_'+str(link_table.id)]=\
+                            HiddenField('startchildtable_'+str(link_table.id), default=link_table.name)
 
-                if child_row_ids:
+                        ids = [parent_id]
+                    else:
+                        self.classattr['startgrandchildtable_'+str(link_table.id)]=\
+                            HiddenField('startgrandchildtable_'+str(link_table.id), default=link_table.name)
+
+                        ids = child_row_ids
+
                     row_names = self.organization_access_control.\
                         get_child_row_names(link_table.name,
-                                            table_data[link_type][table_index].child_link_field_id,
-                                            child_row_ids)
-
-                    self.classattr['startgrandchildtable_'+str(link_table.id)]=\
-                        HiddenField('startgrandchildtable_'+str(link_table.id), default=link_table.name)
-                elif link_type == 'child':
-                    row_names = self.organization_access_control.\
-                        get_child_row_names(link_table.name,
-                                            table_data[link_type][table_index].child_link_field_id,
-                                            [parent_id])
-
-                    self.classattr['startchildtable_'+str(link_table.id)]=\
-                        HiddenField('startchildtable_'+str(link_table.id), default=link_table.name)
+                                            table_data[link_type][table_index].child_link_field_id, ids)
 
                     child_data, child_tables = self.role_access_control.get_link_tables(self.table_data.id, True)
-                elif link_type == 'many':
+                elif link_type == 'many' and current_depth == 0:
                     row_names = self.organization_access_control.\
                         get_many_row_names(link_table.name,
                                            table_data[link_type][table_index].link_table_object_id,
@@ -253,7 +252,8 @@ class FormGenerator():
                     HiddenField('endtable_' + str(link_table.id), default=link_table.name)
 
                 if child_data:
-                    row_counter = self.linked_data(child_tables, child_data, row_name, row_counter, row_ids)
+                    row_counter = self.linked_data(child_tables, child_data, row_name, row_counter, depth, row_ids,
+                                                   (current_depth + 1))
 
                 table_index += 1
 

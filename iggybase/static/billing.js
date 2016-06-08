@@ -4,9 +4,27 @@ $( document ).ready( function () {
             $.fn.checkCodeFormat( $( this ) );
         }
     );
+    $( ".charge-method-percent" ).blur(
+        function( ) {
+            $.fn.checkCodePercent( $( this ) );
+        }
+    );
 } );
 
 ( function( $ ) {
+    $.fn.checkCodePercent = function( ele ) {
+        var total = 0;
+
+        $( ".charge-method-percent" ).each(
+            function( ) {
+                total += parseInt( $( this ).val( ) );
+            }
+        );
+
+        if ( total != 100 )
+            alert('Please correct the percentages for the charge methods.\n\nCurrent Total: ' + String( total ) );
+    }
+
     $.fn.checkCodeFormat = function( ele ) {
         var code_type_ctrl;
         var code_type;

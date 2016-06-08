@@ -119,9 +119,9 @@ class OrganizationAccessControl:
 
         return results
 
-    def get_foreign_key_data(self, fk_table_id, params=None):
+    def get_foreign_key_data(self, fk_table_id, fk_field_display, params=None):
         fk_table_data = self.session.query(models.TableObject).filter_by(id=fk_table_id).first()
-        fk_field_data = self.foreign_key(fk_table_id)
+        fk_field_data = self.foreign_key(fk_table_id, fk_field_display)
 
         results = [(-99, '')]
         if fk_field_data is not None:
@@ -129,14 +129,16 @@ class OrganizationAccessControl:
 
             if params is None:
                 rows = self.session.query(getattr(fk_table_object, 'id'),
-                                                         getattr(fk_table_object, 'name')).all()
+                                                         getattr(fk_table_object, fk_field_data['foreign_key']).
+                                          label('name')).all()
             else:
                 criteria = []
                 for key, value in params.items():
                     criteria.append(getattr(fk_table_object, key) == value)
 
-                rows = self.session.query(getattr(fk_table_object, 'id'), getattr(fk_table_object, 'name')). \
-                    filter(*criteria).all()
+                rows = self.session.query(getattr(fk_table_object, 'id'),
+                                          getattr(fk_table_object,
+                                                  fk_field_data['foreign_key'])).filter(*criteria).all()
 
             for row in rows:
                 results.append((row.id, row.name))
@@ -451,7 +453,7 @@ class OrganizationAccessControl:
 
                             fk_id = []
                             if row_data['data_entry'][field] is not None and row_data['data_entry'][field] != '':
-                                fk_id = self.get_foreign_key_data(field_data.foreign_key_table_object_id,
+                                fk_id = self.get_foreign_key_data(field_data.foreign_key_table_object_id, None,
                                                                   {fk_display: row_data['data_entry'][field]})
 
                             if len(fk_id) == 0 or len(fk_id[0]) == 0:
@@ -490,12 +492,13 @@ class OrganizationAccessControl:
                         elif field_data.data_type_id == 8:
                             setattr(instances[row_id], field, float(row_data['data_entry'][field]))
                         elif field_data.data_type_id == 3:
-                            if row_data['data_entry'][field] == 'y':
+                            logging.info('boolean: ' + field + '    value: ' + str(row_data['data_entry'][field]))
+                            if row_data['data_entry'][field] == 'y' or row_data['data_entry'][field] == 'True':
                                 setattr(instances[row_id], field, 1)
                                 row_data['data_entry'][field] = True
                             else:
-                                setattr(instances[row_id], field, None)
-                                row_data['data_entry'][field] = None
+                                setattr(instances[row_id], field, 0)
+                                row_data['data_entry'][field] = False
                         else:
                             setattr(instances[row_id], field, row_data['data_entry'][field])
 
