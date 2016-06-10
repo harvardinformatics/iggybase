@@ -119,7 +119,6 @@ def update_table_rows(facility_name, table_name):
 @core.route('/new_workflow/<workflow_name>/ajax', methods=['GET', 'POST'])
 @login_required
 def new_workflow(facility_name, workflow_name):
-    print('test')
     wig = WorkItemGroup('new', workflow_name, 1)
     return json.dumps({'work_item_group': wig.name})
 

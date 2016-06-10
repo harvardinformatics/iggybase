@@ -630,7 +630,7 @@ class OrganizationAccessControl:
                filter(models.Step.order == step, models.Workflow.id ==
                    workflow_id).first())
         step_id = res.Step.id
-        updated = self.update_work_item_group(work_item_group_id, 'step_id', step_id)
+        updated = self.update_table_rows({'step_id': step_id, 'before_action_complete': 0}, [work_item_group_id], 'work_item_group')
         return updated
 
     def set_work_items(self, work_item_group_id, save_items, parent, work_items = None):
@@ -706,20 +706,6 @@ class OrganizationAccessControl:
         row = self.session.query(table_model).filter_by(id=row_id).first()
         return getattr(row, attr)
 
-    def update_work_item_group(self, work_item_group_id, attr, value):
-        table_model = util.get_table('work_item_group')
-        work_item_group = table_model.query.filter(table_model.id == work_item_group_id, getattr(table_model, 'organization_id').in_(self.org_ids)).first()
-        updated = False
-        try:
-            setattr(work_item_group, attr, value)
-            updated = True
-        except AttributeError:
-            pass
-        if updated:
-            self.session.commit()
-            current_app.cache.increment_version('work_item_group')
-        return updated
-
     def insert_work_item_group(self, workflow_id, step_num, status):
         table_model = util.get_table('work_item_group')
         work_item_group_table_object = self.session.query(models.TableObject).filter_by(name='work_item_group').first()
@@ -733,7 +719,8 @@ class OrganizationAccessControl:
             new_name = work_item_group_table_object.get_new_name()
             new_row = table_model(name = new_name, active = 1,
                     organization_id = self.current_org_id, workflow_id = workflow_id,
-                    step_id = step_id, status = status)
+                    step_id = step_id, status = status,
+                    before_action_complete = 0)
             self.session.add(new_row)
         except:
             self.session.rollback()

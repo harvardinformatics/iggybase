@@ -5,6 +5,7 @@ from iggybase import utilities as util
 from iggybase import g_helper
 from .workflow import Workflow
 from .field_collection import FieldCollection
+
 class status:
     IN_PROGRESS = 2
     COMPLETE = 3
@@ -117,21 +118,24 @@ class WorkItemGroup:
             url = self.workflow.get_step_url(self.next_step, self.name)
         return url
 
-    def do_step_actions(self, timing = timing.AFTER):
+    def do_step_actions(self, time = timing.AFTER):
         # first perform any actions on this step
         # if new then insert work_item_group
         if self.step_num == 1 and self.name == 'new' and not self.is_complete():
             self.name = self.oac.insert_work_item_group(self.workflow.id,
                     self.step_num, status.IN_PROGRESS)
             self.get_work_item_group()
-        actions = self.oac.get_step_actions(self.step.Step.id, timing)
-        for action in actions:
-            if hasattr(self, action.function):
-                func = getattr(self, action.function)
-                params = {}
-                if action.params:
-                    params = json.loads(action.params)
-                func(**params)
+        if time != timing.BEFORE or (time == timing.BEFORE and self.WorkItemGroup.before_action_complete == 0):
+            actions = self.oac.get_step_actions(self.step.Step.id, time)
+            for action in actions:
+                if hasattr(self, action.function):
+                    func = getattr(self, action.function)
+                    params = {}
+                    if action.params:
+                        params = json.loads(action.params)
+                    func(**params)
+            if time == timing.BEFORE:
+                self.oac.update_table_rows({'before_action_complete': 1}, [self.WorkItemGroup.id], 'work_item_group')
 
     def set_dynamic_params(self):
         args = []
@@ -224,7 +228,7 @@ class WorkItemGroup:
     def set_complete(self):
         self.do_step_actions() # after step actions
         if self.WorkItemGroup.status != status.COMPLETE:
-            self.oac.update_work_item_group(self.WorkItemGroup.id, 'status', status.COMPLETE)
+            self.oac.update_table_rows({'status': status.COMPLETE}, [self.WorkItemGroup.id], 'work_item_group')
 
     '''
     below are workflow action functions
@@ -275,7 +279,7 @@ class WorkItemGroup:
 
                 if skip_step: # if there are no samples
                     self.next_step = self.step_num
-                    self.oac.update_work_item_group(self.WorkItemGroup.id, 'status', status.COMPLETE)
+                    self.oac.update_table_rows({'status': status.COMPLETE}, [self.WorkItemGroup.id], 'work_item_group')
                 else:
                     none_list = []
                     if res.quantity:

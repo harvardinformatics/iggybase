@@ -541,6 +541,7 @@ class WorkItemGroup(Base):
     assigned_to = Column(Integer, ForeignKey('user.id'))
     notes = Column(String(255))
     status = Column(Integer, ForeignKey('select_list.id'))
+    before_action_complete = Column(Boolean)
 
     work_item_group_workflow = relationship("Workflow", foreign_keys=[workflow_id])
     work_item_group_step = relationship("Step", foreign_keys=[step_id])
