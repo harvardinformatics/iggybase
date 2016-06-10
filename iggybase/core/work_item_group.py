@@ -26,6 +26,7 @@ class WorkItemGroup:
         # sql alchemy results will populate these capitalized vars
         self.WorkItemGroup = None
         self.work_items = {}
+        self.parent_work_item = None
         self.get_work_item_group()
 
         # which step is the wig currently on
@@ -65,6 +66,10 @@ class WorkItemGroup:
                 work_items = self.oac.work_items(self.WorkItemGroup.id)
                 # store work_items by table
                 for item in work_items:
+                    if not item.WorkItem.parent_id:
+                        name = self.oac.get_attr_from_id(item.WorkItem.table_object_id,
+                                item.WorkItem.row_id, 'name')
+                        self.parent_work_item = name
                     if item.TableObject.name in self.work_items:
                         self.work_items[item.TableObject.name].append(item)
                     else:
