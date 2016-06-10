@@ -4,6 +4,15 @@ from collections import OrderedDict
 from iggybase import utilities as util
 from iggybase import g_helper
 from .workflow import Workflow
+from .field_collection import FieldCollection
+class status:
+    IN_PROGRESS = 2
+    COMPLETE = 3
+    FINAL = 4
+
+class timing:
+    BEFORE = 1
+    AFTER = 2
 
 # Retreives work_item_group info and processes steps and actions
 class WorkItemGroup:
@@ -42,6 +51,11 @@ class WorkItemGroup:
         self.buttons = []
         self.saved_rows = {}
 
+        # do before step actions, if current step
+        if self.show_step_num == self.step_num:
+            self.do_step_actions(timing.BEFORE)
+
+
     def get_work_item_group(self):
         if self.name != 'new':
             wig = self.oac.work_item_group(self.name)
@@ -55,13 +69,12 @@ class WorkItemGroup:
                     else:
                         self.work_items[item.TableObject.name] = [item]
 
-
     def get_step(self, step_num = None):
         # which step is the wig currently on
-        if self.WorkItemGroup and step_num:
-            step = self.workflow.steps[step_num]
-        elif self.WorkItemGroup:
+        if self.WorkItemGroup and not step_num:
             step = self.workflow.steps_by_id[self.WorkItemGroup.step_id]
+        elif step_num:
+            step = self.workflow.steps[step_num]
         else:
             step = self.workflow.steps[1]
         return step
@@ -91,6 +104,7 @@ class WorkItemGroup:
         self.saved_rows = saved_rows
 
     def update_step(self):
+        self.do_step_actions() # after step actions
         # next_step can be altered by actions, by default it is incremented by one
         if not self.is_complete() and self.next_step != self.step_num:
             success = self.oac.update_step(self.WorkItemGroup.id, self.next_step, self.workflow.id)
@@ -103,14 +117,14 @@ class WorkItemGroup:
             url = self.workflow.get_step_url(self.next_step, self.name)
         return url
 
-    def do_step_actions(self):
+    def do_step_actions(self, timing = timing.AFTER):
         # first perform any actions on this step
         # if new then insert work_item_group
         if self.step_num == 1 and self.name == 'new' and not self.is_complete():
             self.name = self.oac.insert_work_item_group(self.workflow.id,
                     self.step_num, status.IN_PROGRESS)
             self.get_work_item_group()
-        actions = self.oac.get_step_actions(self.step.Step.id)
+        actions = self.oac.get_step_actions(self.step.Step.id, timing)
         for action in actions:
             if hasattr(self, action.function):
                 func = getattr(self, action.function)
@@ -208,6 +222,7 @@ class WorkItemGroup:
         return breadcrumbs
 
     def set_complete(self):
+        self.do_step_actions() # after step actions
         if self.WorkItemGroup.status != status.COMPLETE:
             self.oac.update_work_item_group(self.WorkItemGroup.id, 'status', status.COMPLETE)
 
@@ -228,6 +243,21 @@ class WorkItemGroup:
                 else: # insert new
                     success = self.oac.set_work_items(self.WorkItemGroup.id, tbl_items, parent)
         return success
+
+    def insert_row(self, tables, fields = {}):
+        for table in tables:
+            fc = FieldCollection(None, table)
+            fc.set_fk_fields()
+            fc.set_defaults()
+            for field in fc.fields.values():
+                if not field.Field.display_name in fields and field.default:
+                    fields[field.Field.display_name] = field.default
+
+            row_id = self.oac.insert_row(table, fields)
+            if table in self.saved_rows:
+                self.saved_rows[table].append({'table': table, 'id': row_id})
+            else:
+                self.saved_rows[table] = [{'table': table, 'id': row_id}]
 
     def check_item_field_value(self, item, field, name):
         if item in self.saved_rows:
@@ -255,8 +285,3 @@ class WorkItemGroup:
                         parent_item = {'table': item, 'id': res.id}
                         success = self.oac.set_work_items(self.WorkItemGroup.id, none_list, parent_item)
 
-
-class status:
-    IN_PROGRESS = 2
-    COMPLETE = 3
-    FINAL = 4

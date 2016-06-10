@@ -568,18 +568,27 @@ class WorkItem(Base):
         return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
                (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
 
-class StepAction(Base):
+class StepTiming(Base):
     table_type = 'admin'
-    step_id = Column(Integer, ForeignKey('step.id'))
-    function = Column(String(255))
-    params = Column(String(255))
-
-    step_action_step = relationship("Step", foreign_keys=[step_id])
+    timing = Column(String(255))
 
     def __repr__(self):
         return "<%s(name=%s, description=%s, id=%d, organization_id=%d)>" % \
                (self.__class__.__name__, self.name, self.description, self.id, self.organization_id)
 
+class StepAction(Base):
+    table_type = 'admin'
+    step_id = Column(Integer, ForeignKey('step.id'))
+    function = Column(String(255))
+    params = Column(String(255))
+    timing = Column(Integer, ForeignKey('step_timing.id'))
+
+    step_action_step = relationship("Step", foreign_keys=[step_id])
+    step_action_timing = relationship("StepTiming", foreign_keys=[timing])
+
+    def __repr__(self):
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id)
 
 class Module(Base):
     table_type = 'admin'
@@ -670,7 +679,7 @@ class UserOrganization(Base):
 
 
 class Event(Base):
-    """The only thing that this table does is to map actions to database and other 
+    """The only thing that this table does is to map actions to database and other
     types of events.
     """
     table_type = 'admin'
@@ -678,7 +687,7 @@ class Event(Base):
 
 class EventType(Base):
     table_type = 'admin'
-    
+
 
 class DatabaseEvent(Base):
     """Database events.

@@ -116,6 +116,12 @@ def update_table_rows(facility_name, table_name):
     updated = tq.update_and_get_message(updates, ids, message_fields)
     return json.dumps({'updated': updated})
 
+@core.route('/new_workflow/<workflow_name>/ajax', methods=['GET', 'POST'])
+@login_required
+def new_workflow(facility_name, workflow_name):
+    print('test')
+    wig = WorkItemGroup('new', workflow_name, 1)
+    return json.dumps({'work_item_group': wig.name})
 
 @core.route('/search', methods=['GET', 'POST'])
 def search(facility_name):
@@ -339,6 +345,7 @@ def workflow(facility_name, workflow_name, page_context):
     template = 'workflow_summary'
 
     context = {'btn_overrides': {'bottom':{'new':{'button_value':('New ' + workflow_name.title())}}}}
+    context['hidden_fields'] = {'workflow_name': workflow_name}
     context['workflow_name'] = workflow_name
     return build_summary(table_name, page_form, template, context)
 
@@ -369,12 +376,10 @@ def work_item_group(facility_name, workflow_name, step, work_item_group):
     wig = WorkItemGroup(work_item_group, workflow_name, int(step))
     if 'next_step' in request.form:
         wig.set_saved(json.loads(request.form['saved_rows']))
-        wig.do_step_actions()
         next_step_url = wig.update_step()
         return redirect(next_step_url)
     elif 'complete' in request.form:
         wig.set_saved(json.loads(request.form['saved_rows']))
-        wig.do_step_actions()
         wig.set_complete()
         complete_url = wig.workflow.get_complete_url(wig.name)
         return redirect(complete_url)

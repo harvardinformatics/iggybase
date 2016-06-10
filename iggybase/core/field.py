@@ -62,6 +62,11 @@ class Field:
                 default = g.user.id
             elif self.Field.default == 'org':
                 default = g.current_org_id
+            # TODO: all trues should be stored at 1 but right now child and
+            # grandchild tables only work with True, we should fix this once we
+            # have a data_instance class
+            elif self.Field.default == 'True':
+                default = 1
             elif self.Field.default is not None:
                 default = self.Field.default
         self.default = default

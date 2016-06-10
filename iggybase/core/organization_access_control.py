@@ -670,6 +670,7 @@ class OrganizationAccessControl:
                                 (models.WorkItem.table_object_id ==
                                     parent_table_object_id),
                                 (models.WorkItem.row_id == parent['id'])
+
                         ]
                         parent_id = self.session.query(models.WorkItem.id).filter(*filters).first()[0]
                     new_row = table_model(name = new_name, active = 1,
@@ -692,8 +693,12 @@ class OrganizationAccessControl:
             success = True
         return success
 
-    def get_step_actions(self, step_id):
-        return self.session.query(models.StepAction).filter_by(step_id=step_id).order_by(models.StepAction.order).all()
+    def get_step_actions(self, step_id, timing):
+        return (self.session.query(models.StepAction)
+                .filter(
+                    models.StepAction.step_id==step_id,
+                    models.StepAction.timing == timing
+                ).order_by(models.StepAction.order).all())
 
     def get_attr_from_id(self, table_object_id, row_id, attr):
         table_object = self.session.query(models.TableObject).filter_by(id=table_object_id).first()
@@ -719,7 +724,12 @@ class OrganizationAccessControl:
         table_model = util.get_table('work_item_group')
         work_item_group_table_object = self.session.query(models.TableObject).filter_by(name='work_item_group').first()
         try:
-            step_id = self.session.query(models.Step.id).filter((models.Step.workflow_id == workflow_id), (models.Step.order == step_num)).first()[0]
+            step_id = (self.session.query(models.Step.id)
+                    .filter(
+                        (models.Step.workflow_id == workflow_id),
+                        (models.Step.order == step_num),
+                        (models.Step.active == 1)
+                    ).first()[0])
             new_name = work_item_group_table_object.get_new_name()
             new_row = table_model(name = new_name, active = 1,
                     organization_id = self.current_org_id, workflow_id = workflow_id,
@@ -755,3 +765,23 @@ class OrganizationAccessControl:
                         models.TableObject.id).
                 filter(models.WorkItem.work_item_group_id == work_item_group_id, models.WorkItem.organization_id.in_(self.org_ids)).all())
         return res
+
+    def insert_row(self, table, fields = {}):
+        new_name = None
+        table_model = util.get_table(table)
+        table_table_object = self.session.query(models.TableObject).filter_by(name=table).first()
+        try:
+            new_name = table_table_object.get_new_name()
+            new_row = table_model(name = new_name, **fields)
+            self.session.add(new_row)
+        except:
+            self.session.rollback()
+            print('rollback')
+            logging.info(
+                'insert_row into ' + table + ' rollback- params: ' +
+                json.dumps(fields)
+            )
+        else:
+            print('commit')
+            self.session.commit()
+        return new_row.id
