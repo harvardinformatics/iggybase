@@ -597,7 +597,7 @@ class OrganizationAccessControl:
 
         return names
 
-    def update_table_rows(self, updates, ids, table):
+    def update_rows(self, table, updates, ids):
         ids.sort()
         table_model = util.get_table(table)
         rows = table_model.query.filter(table_model.id.in_(ids), getattr(table_model, 'organization_id').in_(self.org_ids)).order_by('id').all()
@@ -622,15 +622,6 @@ class OrganizationAccessControl:
                 current_app.cache.increment_version([table])
             else:
                 self.session.rollback()
-        return updated
-
-    def update_step(self, work_item_group_id, step, workflow_id):
-        res = (self.session.query(models.Workflow, models.Step).
-               join(models.Step).
-               filter(models.Step.order == step, models.Workflow.id ==
-                   workflow_id).first())
-        step_id = res.Step.id
-        updated = self.update_table_rows({'step_id': step_id, 'before_action_complete': 0}, [work_item_group_id], 'work_item_group')
         return updated
 
     def set_work_items(self, work_item_group_id, save_items, parent, work_items = None):
@@ -706,36 +697,6 @@ class OrganizationAccessControl:
         row = self.session.query(table_model).filter_by(id=row_id).first()
         return getattr(row, attr)
 
-    def insert_work_item_group(self, workflow_id, step_num, status):
-        table_model = util.get_table('work_item_group')
-        work_item_group_table_object = self.session.query(models.TableObject).filter_by(name='work_item_group').first()
-        try:
-            step_id = (self.session.query(models.Step.id)
-                    .filter(
-                        (models.Step.workflow_id == workflow_id),
-                        (models.Step.order == step_num),
-                        (models.Step.active == 1)
-                    ).first()[0])
-            new_name = work_item_group_table_object.get_new_name()
-            new_row = table_model(name = new_name, active = 1,
-                    organization_id = self.current_org_id, workflow_id = workflow_id,
-                    step_id = step_id, status = status,
-                    before_action_complete = 0)
-            self.session.add(new_row)
-        except:
-            self.session.rollback()
-            print('rollback')
-            logging.info(
-                'insert_work_item_group rollback- params: '
-                + ' workflow_id: ' + str(workflow_id)
-                + ' step_num: ' + str(step_num)
-                + ' status: ' + str(status)
-            )
-        else:
-            print('commit')
-            self.session.commit()
-        return new_name
-
     def work_item_group(self, work_item_group):
         res = None
         if work_item_group:
@@ -771,4 +732,4 @@ class OrganizationAccessControl:
         else:
             print('commit')
             self.session.commit()
-        return new_row.id
+        return new_row

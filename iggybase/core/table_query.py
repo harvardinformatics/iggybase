@@ -131,7 +131,7 @@ class TableQuery:
         return list(self.table_dict.values())
 
     def update_and_get_message(self, updates, ids, message_fields):
-        updated = self.oac.update_table_rows(updates, ids, self.display_name)
+        updated = self.oac.update_rows(self.display_name, updates, ids)
         updated_info = []
         for i in updated:
             # for each row grab any message_fields, to inform the user about the

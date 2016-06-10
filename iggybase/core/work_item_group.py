@@ -108,7 +108,11 @@ class WorkItemGroup:
         self.do_step_actions() # after step actions
         # next_step can be altered by actions, by default it is incremented by one
         if not self.is_complete() and self.next_step != self.step_num:
-            success = self.oac.update_step(self.WorkItemGroup.id, self.next_step, self.workflow.id)
+            success = self.oac.update_rows(
+                    'work_item_group',
+                    {'step_id': self.workflow.steps[self.next_step].Step.id, 'before_action_complete': 0},
+                    [self.WorkItemGroup.id]
+            )
             if not success:
                 logging.error('Workflow: next step failed.  Work Item Group: ' +
                         self.name + ' Step: ' + self.step.Step.name)
@@ -122,8 +126,20 @@ class WorkItemGroup:
         # first perform any actions on this step
         # if new then insert work_item_group
         if self.step_num == 1 and self.name == 'new' and not self.is_complete():
-            self.name = self.oac.insert_work_item_group(self.workflow.id,
-                    self.step_num, status.IN_PROGRESS)
+            table = 'work_item_group'
+            # TODO: this should be in a generic locaion, maybe the data_instance
+            # class
+            fields = {'workflow_id': self.workflow.id,
+                'status': status.IN_PROGRESS, 'step_id': self.step.Step.id}
+            fc = FieldCollection(None, table)
+            fc.set_fk_fields()
+            fc.set_defaults()
+            for field in fc.fields.values():
+                if not field.Field.display_name in fields and field.default:
+                    fields[field.Field.display_name] = field.default
+
+            row = self.oac.insert_row(table, fields)
+            self.name = row.name
             self.get_work_item_group()
         if time != timing.BEFORE or (time == timing.BEFORE and self.WorkItemGroup.before_action_complete == 0):
             actions = self.oac.get_step_actions(self.step.Step.id, time)
@@ -135,7 +151,7 @@ class WorkItemGroup:
                         params = json.loads(action.params)
                     func(**params)
             if time == timing.BEFORE:
-                self.oac.update_table_rows({'before_action_complete': 1}, [self.WorkItemGroup.id], 'work_item_group')
+                self.oac.update_rows('work_item_group', {'before_action_complete': 1}, [self.WorkItemGroup.id])
 
     def set_dynamic_params(self):
         args = []
@@ -228,7 +244,7 @@ class WorkItemGroup:
     def set_complete(self):
         self.do_step_actions() # after step actions
         if self.WorkItemGroup.status != status.COMPLETE:
-            self.oac.update_table_rows({'status': status.COMPLETE}, [self.WorkItemGroup.id], 'work_item_group')
+            self.oac.update_rows('work_item_group', {'status': status.COMPLETE}, [self.WorkItemGroup.id])
 
     '''
     below are workflow action functions
@@ -257,11 +273,11 @@ class WorkItemGroup:
                 if not field.Field.display_name in fields and field.default:
                     fields[field.Field.display_name] = field.default
 
-            row_id = self.oac.insert_row(table, fields)
+            row = self.oac.insert_row(table, fields)
             if table in self.saved_rows:
-                self.saved_rows[table].append({'table': table, 'id': row_id})
+                self.saved_rows[table].append({'table': table, 'id': row.id})
             else:
-                self.saved_rows[table] = [{'table': table, 'id': row_id}]
+                self.saved_rows[table] = [{'table': table, 'id': row.id}]
 
     def check_item_field_value(self, item, field, name):
         if item in self.saved_rows:
@@ -279,7 +295,7 @@ class WorkItemGroup:
 
                 if skip_step: # if there are no samples
                     self.next_step = self.step_num
-                    self.oac.update_table_rows({'status': status.COMPLETE}, [self.WorkItemGroup.id], 'work_item_group')
+                    self.oac.update_rows('work_item_group', {'status': status.COMPLETE}, [self.WorkItemGroup.id])
                 else:
                     none_list = []
                     if res.quantity:

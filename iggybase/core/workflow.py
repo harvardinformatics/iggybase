@@ -8,16 +8,17 @@ class Workflow:
         self.rac = g_helper.get_role_access_control()
         self.Workflow = self.rac.workflow(self.name)
         self.id = self.Workflow.id
-        self.steps, self.steps_by_id = self.get_steps()
+
+        self.steps = OrderedDict()
+        self.steps_by_id = {}
+        # sets the above
+        self.get_steps()
 
     def get_steps(self):
         res = self.rac.workflow_steps(self.Workflow.id)
-        steps = OrderedDict()
-        steps_by_id = {}
         for row in res:
-            steps[row.Step.order] = row
-            steps_by_id[row.Step.id] = row
-        return steps, steps_by_id
+            self.steps[row.Step.order] = row
+            self.steps_by_id[row.Step.id] = row
 
     def get_complete_url(self, work_item_group_name):
         return self.get_url('workflow_complete', self.name, None, work_item_group_name)
