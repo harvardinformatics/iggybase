@@ -80,8 +80,12 @@ class FormGenerator():
             else:
                 choices = self.organization_access_control.\
                     get_foreign_key_data(field_data.FK_TableObject.id, field_data.Field.foreign_key_display)
+                if field_data.Field.drop_down_list_limit:
+                    drop_down_limit = field_data.Field.drop_down_list_limit
+                else:
+                    drop_down_limit = 25
 
-                if len(choices) > 25:
+                if len(choices) > drop_down_limit:
                     kwargs['iggybase_class'] = control_type
 
                     # TODO: I'm not sure what this is doing, but FK data is now
