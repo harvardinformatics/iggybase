@@ -122,6 +122,23 @@ def new_workflow(facility_name, workflow_name):
     wig = WorkItemGroup('new', workflow_name, 1)
     return json.dumps({'work_item_group': wig.name})
 
+# TODO: maybe we should move this to the api module
+@core.route('/get_row/<table_name>/ajax', methods=['GET', 'POST'])
+@login_required
+def get_row(facility_name, table_name):
+    criteria = request.json['criteria']
+    fields = request.json['fields']
+    oac = g_helper.get_org_access_control()
+    row = oac.get_row(table_name, criteria)
+    price = None
+    ret = {}
+    if row:
+        for field in fields:
+            ret[field] = str(getattr(row, field))
+            #price = row.price_per_unit
+    return json.dumps(ret)
+
+
 @core.route('/search', methods=['GET', 'POST'])
 def search(facility_name):
     table_name = request.args.get('table_object')

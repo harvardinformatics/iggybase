@@ -26,6 +26,37 @@ $( document ).ready( function () {
     }
 
     $.fn.setPrice = function ( e, ele ) {
-        console.log(ele)
+        var price_item = ele.val();
+        var row_sibs = ele.parent().parent().siblings();
+        var hidden_fields = $("#hidden_fields");
+        var table_name = hidden_fields.find('input[name=table]').val();
+        var facility = hidden_fields.find('input[name=facility]').val();
+        // TODO: use org id to get price_type
+        var criteria = {'price_item_id': price_item, 'price_type_id': 1};
+        var fields = ['price_per_unit'];
+        var url = $URL_ROOT + facility + '/core/get_row/price_list/ajax';
+        $.ajax({
+            // TODO: put facility in hidden fields and access dynamically
+            url: url,
+            data: JSON.stringify({
+                'criteria': criteria,
+                'fields': fields
+            }),
+            contentType: 'application/json;charset=UTF-8',
+            type: 'POST',
+            success: function(response) {
+                response = JSON.parse(response);
+                if(response.price_per_unit.length > 0) {
+                    price = parseFloat(response.price_per_unit);
+                    row_sibs.each(function() {
+                        var price_ele = $(this).find("[id^='data_entry_price_per_unit']");
+                        if (price_ele.length > 0) {
+                            $(price_ele).val(price);
+                        }
+                    });
+
+                }
+            }
+        });
     }
 } ) ( jQuery );
