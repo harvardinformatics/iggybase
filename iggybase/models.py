@@ -1,4 +1,5 @@
 from iggybase.tablefactory import TableFactory
+from iggybase.database import Base
 import logging
 
 table_factory = TableFactory()
@@ -6,8 +7,8 @@ table_factory = TableFactory()
 tables = table_factory.table_objects()
 
 for table_object in tables:
-    class_name = TableFactory.to_camel_case(table_object.name)
-    if class_name not in globals():
+    if table_object.name not in Base.metadata.tables:
+        class_name = TableFactory.to_camel_case(table_object.name)
         new_table = table_factory.table_object_factory(class_name, table_object)
 
         if new_table is not None:

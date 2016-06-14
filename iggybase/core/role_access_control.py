@@ -94,7 +94,7 @@ class RoleAccessControl:
             order_by(models.FieldRole.order, models.FieldRole.display_name).all()
 
         if res is None:
-            return {'Field': {}, 'FieldRole': {}}
+            return {'Field': {}, 'FieldRole': {}, 'DataType': {}}
         else:
             return res
 
@@ -160,7 +160,8 @@ class RoleAccessControl:
         filters = [
             (models.Field.active == active),
             (models.FieldRole.active == active),
-            (models.TableObject.active == active)
+            (models.TableObject.active == active),
+            (models.Field.data_type_id == models.DataType.id)
         ]
         if role_filter: # filters not needed for name of fk_field
             filters.append((models.TableObjectRole.role_id == self.role.id))
@@ -169,15 +170,19 @@ class RoleAccessControl:
             models.Field,
             models.TableObject,
             models.FieldRole,
-            models.TableObjectRole
+            models.TableObjectRole,
+            models.DataType
         ]
         joins = [
             models.FieldRole,
-            models.TableObjectRole
+            models.TableObjectRole,
+            models.DataType
         ]
         orders = [
             models.FieldRole.order,
-            models.Field.order
+            models.Field.order,
+            models.FieldRole.display_name,
+            models.Field.display_name
         ]
         outerjoins = []
 

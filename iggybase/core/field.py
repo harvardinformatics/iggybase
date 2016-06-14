@@ -5,10 +5,11 @@ import datetime
 import logging
 
 class Field:
-    def __init__ (self, field, table_object, field_role, order, table_query_field = None, calculation = None):
+    def __init__ (self, field, table_object, field_role, data_type, order, table_query_field = None, calculation = None):
         self.Field = field
         self.TableObject = table_object
         self.FieldRole = field_role
+        self.DataType = data_type
 
         # FK data will be set when set_fk_field is called
         self.FK_Field = None
@@ -50,7 +51,7 @@ class Field:
     def set_default(self, fk_defaults):
         default = None
         # set fk_default if there is one
-        if (self.is_foreign_key
+        if (self.is_foreign_key and self.FK_TableObject is not None
                 and self.FK_TableObject.name in fk_defaults):
             default = fk_defaults[self.FK_TableObject.name]
         else: # set default from field

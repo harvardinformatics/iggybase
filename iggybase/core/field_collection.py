@@ -36,6 +36,7 @@ class FieldCollection:
             field = Field(row.Field,
                     row.TableObject,
                     row.FieldRole,
+                    row.DataType,
                     order,
                     table_query_field,
                     calculation)

@@ -56,15 +56,21 @@ class TableFactory:
         return "".join(x.title() for x in components)
 
     def create_column(self, attributes, foreign_table_name=None, foreign_column_name=None):
+        # logging.info('attributes.data_type_id: ' +str(attributes.data_type_id))
         datatype = self.session.query(DataType).filter_by(id=attributes.data_type_id).filter_by(active=1).first()
 
         if attributes.data_type_id == 6:
             # file datatype
             dtcname = getattr(sqlalchemy, 'String')
             dtinst = dtcname(250)
-        elif attributes.data_type_id == 9 or attributes.data_type_id == 10:
+        elif attributes.data_type_id == 8 or attributes.data_type_id == 9:
             dtcname = getattr(sqlalchemy, 'Numeric')
             dtinst = dtcname(10, 2)
+        elif attributes.data_type_id == 7:
+            dtcname = getattr(sqlalchemy, 'Integer')
+            dtinst = dtcname(11)
+            foreign_table_name = 'long_text'
+            foreign_column_name = 'long_text'
         else:
             dtcname = getattr(sqlalchemy, datatype.name)
             if attributes.data_type_id == 2:

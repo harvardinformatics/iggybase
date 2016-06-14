@@ -9,6 +9,7 @@ from wtforms.validators import DataRequired, Length, email, Optional
 from iggybase import g_helper
 from iggybase import constants
 from iggybase.core.field_collection import FieldCollection
+from iggybase.core.data_instance import DataInstance
 from json import dumps, loads
 import logging
 
@@ -103,6 +104,7 @@ class FormGenerator():
 
                     return IggybaseLookUpField(display_name, **kwargs)
                 else:
+                    # logging.info(display_name + ' value: ' + str(value))
                     kwargs['coerce'] = int
                     kwargs['choices'] = choices
 
@@ -212,6 +214,9 @@ class FormGenerator():
 
                         ids = child_row_ids
 
+                    logging.info(link_table.name + ' ids:')
+                    logging.info(ids)
+
                     row_names = self.organization_access_control.\
                         get_child_row_names(link_table.name,
                                             table_data[link_type][table_index].child_link_field_id, ids)
@@ -274,19 +279,7 @@ class FormGenerator():
 
     def get_row(self, fields, row_name, row_counter, control_type):
         # logging.info('row_name: ' + row_name)
-        if row_name != 'new':
-            data = self.organization_access_control.get_entry_data(fields.fields, self.table_data.name, {'name': str(row_name)})
-            if data:
-                # logging.info('data is true')
-                data = data[0]
-
-                if type(data) is list:
-                    # logging.info('data[0] is none')
-                    data = None
-                    row_name = 'new'
-            else:
-                data = None
-                row_name = 'new'
+        data = DataInstance(self.table_data.name, row_name)
 
         self.classattr['startrow_'+str(row_counter)]=\
             HiddenField('startrow_'+str(row_counter))
@@ -296,21 +289,11 @@ class FormGenerator():
             # logging.info(str(field.Field.id) + " " + field.Field.display_name +': ' + field.FieldRole.display_name)
             value = None
 
-            if row_name != 'new' and data:
-                if  field.Field.display_name in data.keys():
-                    value = data[data.keys().index(field.Field.display_name)]
-            if value is None:
-                # logging.info(field.Field.field_name+': None')
-                self.classattr['old_value_'+field.Field.display_name+"_"+str(row_counter)]=\
-                    HiddenField('old_value_'+field.Field.display_name+"_"+str(row_counter))
+            if row_name != 'new' and data and field.Field.display_name in data.field_values.keys():
+                value = data.field_values[field.Field.display_name]
 
-                if row_name == 'new' and (field.default is not None and field.default != ''):
-                    # logging.info(field.Field.field_name + ': setting default')
-                    value = field.default
-            else:
-                # logging.info(field.Field.field_name+': '+str(value))
-                self.classattr['old_value_'+field.Field.display_name+"_"+str(row_counter)]=\
-                    HiddenField('old_value_'+field.Field.display_name+"_"+str(row_counter), default=value)
+            if value is None and row_name == 'new' and (field.default is not None and field.default != ''):
+                value = field.default
 
             control_id = 'data_entry_' + field.Field.display_name+"_"+str(row_counter)
             self.classattr[control_id] = self.input_field(field, field_display_name, row_name, control_id,

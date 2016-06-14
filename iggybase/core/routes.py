@@ -13,6 +13,7 @@ from iggybase.decorators import cached, templated
 from iggybase import forms
 import iggybase.templating as templating
 from iggybase.core.field_collection import FieldCollection
+from iggybase.core.form_parser import FormParser
 from .table_query_collection import TableQueryCollection
 from .work_item_group import WorkItemGroup
 import logging
@@ -276,8 +277,8 @@ def data_entry(facility_name, table_name, row_name, page_context):
     form = fg.default_data_entry_form(table_data, row_name)
 
     if form.validate_on_submit() and len(form.errors) == 0:
-        oac = g_helper.get_org_access_control()
-        row_names = oac.save_form()
+        fp = FormParser()
+        row_names = fp.parse()
 
         return saved_data(facility_name, module_name, table_name, row_names, page_context)
 
@@ -476,6 +477,7 @@ def saved_data(facility_name, module_name, table_name, row_names, page_context):
             msg = 'Error: %s,' % str(row_info['table']).replace('<', '').replace('>', '')
             error = True
         else:
+            logging.info(row_info['name'])
             table = urllib.parse.quote(row_info['table'])
             name = urllib.parse.quote(row_info['name'])
             msg += ' <a href=' + request.url_root + facility_name + '/' + module_name + '/detail/' + table + '/' + name + '>' + \
