@@ -111,7 +111,8 @@ class FormParser():
                         else:
                             row_data['data_entry'][field] = int(row_data['data_entry'][field])
                     except ValueError:
-                        instance.set_foreign_key_field_id(field, row_data['data_entry'][field])
+                        fk_id = instance.set_foreign_key_field_id(field, row_data['data_entry'][field])
+                        row_data['data_entry'][field] = fk_id[0]
                 elif meta_data.DataType.name.lower() == 'file':
                     directory = os.path.join(current_app.config['UPLOAD_FOLDER'], table_name_field,
                                              instance.instance_name)
