@@ -125,9 +125,7 @@ class Field:
             self.is_foreign_key = False # maybe no role access
 
     def _get_type(self):
-        # TODO: get some constants and caching working and return a constant
-        # that the receiving class can use for comparisons
-        return self.Field.data_type_id
+        return self.DataType.name.lower()
 
     def _get_calculation_fields(self, calculation):
         calc_fields = {}
@@ -164,3 +162,17 @@ class Field:
                     )
                 )
             )
+
+    def get_link(self, url_root, page = None, table = None):
+        link = url_root + g.facility + '/' + 'core'
+        if page:
+            link += '/' + page
+        if table:
+            link += '/' + table + '/'
+        return link
+
+    def get_file_link(self, url_root, row_name, file):
+        link = (url_root + g.facility
+                + '/core/' + self.TableObject.name + '/'
+                + row_name + '/' + file)
+        return link

@@ -178,6 +178,9 @@ class OrganizationAccessControl:
             else:  # non-fk field
                 tables.add(table_model)
                 col = getattr(table_model, field.Field.display_name)
+                if field.type == 'file': # give name as well
+                    col = getattr(table_model, 'name') + '/' + col
+
                 columns.append(col.label(field.name))
                                 # add to joins if not first table, avoid joining to self
                 if (not first_table_named

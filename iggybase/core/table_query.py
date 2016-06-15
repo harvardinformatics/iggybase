@@ -69,9 +69,9 @@ class TableQuery:
         for field in self.fc.fields.values():
             if field.link_visible() and allow_links:
                 if field.is_foreign_key:
-                    link_fields[field.name] = self.get_link(url_root, 'detail', field.FK_TableObject.name)
+                    link_fields[field.name] = field.get_link(url_root, 'detail', field.FK_TableObject.name)
                 else:
-                    link_fields[field.name] = self.get_link(url_root, 'detail', field.TableObject.name)
+                    link_fields[field.name] = field.get_link(url_root, 'detail', field.TableObject.name)
             if field.is_calculation():
                 calc_fields.append(field.name)
             if not field.visible:
@@ -97,7 +97,24 @@ class TableQuery:
                     col_str = str(col)
                     col = ('<a href="' + link_fields[name] + col_str + '">' +
                             col_str + '</a>')
-                elif col != None and self.fc.fields[name].type == 9:
+                elif col != None and self.fc.fields[name].type == 'file':
+                    filelist = col.split('|')
+                    file_links = []
+                    row_name = None
+                    for file in filelist:
+                        if not row_name:
+                            # row_name is being selected like:
+                            # rowname/one,two,three
+                            # it will only show up in the split of the first
+                            # file but should be used for all
+                            file_split = file.split('/')
+                            if len(file_split) > 1:
+                                row_name = file_split[0]
+                                file = file_split[1]
+                        link = self.fc.fields[name].get_file_link(url_root, row_name, file)
+                        file_links.append('<a href="' + link + '" target="_blank">' + file + '</a>')
+                    col = '|'.join(file_links)
+                elif col != None and self.fc.fields[name].type == 'decimal':
                     col = int(col)
 
                 row_dict[name] = col
@@ -105,14 +122,6 @@ class TableQuery:
                 # store values as a dict of dict so we can access any of the
                 # data by row_id and field display_name
                 self.table_dict[dt_row_id] = row_dict
-
-    def get_link(self, url_root, page = None, table = None):
-        link = url_root + g.facility + '/' + 'core'
-        if page:
-            link += '/' + page
-        if table:
-            link += '/' + table + '/'
-        return link
 
     def get_list_of_list(self): # for download
         table_list = []

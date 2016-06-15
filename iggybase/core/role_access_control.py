@@ -61,7 +61,6 @@ class RoleAccessControl:
                 self.set_routes()
             else:
                 self.set_routes()
-            self.set_routes()
         else:
             self.user = None
             self.role = None
