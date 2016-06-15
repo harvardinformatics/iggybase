@@ -419,7 +419,8 @@ class RoleAccessControl:
                 models.MenuRole.active == active,
                 models.Menu.parent_id == parent_id,
                 models.Menu.active == active
-            ).order_by(models.MenuRole.order, models.MenuRole.display_name, models.Menu.display_name).all())
+            ).order_by(models.MenuRole.order, models.MenuRole.display_name,
+                       models.Menu.order, models.Menu.display_name).all())
 
         for item in items:
             url = ''

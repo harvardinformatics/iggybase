@@ -47,8 +47,7 @@ $( document ).ready( function () {
                 ele.select();
                 alert( 'Code is not the correct format.\n\n###.#####.####.######.######.####.#####' );
             } else {
-                code = code_match[ 1 ] + "." + code_match[ 3 ] + "." + code_match[ 5 ] + "." + code_match[ 7 ] + "." + code_match[ 9 ] + "." + code_match[ 11 ] + "." + code_match[ 13 ];
-                spinal_code = code_match[ 1 ] + "-" + code_match[ 3 ] + "-" + code_match[ 5 ] + "-" + code_match[ 7 ] + "-" + code_match[ 9 ] + "-" + code_match[ 11 ] + "-" + code_match[ 13 ];
+                code = code_match[ 1 ] + "-" + code_match[ 3 ] + "-" + code_match[ 5 ] + "-" + code_match[ 7 ] + "-" + code_match[ 9 ] + "-" + code_match[ 11 ] + "-" + code_match[ 13 ];
                 ele.val( code );
 
                 var hidden_fields = $("#hidden_fields");
@@ -57,7 +56,7 @@ $( document ).ready( function () {
 
                 $.ajax( {
                     url: url,
-                    data: { spinal_code: spinal_code },
+                    data: { spinal_code: code },
                     success: function ( resp ) {
                         if ( resp == 'NOT_FOUND' )
                             alert('code was not verified in Spinal.\n\nPlease confirm the code.');
