@@ -67,18 +67,15 @@ class FormParser():
             # logging.info("row_data['record_data']['table_name']: " + row_data['record_data']['table_name'])
             # logging.info("row_data['record_data']['row_name']: " + row_data['record_data']['row_name'])
 
-            if 'organization_id' in row_data['data_entry'].keys():
-                row_org_id = row_data['data_entry']['organization_id']
+            if ('organization_id' in row_data['data_entry'].keys() and
+            row_data['data_entry']['organization_id']):
+                row_org_id = int(row_data['data_entry']['organization_id'])
             elif instance.get_value('organization_id') is not None:
                 row_org_id = instance.get_value('organization_id')
-            elif self.current_org_id is not None:
+            elif instance.organization_access_control.current_org_id is not None:
                 row_org_id = g.current_org_id
             else:
                 row_org_id = 1
-
-            # convert to an int if numeric
-            if row_org_id.isdigit():
-                row_org_id = int(row_org_id)
 
             if not isinstance(row_org_id, int):
                 row_orgs = instance.set_foreign_key_field_id({'organization_id': row_org_id})
