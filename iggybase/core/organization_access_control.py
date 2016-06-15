@@ -298,8 +298,8 @@ class OrganizationAccessControl:
         child_table = util.get_table(child_table_name)
         parent_column = getattr(child_table, field.display_name)
 
-        logging.info('child_table_name: ' + child_table_name)
-        logging.info('parent_column.name: ' + parent_column.name)
+        # logging.info('child_table_name: ' + child_table_name)
+        # logging.info('parent_column.name: ' + parent_column.name)
 
         rows = self.session.query(child_table).filter(parent_column.in_(parent_ids)).order_by('order', 'name').all( )
 

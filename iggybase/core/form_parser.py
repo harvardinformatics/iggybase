@@ -6,7 +6,7 @@ from iggybase.core.data_instance import DataInstance
 from iggybase import utilities as util
 from flask import request, g, current_app
 from collections import OrderedDict
-
+import logging
 
 class FormParser():
 
@@ -64,6 +64,9 @@ class FormParser():
 
             instance = DataInstance(row_data['record_data']['table_name'], row_data['record_data']['row_name'])
 
+            # logging.info("row_data['record_data']['table_name']: " + row_data['record_data']['table_name'])
+            # logging.info("row_data['record_data']['row_name']: " + row_data['record_data']['row_name'])
+
             if 'organization_id' in row_data['data_entry'].keys():
                 row_org_id = row_data['data_entry']['organization_id']
             elif instance.get_value('organization_id') is not None:
@@ -111,7 +114,7 @@ class FormParser():
                         else:
                             row_data['data_entry'][field] = int(row_data['data_entry'][field])
                     except ValueError:
-                        fk_id = instance.set_foreign_key_field_id(field, row_data['data_entry'][field])
+                        fk_id = instance.set_foreign_key_field_id({field: row_data['data_entry'][field]})
                         row_data['data_entry'][field] = fk_id[0]
                 elif meta_data.DataType.name.lower() == 'file':
                     directory = os.path.join(current_app.config['UPLOAD_FOLDER'], table_name_field,

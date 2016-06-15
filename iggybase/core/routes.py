@@ -303,8 +303,8 @@ def multiple_entry(facility_name, table_name, row_names, page_context):
     fg = form_generator.FormGenerator(table_name)
     form = fg.default_multiple_entry_form(row_names)
     if form.validate_on_submit() and len(form.errors) == 0 and len(row_names) != 0:
-        oac = g_helper.get_org_access_control()
-        row_names = oac.save_form()
+        fp = FormParser()
+        row_names = fp.parse()
 
         return saved_data(facility_name, module_name, table_name, row_names,
                 page_context)

@@ -78,7 +78,7 @@ class DataInstance:
         for field_name, field_value in field_values.items():
             self.field_values[field_name] = field_value
 
-        if 'name' in field_values.keys():
+        if 'name' in field_values.keys() and field_values['name'] is not None and field_values['name'] != '':
             self.instance_name = field_values['name']
 
     def set_foreign_key_field_id(self, text_values = {}):
@@ -118,14 +118,18 @@ class DataInstance:
         return self.field_values
 
     def save(self):
-        if self.new or self.instance.get_value('date_created') is None:
+        # logging.info('name at save: ' )
+        # logging.info(self.instance_name)
+        if self.new or self.get_value('date_created') is None:
             self.set_value('date_created', datetime.datetime.utcnow())
 
         self.set_value('last_modified', datetime.datetime.utcnow())
-        self.set_value('name', self.instance_name)
 
         for field_name, value in self.field_values.items():
-            setattr(self.instance, field_name, value)
+            if field_name == 'name' and (value is None or value == ''):
+                setattr(self.instance, field_name, self.instance_name)
+            else:
+                setattr(self.instance, field_name, value)
 
         if self.table_name != 'history':
             self.changed_values()
@@ -142,11 +146,11 @@ class DataInstance:
 
         self.fields, self.field_values, self.original_values = self.initialize_field_values()
 
-        logging.info('id at save post-refresh: ')
-        logging.info(self.instance.id)
+        # logging.info('id at save post-refresh: ')
+        # logging.info(self.instance.id)
 
-        logging.info('name at save: ' )
-        logging.info(self.instance.name)
+        # logging.info('name at save post-refresh: ' )
+        # logging.info(self.instance.name)
 
         return save_msg
 
