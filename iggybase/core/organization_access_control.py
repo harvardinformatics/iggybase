@@ -263,8 +263,6 @@ class OrganizationAccessControl:
 
         save_msg = {'id': instance.id, 'name': instance.name, 'table': instance.__tablename__}
 
-        self.session.commit()
-
         return save_msg
 
     def get_row_id(self, table_name, params):

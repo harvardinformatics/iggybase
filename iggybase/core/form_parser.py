@@ -1,7 +1,6 @@
 import re
 import os
 from werkzeug.utils import secure_filename
-from iggybase.core.field_collection import FieldCollection
 from iggybase.core.data_instance import DataInstance
 from iggybase import utilities as util
 from flask import request, g, current_app
@@ -106,7 +105,7 @@ class FormParser():
                     try:
                         # TODO find a better way to deal with no value in a select
                         # a top row is is added to all selects with an index of -99 (get_foreign_key_data)
-                        if int(row_data['data_entry'][field]) == -99:
+                        if row_data['data_entry'][field] == None or int(row_data['data_entry'][field]) == -99:
                             row_data['data_entry'][field] = None
                         else:
                             row_data['data_entry'][field] = int(row_data['data_entry'][field])
