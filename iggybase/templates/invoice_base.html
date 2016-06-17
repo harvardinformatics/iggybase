@@ -1,0 +1,95 @@
+{% import "bootstrap/wtf.html" as wtf %}
+{% import 'macros.html' as macros %}
+
+{% block doc -%}
+    <!DOCTYPE html>
+    <html {% block html_attribs %}{% endblock html_attribs %}>
+    {%- block html %}
+        <head>
+        {%- block head %}
+            <title>{% block title %}{% endblock title %}</title>
+
+            {%- block metas %}
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            {%- endblock metas %}
+
+            {%- block styles %}
+            <!-- Bootstrap -->
+            <link href="{{ url_for('static', filename='reset.css') }}" rel="stylesheet">
+            <link href="{{bootstrap_find_resource('css/bootstrap.css', cdn='bootstrap')}}" rel="stylesheet">
+
+            <link href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.3/jquery-ui.min.css" rel="stylesheet">
+
+            <link href="{{ url_for('static', filename='invoice.css') }}" rel="stylesheet">
+            {% if g.rac and g.rac.facility.css %}
+                <link href="{{ url_for('static', filename='css/' + g.rac.facility.css) }}" rel="stylesheet">
+            {% endif %}
+            {%- endblock styles %}
+        {%- endblock head %}
+        </head>
+
+        <body{% block body_attribs %}{% endblock body_attribs %}>
+        {% block body -%}
+
+            <div class="row banner" id="banner">
+                <div class="col-md-1">
+                    <div class="banner-img-wrapper">
+                        <a href="{{ url_for('index') }}"> <img class="banner-img" src="{{ url_for('static', filename='images/harvard_wreath_150.png') }}"></a>
+                    </div>
+                </div>
+                <div class="col-md-7">
+                    <div class="banner-title">
+                            <h1>{{invoice.facility_title}}</h1>
+                    </div>
+                            <ul>
+                            {% for line in invoice.from_address %}
+                                <li>{{line}}</li>
+                            {% endfor %}
+                            </ul>
+                </div>
+            </div>
+
+            <div class="container-fluid">
+                <div class="col-sm-12">
+                    <div  class="content">
+                    {% block content -%}
+                    {% block content_title -%}
+                        {%- endblock content_title %}
+
+                        {% block page_content -%}
+                        {% if invoice.purchase_table %}
+                            <h3>Purchases</h3>
+                            <table>
+                                <tr>
+                                {% for header in invoice.purchase_table[0] %}
+                                    <th>{{header|title}}</th>
+                                {% endfor %}
+                                </tr>
+                                {% for row in invoice.purchase_table %}
+                                    <tr>
+                                    {% for val in row.values() %}
+                                        <td>{{val}}</td>
+                                    {% endfor %}
+                                    </tr>
+                                {% endfor %}
+                            </table>
+                        {% endif %}
+                        {%- endblock page_content %}
+                    {%- endblock content %}
+                    </div>
+
+                </div> <!-- end col-sm-10  -->
+            </div>  <!-- end container fluid -->
+
+
+
+            {% block scripts %}
+                <script>var $URL_ROOT = {{ request.url_root|tojson|safe }};</script>
+                <script src="{{bootstrap_find_resource('jquery.js', cdn='jquery')}}"></script>
+                <script src="{{bootstrap_find_resource('js/bootstrap.js', cdn='bootstrap')}}"></script>
+            {%- endblock scripts %}
+        {%- endblock body %}
+        </body>
+    {%- endblock html %}
+    </html>
+{% endblock doc -%}

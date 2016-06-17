@@ -429,7 +429,7 @@ class OrganizationAccessControl:
         return res
 
     def insert_row(self, table, fields = {}):
-        new_name = None
+        new_row = None
         table_model = util.get_table(table)
         table_table_object = self.session.query(models.TableObject).filter_by(name=table).first()
         try:
@@ -447,3 +447,17 @@ class OrganizationAccessControl:
             print('commit')
             self.session.commit()
         return new_row
+
+    def get_line_items(self, from_date, to_date):
+        line_item = util.get_table('line_item')
+        price_item = util.get_table('price_item')
+        order = util.get_table('order')
+        res = (self.session.query(line_item, price_item, order, models.User)
+                .join((price_item, line_item.price_item_id == price_item.id),
+                    (order, line_item.order_id == order.id),
+                    (models.User, models.User.id == order.submitter_id)).
+            filter(line_item.active == 1,
+                line_item.date_created.between(from_date, to_date)).order_by(order.organization_id).all())
+        return res
+
+
