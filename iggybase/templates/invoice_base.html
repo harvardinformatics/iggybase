@@ -57,23 +57,9 @@
                         {%- endblock content_title %}
 
                         {% block page_content -%}
-                        {% if invoice.purchase_table %}
-                            <h3>Purchases</h3>
-                            <table>
-                                <tr>
-                                {% for header in invoice.purchase_table[0] %}
-                                    <th>{{header|title}}</th>
-                                {% endfor %}
-                                </tr>
-                                {% for row in invoice.purchase_table %}
-                                    <tr>
-                                    {% for val in row.values() %}
-                                        <td>{{val}}</td>
-                                    {% endfor %}
-                                    </tr>
-                                {% endfor %}
-                            </table>
-                        {% endif %}
+                        {{ macros.invoice_table('Purchases', invoice.purchase_table) }}
+                        {{ macros.invoice_table('Expense Code Summary', invoice.charge_table) }}
+                        {{ macros.invoice_table('User Summary', invoice.user_table) }}
                         {%- endblock page_content %}
                     {%- endblock content %}
                     </div>

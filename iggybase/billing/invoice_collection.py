@@ -13,7 +13,7 @@ class InvoiceCollection:
         from_date, to_date = self.parse_dates()
         self.oac = g_helper.get_org_access_control()
         self.invoices = self.get_invoices(from_date, to_date)
-        self.calc_amount()
+        self.total_items()
         self.set_invoices()
         self.populate_tables()
 
@@ -24,22 +24,25 @@ class InvoiceCollection:
 
     def get_invoices(self, from_date, to_date):
         invoices = {} # line_items by org_id
-        line_items = self.oac.get_line_items(from_date, to_date)
-        for item in line_items:
-            org_id = item.Order.organization_id
-            if org_id in invoices:
-                invoices[org_id].add_item(item)
+        res = self.oac.get_line_items(from_date, to_date)
+        item_dict = {}
+        for row in res:
+            org_id = row.Order.organization_id
+            if org_id in item_dict:
+                item_dict[org_id].append(row)
             else:
-                invoices[org_id] = Invoice(org_id, [item])
+                item_dict[org_id] = [row]
+        for org_id, item_list in item_dict.items():
+            invoices[org_id] = Invoice(org_id, item_list)
         return invoices
 
-    def calc_amount(self):
+    def total_items(self):
         for invoice in self.invoices.values():
-            invoice.calc_amount()
+            invoice.total_items()
 
     def set_invoices(self):
         for invoice in self.invoices.values():
-            if invoice.amount:
+            if invoice.total:
                 invoice.set_invoice()
 
     def populate_tables(self):

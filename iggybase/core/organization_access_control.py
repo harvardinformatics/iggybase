@@ -460,4 +460,16 @@ class OrganizationAccessControl:
                 line_item.date_created.between(from_date, to_date)).order_by(order.organization_id).all())
         return res
 
+    def get_charge_method(self, order_id):
+        order_charge_method = util.get_table('order_charge_method')
+        order = util.get_table('order')
+        charge_method = util.get_table('charge_method')
+        charge_method_type = util.get_table('charge_method_type')
+        res = (self.session.query(order, order_charge_method, charge_method,
+            charge_method_type)
+                .join(order_charge_method, charge_method, charge_method_type)
+            .filter(order_charge_method.order_id == order_id, charge_method.active == 1)
+            .order_by(order.date_created, order_charge_method.percent.desc()).all())
+        return res
+
 
