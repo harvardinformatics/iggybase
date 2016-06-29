@@ -281,6 +281,8 @@ class OrganizationAccessControl:
                     fields[name] = 'new'
                 else:
                     fields[name] = old_fields[name]
+            elif old_fields[name] == '' and fields[name] == '':
+                fields[name] = 'new' 
 
         try:
             for field, data in fields.items():
