@@ -16,14 +16,9 @@
             {%- block styles %}
             <!-- Bootstrap -->
             <link href="{{ url_for('static', filename='reset.css') }}" rel="stylesheet">
-            <link href="{{bootstrap_find_resource('css/bootstrap.css', cdn='bootstrap')}}" rel="stylesheet">
-
-            <link href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.3/jquery-ui.min.css" rel="stylesheet">
+            <link href="{{ url_for('static', filename='bootstrap_css/bootstrap.css') }}" rel="stylesheet">
 
             <link href="{{ url_for('static', filename='invoice.css') }}" rel="stylesheet">
-            {% if g.rac and g.rac.facility.css %}
-                <link href="{{ url_for('static', filename='css/' + g.rac.facility.css) }}" rel="stylesheet">
-            {% endif %}
             {%- endblock styles %}
         {%- endblock head %}
         </head>
@@ -34,7 +29,7 @@
             <div class="row banner" id="banner">
                 <div class="col-md-1">
                     <div class="banner-img-wrapper">
-                        <a href="{{ url_for('index') }}"> <img class="banner-img" src="{{ url_for('static', filename='images/harvard_wreath_150.png') }}"></a>
+                        <a> <img class="banner-img" src="{{ url_for('static', filename='images/harvard_wreath_150.png') }}"></a>
                     </div>
                 </div>
                 <div class="col-md-7">
@@ -66,14 +61,6 @@
 
                 </div> <!-- end col-sm-10  -->
             </div>  <!-- end container fluid -->
-
-
-
-            {% block scripts %}
-                <script>var $URL_ROOT = {{ request.url_root|tojson|safe }};</script>
-                <script src="{{bootstrap_find_resource('jquery.js', cdn='jquery')}}"></script>
-                <script src="{{bootstrap_find_resource('js/bootstrap.js', cdn='bootstrap')}}"></script>
-            {%- endblock scripts %}
         {%- endblock body %}
         </body>
     {%- endblock html %}
