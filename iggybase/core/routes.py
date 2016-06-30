@@ -100,7 +100,6 @@ def summary_download(facility_name, table_name):
     csv = excel.make_response_from_array(tq.get_list_of_list(), 'csv')
     return csv
 
-
 @core.route('/update_table_rows/<table_name>', methods=['GET', 'POST'])
 @login_required
 def update_table_rows(facility_name, table_name):

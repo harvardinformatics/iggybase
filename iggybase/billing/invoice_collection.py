@@ -7,7 +7,12 @@ import logging
 
 class InvoiceCollection:
     # either a table_name or a table_query_id must be supplied
-    def __init__ (self, year, month):
+    def __init__ (self, year = None, month = None):
+        last_month = datetime.datetime.now() + relativedelta(months=-1)
+        if not year:
+            year = last_month.year
+        if not month:
+            month = last_month.month
         self.month = month
         self.year = year
         from_date, to_date = self.parse_dates()

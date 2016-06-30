@@ -1,4 +1,7 @@
 @page { size: landscape }
+body {
+    margin: 5px 20px;
+}
 .banner {
     height: 100px;
 }

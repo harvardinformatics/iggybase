@@ -42,7 +42,7 @@ class FieldCollection:
                     calculation)
             field_dict[field.name] = field
 
-            if field.type == 4:
+            if field.type == 'datetime':
                 self.date_fields[field.display_name] = order
         return field_dict
 

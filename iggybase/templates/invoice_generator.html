@@ -6,4 +6,7 @@
         <div class="content_title">
             <h1>Invoice Generator</h1>
         </div>
+        {{ macros.render_select(years, 'year_select')}}
+        {{ macros.render_select(months, 'month_select')}}
+
     {%- endblock content_title %}

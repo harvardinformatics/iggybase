@@ -1,7 +1,9 @@
 from flask import abort, request, current_app
+from collections import OrderedDict
 from importlib import import_module
 from iggybase.admin.models import TableObject
 from iggybase.database import db_session
+import datetime
 import logging
 
 FACILITY = 0
@@ -91,10 +93,20 @@ def get_path(part):
     path = path.split('/')
     return path[part]
 
-
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1] in current_app.config['ALLOWED_EXTENSIONS']
 
+def get_last_x_years(x = 10):
+    now = datetime.datetime.now()
+    years = list(range(now.year, (now.year - x), -1))
+    return years
+
+def get_months_dict():
+    months = OrderedDict()
+    for i in range(1, 13):
+        month = datetime.date(1900, i, 1).strftime('%b')
+        months[month] = i
+    return months
 
 class DictObject(dict):
     def __init__(self, dict):
