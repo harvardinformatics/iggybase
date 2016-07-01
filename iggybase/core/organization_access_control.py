@@ -195,6 +195,17 @@ class OrganizationAccessControl:
                     field.TableObject.name == first_table_named):
                 if type(criteria[criteria_key]) is list:
                     wheres.append(col.in_(criteria[criteria_key]))
+                if type(criteria[criteria_key]) is dict:
+                    if ('from' in criteria[criteria_key]
+                        and 'to' in criteria[criteria_key]
+                    ):
+                        wheres.append(col.between(criteria[criteria_key]['from'],
+                            criteria[criteria_key]['to']))
+                    if( 'compare' in criteria[criteria_key]
+                        and 'value' in criteria[criteria_key]
+                    ):
+                        if criteria[criteria_key]['compare'] == 'greater than':
+                            wheres.append(col > criteria[criteria_key]['value'])
                 else:
                     wheres.append(col == criteria[criteria_key])
         # add organization id checks on all tables, does not include fk tables

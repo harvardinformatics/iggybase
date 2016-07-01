@@ -13,14 +13,21 @@ from flask_weasyprint import render_pdf, HTML
 def default():
     return templating.page_template_context('index.html')
 
-@billing.route( '/invoices/' )
+@billing.route( '/invoice_summary/' )
 @login_required
 @templated()
-def invoices(facility_name):
-    ic = InvoiceCollection() # defaults to last complete
+def invoice_summary(facility_name):
+    ic = InvoiceCollection(2016, 5) # defaults to last complete
     ic.get_select_options()
-    return templating.page_template_context('invoice_generator', ic = ic)
+    return templating.page_template_context('invoice_summary', ic = ic,
+            table_name = 'line_item', table_query = ic.table_query)
 
+@billing.route( '/invoice_summary/ajax/' )
+@login_required
+def invoice_summary_ajax(facility_name):
+    ic = InvoiceCollection(2016, 5) # defaults to last complete
+    return core.routes.build_summary_ajax('line_item', 'invoice_summary',
+            ic.table_query_criteria)
 
 @billing.route( '/invoice/<year>/<month>/' )
 @login_required

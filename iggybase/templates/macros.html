@@ -20,18 +20,26 @@
     </form>
 {%- endmacro %}
 
-{% macro render_select(options, id) -%}
+{% macro render_select(options, id, default = None) -%}
 <select id="{{id}}">
     {% if options is mapping %}
         {% for name, val in options.items(): %}
-            <option value={{val}}>{{name}}</option>
+            {{ render_option(name, val, default) }}
         {% endfor %}
     {% else %}
         {% for val in options: %}
-            <option value={{val}}>{{val}}</option>
+            {{ render_option(val, val, default) }}
         {% endfor %}
     {% endif %}
     </select>
+{%- endmacro %}
+
+{% macro render_option(name, val, default = None) -%}
+    <option
+    {% if default and default == val %}
+        selected
+    {% endif %}
+    value={{val}}>{{name}}</option>
 {%- endmacro %}
 
 {% macro render_nav_menu(items, first_level = False) -%}

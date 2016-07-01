@@ -2,6 +2,7 @@ from collections import OrderedDict
 import datetime
 from dateutil.relativedelta import relativedelta
 from iggybase import g_helper
+from iggybase.core.table_query import TableQuery
 from iggybase import utilities as util
 from .invoice import Invoice
 import logging
@@ -21,6 +22,13 @@ class InvoiceCollection:
         self.invoices = self.get_invoices(from_date, to_date)
         self.set_invoices()
         self.populate_tables()
+        self.table_query_criteria = {
+                ('line_item', 'date_created'): {'from': from_date, 'to': to_date},
+                ('line_item', 'price_per_unit'): {'compare': 'greater than',
+                    'value': 0}
+        }
+        self.table_query = TableQuery(None, 1, 'Line Item', 'line_item',
+                self.table_query_criteria)
 
     def parse_dates(self):
         from_date = datetime.date(year=self.year, month=self.month, day=1)

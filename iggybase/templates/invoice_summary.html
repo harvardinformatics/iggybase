@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "summary_base.html" %}
 {% import "bootstrap/wtf.html" as wtf %}
 {% import 'macros.html' as macros %}
 
@@ -6,7 +6,7 @@
         <div class="content_title">
             <h1>Invoice Generator</h1>
         </div>
-        {{ macros.render_select(ic.select_years, 'year_select')}}
-        {{ macros.render_select(ic.select_months, 'month_select')}}
+        {{ macros.render_select(ic.select_years, 'year_select', ic.year)}}
+        {{ macros.render_select(ic.select_months, 'month_select', ic.month)}}
 
     {%- endblock content_title %}
