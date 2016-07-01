@@ -20,11 +20,17 @@
     </form>
 {%- endmacro %}
 
-{% macro render_select(option_dict, id) -%}
-    <select id="{{id}}">
-    {% for name, val in option_dict.items(): %}
-        <option value={{val}}>{{name}}</option>
-    {% endfor %}
+{% macro render_select(options, id) -%}
+<select id="{{id}}">
+    {% if options is mapping %}
+        {% for name, val in options.items(): %}
+            <option value={{val}}>{{name}}</option>
+        {% endfor %}
+    {% else %}
+        {% for val in options: %}
+            <option value={{val}}>{{val}}</option>
+        {% endfor %}
+    {% endif %}
     </select>
 {%- endmacro %}
 

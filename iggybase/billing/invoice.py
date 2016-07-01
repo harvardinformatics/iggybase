@@ -12,9 +12,9 @@ class Invoice:
         self.oac = g_helper.get_org_access_control()
 
         # set in total_items
-        self.orders = OrderedDict()
-        self.users = OrderedDict()
-        self.total = None
+        self.orders = self.group_by('Order', 'id')
+        self.users = self.group_by('User', 'id')
+        self.total = self.set_total()
 
         # below are for the template
         self.facility_title = 'Harvard University Sequencing Facility'
@@ -34,35 +34,28 @@ class Invoice:
             item_list.append(Item(item))
         return item_list
 
-    # group items by order and by users
     # set total amount
-    def total_items(self):
+    def set_total(self):
         total = 0
         for item in self.items:
-            self.group_by_order(item)
-            self.group_by_user(item)
             total += item.amount
-        self.total = total
+        return total
 
-    def group_by_order(self, item):
-        if item.Order.id in self.orders:
-            self.orders[item.Order.id]['items'].append(item)
-            self.orders[item.Order.id]['amount'] += item.amount
-        else:
-            self.orders[item.Order.id] = {
-                    'items': [item],
-                    'amount': item.amount
-            }
-
-    def group_by_user(self, item):
-        if item.User.id in self.users:
-            self.users[item.User.id]['items'].append(item)
-            self.users[item.User.id]['amount'] += item.amount
-        else:
-            self.users[item.User.id] = {
-                    'items': [item],
-                    'amount': item.amount
-            }
+    # group items by order and by users
+    def group_by(self, table_name, field_name):
+        grouped = OrderedDict()
+        for item in self.items:
+            table = getattr(item, table_name)
+            field_val = getattr(table, field_name)
+            if field_val in grouped:
+                grouped[field_val]['items'].append(item)
+                grouped[field_val]['amount'] += item.amount
+            else:
+                grouped[field_val] = {
+                        'items': [item],
+                        'amount': item.amount
+                }
+        return grouped
 
     def set_invoice(self):
         # find invoice id

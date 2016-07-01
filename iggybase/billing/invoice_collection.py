@@ -2,6 +2,7 @@ from collections import OrderedDict
 import datetime
 from dateutil.relativedelta import relativedelta
 from iggybase import g_helper
+from iggybase import utilities as util
 from .invoice import Invoice
 import logging
 
@@ -18,7 +19,6 @@ class InvoiceCollection:
         from_date, to_date = self.parse_dates()
         self.oac = g_helper.get_org_access_control()
         self.invoices = self.get_invoices(from_date, to_date)
-        self.total_items()
         self.set_invoices()
         self.populate_tables()
 
@@ -41,10 +41,6 @@ class InvoiceCollection:
             invoices[org_id] = Invoice(org_id, item_list)
         return invoices
 
-    def total_items(self):
-        for invoice in self.invoices.values():
-            invoice.total_items()
-
     def set_invoices(self):
         for invoice in self.invoices.values():
             if invoice.total:
@@ -54,3 +50,6 @@ class InvoiceCollection:
         for invoice in self.invoices.values():
             invoice.populate_tables()
 
+    def get_select_options(self):
+        self.select_years = util.get_last_x_years(5)
+        self.select_months = util.get_months_dict()
