@@ -4,9 +4,11 @@
 
     {% block content_title -%}
         <div class="content_title">
-            <h1>Invoice Generator</h1>
-        </div>
-        {{ macros.render_select(ic.select_years, 'year_select', ic.year)}}
-        {{ macros.render_select(ic.select_months, 'month_select', ic.month)}}
+            <h1>Invoice Summary: {{ic.month_str}} {{ic.year}}</h1>
 
+        {{ macros.render_select(ic.select_years, 'year_select', ic.year, hidden
+        = True)}}
+        {{ macros.render_select(ic.select_months, 'month_select', ic.month,
+        hidden = True)}}
+        </div>
     {%- endblock content_title %}

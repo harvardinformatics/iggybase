@@ -23,6 +23,7 @@ $(document).ready(function(){
         }
     });
     $( '#edit' ).click( function(){ return $.fn.editSelected(table);} );
+    $( '#create_invoice' ).click( function(){ return $.fn.createInvoice(table);} );
     $('#year_select, #month_select').change(function() {
         var ajax_url = $('#year_select').val() + '/' + $('#month_select').val() + '/ajax';
         table.ajax.url(ajax_url).load();
@@ -50,4 +51,35 @@ $(document).ready(function(){
         }
     }
 
+    $.fn.createInvoice = function (table) {
+        var hidden_fields = $("#hidden_fields");
+        var url = $URL_ROOT;
+        url += hidden_fields.find('input[name=facility]').val()
+            + '/' + hidden_fields.find('input[name=mod]').val()
+            + '/generate_invoices';
+        $.ajax({
+                // TODO: put facility in hidden fields and access dynamically
+                url:url,
+                contentType: 'application/json;charset=UTF-8',
+                type: 'POST',
+                table: table,
+                success: function(response) {
+                    response = JSON.parse(response);
+                    console.log(response);
+                    var message = '';
+                    if(response.updated.length > 0) {
+                        message = 'Successfully Updated:<br>' + response.updated.join(',');
+                        this.table.ajax.reload();
+                    } else {
+                        message = 'Unable to update any rows.';
+                    }
+                    $('#page_message p').html(message);
+                }
+        });
+        url = $URL_ROOT;
+        url += hidden_fields.find('input[name=facility]').val()
+        + '/' + hidden_fields.find('input[name=mod]').val()
+        + '/invoice_summary/';
+        window.location = (url);
+    }
 } ) ( jQuery );

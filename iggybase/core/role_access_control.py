@@ -13,6 +13,7 @@ class RoleAccessControl:
     def __init__(self):
         self.session = db_session()
         # set user and role
+        print(request)
         if g.user is not None and not g.user.is_anonymous:
             self.user = self.session.query(models.User).filter_by(id=g.user.id).first()
 
@@ -219,7 +220,6 @@ class RoleAccessControl:
                 outerjoin(*outerjoins).
                 filter(*filters).order_by(*orders).all()
         )
-
         return res
 
     def table_query_criteria(self, table_query_id):
@@ -360,21 +360,26 @@ class RoleAccessControl:
                 models.PageFormButton.page_form_id.in_(page_form_ids),
                 models.PageFormButtonRole.role_id == self.role.id,
                 models.PageFormButton.active == active,
-                models.PageFormButtonRole.active == active,
+                models.PageFormButtonRole.active == active
+        ]
+
+        # TODO: default behavior should not require us to enter another row in the db
+        if page_context and 'base-context' not in page_context:
+            filters.extend([
                 models.PageFormButtonContext.active == active,
                 models.PageFormContext.active == active,
                 models.PageFormContext.context.in_(page_context)
-        ]
+            ])
 
         res = (self.session.query(models.PageFormButton, models.SelectListItem)
                 .join(models.PageFormButtonRole,
                     models.PageFormButtonRole.page_form_button_id == models.PageFormButton.id)
-                .join(models.PageFormButtonContext,
-                    models.PageFormButtonContext.page_form_button_id == models.PageFormButton.id)
-                .join(models.PageFormContext,
-                    models.PageFormButtonContext.page_form_context_id == models.PageFormContext.id)
                 .join(models.SelectListItem,
                     models.SelectListItem.id == models.PageFormButton.button_location_id)
+                .outerjoin(models.PageFormButtonContext,
+                    models.PageFormButtonContext.page_form_button_id == models.PageFormButton.id)
+                .outerjoin(models.PageFormContext,
+                    models.PageFormButtonContext.page_form_context_id == models.PageFormContext.id)
             .filter(*filters)
             .order_by(models.PageFormButton.order, models.PageFormButton.id).all())
         for row in res:

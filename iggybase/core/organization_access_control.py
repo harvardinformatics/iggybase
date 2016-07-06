@@ -338,10 +338,12 @@ class OrganizationAccessControl:
                     setattr(row, col, val)
                     row_updates.append(col)
                 except AttributeError:
+                    print('Error')
                     pass
             # commit if we were able to make all updates for the row
             if len(updates) == len(row_updates):
                 self.session.commit()
+                print(updates)
                 updated.append(ids[i])
                 # change table version in cache
                 current_app.cache.increment_version([table])
@@ -443,6 +445,7 @@ class OrganizationAccessControl:
         new_row = None
         table_model = util.get_table(table)
         table_table_object = self.session.query(models.TableObject).filter_by(name=table).first()
+        fields['organization_id'] = self.current_org_id
         try:
             new_name = table_table_object.get_new_name()
             new_row = table_model(name = new_name, **fields)
@@ -459,16 +462,25 @@ class OrganizationAccessControl:
             self.session.commit()
         return new_row
 
-    def get_line_items(self, from_date, to_date):
+    def get_line_items(self, from_date, to_date, org_name = None):
         line_item = util.get_table('line_item')
         price_item = util.get_table('price_item')
         order = util.get_table('order')
+        filters = [
+            line_item.active == 1,
+            line_item.date_created.between(from_date, to_date)
+        ]
+        if org_name:
+            filters.append(models.Organization.name == org_name)
+
         res = (self.session.query(line_item, price_item, order, models.User)
                 .join((price_item, line_item.price_item_id == price_item.id),
                     (order, line_item.order_id == order.id),
-                    (models.User, models.User.id == order.submitter_id)).
-            filter(line_item.active == 1,
-                line_item.date_created.between(from_date, to_date)).order_by(order.organization_id).all())
+                    (models.User, models.User.id == order.submitter_id),
+                    (models.Organization, line_item.organization_id ==
+                        models.Organization.id)
+                ).
+            filter(*filters).order_by(order.organization_id).all())
         return res
 
     def get_charge_method(self, order_id):

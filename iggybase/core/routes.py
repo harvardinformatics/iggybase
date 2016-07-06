@@ -243,11 +243,11 @@ def search_results(facility_name):
     return modal_html
 
 
-@core.route('/uploads/<table_name>/<row_name>/<filename>')
+@core.route('/file/<table_name>/<row_name>/<filename>')
 @login_required
-def uploads(facility_name, table_name, row_name, filename):
-    upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], table_name, row_name)
-    return send_from_directory(upload_dir, filename)
+def file(facility_name, table_name, row_name, filename):
+    file_dir = os.path.join(current_app.config['FILE_FOLDER'], table_name, row_name)
+    return send_from_directory(file_dir, filename)
 
 
 @core.route('/change_role', methods=['POST'])
@@ -430,7 +430,7 @@ def build_summary(table_name, page_form, template, context={}):
                                             table_query=tq, **context)
 
 
-def build_summary_ajax(table_name, page_form, criteria):
+def build_summary_ajax(table_name, page_form, criteria = {}):
     start = time.time()
     route = util.get_path(util.ROUTE)
     # TODO: we don't want oac instantiated multiple times

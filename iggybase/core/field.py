@@ -173,6 +173,6 @@ class Field:
 
     def get_file_link(self, url_root, row_name, file):
         link = (url_root + g.facility
-                + '/core/' + self.TableObject.name + '/'
+                + '/core/file/' + self.TableObject.name + '/'
                 + row_name + '/' + file)
         return link

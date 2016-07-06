@@ -20,8 +20,12 @@
     </form>
 {%- endmacro %}
 
-{% macro render_select(options, id, default = None) -%}
-<select id="{{id}}">
+{% macro render_select(options, id, default = None, hidden = False) -%}
+<select id="{{id}}"
+    {% if hidden %}
+        hidden
+    {% endif %}
+    >
     {% if options is mapping %}
         {% for name, val in options.items(): %}
             {{ render_option(name, val, default) }}
@@ -95,7 +99,7 @@
     {% if field.type == "IggybaseFileField" and field.data is string %}
         {% set files = field.data.split('|') -%}
         {% for file in files -%}
-            <a href="/{{ g.facility }}/core/uploads/{{ table_name }}/{{ row_name }}/{{ file }}">{{ file }}</a>
+            <a href="/{{ g.facility }}/core/file/{{ table_name }}/{{ row_name }}/{{ file }}">{{ file }}</a>
         {% endfor -%}
     {% endif -%}
     </td></tr>

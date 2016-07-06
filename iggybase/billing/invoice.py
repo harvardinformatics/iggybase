@@ -1,15 +1,21 @@
-from flask import request, g
+from flask import request, g, render_template
 from collections import OrderedDict
 from iggybase import utilities as util
 from iggybase import g_helper
 from .item import Item
+from flask_weasyprint import render_pdf, HTML
+import os
+import glob
 
 class Invoice:
-    def __init__ (self, org_id, items):
+    def __init__ (self, from_date, to_date, org_id, items):
         self.org_id = org_id
         self.items = self.populate_items(items)
         self.Invoice = None # set by set_invoice
         self.oac = g_helper.get_org_access_control()
+        self.org_name = getattr(self.oac.get_row('organization', {'id': self.org_id}), 'name')
+        self.from_date = from_date
+        self.to_date = to_date
 
         # set in total_items
         self.orders = self.group_by('Order', 'id')
@@ -27,6 +33,7 @@ class Invoice:
         self.purchase_table = []
         self.charges_table = []
         self.user_table = []
+        self.pdf_prefix = 'invoice-' + str(self.from_date.year) + '-' + '{:02d}'.format(self.from_date.month) + '-' + self.org_name
 
     def populate_items(self, items):
         item_list = []
@@ -64,15 +71,15 @@ class Invoice:
             invoice_id = item.LineItem.invoice_id
             if invoice_id:
                 break
-
         # fetch or insert invoice row
         if invoice_id:
             self.Invoice = self.oac.get_row('invoice', {'id': invoice_id})
         else:
             cols = {
                 'invoice_organization_id': self.org_id,
-                'amount': int(self.amount),
-                'order_id': self.items[0].Order.id
+                'amount': int(self.total),
+                'order_id': self.items[0].Order.id,
+                'invoice_month': self.from_date,
             }
             self.Invoice = self.oac.insert_row('invoice', cols)
 
@@ -145,4 +152,56 @@ class Invoice:
                 rows.append(row)
         return rows
 
+    def get_pdf_list(self):
+        pdf_list = []
+        url = self.get_pdf_dir()
+        file_match = url + self.pdf_prefix
+        past_pdfs = glob.glob(file_match + '*.pdf')
+        for p in past_pdfs:
+            pdf_list.append(p.replace(url, ''))
+        pdf_list.sort(reverse=True)
+        return pdf_list
 
+    def get_next_pdf_name(self):
+        url = self.get_pdf_dir()
+        file_match = url + self.pdf_prefix
+        past_pdfs = glob.glob(file_match + '*.pdf')
+        max_ver = 0
+        if past_pdfs:
+            for p in past_pdfs:
+                ver = p.replace((file_match + '-'), '').replace('.pdf', '')
+                if ver.isnumeric():
+                    ver_int = int(ver)
+                    if ver_int > max_ver:
+                        max_ver = ver_int
+        new_ver = max_ver + 1
+        name = self.pdf_prefix + '-' + str(new_ver) + '.pdf'
+        return name
+
+    def get_pdf_dir(self):
+        return (
+                'files/invoice/'
+                + self.Invoice.name.replace(' ', '_').lower()
+                + '/'
+        )
+
+    def get_pdf_url(self):
+        url = self.get_pdf_dir()
+        if not os.path.exists(url):
+            os.makedirs(url)
+        url += self.get_next_pdf_name()
+        return url
+
+    def get_pdf_string(self):
+        pdf_list = [self.get_next_pdf_name()]
+        pdf_list.extend(self.get_pdf_list())
+        return '|'.join(pdf_list)
+
+    def update_pdf_name(self):
+        updated = self.oac.update_rows(
+                'invoice',
+                {'pdf': self.get_pdf_string()},
+                [self.Invoice.id]
+        )
+        # fetch invoice again
+        self.Invoice = self.oac.get_row('invoice', {'id': self.Invoice.id})

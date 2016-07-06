@@ -114,9 +114,11 @@ class TableQuery:
                         link = self.fc.fields[name].get_file_link(url_root, row_name, file)
                         file_links.append('<a href="' + link + '" target="_blank">' + file + '</a>')
                     col = '|'.join(file_links)
-                elif col != None and self.fc.fields[name].type == 'decimal':
+                elif (col != None
+                        and (self.fc.fields[name].type == 'decimal'
+                            or self.fc.fields[name].type == 'float')
+                ):
                     col = int(col)
-
                 row_dict[name] = col
             if row_dict:
                 # store values as a dict of dict so we can access any of the
