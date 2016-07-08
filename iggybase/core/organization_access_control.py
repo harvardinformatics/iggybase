@@ -34,7 +34,7 @@ class OrganizationAccessControl:
                     if level is not None:
                         facility_orgs[user_org.user_organization_id] = level
 
-            self.current_org_id = user_org
+            self.current_org_id = None
             min_level = None
             for user_org, level in facility_orgs.items():
                 # levels are ordered from high to low, hightest has order = 1
@@ -461,7 +461,7 @@ class OrganizationAccessControl:
             self.session.commit()
         return new_row
 
-    def get_line_items(self, from_date, to_date, org_name = None):
+    def get_line_items(self, from_date, to_date, org_list = []):
         line_item = util.get_table('line_item')
         price_item = util.get_table('price_item')
         order = util.get_table('order')
@@ -470,8 +470,9 @@ class OrganizationAccessControl:
             line_item.date_created >= from_date,
             line_item.date_created <= to_date
         ]
-        if org_name:
-            filters.append(models.Organization.name == org_name)
+
+        if org_list:
+            filters.append(models.Organization.name.in_(org_list))
 
         res = (self.session.query(line_item, price_item, order, models.User,
             models.Organization)

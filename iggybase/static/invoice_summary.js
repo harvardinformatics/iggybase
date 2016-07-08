@@ -22,34 +22,39 @@ $(document).ready(function(){
             style:'multi'
         }
     });
-    $( '#create_invoice' ).click( function(){ return $.fn.createInvoice(table);} );
+    $( '#regenerate' ).click( function(){ return $.fn.regenerate(table);} );
 } );
 
 ( function( $ ) {
-    $.fn.createInvoice = function (table) {
+    $.fn.regenerate = function (table) {
         var hidden_fields = $("#hidden_fields");
+        var table_name = hidden_fields.find('input[name=table]').val();
+        var year = hidden_fields.find('input[name=year]').val();
+        var month = hidden_fields.find('input[name=month]').val();
+        var column_name = table_name + '|organization_id';
+        var orgs = $.map(table.rows('.selected').data(), function (i) { return $(i[column_name]).text()});
         var url_prefix = $URL_ROOT + hidden_fields.find('input[name=facility]').val()
             + '/' + hidden_fields.find('input[name=mod]').val() + '/';
-        var year_month_url = '/' + $('#year_select').val() + '/' + $('#month_select').val();
         $.ajax({
                 // TODO: put facility in hidden fields and access dynamically
-                url:url_prefix + 'generate_invoices' + year_month_url,
+                url:url_prefix + 'generate_invoices/' + year + '/' + month + '/',
+                data: JSON.stringify({
+                    'orgs': orgs,
+                }),
                 contentType: 'application/json;charset=UTF-8',
                 type: 'POST',
                 table: table,
                 success: function(response) {
                     response = JSON.parse(response);
-                    console.log(response);
                     var message = '';
-                    if(response.updated.length > 0) {
-                        message = 'Successfully Updated:<br>' + response.updated.join(',');
+                    if(response.generated.length > 0) {
+                        message = 'Successfully Generated:<br>' + response.generated.join(',');
                         this.table.ajax.reload();
                     } else {
-                        message = 'Unable to update any rows.';
+                        message = 'Unable to regenerate any rows.';
                     }
                     $('#page_message p').html(message);
                 }
         });
-        window.location = url_prefix + 'invoice_summary' + year_month_url;
     }
 } ) ( jQuery );

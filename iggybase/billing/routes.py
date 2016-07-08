@@ -1,4 +1,4 @@
-from flask import render_template
+from flask import render_template, request
 import json
 from collections import OrderedDict
 from flask.ext.security import login_required
@@ -15,7 +15,7 @@ MODULE_NAME = 'billing'
 @login_required
 @templated()
 def review(facility_name):
-    ic = InvoiceCollection(2016, 5) # defaults to last complete
+    ic = InvoiceCollection() # defaults to last complete
     ic.get_select_options()
     ic.get_table_query('line_item')
     return templating.page_template_context('review', ic = ic,
@@ -36,8 +36,10 @@ def invoice_summary(facility_name, year, month):
     ic = InvoiceCollection(int(year), int(month)) # defaults to last complete
     ic.get_select_options()
     ic.get_table_query('invoice')
+    hidden_fields = {'year': year, 'month': month}
     return templating.page_template_context('invoice_summary', ic = ic,
-        table_name = 'invoice', table_query = ic.table_query)
+            module_name = MODULE_NAME, table_name = 'invoice',
+            table_query = ic.table_query, hidden_fields = hidden_fields)
 
 @billing.route( '/invoice_summary/<year>/<month>/ajax/' )
 @login_required
@@ -49,7 +51,10 @@ def invoice_summary_ajax(facility_name, year, month):
 @billing.route('/generate_invoices/<year>/<month>/', methods=['GET', 'POST'])
 @login_required
 def generate_invoices(facility_name, year, month):
-    ic = InvoiceCollection(int(year), int(month)) # defaults to last complete
+    orgs = []
+    if 'orgs' in request.args:
+        orgs = request.json['orgs']
+    ic = InvoiceCollection(int(year), int(month), orgs) # defaults to last complete
     # can't update the pdf name in db after generation because pdf generation
     # borks the db_session for the request
     ic.update_pdf_names()

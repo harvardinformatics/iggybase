@@ -11,7 +11,7 @@ import logging
 
 class InvoiceCollection:
     # either a table_name or a table_query_id must be supplied
-    def __init__ (self, year = None, month = None, org_name = None):
+    def __init__ (self, year = None, month = None, org_list = []):
         last_month = datetime.datetime.now() + relativedelta(months=-1)
         if not year:
             year = last_month.year
@@ -21,9 +21,9 @@ class InvoiceCollection:
         self.year = year
         self.from_date, self.to_date = self.parse_dates()
         self.month_str = self.from_date.strftime('%b')
-        self.org_name = org_name
+        self.org_list = org_list
         self.oac = g_helper.get_org_access_control()
-        self.invoices = self.get_invoices(self.from_date, self.to_date, self.org_name)
+        self.invoices = self.get_invoices(self.from_date, self.to_date, self.org_list)
         self.populate_tables()
         self.table_query_criteria = {
                 'line_item': {
@@ -42,9 +42,9 @@ class InvoiceCollection:
         to_date = from_date + relativedelta(months=1) - relativedelta(days=1)
         return from_date, to_date
 
-    def get_invoices(self, from_date, to_date, org_name = None):
+    def get_invoices(self, from_date, to_date, org_list = []):
         invoices = {} # line_items by org_id
-        res = self.oac.get_line_items(from_date, to_date, org_name)
+        res = self.oac.get_line_items(from_date, to_date, org_list)
         item_dict = {}
         for row in res:
             org_name = row.Organization.name
