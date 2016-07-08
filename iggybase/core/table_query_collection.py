@@ -42,7 +42,7 @@ class TableQueryCollection:
             query.format_results(add_row_id, allow_links)
 
     def get_first(self):
-        first = []
+        first = None
         if self.queries:
             first = self.queries[0]
         return first

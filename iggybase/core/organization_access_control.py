@@ -473,7 +473,8 @@ class OrganizationAccessControl:
         if org_name:
             filters.append(models.Organization.name == org_name)
 
-        res = (self.session.query(line_item, price_item, order, models.User)
+        res = (self.session.query(line_item, price_item, order, models.User,
+            models.Organization)
                 .join((price_item, line_item.price_item_id == price_item.id),
                     (order, line_item.order_id == order.id),
                     (models.User, models.User.id == order.submitter_id),

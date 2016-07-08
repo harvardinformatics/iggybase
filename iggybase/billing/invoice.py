@@ -1,19 +1,18 @@
-from flask import request, g, render_template
+from flask import request, g
 from collections import OrderedDict
 from iggybase import utilities as util
 from iggybase import g_helper
 from .item import Item
-from flask_weasyprint import render_pdf, HTML
 import os
 import glob
 
 class Invoice:
-    def __init__ (self, from_date, to_date, org_id, items):
-        self.org_id = org_id
+    def __init__ (self, from_date, to_date, org_name, items):
+        self.org_name = org_name
         self.items = self.populate_items(items)
         self.Invoice = None # set by set_invoice
         self.oac = g_helper.get_org_access_control()
-        self.org_name = getattr(self.oac.get_row('organization', {'id': self.org_id}), 'name')
+        self.org_id = getattr(self.oac.get_row('organization', {'name': self.org_name}), 'id')
         self.from_date = from_date
         self.to_date = to_date
 
@@ -79,7 +78,7 @@ class Invoice:
                 'invoice_organization_id': self.org_id,
                 'amount': int(self.total),
                 'order_id': self.items[0].Order.id,
-                'invoice_month': self.from_date,
+                'invoice_month': self.from_date
             }
             self.Invoice = self.oac.insert_row('invoice', cols)
 
@@ -185,12 +184,12 @@ class Invoice:
                 + '/'
         )
 
-    def get_pdf_url(self):
-        url = self.get_pdf_dir()
-        if not os.path.exists(url):
-            os.makedirs(url)
-        url += self.get_next_pdf_name()
-        return url
+    def get_pdf_path(self):
+        path = self.get_pdf_dir()
+        if not os.path.exists(path):
+            os.makedirs(path)
+        path += self.get_next_pdf_name()
+        return path
 
     def get_pdf_string(self):
         pdf_list = [self.get_next_pdf_name()]

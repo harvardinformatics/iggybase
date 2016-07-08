@@ -2,13 +2,15 @@
 {% import "bootstrap/wtf.html" as wtf %}
 {% import 'macros.html' as macros %}
 
-    {% block content_title -%}
-        <div class="content_title">
-            <h1>Review Line Items</h1>
-            <p>Choose a month and review/ edit line itmes.<br>Once done click
-                'Create Invoices'.</p>
-        </div>
-        {{ macros.render_select(ic.select_years, 'year_select', ic.year)}}
-        {{ macros.render_select(ic.select_months, 'month_select', ic.month)}}
-
-    {%- endblock content_title %}
+{% block content_title -%}
+    <div class="content_title">
+        <h1>Review Line Items</h1>
+        <p>Choose a month and review/ edit line itmes.<br>Once done click
+            'Create Invoices'.</p>
+    </div>
+{%- endblock content_title %}
+{% block topbuttonbar %}
+    {{ macros.render_select(ic.select_years, 'year_select', ic.year)}}
+    {{ macros.render_select(ic.select_months, 'month_select', ic.month)}}
+    {{ super() }}
+{%- endblock topbuttonbar %}

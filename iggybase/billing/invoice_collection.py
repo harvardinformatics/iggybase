@@ -47,13 +47,13 @@ class InvoiceCollection:
         res = self.oac.get_line_items(from_date, to_date, org_name)
         item_dict = {}
         for row in res:
-            org_id = row.Order.organization_id
-            if org_id in item_dict:
-                item_dict[org_id].append(row)
+            org_name = row.Organization.name
+            if org_name in item_dict:
+                item_dict[org_name].append(row)
             else:
-                item_dict[org_id] = [row]
-        for org_id, item_list in item_dict.items():
-            invoices[org_id] = Invoice(self.from_date, self.to_date, org_id, item_list)
+                item_dict[org_name] = [row]
+        for org_name, item_list in item_dict.items():
+            invoices[org_name] = Invoice(self.from_date, self.to_date, org_name, item_list)
         return invoices
 
     def get_table_query(self, table):
@@ -71,9 +71,13 @@ class InvoiceCollection:
                 invoice.update_pdf_name()
 
     def generate_pdfs(self):
+        generated = []
         for invoice in self.invoices.values():
             if invoice.total:
-                self.generate_pdf(invoice)
+                path = self.generate_pdf(invoice)
+                if path:
+                    generated.append(path)
+        return generated
 
     def populate_tables(self):
         for invoice in self.invoices.values():
@@ -84,10 +88,20 @@ class InvoiceCollection:
         self.select_months = util.get_months_dict()
 
     def generate_pdf(self, invoice):
-        html = render_template('invoice_base.html',
-        module_name = 'billing',
-        invoice = invoice)
-        url = invoice.get_pdf_url()
-        #HTML(url_for('billing.invoice', facility_name = 'bauer', year=2016, month=5,
-        #    org_name = 'Bauer_Core')).write_pdf(url)
-        HTML(string=html).write_pdf(url)
+        try:
+            html = render_template('invoice_base.html',
+            module_name = 'billing',
+            invoice = invoice)
+            path = invoice.get_pdf_path()
+            #HTML(url_for('billing.invoice', facility_name = 'bauer', year=2016, month=5,
+            #    org_name = 'Bauer_Core')).write_pdf(url)
+            HTML(string=html).write_pdf(path)
+            return path
+        except:
+            return False
+
+    def get_invoice_by_org(self, org_name):
+        first = None
+        if org_name in self.invoices:
+            first = self.invoices[org_name]
+        return first

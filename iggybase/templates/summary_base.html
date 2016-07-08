@@ -9,13 +9,7 @@
 {%- endblock styles %}
 {% block title %}Iggybase - {{ table_name.replace( '_',' ' ) }}{% endblock %}
 
-{% block page_msg %}
-    <div id="page_message">
-            <p>
-                {{ page_msg|safe }}
-            </p>
-        </div>
-{%- endblock page_msg -%}
+
 {% block topbuttonbar %}
     {{ super() }}
     {{ macros.render_buttons(top_buttons)}}

@@ -11,11 +11,6 @@ from flask_weasyprint import render_pdf, HTML
 
 MODULE_NAME = 'billing'
 
-@billing.route('/')
-@templated()
-def default():
-    return templating.page_template_context('index.html')
-
 @billing.route( '/review/' )
 @login_required
 @templated()
@@ -27,7 +22,6 @@ def review(facility_name):
         table_name = 'line_item', table_query = ic.table_query,
         module_name=MODULE_NAME)
 
-
 @billing.route( '/review/<year>/<month>/ajax/' )
 @login_required
 def review_ajax(facility_name, year, month):
@@ -35,11 +29,11 @@ def review_ajax(facility_name, year, month):
     return core.routes.build_summary_ajax('line_item', 'review',
             ic.table_query_criteria['line_item'])
 
-@billing.route( '/invoice_summary/' )
+@billing.route( '/invoice_summary/<year>/<month>/' )
 @login_required
 @templated()
-def invoice_summary(facility_name):
-    ic = InvoiceCollection(2016, 5) # defaults to last complete
+def invoice_summary(facility_name, year, month):
+    ic = InvoiceCollection(int(year), int(month)) # defaults to last complete
     ic.get_select_options()
     ic.get_table_query('invoice')
     return templating.page_template_context('invoice_summary', ic = ic,
@@ -52,72 +46,27 @@ def invoice_summary_ajax(facility_name, year, month):
     return core.routes.build_summary_ajax('invoice', 'invoice_summary',
             ic.table_query_criteria['invoice'])
 
-@billing.route( '/generate_invoices/' )
+@billing.route('/generate_invoices/<year>/<month>/', methods=['GET', 'POST'])
 @login_required
-def generate_invoices(facility_name):
-    ic = InvoiceCollection(2016, 5) # defaults to last complete
-    ic.get_select_options()
+def generate_invoices(facility_name, year, month):
+    ic = InvoiceCollection(int(year), int(month)) # defaults to last complete
     # can't update the pdf name in db after generation because pdf generation
     # borks the db_session for the request
     ic.update_pdf_names()
-    ic.generate_pdfs()
-    return json.dumps({'ok':'ok'})
+    generated = ic.generate_pdfs()
+    return json.dumps({'generated':generated})
 
 
 @billing.route( '/invoice/<year>/<month>/<org_name>/' )
 @login_required
 def invoice(facility_name, year, month, org_name):
-    template = 'invoice_generator'
-    print('invoice gen')
     ic = InvoiceCollection(int(year), int(month), org_name)
     return render_template('invoice_base.html',
             module_name = 'billing',
-            invoice = ic.invoices[84])
-
-'''@billing.route( '/invoice/<year>/<month>/<org_name>.pdf' )
-@login_required
-def invoice_pdf(facility_name, year, month, org_name):
-    template = 'invoice_generator'
-    print('invoice gen')
-    ic = InvoiceCollection(int(year), int(month), org_name)
-    html = render_template('invoice_base.html',
-            module_name = 'billing',
-            invoice = ic.invoices[84])
-
-    return render_pdf(HTML(string=html))'''
+            invoice = ic.get_invoice_by_org(org_name))
 
 @billing.route( '/invoice/<year>/<month>/<org_name>.pdf' )
 @login_required
 def invoice_pdf(facility_name, year, month, org_name):
-    '''template = 'invoice_generator'
-    print('invoice gen')
-    ic = InvoiceCollection(int(year), int(month), org_name)
-    html = render_template('invoice_base.html',
-            module_name = 'billing',
-            invoice = ic.invoices[84])'''
-
-    #return render_pdf(HTML(string=html))
     return render_pdf(HTML(string=invoice(facility_name = facility_name,
         year = year, month = month, org_name = org_name)))
-'''
-@billing.route( '/invoice/<year>/<month>/' )
-@login_required
-def invoice(facility_name, year, month):
-    template = 'invoice_generator'
-    print('invoice gen')
-    ic = InvoiceCollection(int(year), int(month))
-    return render_template('invoice_base.html',
-            module_name = 'billing',
-            invoice = ic.invoices[84])
-
-@billing.route( '/invoice/<year>/<month>/download/' )
-@login_required
-def invoice_download(facility_name, year, month):
-    template = 'invoice_generator'
-    print('invoice gen')
-    ic = InvoiceCollection(int(year), int(month))
-    html = render_template('invoice_base.html',
-            module_name = 'billing',
-            invoice = ic.invoices[84])
-    return render_pdf(HTML(string=html))
-'''

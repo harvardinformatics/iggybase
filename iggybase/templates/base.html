@@ -114,6 +114,13 @@
                     {% block content -%}
                         {% block content_title -%}
                         {%- endblock content_title %}
+                        {% block page_msg %}
+                            <div id="page_message">
+                                    <p>
+                                        {{ page_msg|safe }}
+                                    </p>
+                                </div>
+                        {%- endblock page_msg -%}
 
                         {% block topbuttonbar -%}
                         {%- endblock topbuttonbar %}
