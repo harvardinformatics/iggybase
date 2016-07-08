@@ -1,4 +1,4 @@
-from flask import render_template, current_app, url_for, request
+from flask import render_template
 from collections import OrderedDict
 import datetime
 from dateutil.relativedelta import relativedelta
@@ -6,7 +6,7 @@ from iggybase import g_helper
 from iggybase.core.table_query import TableQuery
 from iggybase import utilities as util
 from .invoice import Invoice
-from flask_weasyprint import render_pdf, HTML
+from flask_weasyprint import HTML
 import logging
 
 class InvoiceCollection:
@@ -79,6 +79,17 @@ class InvoiceCollection:
                     generated.append(path)
         return generated
 
+    def generate_pdf(self, invoice):
+        try:
+            html = render_template('invoice_base.html',
+            module_name = 'billing',
+            invoice = invoice)
+            path = invoice.get_pdf_path()
+            HTML(string=html).write_pdf(path)
+            return path
+        except:
+            return False
+
     def populate_tables(self):
         for invoice in self.invoices.values():
             invoice.populate_tables()
@@ -86,19 +97,6 @@ class InvoiceCollection:
     def get_select_options(self):
         self.select_years = util.get_last_x_years(5)
         self.select_months = util.get_months_dict()
-
-    def generate_pdf(self, invoice):
-        try:
-            html = render_template('invoice_base.html',
-            module_name = 'billing',
-            invoice = invoice)
-            path = invoice.get_pdf_path()
-            #HTML(url_for('billing.invoice', facility_name = 'bauer', year=2016, month=5,
-            #    org_name = 'Bauer_Core')).write_pdf(url)
-            HTML(string=html).write_pdf(path)
-            return path
-        except:
-            return False
 
     def get_invoice_by_org(self, org_name):
         first = None

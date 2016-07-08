@@ -20,12 +20,8 @@
     </form>
 {%- endmacro %}
 
-{% macro render_select(options, id, default = None, hidden = False) -%}
-<select id="{{id}}"
-    {% if hidden %}
-        hidden
-    {% endif %}
-    >
+{% macro render_select(options, id, default = None) -%}
+<select id="{{id}}">
     {% if options is mapping %}
         {% for name, val in options.items(): %}
             {{ render_option(name, val, default) }}

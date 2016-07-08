@@ -13,7 +13,6 @@ class RoleAccessControl:
     def __init__(self):
         self.session = db_session()
         # set user and role
-        print(request)
         if g.user is not None and not g.user.is_anonymous:
             self.user = self.session.query(models.User).filter_by(id=g.user.id).first()
 
@@ -220,6 +219,7 @@ class RoleAccessControl:
                 outerjoin(*outerjoins).
                 filter(*filters).order_by(*orders).all()
         )
+
         return res
 
     def table_query_criteria(self, table_query_id):

@@ -1,4 +1,4 @@
-from flask import render_template, request, url_for
+from flask import render_template
 import json
 from collections import OrderedDict
 from flask.ext.security import login_required

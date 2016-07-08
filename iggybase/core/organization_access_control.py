@@ -199,8 +199,8 @@ class OrganizationAccessControl:
                     if ('from' in criteria[criteria_key]
                         and 'to' in criteria[criteria_key]
                     ):
-                        wheres.append(col.between(criteria[criteria_key]['from'],
-                            criteria[criteria_key]['to']))
+                        wheres.extend([col >= criteria[criteria_key]['from'],
+                            col <= criteria[criteria_key]['to']])
                     if( 'compare' in criteria[criteria_key]
                         and 'value' in criteria[criteria_key]
                     ):
@@ -338,12 +338,10 @@ class OrganizationAccessControl:
                     setattr(row, col, val)
                     row_updates.append(col)
                 except AttributeError:
-                    print('Error')
                     pass
             # commit if we were able to make all updates for the row
             if len(updates) == len(row_updates):
                 self.session.commit()
-                print(updates)
                 updated.append(ids[i])
                 # change table version in cache
                 current_app.cache.increment_version([table])
@@ -445,6 +443,7 @@ class OrganizationAccessControl:
         new_row = None
         table_model = util.get_table(table)
         table_table_object = self.session.query(models.TableObject).filter_by(name=table).first()
+        # ensure one inserts under ones current_org_id
         fields['organization_id'] = self.current_org_id
         try:
             new_name = table_table_object.get_new_name()
@@ -468,7 +467,8 @@ class OrganizationAccessControl:
         order = util.get_table('order')
         filters = [
             line_item.active == 1,
-            line_item.date_created.between(from_date, to_date)
+            line_item.date_created >= from_date,
+            line_item.date_created <= to_date
         ]
         if org_name:
             filters.append(models.Organization.name == org_name)
