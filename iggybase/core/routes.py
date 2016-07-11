@@ -245,10 +245,15 @@ def search_results(facility_name):
 
 @core.route('/file/<table_name>/<row_name>/<filename>')
 @login_required
-def file(facility_name, table_name, row_name, filename):
+def file_row(facility_name, table_name, row_name, filename):
     file_dir = os.path.join(current_app.config['FILE_FOLDER'], table_name, row_name)
     return send_from_directory(file_dir, filename)
 
+@core.route('/file/<table_name>/<filename>')
+@login_required
+def file(facility_name, table_name, filename):
+    file_dir = os.path.join(current_app.config['FILE_FOLDER'], table_name)
+    return send_from_directory(file_dir, filename)
 
 @core.route('/change_role', methods=['POST'])
 @login_required

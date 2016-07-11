@@ -1,4 +1,4 @@
-from flask import render_template
+from flask import render_template, request, g
 from collections import OrderedDict
 import datetime
 from dateutil.relativedelta import relativedelta
@@ -8,6 +8,7 @@ from iggybase import utilities as util
 from .invoice import Invoice
 from flask_weasyprint import HTML
 import logging
+import os
 
 class InvoiceCollection:
     # either a table_name or a table_query_id must be supplied
@@ -36,6 +37,8 @@ class InvoiceCollection:
                 }
         }
         self.set_invoices()
+        self.page_list = []
+        self.doc_list = []
 
     def parse_dates(self):
         from_date = datetime.date(year=self.year, month=self.month, day=1)
@@ -77,6 +80,13 @@ class InvoiceCollection:
                 path = self.generate_pdf(invoice)
                 if path:
                     generated.append(path)
+        for doc in self.doc_list:
+            for p in doc.pages:
+                self.page_list.append(p)
+        if self.doc_list:
+            all_path = self.get_all_pdf_path()
+            print(all_path)
+            self.doc_list[0].copy(self.page_list).write_pdf(all_path)
         return generated
 
     def generate_pdf(self, invoice):
@@ -85,7 +95,10 @@ class InvoiceCollection:
             module_name = 'billing',
             invoice = invoice)
             path = invoice.get_pdf_path()
-            HTML(string=html).write_pdf(path)
+            #HTML(string=html).write_pdf(path)
+            doc = HTML(string=html).render()
+            self.doc_list.append(doc)
+            doc.write_pdf(path)
             return path
         except:
             return False
@@ -103,3 +116,14 @@ class InvoiceCollection:
         if org_name in self.invoices:
             first = self.invoices[org_name]
         return first
+
+    def get_all_pdf_path(self):
+        path = 'files/invoice/' + 'all_invoices-' + str(self.from_date.year) + '-' + '{:02d}'.format(self.from_date.month) + '.pdf'
+        return path
+
+    def get_all_pdf_link(self):
+        link = None
+        path = self.get_all_pdf_path()
+        if os.path.exists(path):
+            link = request.url_root + g.facility + '/core/file/invoice/all_invoices-' + str(self.from_date.year) + '-' + '{:02d}'.format(self.from_date.month) + '.pdf'
+        return link
