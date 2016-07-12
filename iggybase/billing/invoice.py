@@ -5,6 +5,7 @@ from iggybase import g_helper
 from .item import Item
 import os
 import glob
+import logging
 
 class Invoice:
     def __init__ (self, from_date, to_date, org_name, items):
@@ -84,13 +85,16 @@ class Invoice:
 
         # update line_item if invoice_id not set
         if self.Invoice:
+            to_update = []
             for item in self.items:
                 if not item.LineItem.invoice_id:
-                        self.oac.update_rows(
-                                'line_item',
-                                {'invoice_id': self.Invoice.id},
-                                [item.LineItem.id]
-                        )
+                        to_update.append(item.LineItem.id)
+            if to_update:
+                updated = self.oac.update_rows(
+                        'line_item',
+                        {'invoice_id': self.Invoice.id},
+                        to_update
+                )
 
     def populate_tables(self):
         self.purchase_table = self.populate_purchase()

@@ -11,19 +11,22 @@ import logging
 import os
 
 class InvoiceCollection:
-    # either a table_name or a table_query_id must be supplied
     def __init__ (self, year = None, month = None, org_list = []):
+        # default to last month
         last_month = datetime.datetime.now() + relativedelta(months=-1)
         if not year:
             year = last_month.year
         if not month:
             month = last_month.month
+
         self.month = month
         self.year = year
+        self.org_list = org_list
         self.from_date, self.to_date = self.parse_dates()
         self.month_str = self.from_date.strftime('%b')
-        self.org_list = org_list
+
         self.oac = g_helper.get_org_access_control()
+        # create invoice objects
         self.invoices = self.get_invoices(self.from_date, self.to_date, self.org_list)
         self.populate_tables()
         self.table_query_criteria = {
@@ -36,9 +39,7 @@ class InvoiceCollection:
                     ('invoice', 'invoice_month'): {'from': self.from_date, 'to': self.to_date},
                 }
         }
-        self.set_invoices()
-        self.page_list = []
-        self.doc_list = []
+        self.set_invoices() # creates invoice rows in DB
 
     def parse_dates(self):
         from_date = datetime.date(year=self.year, month=self.month, day=1)
@@ -46,7 +47,7 @@ class InvoiceCollection:
         return from_date, to_date
 
     def get_invoices(self, from_date, to_date, org_list = []):
-        invoices = {} # line_items by org_id
+        invoices = OrderedDict() # line_items by org_id
         res = self.oac.get_line_items(from_date, to_date, org_list)
         item_dict = {}
         for row in res:
@@ -80,25 +81,15 @@ class InvoiceCollection:
                 path = self.generate_pdf(invoice)
                 if path:
                     generated.append(path)
-        for doc in self.doc_list:
-            for p in doc.pages:
-                self.page_list.append(p)
-        if self.doc_list:
-            all_path = self.get_all_pdf_path()
-            print(all_path)
-            self.doc_list[0].copy(self.page_list).write_pdf(all_path)
         return generated
 
     def generate_pdf(self, invoice):
         try:
             html = render_template('invoice_base.html',
             module_name = 'billing',
-            invoice = invoice)
+            ic = self)
             path = invoice.get_pdf_path()
-            #HTML(string=html).write_pdf(path)
-            doc = HTML(string=html).render()
-            self.doc_list.append(doc)
-            doc.write_pdf(path)
+            HTML(string=html).write_pdf(path)
             return path
         except:
             return False
@@ -111,19 +102,9 @@ class InvoiceCollection:
         self.select_years = util.get_last_x_years(5)
         self.select_months = util.get_months_dict()
 
-    def get_invoice_by_org(self, org_name):
-        first = None
-        if org_name in self.invoices:
-            first = self.invoices[org_name]
-        return first
-
-    def get_all_pdf_path(self):
-        path = 'files/invoice/' + 'all_invoices-' + str(self.from_date.year) + '-' + '{:02d}'.format(self.from_date.month) + '.pdf'
-        return path
+    def get_all_pdf_name(self):
+        return 'invoice-' + str(self.from_date.year) + '-' + '{:02d}'.format(self.from_date.month) + '.pdf'
 
     def get_all_pdf_link(self):
-        link = None
-        path = self.get_all_pdf_path()
-        if os.path.exists(path):
-            link = request.url_root + g.facility + '/core/file/invoice/all_invoices-' + str(self.from_date.year) + '-' + '{:02d}'.format(self.from_date.month) + '.pdf'
+        link = request.url_root + g.facility + '/billing/invoice/' + self.get_all_pdf_name()
         return link

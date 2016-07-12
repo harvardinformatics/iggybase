@@ -23,6 +23,8 @@
 
         <body{% block body_attribs %}{% endblock body_attribs %}>
         {% block body -%}
+        {% for invoice in ic.invoices.values():%}
+            <div class="page_break"></div>
             <div class="pdf_header">
                 <div class="banner" id="banner">
                     <div class="banner-img-wrapper">
@@ -53,18 +55,12 @@
             </div>
 
                     <div  class="content">
-                    {% block content -%}
-                    {% block content_title -%}
-                        {%- endblock content_title %}
-
-                        {% block page_content -%}
                         {{ macros.invoice_table('Purchases', invoice.purchase_table) }}
                         {{ macros.invoice_table('Expense Code Summary', invoice.charge_table) }}
                         {{ macros.invoice_table('User Summary', invoice.user_table) }}
-                        {%- endblock page_content %}
-                    {%- endblock content %}
                     </div>
 
+        {% endfor %}
         {%- endblock body %}
         </body>
     {%- endblock html %}

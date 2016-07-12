@@ -324,8 +324,12 @@ class OrganizationAccessControl:
     def update_rows(self, table, updates, ids):
         ids.sort()
         table_model = util.get_table(table)
-        rows = table_model.query.filter(table_model.id.in_(ids),
-                                        getattr(table_model, 'organization_id').in_(self.org_ids)).order_by('id').all()
+
+        filters = [
+                table_model.id.in_(ids),
+                getattr(table_model, 'organization_id').in_(self.org_ids)
+        ]
+        rows = table_model.query.filter(*filters).order_by('id').all()
 
         updated = []
         for i, row in enumerate(rows):
@@ -338,7 +342,7 @@ class OrganizationAccessControl:
                     setattr(row, col, val)
                     row_updates.append(col)
                 except AttributeError:
-                    pass
+                    print('failed to update')
             # commit if we were able to make all updates for the row
             if len(updates) == len(row_updates):
                 self.session.commit()
@@ -347,6 +351,7 @@ class OrganizationAccessControl:
                 current_app.cache.increment_version([table])
             else:
                 self.session.rollback()
+                print('rollback')
         return updated
 
     def set_work_items(self, work_item_group_id, save_items, parent, work_items = None):

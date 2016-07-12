@@ -64,14 +64,19 @@ def generate_invoices(facility_name, year, month):
 
 @billing.route( '/invoice/<year>/<month>/<org_name>/' )
 @login_required
-def invoice(facility_name, year, month, org_name):
-    ic = InvoiceCollection(int(year), int(month), org_name)
+def invoice(facility_name, year, month, org_name = None):
+    org_list = []
+    if org_name:
+        org_list.append(org_name)
+    ic = InvoiceCollection(int(year), int(month), org_list)
     return render_template('invoice_base.html',
             module_name = 'billing',
-            invoice = ic.get_invoice_by_org(org_name))
+            ic=ic)
 
-@billing.route( '/invoice/<year>/<month>/<org_name>.pdf' )
+@billing.route( '/invoice/invoice-<year>-<month>.pdf' )
+@billing.route( '/invoice/invoice-<year>-<month>-<org_name>.pdf' )
 @login_required
-def invoice_pdf(facility_name, year, month, org_name):
-    return render_pdf(HTML(string=invoice(facility_name = facility_name,
-        year = year, month = month, org_name = org_name)))
+def invoice_pdf(facility_name, year, month, org_name = None):
+    html = (invoice(facility_name = facility_name,
+            year = year, month = month, org_name = org_name))
+    return render_pdf(HTML(string=html))

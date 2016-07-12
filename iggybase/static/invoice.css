@@ -84,3 +84,9 @@ h3 {
     display: table;
     width: 100%;
 }
+table {
+    page-break-inside: avoid;
+}
+.page_break {
+    page-break-before: always;
+}
