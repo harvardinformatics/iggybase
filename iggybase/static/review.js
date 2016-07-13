@@ -39,7 +39,7 @@ $(document).ready(function(){
         if (names.length > 0) {
             var url = $URL_ROOT;
             url += hidden_fields.find('input[name=facility]').val()
-                + '/' + hidden_fields.find('input[name=mod]').val()
+                + '/core'
                 + '/multiple_entry/' + table_name
                 + '/' + JSON.stringify(names);
             if ( url.length > 2000 )
