@@ -64,6 +64,7 @@ def generate_invoices(facility_name, year, month):
     return json.dumps({'generated':generated})
 
 
+@billing.route( '/invoice/<year>/<month>/' )
 @billing.route( '/invoice/<year>/<month>/<org_name>/' )
 @login_required
 def invoice(facility_name, year, month, org_name = None):
