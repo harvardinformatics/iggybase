@@ -480,12 +480,14 @@ class OrganizationAccessControl:
             filters.append(models.Organization.name.in_(org_list))
 
         res = (self.session.query(line_item, price_item, order, models.User,
-            models.Organization)
+            models.Organization, models.OrganizationType)
                 .join((price_item, line_item.price_item_id == price_item.id),
                     (order, line_item.order_id == order.id),
                     (models.User, models.User.id == order.submitter_id),
                     (models.Organization, line_item.organization_id ==
-                        models.Organization.id)
+                        models.Organization.id),
+                    (models.OrganizationType, models.Organization.organization_type_id ==
+                        models.OrganizationType.id)
                 ).
             filter(*filters).order_by(order.organization_id).all())
         return res

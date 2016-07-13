@@ -47,17 +47,17 @@ class InvoiceCollection:
         return from_date, to_date
 
     def get_invoices(self, from_date, to_date, org_list = []):
-        invoices = OrderedDict() # line_items by org_id
+        invoices = []
         res = self.oac.get_line_items(from_date, to_date, org_list)
-        item_dict = {}
+        item_dict = OrderedDict()
         for row in res:
             org_name = row.Organization.name
             if org_name in item_dict:
                 item_dict[org_name].append(row)
             else:
                 item_dict[org_name] = [row]
-        for org_name, item_list in item_dict.items():
-            invoices[org_name] = Invoice(self.from_date, self.to_date, org_name, item_list)
+        for order, item_list in enumerate(item_dict.values()):
+            invoices.append(Invoice(self.from_date, self.to_date, org_name, item_list, order))
         return invoices
 
     def get_table_query(self, table):
@@ -65,18 +65,18 @@ class InvoiceCollection:
                 self.table_query_criteria[table])
 
     def set_invoices(self):
-        for invoice in self.invoices.values():
+        for invoice in self.invoices:
             if invoice.total:
                 invoice.set_invoice()
 
     def update_pdf_names(self):
-        for invoice in self.invoices.values():
+        for invoice in self.invoices:
             if invoice.total:
                 invoice.update_pdf_name()
 
     def generate_pdfs(self):
         generated = []
-        for invoice in self.invoices.values():
+        for invoice in self.invoices:
             if invoice.total:
                 path = self.generate_pdf(invoice)
                 if path:
@@ -87,7 +87,7 @@ class InvoiceCollection:
         try:
             html = render_template('invoice_base.html',
             module_name = 'billing',
-            invoices = {invoice.org_name: invoice})
+            invoices = [invoice])
             path = invoice.get_pdf_path()
             HTML(string=html).write_pdf(path)
             return path
@@ -95,7 +95,7 @@ class InvoiceCollection:
             return False
 
     def populate_tables(self):
-        for invoice in self.invoices.values():
+        for invoice in self.invoices:
             invoice.populate_tables()
 
     def get_select_options(self):

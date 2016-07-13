@@ -8,9 +8,10 @@ import glob
 import logging
 
 class Invoice:
-    def __init__ (self, from_date, to_date, org_name, items):
+    def __init__ (self, from_date, to_date, org_name, items, order):
         self.org_name = org_name
         self.items = self.populate_items(items)
+        self.order = order + 1
         self.Invoice = None # set by set_invoice
         self.oac = g_helper.get_org_access_control()
         self.org_id = getattr(self.oac.get_row('organization', {'name': self.org_name}), 'id')
@@ -33,7 +34,17 @@ class Invoice:
         self.purchase_table = []
         self.charges_table = []
         self.user_table = []
-        self.pdf_prefix = 'invoice-' + str(self.from_date.year) + '-' + '{:02d}'.format(self.from_date.month) + '-' + self.org_name
+
+        self.core_prefix = {
+                'bauer': 'SC',
+                'helium': 'HU'
+        }
+        self.pdf_prefix = (
+                self.core_prefix[g.facility]
+                + self.get_organization_type_prefix()
+                + '-' + str(self.from_date.year) +  '{:02d}'.format(self.from_date.month)
+                + '-' + util.zero_pad(self.order, 4)
+        )
 
     def populate_items(self, items):
         item_list = []
@@ -79,7 +90,8 @@ class Invoice:
                 'invoice_organization_id': self.org_id,
                 'amount': int(self.total),
                 'order_id': self.items[0].Order.id,
-                'invoice_month': self.from_date
+                'invoice_month': self.from_date,
+                'order': self.order
             }
             self.Invoice = self.oac.insert_row('invoice', cols)
 
@@ -208,3 +220,10 @@ class Invoice:
         )
         # fetch invoice again
         self.Invoice = self.oac.get_row('invoice', {'id': self.Invoice.id})
+
+    def get_organization_type_prefix(self):
+        prefix = ''
+        if self.items[0].OrganizationType.name == 'harvard':
+            prefix = 'ib'
+        return prefix
+
