@@ -52,8 +52,10 @@ def invoice_summary_ajax(facility_name, year, month):
 @login_required
 def generate_invoices(facility_name, year, month):
     orgs = []
-    if 'orgs' in request.args:
-        orgs = request.json['orgs']
+    if request.data:
+        post_params = request.get_json()
+        if 'orgs' in post_params:
+            orgs = post_params['orgs']
     ic = InvoiceCollection(int(year), int(month), orgs) # defaults to last complete
     # can't update the pdf name in db after generation because pdf generation
     # borks the db_session for the request
@@ -71,7 +73,7 @@ def invoice(facility_name, year, month, org_name = None):
     ic = InvoiceCollection(int(year), int(month), org_list)
     return render_template('invoice_base.html',
             module_name = 'billing',
-            ic=ic)
+            invoices=ic.invoices)
 
 @billing.route( '/invoice/invoice-<year>-<month>.pdf' )
 @billing.route( '/invoice/invoice-<year>-<month>-<org_name>.pdf' )

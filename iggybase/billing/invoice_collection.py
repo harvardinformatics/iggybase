@@ -87,7 +87,7 @@ class InvoiceCollection:
         try:
             html = render_template('invoice_base.html',
             module_name = 'billing',
-            ic = self)
+            invoices = {invoice.org_name: invoice})
             path = invoice.get_pdf_path()
             HTML(string=html).write_pdf(path)
             return path

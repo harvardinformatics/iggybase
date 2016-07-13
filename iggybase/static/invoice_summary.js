@@ -31,7 +31,7 @@ $(document).ready(function(){
         var table_name = hidden_fields.find('input[name=table]').val();
         var year = hidden_fields.find('input[name=year]').val();
         var month = hidden_fields.find('input[name=month]').val();
-        var column_name = table_name + '|organization_id';
+        var column_name = table_name + '|invoice_organization_id';
         var orgs = $.map(table.rows('.selected').data(), function (i) { return $(i[column_name]).text()});
         var url_prefix = $URL_ROOT + hidden_fields.find('input[name=facility]').val()
             + '/' + hidden_fields.find('input[name=mod]').val() + '/';

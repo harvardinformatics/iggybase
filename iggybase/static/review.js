@@ -64,7 +64,6 @@ $(document).ready(function(){
                 table: table,
                 success: function(response) {
                     response = JSON.parse(response);
-                    console.log(response);
                     var message = '';
                     if(response.generated.length > 0) {
                         message = 'Successfully Generated:<br>' + response.generated.join(',');

@@ -23,7 +23,7 @@
 
         <body{% block body_attribs %}{% endblock body_attribs %}>
         {% block body -%}
-        {% for invoice in ic.invoices.values():%}
+        {% for invoice in invoices.values():%}
             <div class="page_break"></div>
             <div class="pdf_header">
                 <div class="banner" id="banner">
