@@ -321,6 +321,28 @@ class OrganizationAccessControl:
 
         return names
 
+    def update_obj_rows(self, items, updates):
+        updated = []
+        for item in items:
+            row_updates = []
+            for col, val in updates.items():
+                try:
+                    setattr(item, col, val)
+                    row_updates.append(col)
+                except AttributeError:
+                    print('failed to update')
+            # commit if we were able to make all updates for the row
+            if len(updates) == len(row_updates):
+                self.session.commit()
+                updated.append(item.id)
+                # change table version in cache
+                current_app.cache.increment_version([item.__tablename__])
+            else:
+                self.session.rollback()
+                print('rollback')
+
+        return updated
+
     def update_rows(self, table, updates, ids):
         ids.sort()
         table_model = util.get_table(table)
@@ -470,17 +492,17 @@ class OrganizationAccessControl:
         line_item = util.get_table('line_item')
         price_item = util.get_table('price_item')
         order = util.get_table('order')
+        invoice = util.get_table('invoice')
         filters = [
             line_item.active == 1,
             line_item.date_created >= from_date,
             line_item.date_created <= to_date
         ]
-
         if org_list:
             filters.append(models.Organization.name.in_(org_list))
 
         res = (self.session.query(line_item, price_item, order, models.User,
-            models.Organization, models.OrganizationType)
+            models.Organization, models.OrganizationType, invoice)
                 .join((price_item, line_item.price_item_id == price_item.id),
                     (order, line_item.order_id == order.id),
                     (models.User, models.User.id == order.submitter_id),
@@ -488,8 +510,9 @@ class OrganizationAccessControl:
                         models.Organization.id),
                     (models.OrganizationType, models.Organization.organization_type_id ==
                         models.OrganizationType.id)
-                ).
-            filter(*filters).order_by(order.organization_id).all())
+                )
+                .outerjoin(invoice, invoice.id == line_item.invoice_id)
+            .filter(*filters).order_by((line_item.invoice_id == None), line_item.invoice_id, models.Organization.name).all())
         return res
 
     def get_charge_method(self, order_id):

@@ -25,10 +25,12 @@ class InvoiceCollection:
         self.from_date, self.to_date = self.parse_dates()
         self.month_str = self.from_date.strftime('%b')
 
-        self.oac = g_helper.get_org_access_control()
         # create invoice objects
+        self.oac = g_helper.get_org_access_control()
         self.invoices = self.get_invoices(self.from_date, self.to_date, self.org_list)
-        self.populate_tables()
+        self.populate_tables() # populates data for display
+
+        # used when making table queries
         self.table_query_criteria = {
                 'line_item': {
                     ('line_item', 'date_created'): {'from': self.from_date, 'to': self.to_date},
@@ -39,6 +41,7 @@ class InvoiceCollection:
                     ('invoice', 'invoice_month'): {'from': self.from_date, 'to': self.to_date},
                 }
         }
+
         self.set_invoices() # creates invoice rows in DB
 
     def parse_dates(self):
@@ -50,14 +53,45 @@ class InvoiceCollection:
         invoices = []
         res = self.oac.get_line_items(from_date, to_date, org_list)
         item_dict = OrderedDict()
+        # group by org_name and set invoice_order
         for row in res:
             org_name = row.Organization.name
             if org_name in item_dict:
-                item_dict[org_name].append(row)
+                item_dict[org_name]['items'].append(row)
+                if 'invoice_order' not in item_dict[org_name]:
+                    inv = getattr(row, 'Invoice', None)
+                    if inv:
+                        item_dict[org_name]['invoice_order'] = inv.order
             else:
-                item_dict[org_name] = [row]
-        for order, item_list in enumerate(item_dict.values()):
-            invoices.append(Invoice(self.from_date, self.to_date, org_name, item_list, order))
+                item_dict[org_name] = {'items': [row]}
+                inv = getattr(row, 'Invoice', None)
+                if inv:
+                    item_dict[org_name]['invoice_order'] = inv.order
+                else:
+                    item_dict[org_name]['invoice_order'] = None
+
+        # we need to order by org_name but if recreated we need to keep the old
+        # order
+        new_invoices = []
+        max_invoice_order = 0
+        # set existing invoices first, maintaining order
+        for item_list in item_dict.values():
+            if item_list['invoice_order']:
+                invoices.append(Invoice(self.from_date, self.to_date,
+                    item_list['items'],
+                    item_list['invoice_order']))
+                if item_list['invoice_order'] > max_invoice_order:
+                    max_invoice_order = item_list['invoice_order']
+            else:
+                new_invoices.append(item_list)
+        # then set new invoices in order of org_name
+        # increasing order after existing invoices
+        for new_invoice in new_invoices:
+            invoices.append(Invoice(self.from_date, self.to_date,
+            new_invoice['items'],
+                (max_invoice_order + 1)))
+            max_invoice_order += 1
+
         return invoices
 
     def get_table_query(self, table):
@@ -84,15 +118,12 @@ class InvoiceCollection:
         return generated
 
     def generate_pdf(self, invoice):
-        try:
-            html = render_template('invoice_base.html',
-            module_name = 'billing',
-            invoices = [invoice])
-            path = invoice.get_pdf_path()
-            HTML(string=html).write_pdf(path)
-            return path
-        except:
-            return False
+        html = render_template('invoice_base.html',
+        module_name = 'billing',
+        invoices = [invoice])
+        path = invoice.get_pdf_path()
+        HTML(string=html).write_pdf(path)
+        return path
 
     def populate_tables(self):
         for invoice in self.invoices:

@@ -6,17 +6,25 @@ from .item import Item
 import os
 import glob
 import logging
+import time
 
 class Invoice:
-    def __init__ (self, from_date, to_date, org_name, items, order):
-        self.org_name = org_name
+    def __init__ (self, from_date, to_date, items, order):
         self.items = self.populate_items(items)
-        self.order = order + 1
-        self.Invoice = None # set by set_invoice
-        self.oac = g_helper.get_org_access_control()
-        self.org_id = getattr(self.oac.get_row('organization', {'name': self.org_name}), 'id')
         self.from_date = from_date
         self.to_date = to_date
+        self.order = order
+
+        self.org_name = self.items[0].Organization.name
+        self.org_id = self.items[0].Organization.id
+
+        # set by set_invoice
+        self.id = None
+        self.last_modified = None
+        self.name = None
+        self.Invoice = None
+
+        self.oac = g_helper.get_org_access_control()
 
         # set in total_items
         self.orders = self.group_by('Order', 'id')
@@ -77,15 +85,13 @@ class Invoice:
 
     def set_invoice(self):
         # find invoice id
-        invoice_id = None
+        invoice_row = None
         for item in self.items:
-            invoice_id = item.LineItem.invoice_id
-            if invoice_id:
+            invoice_row = item.Invoice
+            if invoice_row:
                 break
-        # fetch or insert invoice row
-        if invoice_id:
-            self.Invoice = self.oac.get_row('invoice', {'id': invoice_id})
-        else:
+        # if new, insert invoice row
+        if not invoice_row:
             cols = {
                 'invoice_organization_id': self.org_id,
                 'amount': int(self.total),
@@ -93,19 +99,23 @@ class Invoice:
                 'invoice_month': self.from_date,
                 'order': self.order
             }
-            self.Invoice = self.oac.insert_row('invoice', cols)
+            invoice_row = self.oac.insert_row('invoice', cols)
+
+        self.id = invoice_row.id
+        self.name = invoice_row.name
+        self.last_modified = invoice_row.last_modified
+        self.Invoice = invoice_row
 
         # update line_item if invoice_id not set
-        if self.Invoice:
+        if self.id:
             to_update = []
             for item in self.items:
                 if not item.LineItem.invoice_id:
-                        to_update.append(item.LineItem.id)
+                        to_update.append(item.LineItem)
             if to_update:
-                updated = self.oac.update_rows(
-                        'line_item',
-                        {'invoice_id': self.Invoice.id},
-                        to_update
+                updated = self.oac.update_obj_rows(
+                        to_update,
+                        {'invoice_id': self.id}
                 )
 
     def populate_tables(self):
@@ -196,7 +206,7 @@ class Invoice:
     def get_pdf_dir(self):
         return (
                 'files/invoice/'
-                + self.Invoice.name.replace(' ', '_').lower()
+                + self.name.replace(' ', '_').lower()
                 + '/'
         )
 
@@ -213,13 +223,7 @@ class Invoice:
         return '|'.join(pdf_list)
 
     def update_pdf_name(self):
-        updated = self.oac.update_rows(
-                'invoice',
-                {'pdf': self.get_pdf_string()},
-                [self.Invoice.id]
-        )
-        # fetch invoice again
-        self.Invoice = self.oac.get_row('invoice', {'id': self.Invoice.id})
+        self.oac.update_obj_rows([self.Invoice], {'pdf':self.get_pdf_string()})
 
     def get_organization_type_prefix(self):
         prefix = ''
