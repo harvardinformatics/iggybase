@@ -492,6 +492,9 @@ class OrganizationAccessControl:
         line_item = util.get_table('line_item')
         price_item = util.get_table('price_item')
         order = util.get_table('order')
+        order_charge_method = util.get_table('order_charge_method')
+        charge_method = util.get_table('charge_method')
+        charge_method_type = util.get_table('charge_method_type')
         invoice = util.get_table('invoice')
         filters = [
             line_item.active == 1,
@@ -501,10 +504,14 @@ class OrganizationAccessControl:
         if org_list:
             filters.append(models.Organization.name.in_(org_list))
 
-        res = (self.session.query(line_item, price_item, order, models.User,
+        res = (self.session.query(line_item, price_item, order,
+            order_charge_method, charge_method, charge_method_type, models.User,
             models.Organization, models.OrganizationType, invoice)
                 .join((price_item, line_item.price_item_id == price_item.id),
                     (order, line_item.order_id == order.id),
+                    (order_charge_method, order.id == order_charge_method.order_id),
+                    (charge_method, order_charge_method.charge_method_id == charge_method.id),
+                    (charge_method_type, charge_method.charge_method_type_id == charge_method_type.id),
                     (models.User, models.User.id == order.submitter_id),
                     (models.Organization, line_item.organization_id ==
                         models.Organization.id),
@@ -512,7 +519,7 @@ class OrganizationAccessControl:
                         models.OrganizationType.id)
                 )
                 .outerjoin(invoice, invoice.id == line_item.invoice_id)
-            .filter(*filters).order_by((line_item.invoice_id == None), line_item.invoice_id, models.Organization.name).all())
+            .filter(*filters).order_by((line_item.invoice_id == None), line_item.invoice_id, models.Organization.name, charge_method.id).all())
         return res
 
     def get_charge_method(self, order_id):

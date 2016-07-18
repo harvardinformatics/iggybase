@@ -17,6 +17,7 @@ class Invoice:
 
         self.org_name = self.items[0].Organization.name
         self.org_id = self.items[0].Organization.id
+        self.charge_method_type = self.items[0].ChargeMethodType.name
 
         # set by set_invoice
         self.id = None
@@ -28,6 +29,7 @@ class Invoice:
 
         # set in total_items
         self.orders = self.group_by('Order', 'id')
+        self.get_charge_method()
         self.users = self.group_by('User', 'id')
         self.total = self.set_total()
 
@@ -120,7 +122,6 @@ class Invoice:
 
     def populate_tables(self):
         self.purchase_table = self.populate_purchase()
-        self.get_charge_method()
         self.charge_table = self.populate_charges()
         self.user_table = self.populate_users()
 
@@ -133,7 +134,7 @@ class Invoice:
                 row['order'] = item.Order.name
                 row['delivery date'] = item.LineItem.date_created
                 row['description'] = item.PriceItem.name
-                row['amount charged'] =  item.display_amount
+                row['amount'] =  item.display_amount
                 rows.append(row)
         return rows
 
@@ -145,6 +146,7 @@ class Invoice:
                     row = OrderedDict()
                     row['order'] = data['charge'].Order.name
                     row['expense code'] = data['charge'].ChargeMethod.code
+                    row['percent charged'] = int(data['charge'].OrderChargeMethod.percent or 0)
                     row['amount charged'] = "${:.2f}".format(data['amount'])
                     row['total charged'] = "${:.2f}".format(data['amount'])
                     rows.append(row)
@@ -153,9 +155,12 @@ class Invoice:
     def get_charge_method(self):
         for order_id, order in self.orders.items():
             self.orders[order_id]['charges'] = []
-            charges = self.oac.get_charge_method(order_id)
             amount_remaining = order['amount']
-            for charge in charges:
+            charges = {}
+            for item in order['items']:
+                if item.OrderChargeMethod.name not in charges:
+                    charges[item.OrderChargeMethod.name] = item
+            for charge in charges.values():
                 if amount_remaining:
                     amount_charged = (order['amount'] *
                     (int(charge.OrderChargeMethod.percent or 0)/100))
