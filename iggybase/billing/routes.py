@@ -17,9 +17,10 @@ MODULE_NAME = 'billing'
 def review(facility_name):
     ic = InvoiceCollection() # defaults to last complete
     ic.get_select_options()
-    ic.get_table_query('line_item')
+    ic.get_table_query_collection('line_item')
+    table_query = ic.tqc.get_first()
     return templating.page_template_context('review', ic = ic,
-        table_name = 'line_item', table_query = ic.table_query,
+        table_name = 'line_item', table_query = table_query,
         module_name=MODULE_NAME)
 
 @billing.route( '/review/<year>/<month>/ajax/' )

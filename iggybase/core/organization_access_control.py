@@ -132,11 +132,10 @@ class OrganizationAccessControl:
 
         return results
 
-    def get_table_query_data(self, field_dict, criteria={}):
+    def get_table_query_data(self, field_dict, criteria={}, joins = []):
         results = []
         tables = set([])
         table_models = {}
-        joins = set([])
         outer_joins = []
         columns = []
         fk_columns = []
@@ -187,7 +186,8 @@ class OrganizationAccessControl:
                     or (first_table_named == field.TableObject.name)):
                     first_table_named = field.TableObject.name
                 else:
-                    joins.add(table_model)
+                    if table_model not in joins:
+                        joins.append(table_model)
                 criteria_key = (field.TableObject.name, field.Field.display_name)
 
             # don't include criteria for self foreign keys

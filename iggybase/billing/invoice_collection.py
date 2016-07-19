@@ -3,7 +3,7 @@ from collections import OrderedDict
 import datetime
 from dateutil.relativedelta import relativedelta
 from iggybase import g_helper
-from iggybase.core.table_query import TableQuery
+from iggybase.core.table_query_collection import TableQueryCollection
 from iggybase import utilities as util
 from .invoice import Invoice
 from flask_weasyprint import HTML
@@ -110,8 +110,8 @@ class InvoiceCollection:
             max_invoice_order += 1
         return invoices
 
-    def get_table_query(self, table):
-        self.table_query = TableQuery(None, 1, table, table,
+    def get_table_query_collection(self, table):
+        self.tqc = TableQueryCollection(table,
                 self.table_query_criteria[table])
 
     def set_invoices(self):
