@@ -132,9 +132,10 @@ class OrganizationAccessControl:
 
         return results
 
-    def get_table_query_data(self, field_dict, criteria={}, joins = []):
+    def get_table_query_data(self, field_dict, criteria={}):
         results = []
         tables = set([])
+        joins = []
         table_models = {}
         outer_joins = []
         columns = []

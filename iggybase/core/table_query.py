@@ -23,15 +23,10 @@ class TableQuery:
         self.fc.set_fk_fields()
         results = []
         self.criteria = self.add_table_query_criteria(self.criteria)
-        joins = []
-        if self.id:
-            joins = self.get_joins(self.id)
-        joins = []
         self.oac = g_helper.get_org_access_control()
         self.results = self.oac.get_table_query_data(
                 self.fc.fields,
-                self.criteria,
-                joins
+                self.criteria
         )
         return self.results
 
@@ -54,13 +49,6 @@ class TableQuery:
 
         criteria.update(orig_criteria)
         return criteria
-
-    def get_joins(self, id):
-        joins = []
-        res = self.rac.table_query_table_object(id)
-        for tbl in res:
-            joins.append(util.get_table(tbl.name))
-        return joins
 
     def format_results(self, add_row_id = True, allow_links = True):
         """Formats data

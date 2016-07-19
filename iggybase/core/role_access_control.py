@@ -604,25 +604,3 @@ class RoleAccessControl:
                 filter(models.Route.active == active).
                 order_by(models.Step.order).all())
         return res
-
-    def table_query_table_object(self, table_query_id, active = 1):
-        filters = [
-            (models.TableObjectRole.role_id == self.role.id),
-            (models.TableQueryTableObject.table_query_id == table_query_id),
-            (models.TableQueryTableObject.active == active)
-        ]
-        table_objects = (
-            self.session.query(
-                models.TableObject
-            )
-            .join(
-                (models.TableQueryTableObject,
-                models.TableQueryTableObject.table_object_id ==
-                models.TableObject.id),
-                (models.TableObjectRole,
-                models.TableObject.id ==
-                models.TableObjectRole.table_object_id)
-            )
-            .filter(*filters).order_by(models.TableQueryTableObject.order).all()
-        )
-        return table_objects
