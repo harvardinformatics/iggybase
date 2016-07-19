@@ -113,7 +113,7 @@ def update_table_rows(facility_name, table_name):
     tqc.get_results()
     tqc.format_results(True)
     tq = tqc.get_first()
-    updated = tq.update_and_get_message(updates, ids, message_fields)
+    updated = tq.update_and_get_message(table_name, updates, ids, message_fields)
     return json.dumps({'updated': updated})
 
 @core.route('/new_workflow/<workflow_name>/ajax', methods=['GET', 'POST'])

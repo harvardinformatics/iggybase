@@ -1,5 +1,5 @@
 from flask import g, current_app
-from sqlalchemy import DateTime, func
+from sqlalchemy import DateTime, func, cast, String
 from iggybase.database import db_session
 from iggybase.admin import models
 from iggybase import utilities as util
@@ -189,13 +189,12 @@ class OrganizationAccessControl:
                     if table_model not in joins:
                         joins.append(table_model)
                 criteria_key = (field.TableObject.name, field.Field.display_name)
-
             # don't include criteria for self foreign keys
             if criteria_key in criteria and not (field.is_foreign_key and
                     field.TableObject.name == first_table_named):
                 if type(criteria[criteria_key]) is list:
                     wheres.append(col.in_(criteria[criteria_key]))
-                if type(criteria[criteria_key]) is dict:
+                elif type(criteria[criteria_key]) is dict:
                     if ('from' in criteria[criteria_key]
                         and 'to' in criteria[criteria_key]
                     ):
@@ -208,13 +207,25 @@ class OrganizationAccessControl:
                             wheres.append(col > criteria[criteria_key]['value'])
                 else:
                     wheres.append(col == criteria[criteria_key])
+        id_cols = []
         # add organization id checks on all tables, does not include fk tables
         for table_model in tables:
             # add a row id that is the id of the first table named
-            if (table_model.__table__.name.lower() == first_table_named):
-                col = getattr(table_model, 'id')
+            id_table_name = table_model.__table__.name.lower()
+            id_table_col = getattr(table_model, 'id')
+            if id_table_name == first_table_named:
+                col = id_table_col
                 columns.append(col.label('DT_RowId'))
+            id_cols.append(id_table_name + '-' + cast(id_table_col, String))
             wheres.append(getattr(table_model, 'organization_id').in_(self.org_ids))
+        first = True
+        for c in id_cols:
+            if first:
+                id_col = c
+                first = False
+            else:
+                id_col = id_col.concat('|' + c)
+        columns.append(id_col.label('DT_row_label'))
         start = time.time()
         results = (
             self.session.query(*columns).
