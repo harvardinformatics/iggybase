@@ -26,6 +26,7 @@ class TableQuery:
         joins = []
         if self.id:
             joins = self.get_joins(self.id)
+        joins = []
         self.oac = g_helper.get_org_access_control()
         self.results = self.oac.get_table_query_data(
                 self.fc.fields,
@@ -134,6 +135,8 @@ class TableQuery:
             if row_dict:
                 # store values as a dict of dict so we can access any of the
                 # data by row_id and field display_name
+                if dt_row_id in self.table_dict:
+                    dt_row_id += 99
                 self.table_dict[dt_row_id] = row_dict
 
     def get_list_of_list(self): # for download

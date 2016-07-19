@@ -143,7 +143,8 @@ class RoleAccessControl:
 
         res = (
             self.session.query(models.TableQueryCalculationField,
-                               models.TableQueryField, models.Field).
+                               models.TableQueryField, models.Field,
+                               models.TableObject).
                 join(models.TableQueryField).
                 join(models.Field).
                 join(
