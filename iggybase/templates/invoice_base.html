@@ -52,13 +52,58 @@
                         </ul>
                     </div>
                 </div>
+            </div><br>
+            <div class="to_wrapper">
+                <div class="to_address">
+                    <div class="to_info">
+                        <ul>
+                            {% for key, val in invoice.to_info.items() %}
+                                <li>{{key}}: {{val}}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% if invoice.charge_method_type == 'po' %}
+                        {% if 'invoice address' in invoice.po_info %}
+                            <div class="po_invoice_address">
+                                Invoice Address:<br>
+                                <ul>
+                                    {% for line in invoice.po_info['invoice address'] %}
+                                        <li>{{line}}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+            <div  class="content">
+                {{ macros.invoice_table('Purchases', invoice.purchase_table) }}
+                {{ macros.invoice_table('Expense Code Summary', invoice.charge_table) }}
+                {{ macros.invoice_table('User Summary', invoice.user_table) }}
             </div>
 
-                    <div  class="content">
-                        {{ macros.invoice_table('Purchases', invoice.purchase_table) }}
-                        {{ macros.invoice_table('Expense Code Summary', invoice.charge_table) }}
-                        {{ macros.invoice_table('User Summary', invoice.user_table) }}
-                    </div>
+            {% if invoice.charge_method_type == 'po' %}
+                {% if 'remit to' in invoice.po_info %}
+                <br>
+                <div class="remit_to">
+                    {% if invoice.po_info['remit to'][0] %}
+                        <div>Remit To:</div>
+                        <ul class="remit_left">
+                        {% for row in invoice.po_info['remit to'][0] %}
+                            <li>{{row}}</li>
+                        {% endfor %}
+                        </ul>
+                    {% endif %}
+                    {% if invoice.po_info['remit to'][1] %}
+                        <ul class="remit_right">
+                        {% for row in invoice.po_info['remit to'][1] %}
+                            <li>{{row}}</li>
+                        {% endfor %}
+                        </ul>
+                    {% endif %}
+                <div>
+                {% endif %}
+            {% endif %}
 
         {% endfor %}
         {%- endblock body %}

@@ -28,7 +28,7 @@ class InvoiceCollection:
         # create invoice objects
         self.oac = g_helper.get_org_access_control()
         self.invoices = self.get_invoices(self.from_date, self.to_date, self.org_list)
-        self.populate_tables() # populates data for display
+        self.populate_template_data() # populates data for display
 
         # used when making table queries
         self.table_query_criteria = {
@@ -141,9 +141,9 @@ class InvoiceCollection:
         HTML(string=html).write_pdf(path)
         return path
 
-    def populate_tables(self):
+    def populate_template_data(self):
         for invoice in self.invoices:
-            invoice.populate_tables()
+            invoice.populate_template_data()
 
     def get_select_options(self):
         self.select_years = util.get_last_x_years(5)

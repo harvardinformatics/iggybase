@@ -41,9 +41,6 @@ class Invoice:
                 '52 Oxford Street',
                 'Cambridge, MA 02138'
         ]
-        self.purchase_table = []
-        self.charges_table = []
-        self.user_table = []
 
         self.core_prefix = {
                 'bauer': 'SC',
@@ -120,10 +117,14 @@ class Invoice:
                         {'invoice_id': self.id}
                 )
 
-    def populate_tables(self):
+    def populate_template_data(self):
         self.purchase_table = self.populate_purchase()
-        self.charge_table = self.populate_charges()
-        self.user_table = self.populate_users()
+        self.to_info = self.populate_to_info()
+        if self.charge_method_type == 'po':
+            self.po_info = self.populate_po_info()
+        else:
+            self.charge_table = self.populate_charges()
+            self.user_table = self.populate_users()
 
     def populate_purchase(self):
         rows = []
@@ -138,6 +139,40 @@ class Invoice:
                 rows.append(row)
         return rows
 
+    def populate_to_info(self):
+        if self.charge_method_type == 'po':
+            info = OrderedDict({
+                    'PI': 'test',
+                    'Institution': 'test',
+                    'PO Number': self.items[0].ChargeMethod.code
+            })
+        else:
+            info = OrderedDict({
+                    'Sent to': 'test',
+                    'Email': 'email'
+            })
+        return info
+
+    def populate_po_info(self):
+        info = {
+                'invoice address': ['test', 'test1', 'test2'],
+                'remit to': [
+                    [
+                        'Harvard University',
+                        'Accounts Receivable',
+                        'PO Box 4999',
+                        'Boston, MA 02212-4999'
+                    ],
+                    [
+                        'Please inlude Invoice number on remittance',
+                        'Harvard Tax ID No: 05-2103580'
+                        'Harvard DUNS 082359691',
+                        'Bank transfer fees are the responsibility of the payer'
+                    ]
+                ]
+        }
+        return info
+
     def populate_charges(self):
         rows = []
         for order in self.orders.values():
@@ -148,6 +183,7 @@ class Invoice:
                     row['expense code'] = data['charge'].ChargeMethod.code
                     row['percent charged'] = int(data['charge'].OrderChargeMethod.percent or 0)
                     row['amount charged'] = "${:.2f}".format(data['amount'])
+                    row['amount credited'] = "${:.2f}".format(0)
                     row['total charged'] = "${:.2f}".format(data['amount'])
                     rows.append(row)
         return rows
