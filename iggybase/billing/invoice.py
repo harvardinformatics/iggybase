@@ -147,15 +147,28 @@ class Invoice:
                     'PO Number': self.items[0].ChargeMethod.code
             })
         else:
+            users = self.oac.get_org_position(self.org_id, 'manager')
+            names = []
+            emails = []
+            for u in users:
+                if u.first_name and u.last_name:
+                    name = u.first_name + ' ' + u.last_name
+                else:
+                    name = u.name
+                names.append(name)
+                emails.append(u.email)
             info = OrderedDict({
-                    'Sent to': 'test',
-                    'Email': 'email'
+                    'Sent to': ', '.join(names),
+                    'Email': ', '.join(emails)
             })
         return info
 
     def populate_po_info(self):
+        address = self.oac.get_org_billing_address(self.org_id)
         info = {
-                'invoice address': ['test', 'test1', 'test2'],
+                'invoice address': [address.address_1, address.address_2,
+                    (address.city + ', ' + address.state + ' ' +
+                        address.postcode)],
                 'remit to': [
                     [
                         'Harvard University',

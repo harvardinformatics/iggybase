@@ -546,4 +546,18 @@ class OrganizationAccessControl:
             .order_by(order.date_created, order_charge_method.percent.desc()).all())
         return res
 
+    def get_org_position(self, org_id, position_name):
+        res = (self.session.query(models.User)
+                .join(models.UserOrganization,
+                    models.UserOrganizationPosition,
+                    models.Position)
+            .filter((models.UserOrganization.user_organization_id == org_id),
+                (models.Position.name == position_name)).all())
+        return res
 
+    def get_org_billing_address(self, org_id):
+        res = (self.session.query(models.Address)
+                .join(models.Organization, models.Organization.billing_address_id ==
+                    models.Address.id)
+            .filter((models.Organization.id == org_id)).first())
+        return res
