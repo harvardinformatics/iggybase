@@ -1,13 +1,10 @@
-#TODO figure out how to import config here
+from config import Config
+
 db = {
-    'from': {
-        #'user':Config.MYSQL_MPM_USER,
-        #'password':Config.MYSQL_MPM_PASSWORD,
-        ''''user':PROJECT,
-        'password':DB_PASS,
-        'host':DB_HOST,
-        'database':'iggybase'''
-    }
+    'user':Config.DB_USER,
+    'password':Config.DB_PASSWORD,
+    'host': Config.DB_HOST,
+    'database': Config.DB_NAME
 
 }
 

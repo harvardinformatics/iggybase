@@ -1,11 +1,15 @@
 import sys
+import os
+
+# add iggybase root dir to path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
 import datetime
 from dateutil.relativedelta import relativedelta
 import glob
 from xml.etree import ElementTree
 import mysql.connector
 import illumina_data_config as config
-#from config import Config
 
 """
 script for inserting illumina_run data
@@ -19,6 +23,7 @@ exp use:
 python process_illumina_data.py --insert_mode --path='/n/seq/sequencing/'
     --filename=RunInfo.xml
 """
+
 cli = {}
 
 def get_connection(user, password, host, database):
@@ -173,13 +178,11 @@ if 'filename' not in cli:
     sys.exit(1)
 
 # get a db connection
-config = Config()
 iggy_db = get_connection(
-    Config.MYSQL_USER,
-    Config.MYSQL_PASSWORD,
-    Config.HOST,
-    Config.DATABASE
-)
+        config.db['user'],
+        config.db['password'],
+        config.db['host'],
+        config.db['database'])
 
 # check path for filename
 print('Checking for filename: ' + cli['filename'] + ' in dir: ' + path)
