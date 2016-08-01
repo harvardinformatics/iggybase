@@ -5,6 +5,7 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 import datetime
+import json
 from dateutil.relativedelta import relativedelta
 import glob
 from xml.etree import ElementTree
@@ -153,7 +154,65 @@ def do_insert(tbl, row_dict):
                 print("\t\tsql has bad chars")
     return ret
 
+def make_dict_illumina_run(run, pk):
+    machine = pk_exists(run.findall('Instrument')[0].text, 'name', 'machine')
+    run_dict = {
+        'name': pk,
+        'number': run.attrib.get('Number'),
+        'machine_id': machine
 
+    }
+    for read in run.findall('Reads')[0].findall('Read'):
+        num = read.attrib.get('Number')
+        prefix = 'read_' + num
+        run_dict[prefix + '_cycles'] = read.attrib.get('NumCycles')
+        if read.attrib.get('IsIndexedRead') == 'Y':
+            index = 1
+        else:
+            index = 0
+        run_dict[prefix + '_index'] =  index
+    return run_dict
+
+def make_dict_illumina_flowcell(run, pk):
+    row_dict = {}
+    '''machine = pk_exists(run.findall('Instrument')[0].text, 'name', 'machine')
+    run_dict = {
+        'name': pk,
+        'number': run.attrib.get('Number'),
+        'machine_id': machine
+
+    }
+    for read in run.findall('Reads')[0].findall('Read'):
+        num = read.attrib.get('Number')
+        prefix = 'read_' + num
+        run_dict[prefix + '_cycles'] = read.attrib.get('NumCycles')
+        if read.attrib.get('IsIndexedRead') == 'Y':
+            index = 1
+        else:
+            index = 0
+        run_dict[prefix + '_index'] =  index'''
+    return row_dict
+
+def insert_row(table, pk):
+    exists = pk_exists(pk, 'name', table)
+    if not exists:
+        print("\t\tgetting data for " + table + ": " + pk)
+        func_name = 'make_dict_' + table
+        if not func_name in globals():
+            print("\t\tno func " + func_name + " defined")
+            success = False
+        else:
+            dict_func = globals()['make_dict_' + table]
+            row_dict = dict_func(run, pk)
+            if row_dict:
+                print("\t\trow data:" + json.dumps(row_dict))
+                print("\t\t" + table + ": " + pk)
+                success = do_insert(table, row_dict)
+            else:
+                print("\t\trow data empty")
+                success = False
+    else:
+        print("\t\t" + table + ": " + pk + 'already exists, id: ' + str(exists))
 
 args = sys.argv[1:]
 for arg in args:
@@ -195,6 +254,7 @@ files = []
 for day in days:
     file_path = path + '/' + day + '*/' + cli['filename']
     files.extend(glob.glob(file_path))
+
 print("\tfound " + str(len(files)) + " files to process")
 for file in files:
     print("\tstarting to process file: " + file)
@@ -202,27 +262,5 @@ for file in files:
     run_info = ElementTree.parse(file).getroot()
     print("\tprocessing " + str(len(run_info)) + ' runs')
     for run in run_info:
-        pk = run.attrib.get('Id')
-        exists = pk_exists(pk, 'name', 'illumina_run')
-        if not exists:
-            print("\t\tinserting run: " + pk)
-            machine = pk_exists(run.findall('Instrument')[0].text, 'name', 'machine')
-            run_dict = {
-                'name': pk,
-                'number': run.attrib.get('Number'),
-                'machine_id': machine
-
-            }
-            for read in run.findall('Reads')[0].findall('Read'):
-                num = read.attrib.get('Number')
-                prefix = 'read_' + num
-                run_dict[prefix + '_cycles'] = read.attrib.get('NumCycles')
-                if read.attrib.get('IsIndexedRead') == 'Y':
-                    index = 1
-                else:
-                    index = 0
-                run_dict[prefix + '_index'] =  index
-            success = do_insert('illumina_run', run_dict)
-        else:
-            print("\t\trun: " + pk + 'already exists, id: ' + str(exists))
-
+        insert_row('illumina_run', run.attrib.get('Id'))
+        insert_row('illumina_flowcell', run.attrib.get('Id'))
