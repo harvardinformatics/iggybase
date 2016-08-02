@@ -9,6 +9,7 @@ import json
 from dateutil.relativedelta import relativedelta
 import glob
 from xml.etree import ElementTree
+import csv
 import mysql.connector
 import illumina_data_config as config
 
@@ -159,8 +160,8 @@ def make_dict_illumina_run(run, pk):
     row_dict = {
         'name': pk,
         'number': run.attrib.get('Number'),
-        'machine_id': machine
-
+        'machine_id': machine,
+        'status': 'new'
     }
     for read in run.findall('Reads')[0].findall('Read'):
         num = read.attrib.get('Number')
@@ -180,11 +181,12 @@ def make_dict_illumina_flowcell(run, pk):
         'lane_count': flowcell_layout.get('LaneCount'),
         'surface_count': flowcell_layout.get('SurfaceCount'),
         'swath_count': flowcell_layout.get('SwathCount'),
-        'tile_count': flowcell_layout.get('TileCount')
+        'tile_count': flowcell_layout.get('TileCount'),
+        'status': 'new'
     }
     return row_dict
 
-def insert_row(table, pk, row_dict = {}):
+def insert_row(table, pk, obj, row_dict = {}):
     exists = pk_exists(pk, 'name', table)
     if not exists:
         print("\t\tgetting data for " + table + ": " + pk)
@@ -194,7 +196,7 @@ def insert_row(table, pk, row_dict = {}):
             success = False
         else:
             dict_func = globals()['make_dict_' + table]
-            row_dict.update(dict_func(run, pk))
+            row_dict.update(dict_func(obj, pk))
             if row_dict:
                 print("\t\trow data:" + json.dumps(row_dict))
                 print("\t\t" + table + ": " + pk)
@@ -202,10 +204,44 @@ def insert_row(table, pk, row_dict = {}):
             else:
                 print("\t\trow data empty")
                 success = False
-    else:
+    else: # TODO: any reason to update here?
         print("\t\t" + table + ": " + pk + 'already exists, id: ' + str(exists))
         success = exists
     return success
+
+def process_file_runinfo(file):
+    run_info = ElementTree.parse(file).getroot()
+    print("\tprocessing " + str(len(run_info)) + ' runs')
+    for run in run_info:
+        row_id = insert_row('illumina_run', run.attrib.get('Id'), run)
+        if row_id:
+            insert_row('illumina_flowcell', run.findall('Flowcell')[0].text,
+                    run, {'illumina_run_id': row_id})
+
+def process_file_samplesheet(file):
+    global path
+    global cli
+    ss_name = (file.replace(path, '')
+        .replace(cli['filename'], '')
+        .replace('/', ''))
+    row_id = insert_row('sample_sheet', ss_name, ss_name)
+    contents = open(file, 'rt')
+    print(contents)
+    try:
+        ss_dict = {}
+        ss = csv.reader(contents)
+        for row in ss:
+            if row and '[' in row[0]:
+                header = row[0].replace('[', '').replace(']', '').lower()
+            elif header and row:
+                if header in ss_dict:
+                    ss_dict[header].append(row)
+                else:
+                    ss_dict[header] = [row]
+        print(ss_dict)
+    finally:
+        contents.close()
+    #print("\tprocessing " + str(len(run_info)) + ' runs')
 
 args = sys.argv[1:]
 for arg in args:
@@ -249,13 +285,14 @@ for day in days:
     files.extend(glob.glob(file_path))
 
 print("\tfound " + str(len(files)) + " files to process")
+file_func = globals()['process_file_' + (cli['filename'].split('.')[0].lower())]
 for file in files:
     print("\tstarting to process file: " + file)
-    # TODO: not all will be xml, consider an object eventually
-    run_info = ElementTree.parse(file).getroot()
+    file_func(file)
+    '''run_info = ElementTree.parse(file).getroot()
     print("\tprocessing " + str(len(run_info)) + ' runs')
     for run in run_info:
         row_id = insert_row('illumina_run', run.attrib.get('Id'))
         if row_id:
             insert_row('illumina_flowcell', run.findall('Flowcell')[0].text,
-                    {'illumina_run_id': row_id})
+                    {'illumina_run_id': row_id})'''
