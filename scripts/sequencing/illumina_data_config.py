@@ -317,6 +317,13 @@ int_col_map = {
             'job_id',
             'command'
             ],
+        'illumina_flowcell':[
+            'illumina_run_id',
+            'lane_count',
+            'swath_count',
+            'surface_count',
+            'tile_count'
+        ],
         'sample_sheet_item':[
             'control',
             'operator',

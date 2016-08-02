@@ -156,7 +156,7 @@ def do_insert(tbl, row_dict):
 
 def make_dict_illumina_run(run, pk):
     machine = pk_exists(run.findall('Instrument')[0].text, 'name', 'machine')
-    run_dict = {
+    row_dict = {
         'name': pk,
         'number': run.attrib.get('Number'),
         'machine_id': machine
@@ -165,35 +165,26 @@ def make_dict_illumina_run(run, pk):
     for read in run.findall('Reads')[0].findall('Read'):
         num = read.attrib.get('Number')
         prefix = 'read_' + num
-        run_dict[prefix + '_cycles'] = read.attrib.get('NumCycles')
+        row_dict[prefix + '_cycles'] = read.attrib.get('NumCycles')
         if read.attrib.get('IsIndexedRead') == 'Y':
             index = 1
         else:
             index = 0
-        run_dict[prefix + '_index'] =  index
-    return run_dict
-
-def make_dict_illumina_flowcell(run, pk):
-    row_dict = {}
-    '''machine = pk_exists(run.findall('Instrument')[0].text, 'name', 'machine')
-    run_dict = {
-        'name': pk,
-        'number': run.attrib.get('Number'),
-        'machine_id': machine
-
-    }
-    for read in run.findall('Reads')[0].findall('Read'):
-        num = read.attrib.get('Number')
-        prefix = 'read_' + num
-        run_dict[prefix + '_cycles'] = read.attrib.get('NumCycles')
-        if read.attrib.get('IsIndexedRead') == 'Y':
-            index = 1
-        else:
-            index = 0
-        run_dict[prefix + '_index'] =  index'''
+        row_dict[prefix + '_index'] =  index
     return row_dict
 
-def insert_row(table, pk):
+def make_dict_illumina_flowcell(run, pk):
+    flowcell_layout = run.findall('FlowcellLayout')[0]
+    row_dict = {
+        'name': pk,
+        'lane_count': flowcell_layout.get('LaneCount'),
+        'surface_count': flowcell_layout.get('SurfaceCount'),
+        'swath_count': flowcell_layout.get('SwathCount'),
+        'tile_count': flowcell_layout.get('TileCount')
+    }
+    return row_dict
+
+def insert_row(table, pk, row_dict = {}):
     exists = pk_exists(pk, 'name', table)
     if not exists:
         print("\t\tgetting data for " + table + ": " + pk)
@@ -203,7 +194,7 @@ def insert_row(table, pk):
             success = False
         else:
             dict_func = globals()['make_dict_' + table]
-            row_dict = dict_func(run, pk)
+            row_dict.update(dict_func(run, pk))
             if row_dict:
                 print("\t\trow data:" + json.dumps(row_dict))
                 print("\t\t" + table + ": " + pk)
@@ -213,6 +204,8 @@ def insert_row(table, pk):
                 success = False
     else:
         print("\t\t" + table + ": " + pk + 'already exists, id: ' + str(exists))
+        success = exists
+    return success
 
 args = sys.argv[1:]
 for arg in args:
@@ -262,5 +255,7 @@ for file in files:
     run_info = ElementTree.parse(file).getroot()
     print("\tprocessing " + str(len(run_info)) + ' runs')
     for run in run_info:
-        insert_row('illumina_run', run.attrib.get('Id'))
-        insert_row('illumina_flowcell', run.attrib.get('Id'))
+        row_id = insert_row('illumina_run', run.attrib.get('Id'))
+        if row_id:
+            insert_row('illumina_flowcell', run.findall('Flowcell')[0].text,
+                    {'illumina_run_id': row_id})
