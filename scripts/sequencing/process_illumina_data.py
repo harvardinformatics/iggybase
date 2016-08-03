@@ -5,6 +5,7 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 import datetime
+import time
 import json
 from dateutil.relativedelta import relativedelta
 import glob
@@ -37,10 +38,13 @@ def get_connection(user, password, host, database):
     )
     return db
 
-def pk_exists(pk, name, tbl):
+def pk_exists(pk, name, tbl, select = 'id'):
     global iggy_db
-    where = name + "='" + pk.replace("'","\\\'") + "'"
-    sql = 'Select id from ' + tbl + " where " + where
+    if isinstance(pk, str):
+        where = name + "='" + pk.replace("'","\\\'") + "'"
+    else:
+        where = name + "=" + str(pk)
+    sql = 'Select ' + select + ' from ' + tbl + " where " + where
     exist = iggy_db.cursor()
     exist.execute(sql)
     row = exist.fetchone()
@@ -85,15 +89,16 @@ def make_vals(tbl, cols):
                 date_formats = [ '%Y-%m-%d', '%Y-%m', '%Y-%m-%d %H:%M:%S']
                 for date_format in date_formats:
                     try:
-                        val_str += '"' + str(datetime.fromtimestamp(time.mktime(time.strptime(val,
+                        val_str += '"' + str(datetime.datetime.fromtimestamp(time.mktime(time.strptime(val,
                     date_format)))) + '"'
                         formatted = True
+                        break
                     except:
                         pass
             elif ':' in val:
                 try:
                     date_format = '%b %d %Y %H:%M:%S'
-                    val_str += '"' + str(datetime.fromtimestamp(time.mktime(time.strptime(val,
+                    val_str += '"' + str(datetime.datetime.fromtimestamp(time.mktime(time.strptime(val,
                 date_format)))) + '"'
                     formatted = True
                 except:
@@ -103,13 +108,14 @@ def make_vals(tbl, cols):
                 date_formats = ['%m/%d/%y',  '%-m/%d/%y']
                 for date_format in date_formats:
                     try:
-                        val_str += '"' + str(datetime.fromtimestamp(time.mktime(time.strptime(val,
+                        val_str += '"' + str(datetime.datetime.fromtimestamp(time.mktime(time.strptime(val,
                         date_format)))) + '"'
                         formatted = True
+                        break
                     except:
                         pass
             else:
-                val_str += '"' + str(datetime.fromtimestamp(int(val))) + '"'
+                val_str += '"' + str(datetime.datetime.fromtimestamp(int(val))) + '"'
                 formatted = True
             if not formatted:
                 val_str += 'Null'
@@ -123,6 +129,7 @@ def make_vals(tbl, cols):
 def do_insert(tbl, row_dict):
     global iggy_db
 
+    print("\t\tinserting into " + tbl + " row data:" + json.dumps(row_dict))
     val_str = make_vals(tbl, row_dict)
     sql = 'Insert into ' + tbl + ' (`' + '`,`'.join(list(row_dict.keys())) + '`) values(' + val_str + ')'
     try:
@@ -155,15 +162,15 @@ def do_insert(tbl, row_dict):
                 print("\t\tsql has bad chars")
     return ret
 
-def make_dict_illumina_run(run, pk):
-    machine = pk_exists(run.findall('Instrument')[0].text, 'name', 'machine')
+def parse_illumina_run(data, pk):
+    machine = pk_exists(data.findall('Instrument')[0].text, 'name', 'machine')
     row_dict = {
         'name': pk,
-        'number': run.attrib.get('Number'),
+        'number': data.attrib.get('Number'),
         'machine_id': machine,
         'status': 'new'
     }
-    for read in run.findall('Reads')[0].findall('Read'):
+    for read in data.findall('Reads')[0].findall('Read'):
         num = read.attrib.get('Number')
         prefix = 'read_' + num
         row_dict[prefix + '_cycles'] = read.attrib.get('NumCycles')
@@ -174,8 +181,8 @@ def make_dict_illumina_run(run, pk):
         row_dict[prefix + '_index'] =  index
     return row_dict
 
-def make_dict_illumina_flowcell(run, pk):
-    flowcell_layout = run.findall('FlowcellLayout')[0]
+def parse_illumina_flowcell(data, pk):
+    flowcell_layout = data.findall('FlowcellLayout')[0]
     row_dict = {
         'name': pk,
         'lane_count': flowcell_layout.get('LaneCount'),
@@ -186,37 +193,47 @@ def make_dict_illumina_flowcell(run, pk):
     }
     return row_dict
 
-def insert_row(table, pk, obj, row_dict = {}):
+def parse_sample_sheet(data, pk):
+    data_split = data.split('_')
+    machine_id = pk_exists(data_split[1], 'name', 'machine')
+    flowcell_id = pk_exists(data_split[3][1:], 'name', 'illumina_flowcell')
+    run_id = pk_exists(flowcell_id, 'id', 'illumina_flowcell', 'illumina_run_id')
+    row_dict = {
+        'name': data,
+        'run_date': (data_split[0][2:4] + '/' + data_split[0][4:6] + '/' + data_split[0][0:2]),
+        'machine_id': machine_id,
+        'slot': data_split[3][0:1],
+        'illumina_flowcell_id': flowcell_id,
+        'illumina_run_id': run_id
+    }
+    return row_dict
+
+def row_exists(table, pk):
     exists = pk_exists(pk, 'name', table)
-    if not exists:
-        print("\t\tgetting data for " + table + ": " + pk)
-        func_name = 'make_dict_' + table
-        if not func_name in globals():
-            print("\t\tno func " + func_name + " defined")
-            success = False
-        else:
-            dict_func = globals()['make_dict_' + table]
-            row_dict.update(dict_func(obj, pk))
-            if row_dict:
-                print("\t\trow data:" + json.dumps(row_dict))
-                print("\t\t" + table + ": " + pk)
-                success = do_insert(table, row_dict)
-            else:
-                print("\t\trow data empty")
-                success = False
-    else: # TODO: any reason to update here?
+    if exists:
         print("\t\t" + table + ": " + pk + 'already exists, id: ' + str(exists))
-        success = exists
-    return success
+    return exists
 
 def process_file_runinfo(file):
     run_info = ElementTree.parse(file).getroot()
     print("\tprocessing " + str(len(run_info)) + ' runs')
     for run in run_info:
-        row_id = insert_row('illumina_run', run.attrib.get('Id'), run)
-        if row_id:
-            insert_row('illumina_flowcell', run.findall('Flowcell')[0].text,
-                    run, {'illumina_run_id': row_id})
+        run_table = 'illumina_run'
+        run_name = run.attrib.get('Id')
+        run_id = row_exists(run_table, run_name)
+        if not run_id:
+            row_dict = parse_illumina_run(run, run_name)
+            if row_dict:
+                run_id = do_insert(run_table, row_dict)
+        if run_id:
+            flow_table = 'illumina_flowcell'
+            flow_name = run.findall('Flowcell')[0].text
+            flow_id = row_exists(flow_table, flow_name)
+            if not flow_id:
+                row_dict = parse_illumina_flowcell(run, flow_name)
+                if row_dict:
+                    row_dict.update({'illumina_run_id': run_id})
+                    do_insert(flow_table, row_dict)
 
 def process_file_samplesheet(file):
     global path
@@ -224,9 +241,16 @@ def process_file_samplesheet(file):
     ss_name = (file.replace(path, '')
         .replace(cli['filename'], '')
         .replace('/', ''))
-    row_id = insert_row('sample_sheet', ss_name, ss_name)
+
+    ss_table = 'sample_sheet'
+    row_id = row_exists(ss_table, ss_name)
+    if not row_id:
+        row_dict = parse_sample_sheet(ss_name, row_id)
+        row_dict.update({'file': file})
+        if row_dict:
+            do_insert(ss_table, row_dict)
+
     contents = open(file, 'rt')
-    print(contents)
     try:
         ss_dict = {}
         ss = csv.reader(contents)
@@ -238,7 +262,6 @@ def process_file_samplesheet(file):
                     ss_dict[header].append(row)
                 else:
                     ss_dict[header] = [row]
-        print(ss_dict)
     finally:
         contents.close()
     #print("\tprocessing " + str(len(run_info)) + ' runs')
@@ -289,10 +312,3 @@ file_func = globals()['process_file_' + (cli['filename'].split('.')[0].lower())]
 for file in files:
     print("\tstarting to process file: " + file)
     file_func(file)
-    '''run_info = ElementTree.parse(file).getroot()
-    print("\tprocessing " + str(len(run_info)) + ' runs')
-    for run in run_info:
-        row_id = insert_row('illumina_run', run.attrib.get('Id'))
-        if row_id:
-            insert_row('illumina_flowcell', run.findall('Flowcell')[0].text,
-                    {'illumina_run_id': row_id})'''
