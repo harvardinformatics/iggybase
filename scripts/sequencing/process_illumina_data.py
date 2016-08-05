@@ -209,7 +209,6 @@ def get_next_name(table_name):
     num = table_meta[10]
     next_num = num + 1
     dig = table_meta[11] - len(str(num))
-    print(table_meta)
     for i in range(0,dig):
         name += '0'
     name += str(num)
@@ -267,7 +266,107 @@ def parse_sample_sheet_item(data):
         'order_id': data['order_id'],
         'sample_sheet_id': data['sample_sheet_id']
     }
+    if 'lane' in data:
+        row_dict['lane'] = data['lane']
     return row_dict
+
+def get_sample_sheet_item_id(run_id, order_id, index, lane = None):
+    global iggy_db
+    sql = ('select i.id from sample_sheet_item i'
+        ' inner join sample_sheet s on i.sample_sheet_id = s.id'
+        ' where s.illumina_run_id = ' + str(run_id)
+        + ' and i.order_id = ' + str(order_id)
+        + ' and i.index = "' + index + '"')
+    if lane:
+        sql += ' and i.lane = ' + lane
+    print("\t\t" + sql)
+    exist = iggy_db.cursor()
+    exist.execute(sql)
+    row = exist.fetchone()
+    row_id = None
+    if row:
+        row_id = row[0]
+    return row_id
+
+def insert_sample_sheet_items(rows):
+    inserted = 0
+    skipped = 0
+    failed = 0
+    si_table = 'sample_sheet_item'
+    print("\t\tfound " + str(len(rows)) + ' sample sheet items to enter')
+    for row in rows:
+        if row['illumina_run_id'] and row['order_id'] and row['index']:
+            row_id = get_sample_sheet_item_id(
+                    row['illumina_run_id'],
+                    row['order_id'],
+                    row['index'],
+                    row.get('lane', None)
+            )
+            if not row_id:
+                row_dict = parse_sample_sheet_item(row)
+                name, next_num = get_next_name(si_table)
+                row_dict.update({'name': name})
+                si_id = do_insert(si_table, row_dict)
+                if si_id:
+                    update_row(
+                            'table_object',
+                            {'name': si_table},
+                            {'new_name_id': next_num}
+                    )
+                    inserted += 1
+            else:
+                skipped += 1
+        else:
+            print("\t\tnot enough infomation provided")
+            failed += 1
+        print("\n\n")
+    print("\t\tinserted " + str(inserted)
+            + " skipped " + str(skipped)
+            + " failed " + str(failed)
+            + " total = " + str(inserted + skipped + failed)
+            + " sample sheet items out of " + str(len(rows)))
+
+def parse_hiseq(lines, illumina_run_id, ss_id):
+    item_cols = [i.lower() for i in lines[0]]
+    rows = []
+    for row in lines[1:]:
+        row_dict = dict(zip(item_cols, row))
+        order_id = None
+        if 'description' in row_dict:
+            order_id = pk_exists(row_dict['description'], 'name', 'order')
+        row_dict.update({
+            'order_id': order_id,
+            'sample_sheet_id': ss_id,
+            'illumina_run_id': illumina_run_id
+        })
+        rows.append(row_dict)
+    insert_sample_sheet_items(rows)
+
+def parse_miseq(lines, illumina_run_id, ss_id):
+    file_dict = {}
+    for row in lines:
+        if row and '[' in row[0]:
+            header = row[0].replace('[', '').replace(']', '').lower()
+        elif header and row:
+            if header in file_dict:
+                file_dict[header].append(row)
+            else:
+                file_dict[header] = [row]
+    order_id = None
+    if 'header' in file_dict and file_dict['header'][2][1]:
+        order_id = pk_exists(file_dict['header'][2][1], 'name', 'order')
+    if order_id:
+        rows = []
+        item_cols = [i.lower() for i in file_dict['data'][0]]
+        for row in file_dict['data'][1:]:
+            row_dict = dict(zip(item_cols, row))
+            row_dict.update({
+                'order_id': order_id,
+                'illumina_run_id': illumina_run_id,
+                'sample_sheet_id': ss_id
+            })
+            rows.append(row_dict)
+        insert_sample_sheet_items(rows)
 
 def row_exists(table, pk):
     exists = pk_exists(pk, 'name', table)
@@ -310,69 +409,17 @@ def process_file_samplesheet(file):
         ss_dict.update({'file': file})
         if ss_dict:
             ss_id = do_insert(ss_table, ss_dict)
-    print(ss_dict)
     if ss_id:
         contents = open(file, 'rt')
+        illumina_run_id = ss_dict['illumina_run_id']
         try:
-            file_dict = {}
-            ss = csv.reader(contents)
-            '''if ss[0][0] == '[Header]':
-                print(True)
+            lines = list(csv.reader(contents))
+            if lines[0][0] == '[Header]':
+                parse_miseq(lines, illumina_run_id, ss_id)
             else:
-                print(False)'''
-            for row in ss:
-                if row and '[' in row[0]:
-                    header = row[0].replace('[', '').replace(']', '').lower()
-                elif header and row:
-                    if header in file_dict:
-                        file_dict[header].append(row)
-                    else:
-                        file_dict[header] = [row]
-            order_id = None
-            if 'header' in file_dict and file_dict['header'][2][1]:
-                order_id = pk_exists(file_dict['header'][2][1], 'name', 'order')
-                print(order_id)
-            if order_id:
-                item_cols = [i.lower() for i in file_dict['data'][0]]
-                si_table = 'sample_sheet_item'
-                item_data = file_dict['data'][1:]
-                print("\t\tfound " + str(len(item_data)) + ' sample sheet items to enter')
-                inserted = 0
-                skipped = 0
-                for row in item_data:
-                    row_dict = dict(zip(item_cols, row))
-                    global iggy_db
-                    sql = ('select i.id from sample_sheet_item i'
-                        ' inner join sample_sheet s on i.sample_sheet_id = s.id'
-                        ' where s.illumina_run_id = ' + str(ss_dict['illumina_run_id'])
-                        + ' and i.order_id = ' + str(order_id)
-                        + ' and i.index = "' + row_dict['index'] + '"')
-                    print("\t\t" + sql)
-                    exist = iggy_db.cursor()
-                    exist.execute(sql)
-                    row = exist.fetchone()
-                    row_id = None
-                    if row:
-                        row_id = row[0]
-                    if not row_id:
-                        row_dict.update({
-                            'order_id': order_id,
-                            'sample_sheet_id': ss_id
-                        })
-                        row_dict = parse_sample_sheet_item(row_dict)
-                        name, next_num = get_next_name('sample_sheet_item')
-                        row_dict.update({'name': name})
-                        si_id = do_insert(si_table, row_dict)
-                        if si_id:
-                            update_row('table_object', {'name':
-                            'sample_sheet_item'},
-                                    {'new_name_id': next_num})
-                            inserted += 1
-                    else:
-                        skipped += 1
+                parse_hiseq(lines, illumina_run_id, ss_id)
 
-                print("\t\tinserted " + str(inserted) + " skipped " + str(skipped) + " total = " + str(inserted + skipped) + " sample sheet items out of " +
-                    str(len(item_data)))
+
         finally:
             contents.close()
 
@@ -427,3 +474,4 @@ file_func = globals()['process_file_' + (cli['filename'].split('.')[0].lower())]
 for file in files:
     print("\tstarting to process file: " + file)
     file_func(file)
+    print("\n\n\n\n")
