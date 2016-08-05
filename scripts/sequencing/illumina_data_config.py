@@ -328,7 +328,9 @@ int_col_map = {
             'control',
             'operator',
             'lane',
-            'recipe'
+            'recipe',
+            'order_id',
+            'sample_sheet_id'
             ],
         'sample':[
             'read_length',
@@ -393,6 +395,9 @@ int_col_map = {
             'oligo_id', 'orderer',
             'receiver','canceler','order_notes','cancel_notes',
             'requester','request_notes'
+        ],
+        'table_object':[
+                'new_name_id'
         ]
 }
 

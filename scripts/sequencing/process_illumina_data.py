@@ -44,7 +44,7 @@ def pk_exists(pk, name, tbl, select = 'id'):
         where = name + "='" + pk.replace("'","\\\'") + "'"
     else:
         where = name + "=" + str(pk)
-    sql = 'Select ' + select + ' from ' + tbl + " where " + where
+    sql = 'Select ' + select + ' from `' + tbl + "` where " + where
     exist = iggy_db.cursor()
     exist.execute(sql)
     row = exist.fetchone()
@@ -162,6 +162,59 @@ def do_insert(tbl, row_dict):
                 print("\t\tsql has bad chars")
     return ret
 
+# TODO: compare with pk_exists
+def select_row(insert_table, criteria, limit = 1):
+    pks = iggy_db.cursor()
+    sql = "select * from " + insert_table
+    wheres = []
+    for key, val in criteria.items():
+        if '_id' in key or key == 'id':
+            wheres.append(key + " = " + str(val))
+        else:
+            wheres.append(key + " like '" + val + "'")
+    if wheres:
+        sql += ' where ' + ' and '.join(wheres)
+    if limit:
+        sql += ' limit 1'
+    print("\t\t" + sql)
+    pks.execute(sql)
+    pks_row = pks.fetchone()
+    return pks_row
+
+def update_row(tbl, criteria, cols):
+    global cli
+    if 'insert_mode' in cli:
+        pks = iggy_db.cursor()
+        sql = "update " + tbl
+        int_cols = get_map(tbl, 'int_col', True)
+        for name, val in cols.items():
+            if name in int_cols:
+                sql += ' set ' + name + ' = ' + str(val)
+            else:
+                sql += ' set ' + name + ' = "' + val + '"'
+        sql += ' where '
+        for key, crit in criteria.items():
+            if key in int_cols:
+                sql += key + ' = ' + str(crit)
+            else:
+                sql += key + ' = "' + str(crit) + '"'
+        print("\t\t" + sql)
+        pks.execute(sql)
+        iggy_db.commit()
+
+def get_next_name(table_name):
+    table_meta = select_row('table_object', {'name':
+        table_name})
+    name = table_meta[9]
+    num = table_meta[10]
+    next_num = num + 1
+    dig = table_meta[11] - len(str(num))
+    print(table_meta)
+    for i in range(0,dig):
+        name += '0'
+    name += str(num)
+    return name, next_num
+
 def parse_illumina_run(data, pk):
     machine = pk_exists(data.findall('Instrument')[0].text, 'name', 'machine')
     row_dict = {
@@ -208,6 +261,14 @@ def parse_sample_sheet(data, pk):
     }
     return row_dict
 
+def parse_sample_sheet_item(data):
+    row_dict = {
+        'index': data['index'],
+        'order_id': data['order_id'],
+        'sample_sheet_id': data['sample_sheet_id']
+    }
+    return row_dict
+
 def row_exists(table, pk):
     exists = pk_exists(pk, 'name', table)
     if exists:
@@ -243,28 +304,77 @@ def process_file_samplesheet(file):
         .replace('/', ''))
 
     ss_table = 'sample_sheet'
-    row_id = row_exists(ss_table, ss_name)
-    if not row_id:
-        row_dict = parse_sample_sheet(ss_name, row_id)
-        row_dict.update({'file': file})
-        if row_dict:
-            do_insert(ss_table, row_dict)
+    ss_id = row_exists(ss_table, ss_name)
+    ss_dict = parse_sample_sheet(ss_name, ss_id)
+    if not ss_id:
+        ss_dict.update({'file': file})
+        if ss_dict:
+            ss_id = do_insert(ss_table, ss_dict)
+    print(ss_dict)
+    if ss_id:
+        contents = open(file, 'rt')
+        try:
+            file_dict = {}
+            ss = csv.reader(contents)
+            '''if ss[0][0] == '[Header]':
+                print(True)
+            else:
+                print(False)'''
+            for row in ss:
+                if row and '[' in row[0]:
+                    header = row[0].replace('[', '').replace(']', '').lower()
+                elif header and row:
+                    if header in file_dict:
+                        file_dict[header].append(row)
+                    else:
+                        file_dict[header] = [row]
+            order_id = None
+            if 'header' in file_dict and file_dict['header'][2][1]:
+                order_id = pk_exists(file_dict['header'][2][1], 'name', 'order')
+                print(order_id)
+            if order_id:
+                item_cols = [i.lower() for i in file_dict['data'][0]]
+                si_table = 'sample_sheet_item'
+                item_data = file_dict['data'][1:]
+                print("\t\tfound " + str(len(item_data)) + ' sample sheet items to enter')
+                inserted = 0
+                skipped = 0
+                for row in item_data:
+                    row_dict = dict(zip(item_cols, row))
+                    global iggy_db
+                    sql = ('select i.id from sample_sheet_item i'
+                        ' inner join sample_sheet s on i.sample_sheet_id = s.id'
+                        ' where s.illumina_run_id = ' + str(ss_dict['illumina_run_id'])
+                        + ' and i.order_id = ' + str(order_id)
+                        + ' and i.index = "' + row_dict['index'] + '"')
+                    print("\t\t" + sql)
+                    exist = iggy_db.cursor()
+                    exist.execute(sql)
+                    row = exist.fetchone()
+                    row_id = None
+                    if row:
+                        row_id = row[0]
+                    if not row_id:
+                        row_dict.update({
+                            'order_id': order_id,
+                            'sample_sheet_id': ss_id
+                        })
+                        row_dict = parse_sample_sheet_item(row_dict)
+                        name, next_num = get_next_name('sample_sheet_item')
+                        row_dict.update({'name': name})
+                        si_id = do_insert(si_table, row_dict)
+                        if si_id:
+                            update_row('table_object', {'name':
+                            'sample_sheet_item'},
+                                    {'new_name_id': next_num})
+                            inserted += 1
+                    else:
+                        skipped += 1
 
-    contents = open(file, 'rt')
-    try:
-        ss_dict = {}
-        ss = csv.reader(contents)
-        for row in ss:
-            if row and '[' in row[0]:
-                header = row[0].replace('[', '').replace(']', '').lower()
-            elif header and row:
-                if header in ss_dict:
-                    ss_dict[header].append(row)
-                else:
-                    ss_dict[header] = [row]
-    finally:
-        contents.close()
-    #print("\tprocessing " + str(len(run_info)) + ' runs')
+                print("\t\tinserted " + str(inserted) + " skipped " + str(skipped) + " total = " + str(inserted + skipped) + " sample sheet items out of " +
+                    str(len(item_data)))
+        finally:
+            contents.close()
 
 args = sys.argv[1:]
 for arg in args:
@@ -288,6 +398,11 @@ if 'filename' not in cli:
         + ' --filename=RunInfo.xml')
     sys.exit(1)
 
+if 'dir_match' in cli:
+    dir_match = cli['dir_match']
+else:
+    dir_match = None
+
 # get a db connection
 iggy_db = get_connection(
         config.db['user'],
@@ -304,7 +419,7 @@ days = [today.strftime("%y%m%d"), yesterday.strftime("%y%m%d")]
 days = ['160720', '160721'] # TODO: remove, this is for testing
 files = []
 for day in days:
-    file_path = path + '/' + day + '*/' + cli['filename']
+    file_path = path + '/' + day + '*' + dir_match + '*/' + cli['filename']
     files.extend(glob.glob(file_path))
 
 print("\tfound " + str(len(files)) + " files to process")
