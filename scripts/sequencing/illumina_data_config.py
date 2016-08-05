@@ -324,6 +324,9 @@ int_col_map = {
             'surface_count',
             'tile_count'
         ],
+        'sample_sheet':[
+            'read_length_1'
+        ],
         'sample_sheet_item':[
             'control',
             'operator',

@@ -245,7 +245,7 @@ def parse_illumina_flowcell(data, pk):
     }
     return row_dict
 
-def parse_sample_sheet(data, pk):
+def parse_sample_sheet(data, pk, file):
     data_split = data.split('_')
     machine_id = pk_exists(data_split[1], 'name', 'machine')
     flowcell_id = pk_exists(data_split[3][1:], 'name', 'illumina_flowcell')
@@ -256,7 +256,8 @@ def parse_sample_sheet(data, pk):
         'machine_id': machine_id,
         'slot': data_split[3][0:1],
         'illumina_flowcell_id': flowcell_id,
-        'illumina_run_id': run_id
+        'illumina_run_id': run_id,
+        'file': file
     }
     return row_dict
 
@@ -340,23 +341,14 @@ def parse_hiseq(lines, illumina_run_id, ss_id):
             'illumina_run_id': illumina_run_id
         })
         rows.append(row_dict)
-    insert_sample_sheet_items(rows)
+    return rows
 
-def parse_miseq(lines, illumina_run_id, ss_id):
-    file_dict = {}
-    for row in lines:
-        if row and '[' in row[0]:
-            header = row[0].replace('[', '').replace(']', '').lower()
-        elif header and row:
-            if header in file_dict:
-                file_dict[header].append(row)
-            else:
-                file_dict[header] = [row]
+def parse_miseq(file_dict, illumina_run_id, ss_id):
     order_id = None
     if 'header' in file_dict and file_dict['header'][2][1]:
         order_id = pk_exists(file_dict['header'][2][1], 'name', 'order')
+    rows = []
     if order_id:
-        rows = []
         item_cols = [i.lower() for i in file_dict['data'][0]]
         for row in file_dict['data'][1:]:
             row_dict = dict(zip(item_cols, row))
@@ -366,7 +358,7 @@ def parse_miseq(lines, illumina_run_id, ss_id):
                 'sample_sheet_id': ss_id
             })
             rows.append(row_dict)
-        insert_sample_sheet_items(rows)
+    return rows
 
 def row_exists(table, pk):
     exists = pk_exists(pk, 'name', table)
@@ -404,22 +396,48 @@ def process_file_samplesheet(file):
 
     ss_table = 'sample_sheet'
     ss_id = row_exists(ss_table, ss_name)
-    ss_dict = parse_sample_sheet(ss_name, ss_id)
-    if not ss_id:
-        ss_dict.update({'file': file})
-        if ss_dict:
-            ss_id = do_insert(ss_table, ss_dict)
     if ss_id:
+        ss_dict = {}
+    else:
+        ss_dict = parse_sample_sheet(ss_name, ss_id, file)
+    if ss_dict:
         contents = open(file, 'rt')
         illumina_run_id = ss_dict['illumina_run_id']
         try:
             lines = list(csv.reader(contents))
             if lines[0][0] == '[Header]':
-                parse_miseq(lines, illumina_run_id, ss_id)
+                file_dict = {}
+                for row in lines:
+                    if row and '[' in row[0]:
+                        header = row[0].replace('[', '').replace(']', '').lower()
+                    elif header and row:
+                        if header in file_dict:
+                            file_dict[header].append(row)
+                        else:
+                            file_dict[header] = [row]
+                if ('settings' in file_dict):
+                    count = len(file_dict['settings'])
+                    if file_dict['settings'][0] and file_dict['settings'][0][0].lower() == 'adapter':
+                        ss_dict['adapter_1'] = file_dict['settings'][0][1]
+                    # TODO: consider max here or create new table
+                    '''if count > 1:
+                        adaptor_num = 2
+                        for setting in file_dict['settings'][1:]:
+                            if len(setting) > 1:
+                                ss_dict['adapter_' + adaptor_num] = setting[1]
+                            adaptor_num += 1 '''
+                if ('reads' in file_dict
+                        and file_dict['reads']
+                        and file_dict['reads'][0]
+                ):
+                    ss_dict['read_length_1'] = file_dict['reads'][0][0]
+                ss_id = do_insert(ss_table, ss_dict)
+                rows = parse_miseq(file_dict, illumina_run_id, ss_id)
             else:
-                parse_hiseq(lines, illumina_run_id, ss_id)
-
-
+                ss_id = do_insert(ss_table, ss_dict)
+                rows = parse_hiseq(lines, illumina_run_id, ss_id)
+            if ss_id:
+                insert_sample_sheet_items(rows)
         finally:
             contents.close()
 
