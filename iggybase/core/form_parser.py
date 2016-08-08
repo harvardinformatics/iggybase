@@ -4,6 +4,7 @@ from werkzeug.utils import secure_filename
 from iggybase.core.data_instance import DataInstance
 from iggybase import utilities as util
 from flask import request, g, current_app
+from iggybase import g_helper
 from collections import OrderedDict
 import logging
 
@@ -17,7 +18,7 @@ class FormParser():
         table_names = []
 
         # used to identify fields that contain data that needs to be saved
-        field_pattern = re.compile('(data_entry|record_data)_(\S+)_(\d+)')
+        field_pattern = re.compile('(long_text|data_entry|record_data|form_data)_(\S+)_(\d+)')
         for key in request.form:
             data = request.form.get(key)
 
@@ -30,7 +31,8 @@ class FormParser():
             if field_id is not None:
                 # logging.info('key: ' + key)
                 if field_id.group(3) not in fields.keys():
-                    fields[field_id.group(3)] = {'data_entry': {}, 'record_data': {}}
+                    fields[field_id.group(3)] = {'long_text': {}, 'form_data': {},
+                                                 'data_entry': {}, 'record_data': {}}
 
                 fields[field_id.group(3)][field_id.group(1)][field_id.group(2)] = data
 
@@ -54,33 +56,32 @@ class FormParser():
         #         for key3, value3 in value2.items():
         #            logging.info(str(key1) + ' ' + str(key2) + ' ' + str(key3) + ': ' + str(value3))
 
+        instance = DataInstance(fields['0']['form_data']['table'])
+        instance.get_data(fields['0']['form_data']['row_name'])
+
+        if fields['0']['record_data']['row_name'] != 'new' and int(fields['0']['form_data']['max_level']) > 0:
+            instance.get_linked_instances(fields['0']['record_data']['depth'])
+
+        organization_access_control = g_helper.get_org_access_control()
+
         for row_id in sorted(fields.keys()):
             row_data = fields[row_id]
 
-            table_name_field = row_data['record_data']['table_name']
+            table_name_field = row_data['record_data']['table']
             if table_name_field not in table_names:
                 table_names.append(table_name_field)
 
-            instance = DataInstance(row_data['record_data']['table_name'], row_data['record_data']['row_name'])
+            if row_data['record_data']['row_name'] == "new":
+                if row_data['data_entry']['name'] == '':
+                    instance_name = instance.add_new_instance(table_name_field)
+                else:
+                    instance_name = row_data['data_entry']['name']
+                    instance.add_new_instance(table_name_field, instance_name)
+            else:
+                instance_name = row_data['record_data']['row_name']
 
             # logging.info("row_data['record_data']['table_name']: " + row_data['record_data']['table_name'])
             # logging.info("row_data['record_data']['row_name']: " + row_data['record_data']['row_name'])
-
-            if ('organization_id' in row_data['data_entry'].keys() and
-            row_data['data_entry']['organization_id']):
-                row_org_id = int(row_data['data_entry']['organization_id'])
-            elif instance.get_value('organization_id') is not None:
-                row_org_id = instance.get_value('organization_id')
-            elif instance.organization_access_control.current_org_id is not None:
-                row_org_id = g.current_org_id
-            else:
-                row_org_id = 1
-
-            if not isinstance(row_org_id, int):
-                row_orgs = instance.set_foreign_key_field_id({'organization_id': row_org_id})
-                row_org_id = row_orgs[0]
-
-            row_data['data_entry']['organization_id'] = row_org_id
 
             exclude_list = ['id', 'last_modified', 'date_created', 'organization_id']
 
@@ -94,13 +95,17 @@ class FormParser():
                 field_data = meta_data.Field
 
                 if 'text' == meta_data.DataType.name.lower and row_data['data_entry'][field] != '':
-                    lt = DataInstance('long_text', 'new', instance.get_value(field))
+                    if row_data['long_text'][field] == '':
+                        lt = DataInstance('long_text', 'new')
+                    else:
+                        lt = DataInstance('long_text')
+                        lt.get_data(None, int(row_data['long_text'][field]))
 
                     lt.set_value('organization_id', row_org_id)
                     lt.set_value('long_text', row_data['data_entry'][field])
-                    lt.save()
+                    msg = lt.save()
 
-                    row_data['data_entry'][field] = lt.instance.id
+                    row_data['data_entry'][field] = next(iter(msg))
                 elif field_data.foreign_key_table_object_id is not None:
                     try:
                         # TODO find a better way to deal with no value in a select
@@ -146,9 +151,9 @@ class FormParser():
                         else:
                             row_data['data_entry'][field] = False
 
-            instance.set_values(row_data['data_entry'])
-            save_msg = instance.save()
-            saved_data[save_msg['id']] = save_msg
+            instance.set_values(row_data['data_entry'], table_name_field, instance_name)
+
+        saved_data = instance.save()
 
         current_app.cache.increment_version(list(table_names))
 

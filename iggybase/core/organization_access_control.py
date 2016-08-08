@@ -81,18 +81,31 @@ class OrganizationAccessControl:
         return
 
     def get_instance_data(self, table_object, criteria):
-        for field, value in criteria.items():
-            if field == 'name' and value == 'new':
-                return table_object()
-            else:
-                res = self.session.query(table_object). \
-                        filter(getattr(table_object, field) == value). \
-                        filter(getattr(table_object, 'organization_id').in_(self.org_ids)).first()
+        # logging.info('get_instance_data')
+        # logging.info(criteria)
+        # logging.info(self.org_ids)
 
-                if res:
-                    return res
-                else:
-                    return table_object()
+        filters = [getattr(table_object, 'organization_id').in_(self.org_ids)]
+
+        if 'name' in criteria and (criteria['name'] == 'new' or criteria['name'] == ['new']):
+            return table_object()
+
+        for field, value in criteria.items():
+            if type(value) is list:
+                filters.append(getattr(table_object, field).in_(value))
+            else:
+                filters.append(getattr(table_object, field) == value)
+
+        res = self.session.query(table_object).filter(*filters).first()
+
+        # logging.info(table_object)
+        # logging.info(filters)
+        # logging.info('res')
+        # logging.info(res)
+        if res:
+            return res
+        else:
+            return table_object()
 
     def get_select_list(self, select_list_id, active=1):
         select_list_items = self.session.query(models.SelectListItem).\
@@ -106,17 +119,16 @@ class OrganizationAccessControl:
 
         return results
 
-    def get_foreign_key_data(self, fk_table_id, fk_field_display, params=None):
-        fk_table_data = self.session.query(models.TableObject).filter_by(id=fk_table_id).first()
-        fk_field_data = self.foreign_key(fk_table_id, fk_field_display)
-
+    def get_foreign_key_data(self, fk_table_data, fk_field_data, params=None):
+        # logging.info(fk_table_data)
+        # logging.info(fk_field_data)
         results = [(-99, '')]
         if fk_field_data is not None:
             fk_table_object = util.get_table(fk_table_data.name)
 
             if params is None:
                 rows = self.session.query(getattr(fk_table_object, 'id'),
-                                                         getattr(fk_table_object, fk_field_data['foreign_key']).
+                                                         getattr(fk_table_object, fk_field_data.display_name).
                                           label('name')).all()
             else:
                 criteria = []
@@ -304,22 +316,24 @@ class OrganizationAccessControl:
 
         return result
 
-    def get_child_row_names(self, child_table_name, child_link_field_id, parent_ids):
+    def get_descendant_data(self, child_table_name, child_link_field_id, parent_ids):
         field = self.session.query(models.Field).filter_by(id=child_link_field_id).first()
 
         child_table = util.get_table(child_table_name)
         parent_column = getattr(child_table, field.display_name)
 
+        filters = [getattr(child_table, 'organization_id').in_(self.org_ids), parent_column.in_(parent_ids)]
+
         # logging.info('child_table_name: ' + child_table_name)
         # logging.info('parent_column.name: ' + parent_column.name)
 
-        rows = self.session.query(child_table).filter(parent_column.in_(parent_ids)).order_by('order', 'name').all( )
+        rows = self.session.query(child_table).\
+            filter(*filters).order_by('order', 'name').all()
 
-        names = OrderedDict()
         for row in rows:
-            names[row.id] = row.name
+            setattr(row, 'instance_parent_id', getattr(row, field.display_name))
 
-        return names
+        return rows
 
     def update_rows(self, table, updates, ids):
         ids.sort()

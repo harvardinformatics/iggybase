@@ -243,7 +243,7 @@ def search_results(facility_name):
     return modal_html
 
 
-@core.route('/file/<table_name>/<row_name>/<filename>')
+core.route('/files/<table_name>/<row_name>/<filename>')
 @login_required
 def file_row(facility_name, table_name, row_name, filename):
     file_dir = os.path.join(current_app.config['FILE_FOLDER'], table_name, row_name)
@@ -270,15 +270,9 @@ def change_role(facility_name):
 @templated()
 def data_entry(facility_name, table_name, row_name, page_context):
     module_name = MODULE_NAME
-    rac = g_helper.get_role_access_control()
-    table_data = rac.has_access('TableObject', {'name': table_name})
-
-    if not table_data:
-        logging.info('routes core not table_data')
-        abort(403)
 
     fg = form_generator.FormGenerator(table_name)
-    form = fg.default_data_entry_form(table_data, row_name)
+    form = fg.default_data_entry_form(row_name)
 
     if form.validate_on_submit() and len(form.errors) == 0:
         fp = FormParser()
@@ -297,11 +291,6 @@ def data_entry(facility_name, table_name, row_name, page_context):
 @templated()
 def multiple_entry(facility_name, table_name, row_names, page_context):
     module_name = MODULE_NAME
-    rac = g_helper.get_role_access_control()
-    table_data = rac.has_access('TableObject', {'name': table_name})
-
-    if not table_data:
-        abort(403)
     row_names = json.loads(row_names)
 
     fg = form_generator.FormGenerator(table_name)

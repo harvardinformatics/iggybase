@@ -11,16 +11,18 @@ from iggybase import constants
 from iggybase.core.field_collection import FieldCollection
 from iggybase.core.data_instance import DataInstance
 from json import dumps, loads
+import datetime, time
 import logging
 
 
 class FormGenerator():
-    def __init__(self, table_object):
+    def __init__(self, table_name):
         self.organization_access_control = g_helper.get_org_access_control()
         self.role_access_control = g_helper.get_role_access_control()
-        self.table_object = table_object
+        self.table_name = table_name
         self.classattr = {}
-        self.table_data = None
+        self.table_meta_data = None
+        self.dropdowns = {}
 
     def input_field(self, field_data, display_name, row_name, control_id, control_type, value=None):
         kwargs = {}
@@ -76,11 +78,18 @@ class FormGenerator():
                 if value is not None:
                     lt_row = self.organization_access_control.get_long_text(value)
                     kwargs['default'] = lt_row.long_text
+                    self.classattr['long_text_' + control_id] = HiddenField('long_text_' + control_id, default=value)
+                else:
+                    self.classattr['long_text_' + control_id] = HiddenField('long_text_' + control_id)
 
                 return IggybaseTextAreaField(display_name, **kwargs)
             else:
-                choices = self.organization_access_control.\
-                    get_foreign_key_data(field_data.FK_TableObject.id, field_data.Field.foreign_key_display)
+                if field_data.name not in self.dropdowns:
+                    self.dropdowns[field_data.name] = self.organization_access_control.\
+                        get_foreign_key_data(field_data.FK_TableObject, field_data.FK_Field)
+
+                choices = self.dropdowns[field_data.name]
+
                 if field_data.Field.drop_down_list_limit:
                     drop_down_limit = field_data.Field.drop_down_list_limit
                 else:
@@ -89,18 +98,11 @@ class FormGenerator():
                 if len(choices) > drop_down_limit:
                     kwargs['iggybase_class'] = control_type
 
-                    # TODO: I'm not sure what this is doing, but FK data is now
-                    # available in field class to use, FK_TableObject.name for
-                    # example
                     if value is not None:
-                        value = self.organization_access_control.\
-                            get_foreign_key_data(field_data.FK_TableObject.id, field_data.Field.foreign_key_display,
-                                                 {'id': value})
+                        value = [item for item in choices if item[0] == value]
 
-                        if len(value) == 1:
+                        if len(value) > 0:
                             kwargs['default'] = value[0][1]
-                        else:
-                            kwargs['default'] = value[1][1]
 
                     return IggybaseLookUpField(display_name, **kwargs)
                 else:
@@ -136,176 +138,139 @@ class FormGenerator():
         return newclass()
 
     def default_multiple_entry_form(self, row_names=[]):
+        self.table_meta_data = self.role_access_control.has_access('TableObject', {'name': self.table_name})
+        data_instance = DataInstance(self.table_meta_data.name, self.organization_access_control)
 
-        self.table_data = self.role_access_control.has_access('TableObject', {'name': self.table_object})
-
-        fields = FieldCollection(None, self.table_data.name)
-        fields.set_fk_fields()
-        fields.set_defaults()
-
-        self.classattr['startmaintable_'+str(self.table_data.id)]=\
-            HiddenField('startmaintable_'+str(self.table_data.id), default=self.table_data.name)
+        self.classattr['startmaintable_'+str(self.table_meta_data.id)]=\
+            HiddenField('startmaintable_'+str(self.table_meta_data.id), default=self.table_meta_data.name)
 
         row_counter = 1
         for row_name in row_names:
             self.classattr.update(self.row_fields(row_counter, row_name))
-            self.get_row(fields, row_name, row_counter, 'table-control')
+            data_instance.get_data(row_name)
+            self.get_row(data_instance, row_name, row_counter, 'table-control', data_instance, row_counter)
             row_counter += 1
 
         newclass = new_class('MultipleForm', (Form,), {}, lambda ns: ns.update(self.classattr))
 
         return newclass()
 
-    def default_data_entry_form(self, table_data, row_name='new', depth = 2):
-        self.table_data = table_data
+    def default_data_entry_form(self, row_name='new', depth = 2):
+        # start_time = time.time()
+        # logging.info('default_data_entry_form start time: ' + datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
 
-        self.classattr = self.row_fields(1, row_name)
+        data_instance = DataInstance(self.table_name, row_name)
 
-        fields = FieldCollection(None, self.table_data.name)
-        fields.set_fk_fields()
-        fields.set_defaults()
+        # logging.info(self.table_name + ': ' + row_name)
+        # logging.info(data_instance.instances[self.table_name])
 
-        self.classattr['startmaintable_'+str(self.table_data.id)]=\
-            HiddenField('startmaintable_'+str(self.table_data.id), default=self.table_data.name)
-
-        self.get_row(fields, row_name, 1, 'data-control')
-
-        self.classattr['endtable_'+str(self.table_data.id)]=\
-            HiddenField('endtable_'+str(self.table_data.id), default=self.table_data.name)
-
-        row_counter = 2
         if row_name != 'new':
-            link_data, link_tables = self.role_access_control.get_link_tables(self.table_data.id)
+            data_instance.get_linked_instances(depth)
 
-            row_counter = self.linked_data(link_tables, link_data, row_name, row_counter, depth)
+        self.get_table(data_instance, 'default')
 
-        self.classattr['row_counter'] = HiddenField('row_counter', default=row_counter)
+        self.classattr['form_data_table_0'] = \
+            HiddenField('form_data_table_0', default=self.table_name)
+
+        self.classattr['form_data_row_name_0'] = \
+            HiddenField('form_data_row_name_0', default=row_name)
+
+        self.classattr['row_counter'] = HiddenField('row_counter', default=data_instance.instance_counter)
 
         newclass = new_class('SingleForm', (Form,), {}, lambda ns: ns.update(self.classattr))
 
+        # logging.info('default_data_entry_form time: ' + str(time.time() - start_time))
+
+        # logging.info('self.dropdowns')
+        # logging.info(self.dropdowns)
+        #logging.info('end time: ' + datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
+
         return newclass()
 
-    def linked_data(self, tables, table_data, row_name, row_counter, depth, child_row_ids = [], current_depth = 0):
-        parent_name = self.table_data.name
-        parent_id = self.organization_access_control.get_row_id(self.table_data.name, {'name': row_name})
+    def get_table(self, data_instance, form_type):
+        row_counter = 0
+        level = 0
 
-        for link_type, link_tables in tables.items():
-            table_index = 0
+        for table_name, table_data in data_instance.tables.items():
+            # start_time = time.time()
+            #logging.info('get_table loop table_name: ' + table_name)
+            # logging.info(data_instance.instances[table_name])
 
-            for link_table in link_tables:
-                self.table_data = link_table
-
-                fields = FieldCollection(None, self.table_data.name)
-                fields.set_fk_fields()
-                # default parent fk to parent id
-                fk_defaults = {parent_name: parent_id}
-                fields.set_defaults(fk_defaults)
-
-                child_data = None
-                if link_type == 'child':
-                    if current_depth == 0:
-                        self.classattr['startchildtable_'+str(link_table.id)]=\
-                            HiddenField('startchildtable_'+str(link_table.id), default=link_table.name)
-
-                        ids = [parent_id]
-                    else:
-                        self.classattr['startgrandchildtable_'+str(link_table.id)]=\
-                            HiddenField('startgrandchildtable_'+str(link_table.id), default=link_table.name)
-
-                        ids = child_row_ids
-
-                    logging.info(link_table.name + ' ids:')
-                    logging.info(ids)
-
-                    row_names = self.organization_access_control.\
-                        get_child_row_names(link_table.name,
-                                            table_data[link_type][table_index].child_link_field_id, ids)
-
-                    child_data, child_tables = self.role_access_control.get_link_tables(self.table_data.id, True)
-                elif link_type == 'many' and current_depth == 0:
-                    row_names = self.organization_access_control.\
-                        get_many_row_names(link_table.name,
-                                           table_data[link_type][table_index].link_table_object_id,
-                                           [parent_id])
-
-                    self.classattr['startchildtable_'+str(link_table.id)]=\
-                        HiddenField('startchildtable_'+str(link_table.id), default=link_table.name)
-
-                    link_table_fields = self.role_access_control.\
-                        fields(table_data[link_type][table_index].link_table_object_id)
-                else:
-                    return
-
-                link_field = self.role_access_control.\
+            if table_data['link_data'] is not None:
+                link_field = self.role_access_control. \
                     has_access('Field',
-                               {'id': table_data[link_type][table_index].child_link_field_id})
+                               {'id': table_data['link_data'].child_link_field_id})
 
-                self.classattr['linkcolumn_'+str(link_table.id)]=\
-                    HiddenField('linkcolumn_'+str(link_table.id), default=link_field.display_name)
+                self.classattr['linkcolumn_' + str(table_data['table_meta_data'].id)] = \
+                    HiddenField('linkcolumn_' + str(table_data['table_meta_data'].id),
+                                default=link_field.display_name)
 
-                self.classattr['headers_'+str(link_table.id)]=\
-                    HiddenField('headers_'+str(link_table.id), default=self.get_field_headers(fields))
+            self.classattr['table_level_' + str(table_data['table_meta_data'].id)] = \
+                HiddenField('table_level_' + str(table_data['table_meta_data'].id), default=table_data['level'])
 
-                if len(row_names) == 0:
-                    row_names[0] = 'new'
+            if level < table_data['level']:
+                level = table_data['level']
 
-                row_ids = []
-                for row_id, row_name in row_names.items():
-                    row_ids.append(row_id)
-                    self.classattr.update(self.row_fields(row_counter, row_name))
-                    self.get_row(fields, row_name, row_counter, 'table-control')
+            self.classattr['table_name_' + str(table_data['table_meta_data'].id)] = \
+                HiddenField('table_name_' + str(table_data['table_meta_data'].id),
+                            default=table_data['table_meta_data'].name)
 
-                    row_counter += 1
+            if table_data['level'] == 0 and form_type == 'default':
+                control_type = 'data-control'
+            else:
+                control_type = 'table-control'
 
-                self.classattr['endtable_' + str(link_table.id)] = \
-                    HiddenField('endtable_' + str(link_table.id), default=link_table.name)
+            for instance_name, instance in data_instance.instances[table_name].items():
+                # logging.info(str(instance.id) + ' start time: ' +
+                #              datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
 
-                if child_data:
-                    row_counter = self.linked_data(child_tables, child_data, row_name, row_counter, depth, row_ids,
-                                                   (current_depth + 1))
+                self.classattr.update(self.row_fields(row_counter, instance_name, table_data['table_meta_data']))
+                self.get_row(data_instance, table_name, instance, control_type, row_counter)
 
-                table_index += 1
+                row_counter += 1
 
-        return row_counter
+            self.classattr['end_table_' + str(table_data['table_meta_data'].id)] = \
+                HiddenField('end_table_' + str(table_data['table_meta_data'].id),
+                            default=table_data['table_meta_data'].name)
 
-    def row_fields(self, row_count, row_name):
-        table_id_field = HiddenField('table_id_'+str(row_count), default=self.table_data.id)
-        table_name_field = HiddenField('table_name_'+str(row_count), default=self.table_data.name)
-        row_field = HiddenField('row_name_'+str(row_count), default=row_name)
+            # logging.info('get_table ' + table_name + ' time: ' + str(time.time() - start_time))
+
+        self.classattr['form_data_max_level_0'] = \
+            HiddenField('form_data_max_level_0', default=level)
+
+        # logging.info('row_counter: ' + str(row_counter))
+
+    def row_fields(self, row_count, row_name, table_meta_data):
+        table_id_field = HiddenField('record_data_table_id_'+str(row_count), default=table_meta_data.id)
+        table_name_field = HiddenField('record_data_table_'+str(row_count), default=table_meta_data.name)
+        row_field = HiddenField('record_data_row_name_'+str(row_count), default=row_name)
 
         return {'record_data_row_name_'+str(row_count): row_field,
-                'record_data_table_name_'+str(row_count): table_name_field,
+                'record_data_table_'+str(row_count): table_name_field,
                 'record_data_table_id_'+str(row_count): table_id_field}
 
-    def get_row(self, fields, row_name, row_counter, control_type):
-        # logging.info('row_name: ' + row_name)
-        data = DataInstance(self.table_data.name, row_name)
+    def get_row(self, data_instance, table_name, instance, control_type, row_counter):
+        # start_time = time.time()
+        # logging.info('row_name: ' + instance.name)
+        self.classattr['start_row_'+str(row_counter)]=\
+            HiddenField('start_row_'+str(row_counter))
 
-        self.classattr['startrow_'+str(row_counter)]=\
-            HiddenField('startrow_'+str(row_counter))
-
-        for field_name, field in fields.fields.items():
+        for field_name, field in data_instance.fields[table_name].fields.items():
+            # field_start = time.time()
             field_display_name = field.display_name.title()
-            # logging.info(str(field.Field.id) + " " + field.Field.display_name +': ' + field.FieldRole.display_name)
-            value = None
 
-            if row_name != 'new' and data and field.Field.display_name in data.field_values.keys():
-                value = data.field_values[field.Field.display_name]
-
-            if value is None and row_name == 'new' and (field.default is not None and field.default != ''):
-                value = field.default
+            value = getattr(instance, field.Field.display_name)
 
             control_id = 'data_entry_' + field.Field.display_name+"_"+str(row_counter)
-            self.classattr[control_id] = self.input_field(field, field_display_name, row_name, control_id,
-                                                          control_type, value)
+            # logging.info('control_id: ' + str(control_id))
+            # logging.info('control_type: ' + str(control_type))
+            # logging.info('value: ' + str(value))
+            self.classattr[control_id] = self.input_field(field, field_display_name, getattr(instance, 'name'),
+                                                          control_id, control_type, value)
 
-        self.classattr['endrow_'+str(row_counter)]=\
-            HiddenField('endrow_'+str(row_counter))
+            # logging.info('input_field ' + field_display_name + ' time: ' + str(time.time() - field_start))
 
-    def get_field_headers(self, fields):
-        headers = ''
-        for name, field in fields.fields.items():
-            if field.visible:
-                headers += field.display_name + '|'
+        self.classattr['end_row_'+str(row_counter)]=\
+            HiddenField('end_row_'+str(row_counter))
 
-        return dumps(headers[:-1])
+        # logging.info('get_row time: ' + str(time.time() - start_time))

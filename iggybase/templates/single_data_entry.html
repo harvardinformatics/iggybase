@@ -38,46 +38,56 @@
     {% if form is defined %}
         {% block page_content -%}
         <div class="page_content">
-            {%- for field in form %}
-                {% if "startmaintable_" in field.id -%}
-                    <div class="col-md-4">
-                    {% set table_name = field.data -%}
-                    <table id="{{ table_name }}" class="table">
-                    {% set maintable = 1 -%}
-                {% elif "startchildtable_" in field.id or "startgrandchildtable_" in field.id -%}
-                    {% set html_id = field.id.split("_") -%}
-                    {% set table_id = html_id[1] -%}
-                    {% if "startgrandchildtable_" in field.id -%}
-                        <div class="col-md-12 left-indent-div">
+            {% set form_fields = form._fields %}
+            {%- for field_name, field in form_fields.items() %}
+                {% if "table_level_" in field.id -%}
+                    {% set table_level = field.data -%}
+                    {%- if table_level == 0 %}
+                        <div class="col-md-4 div_level_{{ table_level }}">
                     {% else -%}
-                        <div class="col-md-12">
+                        <div class="col-md-12 div_level_{{ table_level }}">
                     {% endif -%}
-                    {% set table_title = field.data|replace("_", " ")|title -%}
-                    <h3>{{ table_title }}</h3>
+                {% elif "table_name_" in field.id -%}
                     {% set table_name = field.data -%}
-                    <input type="button" class="add_new_child_item" target_table="{{ table_name}}" table_object_id="{{ table_id }}" value="Add {{ field.data }}">
-                    <table id="{{ table_name }}" class="table table-striped"><tr>
-                    {% set maintable = 0 -%}
-                    {% set endrow = 1 -%}
-                {% elif "endtable_" in field.id -%}
+                    {% set table_title = field.data|replace("_", " ")|title -%}
+                    {% set html_id = field.id.split("_") -%}
+                    {% set table_id = html_id[2] -%}
+
+                    {%- if table_level == 0 %}
+                        <table id="{{ table_name }}" class="table">
+                    {% else -%}
+                        <h3>{{ table_title }}</h3>
+                        <input type="button" class="add_new_child_item" table_level="{{ table_level }}" target_table="{{ table_name }}" table_object_id="{{ table_id }}" value="Add {{ field.data }}">
+                        <table id="{{ table_name }}" class="table table-striped"><tr>
+
+                        {% set field_loop = loop %}
+                        {% set firstrow = 1 %}
+                        {% set found = 0 %}
+                        {% for field_header_name, field_header in form_fields.items() if firstrow == 1 %}
+                            {% if 'end_row_' in field_header.id and found == 1 %}
+                                {% set firstrow = 0 %}
+                            {% endif %}
+
+                            {% if found == 1 %}
+                                {{ macros.form_field_th( field_header ) }}
+                            {% endif %}
+
+                            {% if field_name == field_header_name %}
+                                {% set found = 1 %}
+                            {% endif %}
+                        {%- endfor %}
+                    {% endif -%}
+                {% elif "end_table_" in field.id -%}
                     </table></div><br>
-                {% elif 'startrow_' in field.id-%}
+                {% elif 'start_row_' in field.id-%}
                     {% set field_vars = field.id.split("_") %}
                     <tr row_id="{{ field_vars[field_vars|length - 1] }}" table_object_name="{{ table_name }}">
-                {% elif 'endrow_' in field.id-%}
-                    </tr>
-                {% elif "headers_" in field.id -%}
-                    {% set data = field.data|replace("\"", "")|safe -%}
-                    {% set headers = data.split('|') -%}
-                    <tr>
-                    {% for header in headers -%}
-                        <th>{{ header }}</th>
-                    {% endfor -%}
+                {% elif 'end_row_' in field.id-%}
                     </tr>
                 {% elif "record_data_row_name_" in field.id -%}
                     {% set row_name = field.data %}
                 {% elif not bootstrap_is_hidden_field( field ) -%}
-                    {% if maintable == 1 -%}
+                    {% if table_level == 0 -%}
                         {% set field_vars = field.id.split("_") %}
                         {{ macros.render_field( field, field_vars[field_vars|length - 1], table_name, row_name ) }}
                     {% else -%}

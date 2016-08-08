@@ -198,3 +198,19 @@ pre {
     color: red;
     font-weight:bold;
 }
+.div_level_2 {
+    margin-left: 50px;
+    width: calc(100% - 50px);
+}
+.div_level_3 {
+    margin-left: 100px;
+    width: calc(100% - 100px);
+}
+.div_level_4 {
+    margin-left: 150px;
+    width: calc(100% - 150px);
+}
+.div_level_5 {
+    margin-left: 200px;
+    width: calc(100% - 200px);
+}

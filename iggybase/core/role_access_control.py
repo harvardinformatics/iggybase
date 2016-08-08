@@ -475,27 +475,36 @@ class RoleAccessControl:
         else:
             return False
 
-    def get_link_tables(self, table_object_id, child_only=False, active=1):
-        link_tables = {}
-        link_data = {}
+    def get_link_tables(self, table_object_name, table_object_id, levels=2, level=1, child_only=False, active=1):
+        link_tables = []
 
-        res = self.session.query(models.TableObjectChildren). \
-            filter_by(table_object_id=table_object_id).filter_by(active=active). \
-            order_by(models.TableObjectChildren.order, models.TableObjectChildren.child_table_object_id).all()
+        # logging.info('get_link_tables (models.TableObjectChildren.__table__.columns: ')
+        # logging.info(models.TableObjectChildren.__table__.columns)
+
+        res = self.session.query(models.TableObjectChildren, models.TableObject). \
+            join(models.TableObject, models.TableObjectChildren.child_table_object_id == models.TableObject.id). \
+            filter(models.TableObjectChildren.table_object_id==table_object_id). \
+            filter(models.TableObjectChildren.active==active). \
+            order_by(models.TableObjectChildren.order, models.TableObject.name).all()
+
+        # logging.info('get_link_tables res: ' + table_object_name)
+        # logging.info(res)
 
         if len(res) > 0:
-            child_tables = []
-            child_data = []
-
             for row in res:
-                table_data = self.has_access('TableObject', {'id': row.child_table_object_id})
+                table_data = self.has_access('TableObject', {'id': row.TableObjectChildren.child_table_object_id})
                 if table_data:
-                    child_tables.append(table_data)
-                    child_data.append(row)
+                    link_tables.append({'parent': table_object_name, 'level': level, 'table_meta_data': table_data,
+                                        'link_data': row.TableObjectChildren, 'link_type': 'child'})
 
-            if len(child_tables) > 0:
-                link_tables['child'] = child_tables
-                link_data['child'] = child_data
+                    # logging.info('get_link_tables row.TableObjectChildren ' + table_object_name)
+                    # logging.info(row.TableObjectChildren)
+
+                    if level <= levels:
+                        # logging.info('level: ' + str(level))
+                        link_tables = link_tables + self.get_link_tables(row.TableObject.name, row.TableObject.id,
+                                                                         levels, level + 1, True)
+
 
         if not child_only:
             res = self.session.query(models.TableObjectMany). \
@@ -505,20 +514,17 @@ class RoleAccessControl:
                 order_by(models.TableObjectMany.order, models.TableObjectMany.id).all()
 
             if len(res) > 0:
-                many_tables = []
-                many_data = []
-
                 for row in res:
-                    table_data = self.has_access('TableObject', {'id': row.child_table_object_id})
+                    if row.first_table_object_id == table_object_id:
+                        table_data = self.has_access('TableObject', {'id': row.second_table_object_id})
+                    else:
+                        table_data = self.has_access('TableObject', {'id': row.first_table_object_id})
+
                     if table_data:
-                        many_tables.append(table_data)
-                        many_data.append(row)
+                        link_tables.append({'parent': table_object_name, 'level': level, 'table_meta_data': table_data,
+                                            'link_data': row.TableObjectMany, 'link_type': 'many'})
 
-                if len(many_tables) > 0:
-                    link_tables['many'] = many_tables
-                    link_data['many'] = many_data
-
-        return link_data, link_tables
+        return link_tables
 
     def check_facility_module(self, facility, module, table_name, active=1):
         rec = (self.session.query(models.TableObject).

@@ -83,13 +83,14 @@ $( document ).ready( function () {
 ( function( $ ) {
     $.fn.addChildTableRow = function( ele ) {
         var target = ele.attr( "target_table" );
+        var table_level = ele.attr( "table_level" );
         var table_object_id = ele.attr( "table_object_id" );
         var link_column = $( "#linkcolumn_" + table_object_id ).val( );
-        var parent_name = $( '#old_value_name_1' ).val( );
-
         var new_tr = $( "#" + target + " tr:last" ).clone( );
-
         var old_id = new_tr.attr( 'row_id' );
+        var parent_name = '';
+        if ( table_level == 1 )
+            parent_name = $( '#record_data_row_name_0' ).val( );
 
         var row_id = $( '#row_counter' ).val( );
         $( '#row_counter' ).val( parseInt( row_id ) + 1 );
@@ -137,14 +138,12 @@ $( document ).ready( function () {
                     var new_id = matches[ 1 ] + "_" + ( row_id );
                     var value = '';
 
-                    if ( matches[ 1 ] == 'old_value_name' || matches[ 1 ] == 'record_data_row_name' ) {
-                        value = 'new';
+                    if ( matches[ 1 ] == 'record_data_row_name' ) {
+                        value = 'new_dynamic';
                     } else if ( matches[ 1 ] == 'record_data_table_id' ) {
                         value = table_object_id;
-                    } else if ( matches[ 1 ] == 'record_data_table_name' ) {
+                    } else if ( matches[ 1 ] == 'record_data_table' ) {
                         value = target;
-                    } else if ( 'old_value_' + link_column == matches[ 1 ] ) {
-                        value = $( this ).attr( 'value' );
                     }
 
                     var new_input = $( '<input>' ).attr( {
@@ -345,7 +344,7 @@ $( document ).ready( function () {
         var input_id = ele.attr( 'luid' );
 
         var matches = input_id.match( /data_entry_(\S+)_(\d+)/);
-        var table_object = $( '#record_data_table_name_' + matches[2] ).val( );
+        var table_object = $( '#record_data_table_' + matches[2] ).val( );
 
         var display_name = matches[ 1 ];
 
