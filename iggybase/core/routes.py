@@ -243,7 +243,11 @@ def search_results(facility_name):
     return modal_html
 
 
+<<<<<<< Updated upstream
 core.route('/files/<table_name>/<row_name>/<filename>')
+=======
+@core.route('/files/<table_name>/<row_name>/<filename>')
+>>>>>>> Stashed changes
 @login_required
 def file_row(facility_name, table_name, row_name, filename):
     file_dir = os.path.join(current_app.config['FILE_FOLDER'], table_name, row_name)

@@ -81,6 +81,7 @@ class OrganizationAccessControl:
         return
 
     def get_instance_data(self, table_object, criteria):
+<<<<<<< Updated upstream
         # logging.info('get_instance_data')
         # logging.info(criteria)
         # logging.info(self.org_ids)
@@ -88,6 +89,11 @@ class OrganizationAccessControl:
         filters = [getattr(table_object, 'organization_id').in_(self.org_ids)]
 
         if 'name' in criteria and (criteria['name'] == 'new' or criteria['name'] == ['new']):
+=======
+        filters = [getattr(table_object, 'organization_id').in_(self.org_ids)]
+
+        if 'name' in criteria and criteria['name'] == 'new':
+>>>>>>> Stashed changes
             return table_object()
 
         for field, value in criteria.items():
@@ -98,10 +104,13 @@ class OrganizationAccessControl:
 
         res = self.session.query(table_object).filter(*filters).first()
 
+<<<<<<< Updated upstream
         # logging.info(table_object)
         # logging.info(filters)
         # logging.info('res')
         # logging.info(res)
+=======
+>>>>>>> Stashed changes
         if res:
             return res
         else:
@@ -343,7 +352,11 @@ class OrganizationAccessControl:
             filter(*filters).order_by('order', 'name').all()
 
         for row in rows:
+<<<<<<< Updated upstream
             setattr(row, 'instance_parent_id', getattr(row, field.display_name))
+=======
+            names[row.id] = [row.name, getattr(row, field.display_name)]
+>>>>>>> Stashed changes
 
         return rows
 
