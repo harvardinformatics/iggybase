@@ -5,19 +5,31 @@ from iggybase import g_helper
 from .item import Item
 import os
 import glob
+import logging
+import time
 
 class Invoice:
-    def __init__ (self, from_date, to_date, org_name, items):
-        self.org_name = org_name
+    def __init__ (self, from_date, to_date, items, order):
         self.items = self.populate_items(items)
-        self.Invoice = None # set by set_invoice
-        self.oac = g_helper.get_org_access_control()
-        self.org_id = getattr(self.oac.get_row('organization', {'name': self.org_name}), 'id')
         self.from_date = from_date
         self.to_date = to_date
+        self.order = order
+
+        self.org_name = self.items[0].Organization.name
+        self.org_id = self.items[0].Organization.id
+        self.charge_method_type = self.items[0].ChargeMethodType.name
+
+        # set by set_invoice
+        self.id = None
+        self.last_modified = None
+        self.name = None
+        self.Invoice = None
+
+        self.oac = g_helper.get_org_access_control()
 
         # set in total_items
         self.orders = self.group_by('Order', 'id')
+        self.get_charge_method()
         self.users = self.group_by('User', 'id')
         self.total = self.set_total()
 
@@ -29,10 +41,17 @@ class Invoice:
                 '52 Oxford Street',
                 'Cambridge, MA 02138'
         ]
-        self.purchase_table = []
-        self.charges_table = []
-        self.user_table = []
-        self.pdf_prefix = 'invoice-' + str(self.from_date.year) + '-' + '{:02d}'.format(self.from_date.month) + '-' + self.org_name
+
+        self.core_prefix = {
+                'bauer': 'SC',
+                'helium': 'HU'
+        }
+        self.pdf_prefix = (
+                self.core_prefix[g.facility]
+                + self.get_organization_type_prefix()
+                + '-' + str(self.from_date.year) +  '{:02d}'.format(self.from_date.month)
+                + '-' + util.zero_pad(self.order, 4)
+        )
 
     def populate_items(self, items):
         item_list = []
@@ -65,38 +84,47 @@ class Invoice:
 
     def set_invoice(self):
         # find invoice id
-        invoice_id = None
+        invoice_row = None
         for item in self.items:
-            invoice_id = item.LineItem.invoice_id
-            if invoice_id:
+            invoice_row = item.Invoice
+            if invoice_row:
                 break
-        # fetch or insert invoice row
-        if invoice_id:
-            self.Invoice = self.oac.get_row('invoice', {'id': invoice_id})
-        else:
+        # if new, insert invoice row
+        if not invoice_row:
             cols = {
                 'invoice_organization_id': self.org_id,
                 'amount': int(self.total),
                 'order_id': self.items[0].Order.id,
-                'invoice_month': self.from_date
+                'invoice_month': self.from_date,
+                'order': self.order
             }
-            self.Invoice = self.oac.insert_row('invoice', cols)
+            invoice_row = self.oac.insert_row('invoice', cols)
+
+        self.id = invoice_row.id
+        self.name = invoice_row.name
+        self.last_modified = invoice_row.last_modified
+        self.Invoice = invoice_row
 
         # update line_item if invoice_id not set
-        if self.Invoice:
+        if self.id:
+            to_update = []
             for item in self.items:
                 if not item.LineItem.invoice_id:
-                        self.oac.update_rows(
-                                'line_item',
-                                {'invoice_id': self.Invoice.id},
-                                [item.LineItem.id]
-                        )
+                        to_update.append(item.LineItem)
+            if to_update:
+                updated = self.oac.update_obj_rows(
+                        to_update,
+                        {'invoice_id': self.id}
+                )
 
-    def populate_tables(self):
+    def populate_template_data(self):
         self.purchase_table = self.populate_purchase()
-        self.get_charge_method()
-        self.charge_table = self.populate_charges()
-        self.user_table = self.populate_users()
+        self.to_info = self.populate_to_info()
+        if self.charge_method_type == 'po':
+            self.po_info = self.populate_po_info()
+        else:
+            self.charge_table = self.populate_charges()
+            self.user_table = self.populate_users()
 
     def populate_purchase(self):
         rows = []
@@ -107,9 +135,56 @@ class Invoice:
                 row['order'] = item.Order.name
                 row['delivery date'] = item.LineItem.date_created
                 row['description'] = item.PriceItem.name
-                row['amount charged'] =  item.display_amount
+                row['amount'] =  item.display_amount
                 rows.append(row)
         return rows
+
+    def populate_to_info(self):
+        if self.charge_method_type == 'po':
+            info = OrderedDict({
+                    'PI': 'test',
+                    'Institution': 'test',
+                    'PO Number': self.items[0].ChargeMethod.code
+            })
+        else:
+            users = self.oac.get_org_position(self.org_id, 'manager')
+            names = []
+            emails = []
+            for u in users:
+                if u.first_name and u.last_name:
+                    name = u.first_name + ' ' + u.last_name
+                else:
+                    name = u.name
+                names.append(name)
+                emails.append(u.email)
+            info = OrderedDict({
+                    'Sent to': ', '.join(names),
+                    'Email': ', '.join(emails)
+            })
+        return info
+
+    def populate_po_info(self):
+        address = self.oac.get_org_billing_address(self.org_id)
+        info = {
+                'invoice address': [address.address_1, address.address_2,
+                    (address.city + ', ' + address.state + ' ' +
+                        address.postcode)],
+                'remit to': [
+                    [
+                        'Harvard University',
+                        'Accounts Receivable',
+                        'PO Box 4999',
+                        'Boston, MA 02212-4999'
+                    ],
+                    [
+                        'Please inlude Invoice number on remittance',
+                        'Harvard Tax ID No: 05-2103580'
+                        'Harvard DUNS 082359691',
+                        'Bank transfer fees are the responsibility of the payer'
+                    ]
+                ]
+        }
+        return info
 
     def populate_charges(self):
         rows = []
@@ -119,7 +194,9 @@ class Invoice:
                     row = OrderedDict()
                     row['order'] = data['charge'].Order.name
                     row['expense code'] = data['charge'].ChargeMethod.code
+                    row['percent charged'] = int(data['charge'].OrderChargeMethod.percent or 0)
                     row['amount charged'] = "${:.2f}".format(data['amount'])
+                    row['amount credited'] = "${:.2f}".format(0)
                     row['total charged'] = "${:.2f}".format(data['amount'])
                     rows.append(row)
         return rows
@@ -127,9 +204,12 @@ class Invoice:
     def get_charge_method(self):
         for order_id, order in self.orders.items():
             self.orders[order_id]['charges'] = []
-            charges = self.oac.get_charge_method(order_id)
             amount_remaining = order['amount']
-            for charge in charges:
+            charges = {}
+            for item in order['items']:
+                if item.OrderChargeMethod.name not in charges:
+                    charges[item.OrderChargeMethod.name] = item
+            for charge in charges.values():
                 if amount_remaining:
                     amount_charged = (order['amount'] *
                     (int(charge.OrderChargeMethod.percent or 0)/100))
@@ -180,7 +260,7 @@ class Invoice:
     def get_pdf_dir(self):
         return (
                 'files/invoice/'
-                + self.Invoice.name.replace(' ', '_').lower()
+                + self.name.replace(' ', '_').lower()
                 + '/'
         )
 
@@ -197,10 +277,11 @@ class Invoice:
         return '|'.join(pdf_list)
 
     def update_pdf_name(self):
-        updated = self.oac.update_rows(
-                'invoice',
-                {'pdf': self.get_pdf_string()},
-                [self.Invoice.id]
-        )
-        # fetch invoice again
-        self.Invoice = self.oac.get_row('invoice', {'id': self.Invoice.id})
+        self.oac.update_obj_rows([self.Invoice], {'pdf':self.get_pdf_string()})
+
+    def get_organization_type_prefix(self):
+        prefix = ''
+        if self.items[0].OrganizationType.name == 'harvard':
+            prefix = 'ib'
+        return prefix
+

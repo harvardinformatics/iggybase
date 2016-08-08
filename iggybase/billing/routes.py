@@ -17,9 +17,10 @@ MODULE_NAME = 'billing'
 def review(facility_name):
     ic = InvoiceCollection() # defaults to last complete
     ic.get_select_options()
-    ic.get_table_query('line_item')
+    ic.get_table_query_collection('line_item')
+    table_query = ic.tqc.get_first()
     return templating.page_template_context('review', ic = ic,
-        table_name = 'line_item', table_query = ic.table_query,
+        table_name = 'line_item', table_query = table_query,
         module_name=MODULE_NAME)
 
 @billing.route( '/review/<year>/<month>/ajax/' )
@@ -52,8 +53,10 @@ def invoice_summary_ajax(facility_name, year, month):
 @login_required
 def generate_invoices(facility_name, year, month):
     orgs = []
-    if 'orgs' in request.args:
-        orgs = request.json['orgs']
+    if request.data:
+        post_params = request.get_json()
+        if 'orgs' in post_params:
+            orgs = post_params['orgs']
     ic = InvoiceCollection(int(year), int(month), orgs) # defaults to last complete
     # can't update the pdf name in db after generation because pdf generation
     # borks the db_session for the request
@@ -62,16 +65,22 @@ def generate_invoices(facility_name, year, month):
     return json.dumps({'generated':generated})
 
 
+@billing.route( '/invoice/<year>/<month>/' )
 @billing.route( '/invoice/<year>/<month>/<org_name>/' )
 @login_required
-def invoice(facility_name, year, month, org_name):
-    ic = InvoiceCollection(int(year), int(month), org_name)
+def invoice(facility_name, year, month, org_name = None):
+    org_list = []
+    if org_name:
+        org_list.append(org_name)
+    ic = InvoiceCollection(int(year), int(month), org_list)
     return render_template('invoice_base.html',
             module_name = 'billing',
-            invoice = ic.get_invoice_by_org(org_name))
+            invoices=ic.invoices)
 
-@billing.route( '/invoice/<year>/<month>/<org_name>.pdf' )
+@billing.route( '/invoice/invoice-<year>-<month>.pdf' )
+@billing.route( '/invoice/invoice-<year>-<month>-<org_name>.pdf' )
 @login_required
-def invoice_pdf(facility_name, year, month, org_name):
-    return render_pdf(HTML(string=invoice(facility_name = facility_name,
-        year = year, month = month, org_name = org_name)))
+def invoice_pdf(facility_name, year, month, org_name = None):
+    html = (invoice(facility_name = facility_name,
+            year = year, month = month, org_name = org_name))
+    return render_pdf(HTML(string=html))

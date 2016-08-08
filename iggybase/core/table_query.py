@@ -22,7 +22,7 @@ class TableQuery:
         """
         self.fc.set_fk_fields()
         results = []
-        self.criteria = self._add_table_query_criteria(self.criteria)
+        self.criteria = self.add_table_query_criteria(self.criteria)
         self.oac = g_helper.get_org_access_control()
         self.results = self.oac.get_table_query_data(
                 self.fc.fields,
@@ -30,7 +30,7 @@ class TableQuery:
         )
         return self.results
 
-    def _add_table_query_criteria(self, orig_criteria):
+    def add_table_query_criteria(self, orig_criteria):
         criteria = {}
         # add criteria from get params
         filters = util.get_filters()
@@ -88,6 +88,9 @@ class TableQuery:
                     dt_row_id = col
                     if not add_row_id:
                         continue
+                elif name == 'DT_row_label':
+                    dt_row_label = col
+                    continue
                 elif name in invisible_fields:
                     continue
                 elif name in calc_fields:
@@ -123,7 +126,7 @@ class TableQuery:
             if row_dict:
                 # store values as a dict of dict so we can access any of the
                 # data by row_id and field display_name
-                self.table_dict[dt_row_id] = row_dict
+                self.table_dict[dt_row_label] = row_dict
 
     def get_list_of_list(self): # for download
         table_list = []
@@ -141,7 +144,7 @@ class TableQuery:
     def get_row_list(self): # for summary_ajax
         return list(self.table_dict.values())
 
-    def update_and_get_message(self, updates, ids, message_fields):
+    def update_and_get_message(self, table_name, updates, ids, message_fields):
         updated = self.oac.update_rows(self.display_name, updates, ids)
         updated_info = []
         for i in updated:
@@ -149,7 +152,7 @@ class TableQuery:
             # update
             row_fields = []
             for field in message_fields:
-                val = self.table_dict[i][field]
+                val = self.table_dict[table_name + '-' + str(i)][field]
                 if val:
                     row_fields.append(str(val))
             if row_fields:

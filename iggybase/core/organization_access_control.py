@@ -1,5 +1,5 @@
 from flask import g, current_app
-from sqlalchemy import DateTime, func
+from sqlalchemy import DateTime, func, cast, String
 from iggybase.database import db_session
 from iggybase.admin import models
 from iggybase import utilities as util
@@ -147,8 +147,8 @@ class OrganizationAccessControl:
     def get_table_query_data(self, field_dict, criteria={}):
         results = []
         tables = set([])
+        joins = []
         table_models = {}
-        joins = set([])
         outer_joins = []
         columns = []
         fk_columns = []
@@ -199,15 +199,15 @@ class OrganizationAccessControl:
                     or (first_table_named == field.TableObject.name)):
                     first_table_named = field.TableObject.name
                 else:
-                    joins.add(table_model)
+                    if table_model not in joins:
+                        joins.append(table_model)
                 criteria_key = (field.TableObject.name, field.Field.display_name)
-
             # don't include criteria for self foreign keys
             if criteria_key in criteria and not (field.is_foreign_key and
                     field.TableObject.name == first_table_named):
                 if type(criteria[criteria_key]) is list:
                     wheres.append(col.in_(criteria[criteria_key]))
-                if type(criteria[criteria_key]) is dict:
+                elif type(criteria[criteria_key]) is dict:
                     if ('from' in criteria[criteria_key]
                         and 'to' in criteria[criteria_key]
                     ):
@@ -220,13 +220,25 @@ class OrganizationAccessControl:
                             wheres.append(col > criteria[criteria_key]['value'])
                 else:
                     wheres.append(col == criteria[criteria_key])
+        id_cols = []
         # add organization id checks on all tables, does not include fk tables
         for table_model in tables:
             # add a row id that is the id of the first table named
-            if (table_model.__table__.name.lower() == first_table_named):
-                col = getattr(table_model, 'id')
+            id_table_name = table_model.__table__.name.lower()
+            id_table_col = getattr(table_model, 'id')
+            if id_table_name == first_table_named:
+                col = id_table_col
                 columns.append(col.label('DT_RowId'))
+            id_cols.append(id_table_name + '-' + cast(id_table_col, String))
             wheres.append(getattr(table_model, 'organization_id').in_(self.org_ids))
+        first = True
+        for c in id_cols:
+            if first:
+                id_col = c
+                first = False
+            else:
+                id_col = id_col.concat('|' + c)
+        columns.append(id_col.label('DT_row_label'))
         start = time.time()
         results = (
             self.session.query(*columns).
@@ -335,11 +347,37 @@ class OrganizationAccessControl:
 
         return rows
 
+    def update_obj_rows(self, items, updates):
+        updated = []
+        for item in items:
+            row_updates = []
+            for col, val in updates.items():
+                try:
+                    setattr(item, col, val)
+                    row_updates.append(col)
+                except AttributeError:
+                    print('failed to update')
+            # commit if we were able to make all updates for the row
+            if len(updates) == len(row_updates):
+                self.session.commit()
+                updated.append(item.id)
+                # change table version in cache
+                current_app.cache.increment_version([item.__tablename__])
+            else:
+                self.session.rollback()
+                print('rollback')
+
+        return updated
+
     def update_rows(self, table, updates, ids):
         ids.sort()
         table_model = util.get_table(table)
-        rows = table_model.query.filter(table_model.id.in_(ids),
-                                        getattr(table_model, 'organization_id').in_(self.org_ids)).order_by('id').all()
+
+        filters = [
+                table_model.id.in_(ids),
+                getattr(table_model, 'organization_id').in_(self.org_ids)
+        ]
+        rows = table_model.query.filter(*filters).order_by('id').all()
 
         updated = []
         for i, row in enumerate(rows):
@@ -352,7 +390,7 @@ class OrganizationAccessControl:
                     setattr(row, col, val)
                     row_updates.append(col)
                 except AttributeError:
-                    pass
+                    print('failed to update')
             # commit if we were able to make all updates for the row
             if len(updates) == len(row_updates):
                 self.session.commit()
@@ -361,6 +399,7 @@ class OrganizationAccessControl:
                 current_app.cache.increment_version([table])
             else:
                 self.session.rollback()
+                print('rollback')
         return updated
 
     def set_work_items(self, work_item_group_id, save_items, parent, work_items = None):
@@ -479,24 +518,34 @@ class OrganizationAccessControl:
         line_item = util.get_table('line_item')
         price_item = util.get_table('price_item')
         order = util.get_table('order')
+        order_charge_method = util.get_table('order_charge_method')
+        charge_method = util.get_table('charge_method')
+        charge_method_type = util.get_table('charge_method_type')
+        invoice = util.get_table('invoice')
         filters = [
             line_item.active == 1,
             line_item.date_created >= from_date,
             line_item.date_created <= to_date
         ]
-
         if org_list:
             filters.append(models.Organization.name.in_(org_list))
 
-        res = (self.session.query(line_item, price_item, order, models.User,
-            models.Organization)
+        res = (self.session.query(line_item, price_item, order,
+            order_charge_method, charge_method, charge_method_type, models.User,
+            models.Organization, models.OrganizationType, invoice)
                 .join((price_item, line_item.price_item_id == price_item.id),
                     (order, line_item.order_id == order.id),
+                    (order_charge_method, order.id == order_charge_method.order_id),
+                    (charge_method, order_charge_method.charge_method_id == charge_method.id),
+                    (charge_method_type, charge_method.charge_method_type_id == charge_method_type.id),
                     (models.User, models.User.id == order.submitter_id),
                     (models.Organization, line_item.organization_id ==
-                        models.Organization.id)
-                ).
-            filter(*filters).order_by(order.organization_id).all())
+                        models.Organization.id),
+                    (models.OrganizationType, models.Organization.organization_type_id ==
+                        models.OrganizationType.id)
+                )
+                .outerjoin(invoice, invoice.id == line_item.invoice_id)
+            .filter(*filters).order_by((line_item.invoice_id == None), line_item.invoice_id, models.Organization.name, charge_method.id).all())
         return res
 
     def get_charge_method(self, order_id):
@@ -511,4 +560,18 @@ class OrganizationAccessControl:
             .order_by(order.date_created, order_charge_method.percent.desc()).all())
         return res
 
+    def get_org_position(self, org_id, position_name):
+        res = (self.session.query(models.User)
+                .join(models.UserOrganization,
+                    models.UserOrganizationPosition,
+                    models.Position)
+            .filter((models.UserOrganization.user_organization_id == org_id),
+                (models.Position.name == position_name)).all())
+        return res
 
+    def get_org_billing_address(self, org_id):
+        res = (self.session.query(models.Address)
+                .join(models.Organization, models.Organization.billing_address_id ==
+                    models.Address.id)
+            .filter((models.Organization.id == org_id)).first())
+        return res

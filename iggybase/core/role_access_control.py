@@ -143,7 +143,8 @@ class RoleAccessControl:
 
         res = (
             self.session.query(models.TableQueryCalculationField,
-                               models.TableQueryField, models.Field).
+                               models.TableQueryField, models.Field,
+                               models.TableObject).
                 join(models.TableQueryField).
                 join(models.Field).
                 join(
@@ -609,4 +610,3 @@ class RoleAccessControl:
                 filter(models.Route.active == active).
                 order_by(models.Step.order).all())
         return res
-

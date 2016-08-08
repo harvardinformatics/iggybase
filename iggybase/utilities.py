@@ -87,7 +87,6 @@ def to_camel_case(snake_str):
 
     return "".join(x.title() for x in components)
 
-
 def get_path(part):
     path = request.path.strip('/')
     path = path.split('/')
@@ -107,6 +106,17 @@ def get_months_dict():
         month = datetime.date(1900, i, 1).strftime('%b')
         months[month] = i
     return months
+
+def zero_pad(num, length):
+    num_str = str(num)
+    num_len = len(num_str)
+    if num_len > length:
+        return False
+    ret = ''
+    for x in range(num_len, length):
+        ret += '0'
+    ret += num_str
+    return ret
 
 class DictObject(dict):
     def __init__(self, dict):

@@ -60,27 +60,33 @@ h3 {
   margin-top: 20px;
   margin-bottom: 10px;
 }
-.address {
-    display:block;
+.address, .to_info, .remit_left {
     margin:12px 0 1px 0;
+    display: table-cell;
+    float: left;
 }
-.invoice_info {
+.invoice_info, .po_invoice_address, .remit_right {
     display: table-cell;
     float: right;
 }
-.invoice_info ul{
+.invoice_info ul .po_invoice_address ul, .remit_right ul {
     float: right;
     margin-right:20px;
     font-weight: bold;
 }
-.sub_headers {
+.sub_headers, .to_address {
     display: table-row;
 }
-.address {
-    display: table-cell;
-    float: left;
-}
-.pdf_header {
+.pdf_header, .to_wrapper {
     display: table;
     width: 100%;
+}
+table {
+    page-break-inside: avoid;
+}
+.page_break {
+    page-break-before: always;
+}
+.remit_right, .remit_left {
+    border: 1px solid black;
 }

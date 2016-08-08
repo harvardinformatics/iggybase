@@ -33,19 +33,32 @@ class OrganizationType(Base):
         return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
                (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
 
+class Address(Base):
+    table_type = 'admin'
+
+    address_1 = Column(String(255))
+    address_2 = Column(String(255))
+    city = Column(String(255))
+    state = Column(String(255))
+    postcode = Column(String(255))
+    country = Column(String(255))
 
 class Organization(Base):
     table_type = 'admin'
 
-    address_id = Column(Integer)
+    address_id = Column(Integer, ForeignKey('address.id'))
     billing_address_id = Column(Integer)
     organization_type_id = Column(Integer, ForeignKey('organization_type.id'))
     parent_id = Column(Integer, ForeignKey('organization.id'))
+    # organizations must have an institution but can also have a dept
+    # dept is most applicable to universities and less so to industry
     department_id = Column(Integer, ForeignKey('department.id'))
+    institution_id = Column(Integer, ForeignKey('institution.id'))
 
     parent = relation('Organization', remote_side="Organization.id", foreign_keys=[parent_id])
     organization_department = relationship("Department", foreign_keys=[department_id])
     organization_organization_type = relationship("OrganizationType", foreign_keys=[organization_type_id])
+    organization_address = relationship("Address", foreign_keys=[address_id])
 
     def __repr__(self):
         return "<%s(class=%s, name=%s, description=%s, id=%d)>" % \
@@ -665,6 +678,10 @@ class User(Base, UserMixin):
     def __repr__(self):
         return '<User %r>' % (self.name)
 
+class Position(Base):
+    __tablename__ = 'position'
+    table_type = 'admin'
+
 
 class UserOrganization(Base):
     table_type = 'admin'
@@ -678,6 +695,15 @@ class UserOrganization(Base):
     def __repr__(self):
         return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
                (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+
+class UserOrganizationPosition(Base):
+    table_type = 'admin'
+    user_organization_id = Column(Integer, ForeignKey('user_organization.id'))
+    position_id = Column(Integer, ForeignKey('position.id'))
+
+    user_organization_position_user_organization = relationship('UserOrganization', foreign_keys=[user_organization_id])
+    user_organization_position_position = relationship('Position', foreign_keys=[position_id])
+
 
 
 class Event(Base):

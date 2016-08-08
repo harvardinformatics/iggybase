@@ -28,6 +28,9 @@ def multiply(cols):
 def divide(cols):
     return (cols[0] / cols[1])
 
+def percent(cols):
+    return (float(cols[0]) * (cols[1]/100))
+
 def chars(cols):
     if cols[0]:
         chars = len(str(cols[0]))

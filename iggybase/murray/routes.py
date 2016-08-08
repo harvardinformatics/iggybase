@@ -28,7 +28,7 @@ def update_ordered(facility_name, table_name):
     # TODO if we can sort out foreign keys for the update then
     # we don't need to pass in button text
     hidden_fields['button_text'] = 'Receive Selected Oligos'
-    hidden_fields['message_fields'] = '["oligo name"]'
+    hidden_fields['message_fields'] = '["oligo|oligo_name"]'
     # if nothing to display then page not found
     if not tq.fc.fields:
         abort(403)
@@ -55,7 +55,7 @@ def update_requested(facility_name, table_name):
     hidden_fields = {}
     hidden_fields['column_defaults'] = '{"status":2, "ordered":"now"}'
     hidden_fields['button_text'] = 'Order Selected Oligos'
-    hidden_fields['message_fields'] = '["oligo name", "sequence"]'
+    hidden_fields['message_fields'] = '["oligo|oligo_name", "oligo|sequence"]'
     # if nothing to display then page not found
     if not tq.fc.fields:
         abort(403)
@@ -83,7 +83,7 @@ def cancel(facility_name, table_name):
     # TODO if we can sort out foreign keys for the update then
     # we don't need to pass in button text
     hidden_fields['button_text'] = 'Cancel Selected Oligos'
-    hidden_fields['message_fields'] = '["oligo name"]'
+    hidden_fields['message_fields'] = '["oligo|oligo_name"]'
     # if nothing to display then page not found
     if not tq.fc.fields:
         abort(403)
