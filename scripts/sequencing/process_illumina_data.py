@@ -202,6 +202,12 @@ def update_row(tbl, criteria, cols):
         pks.execute(sql)
         iggy_db.commit()
 
+def update_table_status(table, ids, status):
+    table_object_id = pk_exists(table, 'name', 'table_object')
+    status_row = select_row('status', {'name': status, 'table_object_id':
+        table_object_id})
+    print(status_row)
+
 def get_next_name(table_name):
     table_meta = select_row('table_object', {'name':
         table_name})
@@ -330,18 +336,21 @@ def insert_sample_sheet_items(rows):
 def parse_hiseq(lines, illumina_run_id, ss_id):
     item_cols = [i.lower() for i in lines[0]]
     rows = []
+    order_ids = []
     for row in lines[1:]:
         row_dict = dict(zip(item_cols, row))
         order_id = None
         if 'description' in row_dict:
             order_id = pk_exists(row_dict['description'], 'name', 'order')
+            if order_id:
+                order_ids.append(order_id)
         row_dict.update({
             'order_id': order_id,
             'sample_sheet_id': ss_id,
             'illumina_run_id': illumina_run_id
         })
         rows.append(row_dict)
-    return rows
+    return order_ids, rows
 
 def parse_miseq(file_dict, illumina_run_id, ss_id):
     order_id = None
@@ -358,7 +367,7 @@ def parse_miseq(file_dict, illumina_run_id, ss_id):
                 'sample_sheet_id': ss_id
             })
             rows.append(row_dict)
-    return rows
+    return [order_id], rows
 
 def row_exists(table, pk):
     exists = pk_exists(pk, 'name', table)
@@ -432,12 +441,14 @@ def process_file_samplesheet(file):
                 ):
                     ss_dict['read_length_1'] = file_dict['reads'][0][0]
                 ss_id = do_insert(ss_table, ss_dict)
-                rows = parse_miseq(file_dict, illumina_run_id, ss_id)
+                order_ids, rows = parse_miseq(file_dict, illumina_run_id, ss_id)
             else:
                 ss_id = do_insert(ss_table, ss_dict)
-                rows = parse_hiseq(lines, illumina_run_id, ss_id)
+                order_ids, rows = parse_hiseq(lines, illumina_run_id, ss_id)
             if ss_id:
                 insert_sample_sheet_items(rows)
+            if order_ids:
+                update_table_status('order', order_ids, 'running')
         finally:
             contents.close()
 
