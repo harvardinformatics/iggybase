@@ -319,7 +319,7 @@ $( document ).ready( function () {
             var input_id = ele.attr( 'id' );
 
             var matches = input_id.match( /data_entry_(\S+)_(\d+)/);
-            var table_object = $( '#record_data_table_name_' + matches[2] ).val( );
+            var table_object = $( '#record_data_table_' + matches[2] ).val( );
 
             var display_name = matches[ 1 ];
             var search_vals = {};

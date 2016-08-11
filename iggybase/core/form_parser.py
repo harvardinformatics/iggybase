@@ -57,7 +57,7 @@ class FormParser():
         instance.get_data(fields['0']['form_data']['row_name'])
 
         if fields['0']['record_data']['row_name'] != 'new' and int(fields['0']['form_data']['max_level']) > 0:
-            instance.get_linked_instances(fields['0']['record_data']['depth'])
+            instance.get_linked_instances(int(fields['0']['form_data']['max_level']))
 
         for row_id in sorted(fields.keys()):
             row_data = fields[row_id]
@@ -67,9 +67,9 @@ class FormParser():
                 table_names.append(table_name_field)
 
             if row_data['record_data']['row_name'] != "new":
+                instance_name = instance.add_new_instance(table_name_field, 'new')
                 if row_data['data_entry']['name'] == '':
                     instance_name = row_data['data_entry']['name']
-                instance.add_new_instance(table_name_field, 'new')
             else:
                 instance_name = row_data['record_data']['row_name']
 

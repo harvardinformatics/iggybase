@@ -342,9 +342,9 @@ class OrganizationAccessControl:
         rows = self.session.query(child_table).\
             filter(*filters).order_by('order', 'name').all()
 
-        row_data = {}
+        row_data = []
         for index, row in enumerate(rows):
-            row_data[index] = {'parent_id': getattr(row, field.display_name), 'instance': row}
+            row_data.append({'parent_id': getattr(row, field.display_name), 'instance': row})
 
         return row_data
 

@@ -156,12 +156,12 @@ class DataInstance:
 
                 ids = []
 
-                if child_rows:
+                if len(child_rows) > 0:
                     for row in child_rows:
                         # logging.info('instance time: ' + datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
                         self.get_data(None, row['instance'].id, table_name, row['instance'], row['parent_id'])
                         self.instance_counter += 1
-                        ids.append(row.id)
+                        ids.append(row['instance'].id)
                 else:
                     self.get_data('new', None, table_name)
 

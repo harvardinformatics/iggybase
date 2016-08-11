@@ -191,12 +191,11 @@ class FormGenerator():
         row_counter = 0
         level = 0
 
-        table_names = {table_name: table_data for table_name, table_data in data_instance.tables.items()
-                       if table_name != 'history'}
-
-        for table_name, table_data in table_names.items():
+        for table_name, table_data in data_instance.tables.items():
             # start_time = time.time()
             # logging.info('get_table loop table_name: ' + table_name)
+            if table_name == 'history':
+                continue
 
             if table_data['link_data'] is not None:
                 link_field = self.role_access_control. \
