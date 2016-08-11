@@ -161,7 +161,7 @@ class FormGenerator():
 
         data_instance = DataInstance(self.table_name, row_name)
 
-        # logging.info(self.table_name + ': ' + row_name)
+        # logging.info('default_data_entry_form ' + self.table_name + ': ' + row_name)
         # logging.info(data_instance.instances[self.table_name])
 
         if row_name != 'new':
@@ -191,10 +191,12 @@ class FormGenerator():
         row_counter = 0
         level = 0
 
-        for table_name, table_data in data_instance.tables.items():
+        table_names = {table_name: table_data for table_name, table_data in data_instance.tables.items()
+                       if table_name != 'history'}
+
+        for table_name, table_data in table_names.items():
             # start_time = time.time()
-            #logging.info('get_table loop table_name: ' + table_name)
-            # logging.info(data_instance.instances[table_name])
+            # logging.info('get_table loop table_name: ' + table_name)
 
             if table_data['link_data'] is not None:
                 link_field = self.role_access_control. \
@@ -221,6 +223,8 @@ class FormGenerator():
                 control_type = 'table-control'
 
             for instance_name, instance in data_instance.instances[table_name].items():
+                # logging.info(instance_name + ' data: ')
+                # logging.info(instance)
                 # logging.info(str(instance.id) + ' start time: ' +
                 #              datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
 
@@ -259,13 +263,17 @@ class FormGenerator():
             # field_start = time.time()
             field_display_name = field.display_name.title()
 
-            value = getattr(instance, field.Field.display_name)
+            value = getattr(instance['instance'], field.Field.display_name)
 
-            control_id = 'data_entry_' + field.Field.display_name+"_"+str(row_counter)
-            logging.info('control_id: ' + str(control_id))
-            logging.info('control_type: ' + str(control_type))
-            logging.info('value: ' + str(value))
-            self.classattr[control_id] = self.input_field(field, field_display_name, getattr(instance, 'name'),
+            if field.Field.display_name == 'name' and value == 'new':
+                value = None
+
+            control_id = 'data_entry_' + field.Field.display_name + "_" + str(row_counter)
+            # logging.info('control_id: ' + str(control_id))
+            # logging.info('control_type: ' + str(control_type))
+            # logging.info('value: ' + str(value))
+            self.classattr[control_id] = self.input_field(field, field_display_name,
+                                                          getattr(instance['instance'], 'name'),
                                                           control_id, control_type, value)
 
             # logging.info('input_field ' + field_display_name + ' time: ' + str(time.time() - field_start))

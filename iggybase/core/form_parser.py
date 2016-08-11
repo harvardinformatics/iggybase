@@ -4,7 +4,6 @@ from werkzeug.utils import secure_filename
 from iggybase.core.data_instance import DataInstance
 from iggybase import utilities as util
 from flask import request, g, current_app
-from iggybase import g_helper
 from collections import OrderedDict
 import logging
 
@@ -13,8 +12,6 @@ class FormParser():
     def parse(self):
         # fields contain the data that was displayed on the form and possibly edited
         fields = {}
-        # data structure containing info about rows saved
-        saved_data = OrderedDict()
         table_names = []
 
         # used to identify fields that contain data that needs to be saved
@@ -62,8 +59,6 @@ class FormParser():
         if fields['0']['record_data']['row_name'] != 'new' and int(fields['0']['form_data']['max_level']) > 0:
             instance.get_linked_instances(fields['0']['record_data']['depth'])
 
-        organization_access_control = g_helper.get_org_access_control()
-
         for row_id in sorted(fields.keys()):
             row_data = fields[row_id]
 
@@ -71,12 +66,10 @@ class FormParser():
             if table_name_field not in table_names:
                 table_names.append(table_name_field)
 
-            if row_data['record_data']['row_name'] == "new":
+            if row_data['record_data']['row_name'] != "new":
                 if row_data['data_entry']['name'] == '':
-                    instance_name = instance.add_new_instance(table_name_field)
-                else:
                     instance_name = row_data['data_entry']['name']
-                    instance.add_new_instance(table_name_field, instance_name)
+                instance.add_new_instance(table_name_field, 'new')
             else:
                 instance_name = row_data['record_data']['row_name']
 
@@ -103,13 +96,17 @@ class FormParser():
             exclude_list = ['id', 'last_modified', 'date_created', 'organization_id']
 
             # logging.info('for field in current_field_data.items(): ')
-            for field, meta_data in instance.fields.items():
+            for table_field, meta_data in instance.fields[table_name_field].fields.items():
                 # logging.info('field: ' + field)
                 # only update fields that were on the form
-                if field not in row_data['data_entry'].keys():
+
+                if meta_data.Field.display_name not in row_data['data_entry'].keys():
                     continue
 
                 field_data = meta_data.Field
+                field = field_data.display_name
+                # logging.info(field + ' ' + str(field_data.data_type_id))
+                # logging.info("pre row_data['data_entry'][field]: " + str(row_data['data_entry'][field]))
 
                 if 'text' == meta_data.DataType.name.lower and row_data['data_entry'][field] != '':
                     if row_data['long_text'][field] == '':
@@ -167,6 +164,13 @@ class FormParser():
                             row_data['data_entry'][field] = True
                         else:
                             row_data['data_entry'][field] = False
+
+                # logging.info(field + " post row_data['data_entry'][field]: " + str(row_data['data_entry'][field]))
+
+            # logging.info('form_parser table_name_field: ')
+            # logging.info(table_name_field)
+            # logging.info('form_parser instance_name: ')
+            # logging.info(instance_name)
 
             instance.set_values(row_data['data_entry'], table_name_field, instance_name)
 

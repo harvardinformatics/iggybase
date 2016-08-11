@@ -10,8 +10,11 @@ import logging
 
 class DataInstance:
     def __init__(self, table_name, instance_name = None):
-        self.organization_access_control = g_helper.get_org_access_control()
+        # logging.info('DataInstance.__init__ table_name: ' + table_name)
+        # logging.info('DataInstance.__init__ instance_name: ' + instance_name)
+
         self.role_access_control = g_helper.get_role_access_control()
+        self.organization_access_control = g_helper.get_org_access_control()
 
         self.table_name = table_name
         self.tables = OrderedDict()
@@ -30,13 +33,12 @@ class DataInstance:
         self.instances = {}
         self.fields = {}
         self.history = []
-        self.instance_name = None
+        self.instance_name = instance_name
 
         self.initialize_fields(table_name)
 
         if instance_name is not None:
             self.get_data(instance_name)
-            self.instance_name = instance_name
 
         self.tables['history'] = {'level': 0,
                                    'parent': None,
@@ -54,39 +56,43 @@ class DataInstance:
             self.fields[table_name] = FieldCollection(None, table_name)
             self.fields[table_name].set_fk_fields()
 
-    def get_data(self, instance_name = 'new', instance_id = None, table_name = None, instance = None):
+    def get_data(self, instance_name = 'new', instance_id = None, table_name = None, instance = None,
+                 instance_parent_id = None):
         if table_name is None:
             table_name = self.table_name
 
         if instance is None:
             instance = self.get_instance(table_name, instance_name, instance_id)
-            setattr(instance, 'instance_parent_id', None)
 
         if instance.name is None or instance.name == '' or instance_name == 'new':
             instance.name = 'new'
 
+        # logging.info('DataInstance.get_data instance_name: ' + instance.name)
+
         if self.instance_name is None:
             self.instance_name = instance.name
 
+        instance = {'instance': instance, 'parent_id': instance_parent_id}
+
         self.initialize_values(table_name, instance)
 
-        self.instances[table_name][instance.name] = instance
+        self.instances[table_name][instance['instance'].name] = instance
 
     def add_new_instance(self, table_name, instance_name, instance = None):
         if instance is None:
             instance = self.get_instance(table_name, instance_name, None)
 
-        setattr(instance, 'instance_parent_id', None)
-
         if instance.name is None or instance_name == 'new':
             instance.name = 'new_' + str(len(self.instances[table_name]))
 
+        instance = {'instance': instance, 'parent_id': None}
+
         self.initialize_values(table_name, instance)
 
-        self.instances[table_name][instance.name] = instance
+        self.instances[table_name][instance['instance'].name] = instance
 
-        logging.info(table_name + ' new instance: ' + instance.name)
-        return instance.name
+        # logging.info(table_name + ' new instance: ' + instance.name)
+        return instance['instance'].name
 
     def get_instance(self, table_name, instance_name, instance_id):
         table_object = self.tables[table_name]['table_object']
@@ -129,7 +135,7 @@ class DataInstance:
             self.initialize_fields(table_name)
 
             if link_data['level'] == 1:
-                ids = [self.instances[self.table_name][self.instance_name].id]
+                ids = [self.instances[self.table_name][self.instance_name]['instance'].id]
 
             if link_data['link_type'] == "child":
                 # logging.info('child_rows start time: ' + datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
@@ -153,7 +159,7 @@ class DataInstance:
                 if child_rows:
                     for row in child_rows:
                         # logging.info('instance time: ' + datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
-                        self.get_data(None, row.id, table_name, row)
+                        self.get_data(None, row['instance'].id, table_name, row['instance'], row['parent_id'])
                         self.instance_counter += 1
                         ids.append(row.id)
                 else:
@@ -172,53 +178,17 @@ class DataInstance:
         if self.tables[table_name]['parent'] is None:
             self.fields[table_name].set_defaults()
         else:
-            self.fields[table_name].set_defaults({self.tables[table_name]['parent']: instance.instance_parent_id})
+            self.fields[table_name].set_defaults({self.tables[table_name]['parent']: instance['parent_id']})
 
-        if instance.name == 'new':
+        if instance['instance'].name == 'new':
             for field, meta_data in self.fields[table_name].fields.items():
                 if meta_data.default is not None:
-                    setattr(instance, meta_data.Field.display_name, meta_data.default)
-                else:
-                    setattr(instance, meta_data.Field.display_name, None)
-
-    def set_value(self, field_name, field_value, table_name = None, instance_name = None):
-        if table_name is None:
-            table_name = self.table_name
-        if instance_name is None:
-            instance_name = self.instance_name
-
-        if self.fields[table_name].fields[table_name + "|" + field_name].is_foreign_key:
-            field_value = self.set_foreign_key_field_id(table_name, field_name, field_value)
-
-        if table_name != 'history':
-            new_key = self.add_new_instance('history', 'new')
-
-            self.set_value({'table_object_id': self.tables[table_name]['table_meta_data'].id,
-                            'field_id': self.fields[table_name].fields[table_name + "|" + field_name].Field.id,
-                            'organization_id': self.set_organization_id(self.instances['history'][new_key]),
-                            'instance_name': instance_name,
-                            'old_value': getattr(self.instances[table_name][instance_name], field_name, None),
-                            'user_id': g.user.id,
-                            'new_value': field_value},
-                           'history',
-                           new_key)
-
-        setattr(self.instances[table_name][instance_name], field_name, field_value)
-
-    def set_values(self, field_values = {}, table_name = None, instance_name = None):
-        if table_name is None:
-            table_name = self.table_name
-        if instance_name is None:
-            instance_name = self.instance_name
-
-        if 'organization_id' in field_values:
-            self.set_value('organization_id', field_values['organization_id'], table_name, instance_name)
-            field_values.pop('organization_id')
-
-        for field_name, field_value in field_values.items():
-            self.set_value(field_name, field_value, table_name, instance_name)
+                    setattr(instance['instance'], meta_data.Field.display_name, meta_data.default)
 
     def set_foreign_key_field_id(self, table_name, field, value):
+        if isinstance( value, int ):
+            return value
+
         if table_name is None:
             table_name = self.table_name
 
@@ -248,7 +218,7 @@ class DataInstance:
         if instance_name is None:
             instance_name = self.instance_name
 
-        return self.field_values[table_name][instance_name][field_name]
+        return self.field_values[table_name][instance_name]['instance'][field_name]
 
     def get_values(self, table_name = None, instance_name = None):
         if table_name is None:
@@ -256,45 +226,123 @@ class DataInstance:
         if instance_name is None:
             instance_name = self.instance_name
 
-        return self.field_values[table_name][instance_name]
+        return self.field_values[table_name][instance_name]['instance']
+
+    def set_values(self, field_values = {}, table_name = None, instance_name = None):
+        # logging.info('set_values table_name: ')
+        # logging.info(table_name)
+        # logging.info('set_values instance_name: ')
+        # logging.info(instance_name)
+        # logging.info('set_values field_values: ')
+        # logging.info(field_values)
+
+        if table_name is None:
+            table_name = self.table_name
+        if instance_name is None:
+            instance_name = self.instance_name
+
+        if 'organization_id' in field_values:
+            # logging.info('field_values[organization_id]: ' + str(field_values['organization_id']))
+            org_id = self.set_organization_id(field_values['organization_id'])
+            # logging.info('org_id: ' + str(org_id))
+            self.set_value('organization_id', org_id, table_name, instance_name)
+            field_values.pop('organization_id')
+            # logging.info('instance org_id: ' + str(getattr(self.instances[table_name][instance_name]['instance'],
+            #                                                'organization_id')))
+
+        for field_name, field_value in field_values.items():
+            self.set_value(field_name, field_value, table_name, instance_name)
+
+    def set_value(self, field_name, field_value, table_name = None, instance_name = None):
+        # logging.info('set_value table_name: ')
+        # logging.info(table_name)
+        # logging.info('set_value instance_name: ')
+        # logging.info(instance_name)
+        # logging.info('set_value self.instances[table_name]: ')
+        # logging.info(self.instances[table_name])
+
+        if table_name is None:
+            table_name = self.table_name
+        if instance_name is None:
+            instance_name = self.instance_name
+
+        exclude_list = ['id', 'last_modified', 'date_created']
+
+        if self.fields[table_name].fields[table_name + "|" + field_name].is_foreign_key:
+            field_value = self.set_foreign_key_field_id(table_name, field_name, field_value)
+
+        if table_name != 'history' and field_name not in exclude_list and \
+                ((getattr(self.instances[table_name][instance_name]['instance'], field_name) is None and
+                  field_value is not None) or
+                 field_value != getattr(self.instances[table_name][instance_name]['instance'], field_name)):
+            new_key = self.add_new_instance('history', 'new')
+
+            self.set_values({'table_object_id': self.tables[table_name]['table_meta_data'].id,
+                             'field_id': self.fields[table_name].fields[table_name + "|" + field_name].Field.id,
+                             'organization_id':  getattr(self.instances[table_name][instance_name]['instance'],
+                                                         'organization_id'),
+                             'instance_name': instance_name,
+                             'old_value': getattr(self.instances[table_name][instance_name]['instance'],
+                                                  field_name, None),
+                             'user_id': g.user.id,
+                             'new_value': field_value},
+                            'history',
+                            new_key)
+
+        if field_name not in exclude_list:
+            logging.info('setting ' + instance_name + " " + field_name + ": " + str(field_value))
+            setattr(self.instances[table_name][instance_name]['instance'], field_name, field_value)
 
     def save(self):
         # logging.info('name at save: ' )
         # logging.info(self.instance_name)
         saved_data = {}
-
         instance_names = {}
 
-        table_data = (x for x in self.instances.keys() if x != 'history')
+        for table_name, instances in self.instances.items():
+            # logging.info('table_name: ')
+            # logging.info(table_name)
+            # logging.info('instances.keys(): ')
+            #  logging.info(instances.keys())
 
-        for table_name in table_data:
-            instances = self.instances[table_name]
+            if table_name == 'history':
+                continue
 
             for instance_name, instance in instances.items():
-                if 'new' in instance_name and (instance.name is None or instance.name == 'new'):
-                    instance.name = self.set_instance_name(table_name)
+                # logging.info('instance_name: ')
+                # logging.info(instance_name)
+                if 'new' in instance_name and (instance['instance'].name is None or instance['instance'].name == 'new'):
+                    instance['instance'].name = self.set_instance_name(table_name)
 
-                instance_names[instance_name] = instance.name
+                instance_names[instance_name] = instance['instance'].name
 
-                if instance.date_created is None:
-                    instance.date_created = datetime.datetime.utcnow()
+                # logging.info('instance[instance].name: ')
+                # logging.info(instance['instance'].name)
+                if instance['instance'].date_created is None:
+                    instance['instance'].date_created = datetime.datetime.utcnow()
 
-                instance.last_modified = datetime.datetime.utcnow()
+                instance['instance'].last_modified = datetime.datetime.utcnow()
 
-                save_msg = self.organization_access_control.save_data_instance(instance)
+                save_msg = self.organization_access_control.save_data_instance(instance['instance'])
+                # logging.info('save_msg: ')
+                # logging.info(save_msg)
                 saved_data[save_msg['id']] = save_msg
 
-        for instance in self.instances['history']:
-            if instance.instance_name in instance_names.keys():
-                instance.instance_name = instance_names[instance_name]
+        # logging.info('instance_names: ')
+        # logging.info(instance_names)
+        for history_name, instance in self.instances['history'].items():
+            # logging.info('history instance: ')
+            # logging.info(instance['instance'])
+            if instance['instance'].instance_name in instance_names.keys():
+                instance['instance'].instance_name = instance_names[instance_name]
 
-            instance.name = self.set_instance_name('history')
-            instance.date_created = datetime.datetime.utcnow()
-            instance.last_modified = datetime.datetime.utcnow()
+            instance['instance'].name = self.set_instance_name('history')
+            instance['instance'].date_created = datetime.datetime.utcnow()
+            instance['instance'].last_modified = datetime.datetime.utcnow()
 
-            self.organization_access_control.save_data_instance(instance)
+            self.organization_access_control.save_data_instance(instance['instance'])
 
-        self.organization_access_control.commit
+        self.organization_access_control.commit()
 
         return saved_data
 
@@ -312,11 +360,11 @@ class DataInstance:
 
         return instance_name
 
-    def set_organization_id(self, instance):
-        if instance.organization_id is not None:
-            row_org_id = instance.organization_id
-
-            if not isinstance(row_org_id, int):
+    def set_organization_id(self, row_org_id = None):
+        if row_org_id is not None:
+            if isinstance(row_org_id, int):
+                return row_org_id
+            else:
                 org_table_object = util.get_table('organization')
 
                 org_record = self.organization_access_control.session.query(org_table_object). \

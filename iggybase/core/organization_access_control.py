@@ -342,10 +342,11 @@ class OrganizationAccessControl:
         rows = self.session.query(child_table).\
             filter(*filters).order_by('order', 'name').all()
 
-        for row in rows:
-            setattr(row, 'instance_parent_id', getattr(row, field.display_name))
+        row_data = {}
+        for index, row in enumerate(rows):
+            row_data[index] = {'parent_id': getattr(row, field.display_name), 'instance': row}
 
-        return rows
+        return row_data
 
     def update_obj_rows(self, items, updates):
         updated = []
