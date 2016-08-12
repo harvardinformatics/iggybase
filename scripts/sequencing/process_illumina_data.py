@@ -85,6 +85,8 @@ def make_vals(tbl, cols):
             val_str += str(val).replace('$','')
         elif col in date_cols:
             formatted = False
+            if val == 'now':
+                val = str(int(time.time()))
             if '-' in val:
                 date_formats = [ '%Y-%m-%d', '%Y-%m', '%Y-%m-%d %H:%M:%S']
                 for date_format in date_formats:
@@ -185,7 +187,7 @@ def update_row(tbl, criteria, cols):
     global cli
     if 'insert_mode' in cli:
         pks = iggy_db.cursor()
-        sql = "update " + tbl
+        sql = "update `" + tbl + '`'
         int_cols = get_map(tbl, 'int_col', True)
         for name, val in cols.items():
             if name in int_cols:
@@ -193,20 +195,47 @@ def update_row(tbl, criteria, cols):
             else:
                 sql += ' set ' + name + ' = "' + val + '"'
         sql += ' where '
+        wheres = []
         for key, crit in criteria.items():
-            if key in int_cols:
-                sql += key + ' = ' + str(crit)
+            if isinstance(crit, list) and crit:
+                if key in int_cols:
+                    wheres.append(key + ' in (' + ','.join([str(c) for c in crit]) + ')')
+                else:
+                    wheres.append(key + ' in ("' + '","'.join(crit) + '")')
             else:
-                sql += key + ' = "' + str(crit) + '"'
+                if key in int_cols:
+                    wheres.append(key + ' = ' + str(crit))
+                else:
+                    wheres.append(key + ' = "' + str(crit) + '"')
+        sql += ' and '.join(wheres)
         print("\t\t" + sql)
         pks.execute(sql)
         iggy_db.commit()
 
-def update_table_status(table, ids, status):
+def update_table_status(table, ids, status, current = []):
     table_object_id = pk_exists(table, 'name', 'table_object')
     status_row = select_row('status', {'name': status, 'table_object_id':
         table_object_id})
-    print(status_row)
+    if status_row:
+        cols = {
+                'status_id': status_row[0],
+        }
+        criteria = {
+                'id': ids
+        }
+        curr_status = []
+        for c in current:
+            status_row = select_row('status', {'name': c, 'table_object_id':
+                table_object_id})
+            if status_row:
+                curr_status.append(status_row[0])
+        if curr_status:
+            criteria['status_id'] = curr_status
+        update_row(
+                table,
+                criteria,
+                cols
+        )
 
 def get_next_name(table_name):
     table_meta = select_row('table_object', {'name':
@@ -251,7 +280,7 @@ def parse_illumina_flowcell(data, pk):
     }
     return row_dict
 
-def parse_sample_sheet(data, pk, file):
+def parse_sample_sheet(data, file):
     data_split = data.split('_')
     machine_id = pk_exists(data_split[1], 'name', 'machine')
     flowcell_id = pk_exists(data_split[3][1:], 'name', 'illumina_flowcell')
@@ -263,7 +292,8 @@ def parse_sample_sheet(data, pk, file):
         'slot': data_split[3][0:1],
         'illumina_flowcell_id': flowcell_id,
         'illumina_run_id': run_id,
-        'file': file
+        'file': file,
+        'date_created': 'now'
     }
     return row_dict
 
@@ -271,7 +301,8 @@ def parse_sample_sheet_item(data):
     row_dict = {
         'index': data['index'],
         'order_id': data['order_id'],
-        'sample_sheet_id': data['sample_sheet_id']
+        'sample_sheet_id': data['sample_sheet_id'],
+        'date_created': 'now'
     }
     if 'lane' in data:
         row_dict['lane'] = data['lane']
@@ -339,7 +370,6 @@ def parse_hiseq(lines, illumina_run_id, ss_id):
     order_ids = []
     for row in lines[1:]:
         row_dict = dict(zip(item_cols, row))
-        order_id = None
         if 'description' in row_dict:
             order_id = pk_exists(row_dict['description'], 'name', 'order')
             if order_id:
@@ -353,7 +383,7 @@ def parse_hiseq(lines, illumina_run_id, ss_id):
     return order_ids, rows
 
 def parse_miseq(file_dict, illumina_run_id, ss_id):
-    order_id = None
+    order_ids = []
     if 'header' in file_dict and file_dict['header'][2][1]:
         order_id = pk_exists(file_dict['header'][2][1], 'name', 'order')
     rows = []
@@ -367,7 +397,8 @@ def parse_miseq(file_dict, illumina_run_id, ss_id):
                 'sample_sheet_id': ss_id
             })
             rows.append(row_dict)
-    return [order_id], rows
+        order_ids.append(order_id)
+    return order_ids, rows
 
 def row_exists(table, pk):
     exists = pk_exists(pk, 'name', table)
@@ -405,10 +436,7 @@ def process_file_samplesheet(file):
 
     ss_table = 'sample_sheet'
     ss_id = row_exists(ss_table, ss_name)
-    if ss_id:
-        ss_dict = {}
-    else:
-        ss_dict = parse_sample_sheet(ss_name, ss_id, file)
+    ss_dict = parse_sample_sheet(ss_name, file)
     if ss_dict:
         contents = open(file, 'rt')
         illumina_run_id = ss_dict['illumina_run_id']
@@ -440,15 +468,21 @@ def process_file_samplesheet(file):
                         and file_dict['reads'][0]
                 ):
                     ss_dict['read_length_1'] = file_dict['reads'][0][0]
-                ss_id = do_insert(ss_table, ss_dict)
+                if not ss_id:
+                    ss_id = do_insert(ss_table, ss_dict)
                 order_ids, rows = parse_miseq(file_dict, illumina_run_id, ss_id)
             else:
-                ss_id = do_insert(ss_table, ss_dict)
+                if not ss_id:
+                    ss_id = do_insert(ss_table, ss_dict)
                 order_ids, rows = parse_hiseq(lines, illumina_run_id, ss_id)
             if ss_id:
                 insert_sample_sheet_items(rows)
             if order_ids:
-                update_table_status('order', order_ids, 'running')
+                if folder == 'primary_data':
+                    update_table_status('order', list(set(order_ids)), 'running', ['new'])
+                else:
+                    update_table_status('order', list(set(order_ids)), 'in analysis', ['new',
+                    'running'])
         finally:
             contents.close()
 
@@ -466,9 +500,12 @@ if 'path' in cli:
     path = cli['path']
 else:
     # TODO: replace with real default after testing
-    path = '/Users/portermahoney/sites/analysis_finished'
+    path = '/Users/portermahoney/sites/primary_data'
+folder = path.split('/')[-1]
 
-if 'filename' not in cli:
+if 'filename' in cli:
+    filename = cli['filename']
+else:
     print('You must have the option filename, exp:'
         + ' python process_seq_file.py --path=~sites/analysis_finished'
         + ' --filename=RunInfo.xml')
@@ -477,7 +514,7 @@ if 'filename' not in cli:
 if 'dir_match' in cli:
     dir_match = cli['dir_match']
 else:
-    dir_match = None
+    dir_match = ''
 
 # get a db connection
 iggy_db = get_connection(
@@ -487,7 +524,7 @@ iggy_db = get_connection(
         config.db['database'])
 
 # check path for filename
-print('Checking for filename: ' + cli['filename'] + ' in dir: ' + path)
+print('Checking for filename: ' + filename + ' in dir: ' + path)
 today = datetime.datetime.now()
 yesterday = today + relativedelta(days=-1)
 # within two days, TODO: days could be a cli
@@ -495,12 +532,12 @@ days = [today.strftime("%y%m%d"), yesterday.strftime("%y%m%d")]
 days = ['160720', '160721'] # TODO: remove, this is for testing
 files = []
 for day in days:
-    file_path = path + '/' + day + '*' + dir_match + '*/' + cli['filename']
+    file_path = path + '/' + day + '*' + dir_match + '*/' + filename
     files.extend(glob.glob(file_path))
-
 print("\tfound " + str(len(files)) + " files to process")
-file_func = globals()['process_file_' + (cli['filename'].split('.')[0].lower())]
+process_func = globals()['process_file_' + (filename.split('.')[0].lower())]
+
 for file in files:
-    print("\tstarting to process file: " + file)
-    file_func(file)
+    print("\tstarting to process: " + file)
+    process_func(file)
     print("\n\n\n\n")
