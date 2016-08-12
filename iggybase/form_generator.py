@@ -247,9 +247,14 @@ class FormGenerator():
         table_id_field = HiddenField('record_data_table_id_'+str(row_count), default=table_meta_data.id)
         table_name_field = HiddenField('record_data_table_'+str(row_count), default=table_meta_data.name)
         row_field = HiddenField('record_data_row_name_'+str(row_count), default=row_name)
+        if row_name == 'new':
+            row_new = HiddenField('record_data_row_new_'+str(row_count), default=1)
+        else:
+            row_new = HiddenField('record_data_row_new_'+str(row_count), default=0)
 
         return {'record_data_row_name_'+str(row_count): row_field,
                 'record_data_table_'+str(row_count): table_name_field,
+                'record_data_new_'+str(row_count): row_new,
                 'record_data_table_id_'+str(row_count): table_id_field}
 
     def get_row(self, data_instance, table_name, instance, control_type, row_counter):

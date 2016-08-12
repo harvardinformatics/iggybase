@@ -68,6 +68,7 @@ class DataInstance:
             instance.name = 'new'
 
         # logging.info('DataInstance.get_data instance_name: ' + instance.name)
+        # logging.info(instance)
 
         if self.instance_name is None:
             self.instance_name = instance.name
@@ -235,6 +236,8 @@ class DataInstance:
         # logging.info(instance_name)
         # logging.info('set_values field_values: ')
         # logging.info(field_values)
+        # logging.info('set_values self.instances[table_name]: ')
+        # logging.info(self.instances[table_name])
 
         if table_name is None:
             table_name = self.table_name
@@ -290,7 +293,7 @@ class DataInstance:
                             new_key)
 
         if field_name not in exclude_list:
-            logging.info('setting ' + instance_name + " " + field_name + ": " + str(field_value))
+            # logging.info('setting ' + instance_name + " " + field_name + ": " + str(field_value))
             setattr(self.instances[table_name][instance_name]['instance'], field_name, field_value)
 
     def save(self):

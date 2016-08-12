@@ -48,6 +48,9 @@ class FormParser():
 
                     fields[field_id.group(3)][field_id.group(1)][field_id.group(2)][filename] = files[key]
 
+        # logging.info("fields['0']['form_data']['table']: " + fields['0']['form_data']['table'])
+        # logging.info("fields['0']['form_data']['row_name']: " + fields['0']['form_data']['row_name'])
+
         # for key1, value1 in fields.items():
         #     for key2, value2 in value1.items():
         #         for key3, value3 in value2.items():
@@ -66,15 +69,16 @@ class FormParser():
             if table_name_field not in table_names:
                 table_names.append(table_name_field)
 
-            if row_data['record_data']['row_name'] != "new":
+            if row_data['record_data']['new'] == 1:
                 instance_name = instance.add_new_instance(table_name_field, 'new')
                 if row_data['data_entry']['name'] == '':
                     instance_name = row_data['data_entry']['name']
             else:
                 instance_name = row_data['record_data']['row_name']
 
+            # logging.info("formparser instance_name: " + instance_name)
             # logging.info("row_data['record_data']['table_name']: " + row_data['record_data']['table_name'])
-            # logging.info("row_data['record_data']['row_name']: " + row_data['record_data']['row_name'])
+            # logging.info("formparser row_data['record_data']['row_name']: " + row_data['record_data']['row_name'])
 
             if ('organization_id' in row_data['data_entry'].keys() and
                     row_data['data_entry']['organization_id']):
