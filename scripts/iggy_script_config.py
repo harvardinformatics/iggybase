@@ -299,9 +299,26 @@ base_int_col_map = ['id', 'active', 'organization_id', 'note_id', 'user_id',
 'department_id', 'machine_id', 'project_id', 'role_id', 'table_object_id',
 'illumina_bclconversion_analysis_id','illumina_run_id','illumina_flowcell_id',
 'sample_sheet_id', 'reagent_request_id', 'sequencing_price_id', 'order',
-'field_id', 'status_id']
+'field_id', 'status_id', 'passed', 'billable']
 # by table
 int_col_map = {
+        'field':[
+            'length',
+            'data_type_id',
+            'unique',
+            'primary_key',
+            'foreign_key_table_object_id',
+            'foreign_key_field_id',
+            ],
+        'field_role':[
+            'visible',
+            ],
+        'table_object':[
+            'module_id',
+            'id_length',
+            'admin_table',
+            'new_name_id',
+            ],
         'illumina_run':[
             'machine_id',
             'read_1_cycles',

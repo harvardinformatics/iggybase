@@ -37,8 +37,7 @@ class IggyScript:
 
     # if child passes in a config it will override the base
     def get_config(self, param):
-        if self.config:
-            val = getattr(self.config, param, None)
+        val = getattr(self.config, param, None)
         if not val:
             val = getattr(base_config, param)
         return val
@@ -140,7 +139,7 @@ class IggyScript:
             print("\t\t" + sql)
         except:
             print("\t\t" + 'sql has bad characters')
-        if 'insert_mode' in cli:
+        if 'insert_mode' in self.cli:
             insert_mode = True
         else:
             insert_mode = False
