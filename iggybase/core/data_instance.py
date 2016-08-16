@@ -33,7 +33,11 @@ class DataInstance:
         self.instances = {}
         self.fields = {}
         self.history = []
-        self.instance_name = instance_name
+        if instance_name is None:
+            self.instance_name = None
+        else:
+            self.instance_name = instance_name
+
 
         self.initialize_fields(table_name)
 
@@ -78,6 +82,22 @@ class DataInstance:
         self.initialize_values(table_name, instance)
 
         self.instances[table_name][instance['instance'].name] = instance
+
+    def get_multiple_data(self, instance_names = []):
+        for instance_name in instance_names:
+            instance = self.get_instance(self.table_name, instance_name, None)
+
+            if instance.name is None or instance.name == '' or instance_name == 'new':
+                instance.name = 'new'
+
+            # logging.info('DataInstance.get_data instance_name: ' + instance.name)
+            # logging.info(instance)
+
+            instance = {'instance': instance, 'parent_id': None}
+
+            self.initialize_values(self.table_name, instance)
+
+            self.instances[self.table_name][instance['instance'].name] = instance
 
     def add_new_instance(self, table_name, instance_name, instance = None):
         if instance is None:

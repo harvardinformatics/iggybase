@@ -280,12 +280,13 @@ def data_entry(facility_name, table_name, row_name, page_context):
 
         return saved_data(facility_name, module_name, table_name, row_names, page_context)
 
-    return templating.page_template_context('single_data_entry',
+    return templating.page_template_context('data_entry',
                                             module_name=module_name, form=form, table_name=table_name,
-                                            page_context=page_context.split(','))
+                                            page_context = page_context, form_type='single')
 
 
-@core.route('/multiple_entry/<table_name>/<row_names>', defaults={'page_context': 'base-context'}, methods=['GET', 'POST'])
+@core.route('/multiple_entry/<table_name>/<row_names>', defaults={'page_context': 'base-context'},
+            methods=['GET', 'POST'])
 @core.route('/multiple_entry/<table_name>/<row_names>/<page_context>', methods=['GET', 'POST'])
 @login_required
 @templated()
@@ -299,11 +300,10 @@ def multiple_entry(facility_name, table_name, row_names, page_context):
         fp = FormParser()
         row_names = fp.parse()
 
-        return saved_data(facility_name, module_name, table_name, row_names,
-                page_context)
+        return saved_data(facility_name, module_name, table_name, row_names, page_context)
 
-    return templating.page_template_context('multiple_data_entry', module_name=module_name, form=form,
-                                            table_name=table_name)
+    return templating.page_template_context('data_entry', module_name=module_name, form=form, form_type='multiple',
+                                            table_name=table_name, page_context=page_context)
 
 
 @core.route('/cache/', methods=['GET', 'POST'])

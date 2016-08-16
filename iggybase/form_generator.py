@@ -138,18 +138,29 @@ class FormGenerator():
         return newclass()
 
     def default_multiple_entry_form(self, row_names=[]):
-        self.table_meta_data = self.role_access_control.has_access('TableObject', {'name': self.table_name})
-        data_instance = DataInstance(self.table_meta_data.name, self.organization_access_control)
+        data_instance = DataInstance(self.table_name)
+        data_instance.get_multiple_data(row_names)
 
-        self.classattr['startmaintable_'+str(self.table_meta_data.id)]=\
-            HiddenField('startmaintable_'+str(self.table_meta_data.id), default=self.table_meta_data.name)
+        self.get_table(data_instance, 'multiple')
 
-        row_counter = 1
+        self.classattr['form_data_table_0'] = \
+            HiddenField('form_data_table_0', default=self.table_name)
+
+        self.classattr['form_data_type_0'] = \
+            HiddenField('form_data_type_0', default='multiple')
+
+        row_counter = 0
         for row_name in row_names:
-            self.classattr.update(self.row_fields(row_counter, row_name))
-            data_instance.get_data(row_name)
-            self.get_row(data_instance, row_name, row_counter, 'table-control', data_instance, row_counter)
+            self.classattr['form_data_row_name_' + str(row_counter)] = \
+                HiddenField('form_data_row_name_' + str(row_counter), default=row_name)
             row_counter += 1
+
+        # logging.info('row_names')
+        # logging.info(row_names)
+        # logging.info('data_instance.instances[self.table_name]')
+        # logging.info(data_instance.instances[self.table_name])
+
+        self.classattr['row_counter'] = HiddenField('row_counter', default=data_instance.instance_counter)
 
         newclass = new_class('MultipleForm', (Form,), {}, lambda ns: ns.update(self.classattr))
 
@@ -168,6 +179,9 @@ class FormGenerator():
             data_instance.get_linked_instances(depth)
 
         self.get_table(data_instance, 'default')
+
+        self.classattr['form_data_type_0'] = \
+            HiddenField('form_data_type_0', default='single')
 
         self.classattr['form_data_table_0'] = \
             HiddenField('form_data_table_0', default=self.table_name)

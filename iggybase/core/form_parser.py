@@ -74,7 +74,11 @@ class FormParser():
                 if row_data['data_entry']['name'] == '':
                     instance_name = row_data['data_entry']['name']
             else:
-                instance_name = row_data['record_data']['row_name']
+                # on a multiform all instances are not fetched with get_data
+                if row_data['record_data']['row_name'] not in instance.instances[table_name_field]:
+                    instance_name = instance.add_new_instance(table_name_field, row_data['record_data']['row_name'])
+                else:
+                    instance_name = row_data['record_data']['row_name']
 
             # logging.info("formparser instance_name: " + instance_name)
             # logging.info("row_data['record_data']['table_name']: " + row_data['record_data']['table_name'])
@@ -133,8 +137,8 @@ class FormParser():
                         else:
                             row_data['data_entry'][field] = int(row_data['data_entry'][field])
                     except ValueError:
-                        fk_id = instance.set_foreign_key_field_id({field: row_data['data_entry'][field]})
-                        row_data['data_entry'][field] = fk_id[0]
+                        row_data['data_entry'][field] = instance.set_foreign_key_field_id(table_name_field, field,
+                                                                                          row_data['data_entry'][field])
                 elif meta_data.DataType.name.lower() == 'file':
                     directory = os.path.join(current_app.config['UPLOAD_FOLDER'], table_name_field,
                                              instance.instance_name)

@@ -92,7 +92,7 @@ $( document ).ready( function () {
         if ( table_level == 1 )
             parent_name = $( '#record_data_row_name_0' ).val( );
 
-        var row_id = $( '#row_counter' ).val( );
+        var row_id = parseInt( $( '#row_counter' ).val( ) ) + 1;
         $( '#row_counter' ).val( parseInt( row_id ) + 1 );
 
         new_tr.attr( 'row_id', row_id );
@@ -123,7 +123,10 @@ $( document ).ready( function () {
                         } else {
                             if ( 'data_entry_' + link_column == matches[ 1 ] )
                                 $( this ).val( parent_name ).attr( 'id', new_id ).attr( 'name', new_id );
-                            else
+                            else if ( $( this ).attr( 'class' ).includes( 'date-field' ) ) {
+                                var utc = new Date().toJSON().slice(0,10);
+                                $( this ).val( utc ).attr( 'id', new_id ).attr( 'name', new_id );
+                            } else
                                 $( this ).val( '' ).attr( 'id', new_id ).attr( 'name', new_id );
                         }
                     }

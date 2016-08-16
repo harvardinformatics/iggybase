@@ -114,6 +114,8 @@ class IggybaseDateField(DateField):
             # remove datepicker for readonly
             self.iggybase_class = temp_class
 
+        self.iggybase_class += ' date-field'
+
         self.readonly = kwargs['readonly']
         del kwargs['readonly']
 
