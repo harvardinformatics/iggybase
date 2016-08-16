@@ -1,24 +1,15 @@
 from config import Config
 
 # db connection information
-db = {
-    'from': {
-        'user':Config.MYSQL_MPM_USER,
-        'password':Config.MYSQL_MPM_PASSWORD,
-        'host':'localhost',
-        'database':'iggybase'
-
-    },
-    'to':{
-        'user':Config.MYSQL_MPM_USER,
-        'password':Config.MYSQL_MPM_PASSWORD,
-        'host':'localhost',
-        'database':'iggybase'
-    }
+from_db = {
+    'user':Config.MYSQL_MPM_USER,
+    'password':Config.MYSQL_MPM_PASSWORD,
+    'host':'localhost',
+    'database':'iggybase'
 }
 
 # name of the semantic columns
-semantic_col_map = {
+'''semantic_col_map = {
         'col_name':3,
         'value':4
 }
@@ -477,4 +468,4 @@ fk_tbl_map = {
 # use to just skip some troublesome rows
 keys_to_skip = ['Weinstein_Bryan', 'Bryan Weinstein', 'Bryan_Weinstein',
         'Testy_McTesterson', 'Lester_Kobzik',
-        'David_Doupe2','Kathy_LoBuglio','2150030660','0007281637']
+        'David_Doupe2','Kathy_LoBuglio','2150030660','0007281637']'''
