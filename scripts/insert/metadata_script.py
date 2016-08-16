@@ -27,9 +27,9 @@ python process_illumina_data.py --insert_mode --path='/n/seq/sequencing/'
     --filename=RunInfo.xml
 """
 
-class MetadataIggyScript (IggyScript):
+class MetadataScript (IggyScript):
     def __init__(self):
-        super(MetadataIggyScript, self).__init__()
+        super(MetadataScript, self).__init__()
 
     def insert_row(self, tbl, cols):
         col_val_map = self.get_map(tbl, 'col_value')
@@ -204,9 +204,9 @@ class MetadataIggyScript (IggyScript):
         #insert_metadata('price_list', 'PL', [1, 63], 41)
         #insert_metadata('price_item', 'PI', [1, 63], 40)
         #insert_metadata('price_type', 'PT', [1, 63], 39)
-        #insert_metadata('line_item', 'LI', [1, 63], 41)
+        self.insert_metadata('line_item', 'LI', [1, 63], 41)
         #self.insert_metadata('lane', 'LN', [1, 63], 42)
-        self.insert_metadata('illumina_run', 'IR', [1, 63], 42)
+        #self.insert_metadata('illumina_run', 'IR', [1, 63], 42)
 
-script = MetadataIggyScript()
+script = MetadataScript()
 script.run()

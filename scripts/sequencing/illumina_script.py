@@ -11,7 +11,7 @@ import glob
 from xml.etree import ElementTree
 import csv
 from scripts.iggy_script import IggyScript
-import illumina_iggy_config as config
+import illumina_config as config
 
 """
 script for inserting illumina_run data
@@ -26,9 +26,9 @@ python process_illumina_data.py --insert_mode --path='/n/seq/sequencing/'
     --filename=RunInfo.xml
 """
 
-class IlluminaIggyScript (IggyScript):
+class IlluminaScript (IggyScript):
     def __init__(self):
-        super(IlluminaIggyScript, self).__init__(config)
+        super(IlluminaScript, self).__init__(config)
 
     def parse_illumina_run(self, data, pk):
         machine = self.pk_exists(data.findall('Instrument')[0].text, 'name', 'machine')
@@ -124,6 +124,7 @@ class IlluminaIggyScript (IggyScript):
         si_table = 'sample_sheet_item'
         print("\t\tfound " + str(len(rows)) + ' sample sheet items to enter')
         for row in rows:
+            lane_table = 'lane'
             lane_dict = self.parse_lane(row, illumina_flowcell_id)
             lane_row = self.select_row(
                     'lane',
@@ -135,7 +136,15 @@ class IlluminaIggyScript (IggyScript):
             if lane_row:
                 lane_id = lane_row[0]
             else:
-                lane_id = self.do_insert('lane', lane_dict)
+                name, next_num = self.get_next_name(lane_table)
+                lane_dict.update({'name': name})
+                lane_id = self.do_insert(lane_table, lane_dict)
+                if lane_id:
+                    self.update_row(
+                            'table_object',
+                            {'name': lane_table},
+                            {'new_name_id': next_num}
+                    )
             if row['illumina_run_id'] and row['order_id'] and row['index']:
                 row_id = self.get_sample_sheet_item_id(
                         row['illumina_run_id'],
@@ -283,7 +292,7 @@ class IlluminaIggyScript (IggyScript):
                 contents.close()
 
     def parse_cli(self):
-        cli = super(IlluminaIggyScript, self).parse_cli()
+        cli = super(IlluminaScript, self).parse_cli()
         if not 'path' in cli:
             # TODO: replace with real default after testing
             cli['path'] = '/Users/portermahoney/sites/primary_data'
@@ -320,7 +329,7 @@ class IlluminaIggyScript (IggyScript):
             print("\n\n\n\n")
 
 # execute run on this class
-script = IlluminaIggyScript()
+script = IlluminaScript()
 script.run()
 
 
