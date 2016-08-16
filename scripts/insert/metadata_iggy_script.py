@@ -205,4 +205,8 @@ class MetadataIggyScript (IggyScript):
         #insert_metadata('price_item', 'PI', [1, 63], 40)
         #insert_metadata('price_type', 'PT', [1, 63], 39)
         #insert_metadata('line_item', 'LI', [1, 63], 41)
-        self.insert_metadata('lane', 'LN', [1, 63], 42)
+        #self.insert_metadata('lane', 'LN', [1, 63], 42)
+        self.insert_metadata('illumina_run', 'IR', [1, 63], 42)
+
+script = MetadataIggyScript()
+script.run()

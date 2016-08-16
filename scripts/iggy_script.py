@@ -4,6 +4,7 @@ import os
 # add iggybase root dir to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
+import time
 import datetime
 import json
 import mysql.connector
@@ -81,57 +82,64 @@ class IggyScript:
         date_cols = self.get_map(tbl, 'date_col', True)
         i = 0
         for col, val in cols.items():
-            if i > 0:
-                val_str += ','
-            if col in int_cols:
-                val = str(val).replace(',','')
-                val_str += str(val).replace('$','')
-            elif col in date_cols:
-                formatted = False
-                if val == 'now':
-                    val = str(int(time.time()))
-                if '-' in val:
-                    date_formats = [ '%Y-%m-%d', '%Y-%m', '%Y-%m-%d %H:%M:%S']
-                    for date_format in date_formats:
+            if val is not None:
+                if i > 0:
+                    val_str += ','
+                if col in int_cols:
+                    val = str(val).replace(',','')
+                    val_str += str(val).replace('$','')
+                elif col in date_cols:
+                    formatted = False
+                    if val == 'now':
+                        val = str(int(time.time()))
+                    if '-' in val:
+                        date_formats = [ '%Y-%m-%d', '%Y-%m', '%Y-%m-%d %H:%M:%S']
+                        for date_format in date_formats:
+                            try:
+                                val_str += '"' + str(datetime.datetime.fromtimestamp(time.mktime(time.strptime(val,
+                            date_format)))) + '"'
+                                formatted = True
+                                break
+                            except:
+                                pass
+                    elif ':' in val:
                         try:
+                            date_format = '%b %d %Y %H:%M:%S'
                             val_str += '"' + str(datetime.datetime.fromtimestamp(time.mktime(time.strptime(val,
                         date_format)))) + '"'
                             formatted = True
-                            break
                         except:
-                            pass
-                elif ':' in val:
-                    try:
-                        date_format = '%b %d %Y %H:%M:%S'
-                        val_str += '"' + str(datetime.datetime.fromtimestamp(time.mktime(time.strptime(val,
-                    date_format)))) + '"'
-                        formatted = True
-                    except:
-                        val_str += 'Null'
+                            val_str += 'Null'
 
-                elif '/' in val:
-                    date_formats = ['%m/%d/%y',  '%-m/%d/%y']
-                    for date_format in date_formats:
-                        try:
-                            val_str += '"' + str(datetime.datetime.fromtimestamp(time.mktime(time.strptime(val,
-                            date_format)))) + '"'
-                            formatted = True
-                            break
-                        except:
-                            pass
+                    elif '/' in val:
+                        date_formats = ['%m/%d/%y',  '%-m/%d/%y']
+                        for date_format in date_formats:
+                            try:
+                                val_str += '"' + str(datetime.datetime.fromtimestamp(time.mktime(time.strptime(val,
+                                date_format)))) + '"'
+                                formatted = True
+                                break
+                            except:
+                                pass
+                    else:
+                        val_str += '"' + str(datetime.datetime.fromtimestamp(int(val))) + '"'
+                        formatted = True
+                    if not formatted:
+                        val_str += 'Null'
+                        print('Date could not be formated ' + str(val))
                 else:
-                    val_str += '"' + str(datetime.datetime.fromtimestamp(int(val))) + '"'
-                    formatted = True
-                if not formatted:
-                    val_str += 'Null'
-                    print('Date could not be formated ' + str(val))
-            else:
-                val.replace("'","\'")
-                val_str += '"' + val.replace('"','') + '"'
-            i += 1
+                    val.replace("'","\'")
+                    val_str += '"' + val.replace('"','') + '"'
+                i += 1
         return val_str
 
+    def add_cols(self, tbl, row_dict):
+        base_cols = self.get_map(tbl, 'add_cols')
+        row_dict.update(base_cols)
+        return row_dict
+
     def do_insert(self, tbl, row_dict):
+        row_dict = self.add_cols(tbl, row_dict)
         print("\t\tinserting into " + tbl + " row data:" + json.dumps(row_dict))
         val_str = self.make_vals(tbl, row_dict)
         sql = 'Insert into ' + tbl + ' (`' + '`,`'.join(list(row_dict.keys())) + '`) values(' + val_str + ')'
@@ -165,13 +173,14 @@ class IggyScript:
                     print("\t\tsql has bad chars")
         return ret
 
-    # TODO: compare with pk_exists
-    def select_row(self, insert_table, criteria, limit = 1):
+    # TODO: compare with pk_exists and row_exists
+    def select_row(self, tbl, criteria = [], limit = 1):
+        int_cols = self.get_map(tbl, 'int_col', True)
         pks = self.db.cursor()
-        sql = "select * from " + insert_table
+        sql = "select * from " + tbl
         wheres = []
         for key, val in criteria.items():
-            if '_id' in key or key == 'id':
+            if key in int_cols:
                 wheres.append(key + " = " + str(val))
             else:
                 wheres.append(key + " like '" + val + "'")

@@ -36,7 +36,8 @@ class IlluminaIggyScript (IggyScript):
             'name': pk,
             'number': data.attrib.get('Number'),
             'machine_id': machine,
-            'status': 'new'
+            'status': 'new',
+            'passed': 1
         }
         for read in data.findall('Reads')[0].findall('Read'):
             num = read.attrib.get('Number')
@@ -78,25 +79,35 @@ class IlluminaIggyScript (IggyScript):
         }
         return row_dict
 
-    def parse_sample_sheet_item(self, data):
+    def parse_sample_sheet_item(self, data, lane_id):
         row_dict = {
             'index': data['index'],
             'order_id': data['order_id'],
             'sample_sheet_id': data['sample_sheet_id'],
-            'date_created': 'now'
+            'date_created': 'now',
+            'lane_id': lane_id
         }
-        if 'lane' in data:
-            row_dict['lane'] = data['lane']
         return row_dict
 
-    def get_sample_sheet_item_id(self, run_id, order_id, index, lane = None):
+    def parse_lane(self, data, illumina_flowcell_id):
+        if 'lane' in data:
+            lane_number = data['lane']
+        else:
+            lane_number = 1
+        row_dict = {
+            'illumina_flowcell_id': illumina_flowcell_id,
+            'lane_number': lane_number,
+            'passed': 1
+        }
+        return row_dict
+
+    def get_sample_sheet_item_id(self, run_id, order_id, index, lane_id = None):
         sql = ('select i.id from sample_sheet_item i'
             ' inner join sample_sheet s on i.sample_sheet_id = s.id'
             ' where s.illumina_run_id = ' + str(run_id)
             + ' and i.order_id = ' + str(order_id)
-            + ' and i.index = "' + index + '"')
-        if lane:
-            sql += ' and i.lane = ' + lane
+            + ' and i.index = "' + index + '"'
+            + ' and i.lane_id = ' + str(lane_id))
         print("\t\t" + sql)
         exist = self.db.cursor()
         exist.execute(sql)
@@ -106,27 +117,39 @@ class IlluminaIggyScript (IggyScript):
             row_id = row[0]
         return row_id
 
-    def insert_sample_sheet_items(self, rows):
+    def insert_sample_sheet_items(self, rows, illumina_flowcell_id):
         inserted = 0
         skipped = 0
         failed = 0
         si_table = 'sample_sheet_item'
         print("\t\tfound " + str(len(rows)) + ' sample sheet items to enter')
         for row in rows:
+            lane_dict = self.parse_lane(row, illumina_flowcell_id)
+            lane_row = self.select_row(
+                    'lane',
+                    {
+                        'lane_number': lane_dict['lane_number'],
+                        'illumina_flowcell_id': illumina_flowcell_id
+                    }
+            )
+            if lane_row:
+                lane_id = lane_row[0]
+            else:
+                lane_id = self.do_insert('lane', lane_dict)
             if row['illumina_run_id'] and row['order_id'] and row['index']:
                 row_id = self.get_sample_sheet_item_id(
                         row['illumina_run_id'],
                         row['order_id'],
                         row['index'],
-                        row.get('lane', None)
+                        lane_id
                 )
                 if not row_id:
-                    row_dict = self.parse_sample_sheet_item(row)
+                    row_dict = self.parse_sample_sheet_item(row, lane_id)
                     name, next_num = self.get_next_name(si_table)
                     row_dict.update({'name': name})
                     si_id = self.do_insert(si_table, row_dict)
                     if si_id:
-                        update_row(
+                        self.update_row(
                                 'table_object',
                                 {'name': si_table},
                                 {'new_name_id': next_num}
@@ -212,6 +235,7 @@ class IlluminaIggyScript (IggyScript):
         if ss_dict:
             contents = open(file, 'rt')
             illumina_run_id = ss_dict['illumina_run_id']
+            illumina_flowcell_id = ss_dict['illumina_flowcell_id']
             try:
                 lines = list(csv.reader(contents))
                 if lines[0][0] == '[Header]':
@@ -248,7 +272,7 @@ class IlluminaIggyScript (IggyScript):
                         ss_id = self.do_insert(ss_table, ss_dict)
                     order_ids, rows = self.parse_hiseq(lines, illumina_run_id, ss_id)
                 if ss_id:
-                    self.insert_sample_sheet_items(rows)
+                    self.insert_sample_sheet_items(rows, illumina_flowcell_id)
                 if order_ids:
                     if self.folder == 'primary_data':
                         self.update_table_status('order', list(set(order_ids)), 'running', ['new'])
@@ -294,3 +318,9 @@ class IlluminaIggyScript (IggyScript):
             print("\tstarting to process: " + file)
             process_func(file)
             print("\n\n\n\n")
+
+# execute run on this class
+script = IlluminaIggyScript()
+script.run()
+
+

@@ -347,11 +347,14 @@ int_col_map = {
         'sample_sheet_item':[
             'control',
             'operator',
-            'lane',
+            'lane_id',
             'recipe',
             'order_id',
             'sample_sheet_id'
             ],
+        'lane':[
+            'lane_number'
+        ],
         'sample':[
             'read_length',
             'bioanlyzer_performed',
