@@ -166,7 +166,7 @@ class MetadataScript (IggyScript):
 
     def show_cols(self, tbl):
         pks = self.db.cursor()
-        sql = "show columns from " + tbl
+        sql = "show columns from `" + tbl + "`"
         print("\t\t" + sql)
         pks.execute(sql)
         pks_row = pks.fetchall()
@@ -204,9 +204,12 @@ class MetadataScript (IggyScript):
         #insert_metadata('price_list', 'PL', [1, 63], 41)
         #insert_metadata('price_item', 'PI', [1, 63], 40)
         #insert_metadata('price_type', 'PT', [1, 63], 39)
-        self.insert_metadata('line_item', 'LI', [1, 63], 41)
+        #self.insert_metadata('line_item', 'LI', [1, 63], 41)
         #self.insert_metadata('lane', 'LN', [1, 63], 42)
         #self.insert_metadata('illumina_run', 'IR', [1, 63], 42)
+        #self.insert_metadata('line_item_assoc', 'LA', [1, 63], 43)
+        #self.insert_metadata('sequencing_price', 'SP', [1, 63], 45)
+        self.insert_metadata('read', 'RD', [1, 63], 46)
 
 script = MetadataScript()
 script.run()
