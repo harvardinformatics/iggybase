@@ -423,7 +423,7 @@ class OrganizationAccessControl:
                         setattr(instances[row_id], column_name, data)
 
                 if column_name != 'last_modified' and column_name != 'date_created' and \
-                        not (old_fields[field_id] == data or old_fields[field_id] == str(data)):
+                        not (old_fields[column_name] == data or old_fields[column_name] == str(data)):
                     history_instance = core_models.History()
                     history_instance.name = history_data.get_new_name()
                     history_instance.date_created = datetime.datetime.utcnow()
@@ -433,7 +433,7 @@ class OrganizationAccessControl:
                     history_instance.organization_id = row_org_id[row_id]
                     history_instance.user_id = g.user.id
                     history_instance.instance_name = current_inst_name
-                    history_instance.old_value = old_fields[field_id]
+                    history_instance.old_value = old_fields[column_name]
                     history_instance.new_value = data
                     self.session.add(history_instance)
                     self.session.flush
