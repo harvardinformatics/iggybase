@@ -37,18 +37,20 @@ class IlluminaScript (IggyScript):
             'number': data.attrib.get('Number'),
             'machine_id': machine,
             'status': 'new',
-            'passed': 1
+            'passed': 1,
+            'date_created': 'now'
         }
-        for read in data.findall('Reads')[0].findall('Read'):
-            num = read.attrib.get('Number')
-            prefix = 'read_' + num
-            row_dict[prefix + '_cycles'] = read.attrib.get('NumCycles')
-            if read.attrib.get('IsIndexedRead') == 'Y':
-                index = 1
-            else:
-                index = 0
-            row_dict[prefix + '_index'] =  index
         return row_dict
+
+    def parse_read(self, read, illumina_run_id):
+        read_dict = {
+            'order': read.attrib.get('Number'),
+            'cycles': read.attrib.get('NumCycles'),
+            'illumina_run_id': illumina_run_id,
+            'indexed': int(read.attrib.get('IsIndexedRead') == 'Y'),
+            'date_created': 'now'
+        }
+        return read_dict
 
     def parse_illumina_flowcell(self, data, pk):
         flowcell_layout = data.findall('FlowcellLayout')[0]
@@ -58,7 +60,8 @@ class IlluminaScript (IggyScript):
             'surface_count': flowcell_layout.get('SurfaceCount'),
             'swath_count': flowcell_layout.get('SwathCount'),
             'tile_count': flowcell_layout.get('TileCount'),
-            'status': 'new'
+            'status': 'new',
+            'date_created': 'now'
         }
         return row_dict
 
@@ -97,7 +100,8 @@ class IlluminaScript (IggyScript):
         row_dict = {
             'illumina_flowcell_id': illumina_flowcell_id,
             'lane_number': lane_number,
-            'passed': 1
+            'passed': 1,
+            'date_created': 'now'
         }
         return row_dict
 
@@ -224,6 +228,20 @@ class IlluminaScript (IggyScript):
                 if row_dict:
                     run_id = self.do_insert(run_table, row_dict)
             if run_id:
+                # insert reads
+                read_table = 'read'
+                for read in run.findall('Reads')[0].findall('Read'):
+                    read_dict = self.parse_read(read, run_id)
+                    if read_dict:
+                        name, next_num = self.get_next_name(read_table)
+                        read_dict.update({'name': name})
+                        read_id = self.do_insert(read_table, read_dict)
+                        if read_id:
+                            self.update_row(
+                                    'table_object',
+                                    {'name': read_table},
+                                    {'new_name_id': next_num}
+                            )
                 flow_table = 'illumina_flowcell'
                 flow_name = run.findall('Flowcell')[0].text
                 flow_id = self.row_exists(flow_table, flow_name)

@@ -209,7 +209,8 @@ class MetadataScript (IggyScript):
         #self.insert_metadata('illumina_run', 'IR', [1, 63], 42)
         #self.insert_metadata('line_item_assoc', 'LA', [1, 63], 43)
         #self.insert_metadata('sequencing_price', 'SP', [1, 63], 45)
-        self.insert_metadata('read', 'RD', [1, 63], 46)
+        #self.insert_metadata('read', 'RD', [1, 63], 46)
+        self.insert_metadata('price_item_assoc', 'PA', [1, 63], 47)
 
 script = MetadataScript()
 script.run()

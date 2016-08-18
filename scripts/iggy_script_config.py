@@ -311,6 +311,10 @@ int_col_map = {
             'foreign_key_table_object_id',
             'foreign_key_field_id',
             ],
+        'read':[
+            'indexed',
+            'cycles'
+        ],
         'field_role':[
             'visible',
             ],

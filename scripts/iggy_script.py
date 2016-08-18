@@ -142,7 +142,7 @@ class IggyScript:
         row_dict = self.add_cols(tbl, row_dict)
         print("\t\tinserting into " + tbl + " row data:" + json.dumps(row_dict))
         val_str = self.make_vals(tbl, row_dict)
-        sql = 'Insert into ' + tbl + ' (`' + '`,`'.join(list(row_dict.keys())) + '`) values(' + val_str + ')'
+        sql = 'Insert into `' + tbl + '` (`' + '`,`'.join(list(row_dict.keys())) + '`) values(' + val_str + ')'
         try:
             print("\t\t" + sql)
         except:
