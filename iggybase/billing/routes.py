@@ -36,11 +36,11 @@ def review_ajax(facility_name, year, month):
 def invoice_summary(facility_name, year, month):
     ic = InvoiceCollection(int(year), int(month)) # defaults to last complete
     ic.get_select_options()
-    ic.get_table_query('invoice')
+    ic.get_table_query_collection('invoice')
     hidden_fields = {'year': year, 'month': month}
     return templating.page_template_context('invoice_summary', ic = ic,
             module_name = MODULE_NAME, table_name = 'invoice',
-            table_query = ic.table_query, hidden_fields = hidden_fields)
+            table_query = ic.tqc.queries[0], hidden_fields = hidden_fields)
 
 @billing.route( '/invoice_summary/<year>/<month>/ajax/' )
 @login_required

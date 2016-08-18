@@ -92,8 +92,12 @@ $( document ).ready( function () {
         if ( table_level == 1 )
             parent_name = $( '#record_data_row_name_0' ).val( );
 
+        //alert('table_level: ' + table_level);
+        //alert('parent_name: ' + parent_name);
+        //alert('link_column: ' + link_column);
+
         var row_id = parseInt( $( '#row_counter' ).val( ) ) + 1;
-        $( '#row_counter' ).val( parseInt( row_id ) + 1 );
+        $( '#row_counter' ).val( parseInt( row_id ) );
 
         new_tr.attr( 'row_id', row_id );
 
@@ -114,9 +118,18 @@ $( document ).ready( function () {
                         var new_id = matches[ 1 ] + "_" + ( row_id );
 
                         if ( $( this ).prop( 'type' ) == 'select-one' ) {
+                            //alert('select matches[ 1 ]: ' + matches[ 1 ]);
                             if ( 'data_entry_' + link_column == matches[ 1 ] ) {
-                                $( this ).attr( 'id', new_id ).attr( 'name', new_id );
-                                $( this ).filter( function( ) { return $( this ).text( ) == parent_name; } ).prop( 'selectedIndex', true );
+                                //alert('looking for: ' + parent_name);
+                                $( this ).attr( 'id', new_id ).attr( 'name', new_id )
+                                $( this ).find( 'option' ).each(
+                                    function( index, element ) {
+                                        if ( element.text == parent_name ){
+                                            $( element ).attr( 'selected', true );
+                                        }
+                                    }
+                                );
+                                //alert('new_id: ' + new_id);
                             } else {
                                 $( this ).prop( 'selectedIndex', 0 ).attr( 'id', new_id ).attr( 'name', new_id );
                             }

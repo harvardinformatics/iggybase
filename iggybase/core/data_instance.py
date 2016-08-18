@@ -183,6 +183,9 @@ class DataInstance:
                         self.get_data(None, row['instance'].id, table_name, row['instance'], row['parent_id'])
                         self.instance_counter += 1
                         ids.append(row['instance'].id)
+                elif link_data['level'] == 1:
+                    self.get_data('new', None, table_name, None,
+                                  self.instances[self.table_name][self.instance_name]['instance'].id)
                 else:
                     self.get_data('new', None, table_name)
 
@@ -194,6 +197,7 @@ class DataInstance:
 
     def initialize_values(self, table_name, instance):
         # logging.info('table_name: ' + table_name)
+        # logging.info('instance[parent_id]: ' + str(instance['parent_id']))
         # logging.info(self.tables)
 
         if self.tables[table_name]['parent'] is None:
