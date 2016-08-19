@@ -214,9 +214,6 @@ class DataInstance:
         if isinstance( value, int ):
             return value
 
-        if table_name is None:
-            table_name = self.table_name
-
         # logging.info(table_name)
         # logging.info(self.fields[table_name].fields)
 
@@ -228,9 +225,14 @@ class DataInstance:
 
         # logging.info(fk_table_object)
         # logging.info(fk_field_display)
-
-        fk_id = self.organization_access_control.session.query(fk_table_object). \
-            filter(getattr(fk_table_object, fk_field_display.display_name) == value).first()
+        if fk_table_data.name == 'field':
+            fk_id = self.organization_access_control.session.query(fk_table_object). \
+                filter(getattr(fk_table_object, fk_field_display.display_name) == value). \
+                filter(fk_table_object.table_object_id == self.tables[table_name]['table_meta_data'].id).\
+                first()
+        else:
+            fk_id = self.organization_access_control.session.query(fk_table_object). \
+                filter(getattr(fk_table_object, fk_field_display.display_name) == value).first()
 
         if fk_id:
             return fk_id.id
