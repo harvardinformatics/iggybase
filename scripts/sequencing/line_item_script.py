@@ -59,7 +59,8 @@ class LineItemScript (IggyScript):
                 'price_item_id': price_item_id,
                 'price_per_unit': float(price),
                 'quantity': 1,
-                'order_id': order_id
+                'order_id': order_id,
+                'date_created': 'now'
         }
         return row_dict
 
