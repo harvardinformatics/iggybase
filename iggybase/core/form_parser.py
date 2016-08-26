@@ -4,7 +4,6 @@ from werkzeug.utils import secure_filename
 from iggybase.core.data_instance import DataInstance
 from iggybase import utilities as util
 from flask import request, g, current_app
-from iggybase import g_helper
 from collections import OrderedDict
 import logging
 
@@ -57,16 +56,11 @@ class FormParser():
         #         for key3, value3 in value2.items():
         #            logging.info(str(key1) + ' ' + str(key2) + ' ' + str(key3) + ': ' + str(value3))
 
-<<<<<<< Updated upstream
         instance = DataInstance(fields['0']['form_data']['table'])
         instance.get_data(fields['0']['form_data']['row_name'])
 
         if fields['0']['record_data']['row_name'] != 'new' and int(fields['0']['form_data']['max_level']) > 0:
             instance.get_linked_instances(int(fields['0']['form_data']['max_level']))
-=======
-        instance = None
-        organization_access_control = g_helper.get_org_access_control()
->>>>>>> Stashed changes
 
         for row_id in sorted(fields.keys()):
             row_data = fields[row_id]
@@ -75,7 +69,6 @@ class FormParser():
             if table_name_field not in table_names:
                 table_names.append(table_name_field)
 
-<<<<<<< Updated upstream
             if row_data['record_data']['new'] == 1:
                 instance_name = instance.add_new_instance(table_name_field, 'new')
                 if row_data['data_entry']['name'] == '':
@@ -86,12 +79,6 @@ class FormParser():
                     instance_name = instance.add_new_instance(table_name_field, row_data['record_data']['row_name'])
                 else:
                     instance_name = row_data['record_data']['row_name']
-=======
-            if instance is None or instance.table_name != table_name_field:
-                instance = DataInstance(table_name_field, organization_access_control)
-
-            instance.get_data(row_data['record_data']['row_name'])
->>>>>>> Stashed changes
 
             # logging.info("formparser instance_name: " + instance_name)
             # logging.info("row_data['record_data']['table_name']: " + row_data['record_data']['table_name'])
@@ -197,7 +184,6 @@ class FormParser():
 
         saved_data = instance.save()
 
-        organization_access_control.commit()
         current_app.cache.increment_version(list(table_names))
 
         return saved_data

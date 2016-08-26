@@ -11,11 +11,7 @@ from iggybase import constants
 from iggybase.core.field_collection import FieldCollection
 from iggybase.core.data_instance import DataInstance
 from json import dumps, loads
-<<<<<<< Updated upstream
 import datetime, time
-=======
-import datetime
->>>>>>> Stashed changes
 import logging
 
 
@@ -142,15 +138,10 @@ class FormGenerator():
         return newclass()
 
     def default_multiple_entry_form(self, row_names=[]):
-<<<<<<< Updated upstream
         data_instance = DataInstance(self.table_name)
         data_instance.get_multiple_data(row_names)
 
         self.get_table(data_instance, 'multiple')
-=======
-        self.table_data = self.role_access_control.has_access('TableObject', {'name': self.table_object})
-        data_instance = DataInstance(self.table_data.name, self.organization_access_control)
->>>>>>> Stashed changes
 
         self.classattr['form_data_table_0'] = \
             HiddenField('form_data_table_0', default=self.table_name)
@@ -160,13 +151,8 @@ class FormGenerator():
 
         row_counter = 0
         for row_name in row_names:
-<<<<<<< Updated upstream
             self.classattr['form_data_row_name_' + str(row_counter)] = \
                 HiddenField('form_data_row_name_' + str(row_counter), default=row_name)
-=======
-            self.classattr.update(self.row_fields(row_counter, row_name))
-            self.get_row(fields, row_name, row_counter, 'table-control', data_instance)
->>>>>>> Stashed changes
             row_counter += 1
 
         # logging.info('row_names')
@@ -174,14 +160,7 @@ class FormGenerator():
         # logging.info('data_instance.instances[self.table_name]')
         # logging.info(data_instance.instances[self.table_name])
 
-<<<<<<< Updated upstream
         self.classattr['row_counter'] = HiddenField('row_counter', default=data_instance.instance_counter)
-=======
-    def default_data_entry_form(self, table_data, row_name='new', depth = 2):
-        logging.info('start time: ' + datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
-        self.table_data = table_data
-        data_instance = DataInstance(self.table_data.name, self.organization_access_control)
->>>>>>> Stashed changes
 
         newclass = new_class('MultipleForm', (Form,), {}, lambda ns: ns.update(self.classattr))
 
@@ -191,48 +170,27 @@ class FormGenerator():
         # start_time = time.time()
         # logging.info('default_data_entry_form start time: ' + datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
 
-<<<<<<< Updated upstream
         data_instance = DataInstance(self.table_name, row_name)
-=======
-        parent_id = self.get_row(fields, row_name, 1, 'data-control', data_instance)
->>>>>>> Stashed changes
 
         # logging.info('default_data_entry_form ' + self.table_name + ': ' + row_name)
         # logging.info(data_instance.instances[self.table_name])
 
         if row_name != 'new':
-<<<<<<< Updated upstream
             data_instance.get_linked_instances(depth)
-=======
-
-            row_counter = self.linked_data(link_tables, link_data, row_name, row_counter, depth, [parent_id])
-
-        self.classattr['row_counter'] = HiddenField('row_counter', default=row_counter)
->>>>>>> Stashed changes
 
         self.get_table(data_instance, 'default')
 
-<<<<<<< Updated upstream
         self.classattr['form_data_type_0'] = \
             HiddenField('form_data_type_0', default='single')
 
         self.classattr['form_data_table_0'] = \
             HiddenField('form_data_table_0', default=self.table_name)
-=======
-        logging.info('end time: ' + datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
-
-        return newclass()
-
-    def linked_data(self, tables, table_data, row_name, row_counter, depth, parent_ids = [], current_depth = 0):
-        parent_name = self.table_data.name
->>>>>>> Stashed changes
 
         self.classattr['form_data_row_name_0'] = \
             HiddenField('form_data_row_name_0', default=row_name)
 
         self.classattr['row_counter'] = HiddenField('row_counter', default=data_instance.instance_counter)
 
-<<<<<<< Updated upstream
         newclass = new_class('SingleForm', (Form,), {}, lambda ns: ns.update(self.classattr))
 
         # logging.info('default_data_entry_form time: ' + str(time.time() - start_time))
@@ -257,38 +215,6 @@ class FormGenerator():
                 link_field = self.role_access_control. \
                     has_access('Field',
                                {'id': table_data['link_data'].child_link_field_id})
-=======
-                fields = FieldCollection(None, self.table_data.name)
-                fields.set_fk_fields()
-                # default parent fk to parent id
-                fk_defaults = {parent_name: parent_ids[0]}
-                fields.set_defaults(fk_defaults)
-
-                data_instance = DataInstance(self.table_data.name, self.organization_access_control, fields)
-
-                child_data = None
-                if link_type == 'child':
-                    if current_depth == 0:
-                        self.classattr['startchildtable_'+str(link_table.id)]=\
-                            HiddenField('startchildtable_'+str(link_table.id), default=link_table.name)
-                    else:
-                        self.classattr['startgrandchildtable_'+str(link_table.id)]=\
-                            HiddenField('startgrandchildtable_'+str(link_table.id), default=link_table.name)
-
-                    # logging.info(link_table.name + ' ids:')
-                    # logging.info(ids)
-
-                    row_names = self.organization_access_control.\
-                        get_child_row_names(link_table.name,
-                                            table_data[link_type][table_index].child_link_field_id, parent_ids)
-
-                    child_data, child_tables = self.role_access_control.get_link_tables(self.table_data.id, True)
-                elif link_type == 'many' and current_depth == 0:
-                    row_names = self.organization_access_control.\
-                        get_many_row_names(link_table.name,
-                                           table_data[link_type][table_index].link_table_object_id,
-                                           parent_ids)
->>>>>>> Stashed changes
 
                 self.classattr['linkcolumn_' + str(table_data['table_meta_data'].id)] = \
                     HiddenField('linkcolumn_' + str(table_data['table_meta_data'].id),
@@ -304,7 +230,6 @@ class FormGenerator():
                 HiddenField('table_name_' + str(table_data['table_meta_data'].id),
                             default=table_data['table_meta_data'].name)
 
-<<<<<<< Updated upstream
             if table_data['level'] == 0 and form_type == 'default':
                 control_type = 'data-control'
             else:
@@ -318,18 +243,6 @@ class FormGenerator():
 
                 self.classattr.update(self.row_fields(row_counter, instance_name, table_data['table_meta_data']))
                 self.get_row(data_instance, table_name, instance, control_type, row_counter)
-=======
-                if len(row_names) == 0:
-                    row_names[0] = 'new'
-
-                for row_id, data in row_names.items():
-                    logging.info(str(row_id) + ' start time: ' + datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
-
-                    row_name = data[0]
-
-                    self.classattr.update(self.row_fields(row_counter, row_name))
-                    self.get_row(fields, row_name, row_counter, 'table-control', data_instance)
->>>>>>> Stashed changes
 
                 row_counter += 1
 
@@ -337,13 +250,7 @@ class FormGenerator():
                 HiddenField('end_table_' + str(table_data['table_meta_data'].id),
                             default=table_data['table_meta_data'].name)
 
-<<<<<<< Updated upstream
             # logging.info('get_table ' + table_name + ' time: ' + str(time.time() - start_time))
-=======
-                if child_data:
-                    row_counter = self.linked_data(child_tables, child_data, row_name, row_counter, depth,
-                                                   list(row_names.keys()), (current_depth + 1))
->>>>>>> Stashed changes
 
         self.classattr['form_data_max_level_0'] = \
             HiddenField('form_data_max_level_0', default=level)
@@ -364,20 +271,11 @@ class FormGenerator():
                 'record_data_new_'+str(row_count): row_new,
                 'record_data_table_id_'+str(row_count): table_id_field}
 
-<<<<<<< Updated upstream
     def get_row(self, data_instance, table_name, instance, control_type, row_counter):
         # start_time = time.time()
         # logging.info('row_name: ' + instance.name)
         self.classattr['start_row_'+str(row_counter)]=\
             HiddenField('start_row_'+str(row_counter))
-=======
-    def get_row(self, fields, row_name, row_counter, control_type, data):
-        # logging.info('row_name: ' + row_name)
-        data.get_data(row_name)
-
-        self.classattr['startrow_'+str(row_counter)]=\
-            HiddenField('startrow_'+str(row_counter))
->>>>>>> Stashed changes
 
         for field_name, field in data_instance.fields[table_name].fields.items():
             # field_start = time.time()
@@ -398,11 +296,7 @@ class FormGenerator():
 
             # logging.info('input_field ' + field_display_name + ' time: ' + str(time.time() - field_start))
 
-<<<<<<< Updated upstream
         self.classattr['end_row_'+str(row_counter)]=\
             HiddenField('end_row_'+str(row_counter))
 
         # logging.info('get_row time: ' + str(time.time() - start_time))
-=======
-        return data.get_value('id')
->>>>>>> Stashed changes
