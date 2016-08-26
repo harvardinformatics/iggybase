@@ -476,6 +476,7 @@ class RoleAccessControl:
         else:
             return False
 
+<<<<<<< Updated upstream
     def get_link_tables(self, table_object_name, table_object_id, levels=2, level=1, child_only=False, active=1):
         link_tables = []
 
@@ -487,6 +488,20 @@ class RoleAccessControl:
             filter(models.TableObjectChildren.table_object_id==table_object_id). \
             filter(models.TableObjectChildren.active==active). \
             order_by(models.TableObjectChildren.order, models.TableObject.name).all()
+=======
+    def get_link_tables(self, table_object_id, levels=2, level=0, child_only=False, active=1):
+        link_tables = {'child': OrderedDict(), 'many': []}
+        link_data = {'child': OrderedDict(), 'many': []}
+
+        res = self.session.query(models.TableObjectChildren). \
+            join(models.TableObject, models.TableObjectChildren.table_object_id == models.TableObject.id). \
+            filter_by(table_object_id=table_object_id).filter_by(active=active). \
+            order_by(models.TableObjectChildren.order, models.TableObject.order, models.TableObject.name).all()
+
+        if len(res) > 0:
+            link_tables['child'][res[0].TableObject.name] = {level: []}
+            link_data['child'][res[0].TableObject.name] = {level: []}
+>>>>>>> Stashed changes
 
         # logging.info('get_link_tables res: ' + table_object_name)
         # logging.info(res)
@@ -495,6 +510,7 @@ class RoleAccessControl:
             for row in res:
                 table_data = self.has_access('TableObject', {'id': row.TableObjectChildren.child_table_object_id})
                 if table_data:
+<<<<<<< Updated upstream
                     link_tables.append({'parent': table_object_name, 'level': level, 'table_meta_data': table_data,
                                         'link_data': row.TableObjectChildren, 'link_type': 'child'})
 
@@ -506,6 +522,17 @@ class RoleAccessControl:
                         link_tables = link_tables + self.get_link_tables(row.TableObject.name, row.TableObject.id,
                                                                          levels, level + 1, True)
 
+=======
+                    link_tables['child'][row.TableObject.name][level].append(table_data)
+                    link_data['child'][row.TableObject.name][level].append(row.TableObjectChildren)
+
+                    if level < levels:
+                        child_link_data, child_link_tables = self.role_access_control. \
+                            get_link_tables(row.TableObjectChildren.child_table_object_id, levels, level + 1, True)
+
+                        link_tables['child'].update(child_link_tables['child'])
+                        link_data['child'].update(child_link_data['child'])
+>>>>>>> Stashed changes
 
         if not child_only:
             res = self.session.query(models.TableObjectMany). \
@@ -522,8 +549,13 @@ class RoleAccessControl:
                         table_data = self.has_access('TableObject', {'id': row.first_table_object_id})
 
                     if table_data:
+<<<<<<< Updated upstream
                         link_tables.append({'parent': table_object_name, 'level': level, 'table_meta_data': table_data,
                                             'link_data': row.TableObjectMany, 'link_type': 'many'})
+=======
+                        link_tables['many'].append(table_data)
+                        link_data['many'].append(row)
+>>>>>>> Stashed changes
 
         return link_tables
 

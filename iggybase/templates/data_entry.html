@@ -40,6 +40,7 @@
         <div class="page_content">
             {% set form_fields = form._fields %}
             {%- for field_name, field in form_fields.items() %}
+<<<<<<< Updated upstream:iggybase/templates/data_entry.html
                 {% if "table_level_" in field.id -%}
                     {% set table_level = field.data -%}
                     {%- if table_level == 0 and form_type == "single" %}
@@ -48,6 +49,10 @@
                         <div class="col-md-12 div_level_{{ table_level }}">
                     {% endif -%}
                 {% elif "table_name_" in field.id -%}
+=======
+                {% if "startmaintable_" in field.id -%}
+                    <div class="col-md-4">
+>>>>>>> Stashed changes:iggybase/templates/single_data_entry.html
                     {% set table_name = field.data -%}
                     {% set table_title = field.data|replace("_", " ")|title -%}
                     {% set html_id = field.id.split("_") -%}
@@ -78,12 +83,43 @@
                             {% endif %}
                         {%- endfor %}
                     {% endif -%}
+<<<<<<< Updated upstream:iggybase/templates/data_entry.html
                 {% elif "end_table_" in field.id -%}
+=======
+                    {% set table_title = field.data|replace("_", " ")|title -%}
+                    <h3>{{ table_title }}</h3>
+                    {% set table_name = field.data -%}
+                    <input type="button" class="add_new_child_item" target_table="{{ table_name }}" table_object_id="{{ table_id }}" value="Add {{ field.data }}">
+                    <table id="{{ table_name }}" class="table table-striped"><tr>
+                    {% set field_loop = loop %}
+                    {% set firstrow = 1 %}
+                    {% set found = 0 %}
+                    {% for field_header_name, field_header in form_fields.items() if firstrow == 1 %}
+                        {% if 'endrow_' in field_header.id and found == 1 %}
+                            {% set firstrow = 0 %}
+                        {% endif %}
+
+                        {% if found == 1 %}
+                            {{ macros.form_field_th( field_header ) }}
+                        {% endif %}
+
+                        {% if field_name == field_header_name %}
+                            {% set found = 1 %}
+                        {% endif %}
+                    {%- endfor %}
+                    {% set maintable = 0 -%}
+                    {% set endrow = 1 -%}
+                {% elif "endtable_" in field.id -%}
+>>>>>>> Stashed changes:iggybase/templates/single_data_entry.html
                     </table></div><br>
                 {% elif 'start_row_' in field.id-%}
                     {% set field_vars = field.id.split("_") %}
                     <tr row_id="{{ field_vars[field_vars|length - 1] }}" table_object_name="{{ table_name }}">
+<<<<<<< Updated upstream:iggybase/templates/data_entry.html
                 {% elif 'end_row_' in field.id-%}
+=======
+                {% elif 'endrow_' in field.id-%}
+>>>>>>> Stashed changes:iggybase/templates/single_data_entry.html
                     </tr>
                 {% elif "record_data_row_name_" in field.id -%}
                     {% set row_name = field.data %}

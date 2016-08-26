@@ -9,14 +9,25 @@ import logging
 
 
 class DataInstance:
+<<<<<<< Updated upstream
     def __init__(self, table_name, instance_name = None):
         # logging.info('DataInstance.__init__ table_name: ' + table_name)
         # logging.info('DataInstance.__init__ instance_name: ' + instance_name)
+=======
+    def __init__(self, table_name, organization_access_control = None, field_collection = None):
+        if organization_access_control is None:
+            self.organization_access_control = g_helper.get_org_access_control()
+        else:
+            self.organization_access_control = organization_access_control
+
+        role_access_control = g_helper.get_role_access_control()
+>>>>>>> Stashed changes
 
         self.role_access_control = g_helper.get_role_access_control()
         self.organization_access_control = g_helper.get_org_access_control()
 
         self.table_name = table_name
+<<<<<<< Updated upstream
         self.tables = OrderedDict()
         self.tables[table_name] = {'level': 0,
                                    'parent': None,
@@ -35,9 +46,32 @@ class DataInstance:
         self.history = []
         if instance_name is None:
             self.instance_name = None
+=======
+        self.table_names = {table_name: table_name}
+        self.table_objects = {table_name: util.get_table(table_name)}
+
+        self.instance_name = None
+        self.instances = {table_name: []}
+        self.new = True
+        self.history = None
+        self.fields = {}
+        self.field_values = {}
+        self.original_values = {}
+        self.descendants = {}
+
+        self.initialize_fields(field_collection)
+
+    def get_data(self, instance_name = 'new', instance_id = None):
+        self.instances[self.table_name].append(self.get_instance(instance_name, instance_id))
+
+        if self.instance[self.table_name][0].name is None or instance_name == 'new':
+            self.instance_name = self.set_instance_name()
+            self.new = True
+>>>>>>> Stashed changes
         else:
             self.instance_name = instance_name
 
+<<<<<<< Updated upstream
 
         self.initialize_fields(table_name)
 
@@ -64,6 +98,57 @@ class DataInstance:
                  instance_parent_id = None):
         if table_name is None:
             table_name = self.table_name
+=======
+        self.initialize_values()
+
+    def get_instance(self, instance_name, instance_id = None):
+        if instance_id is None:
+            instance = self.organization_access_control.get_instance_data(self.table_object,
+                                                                               {'name': [instance_name]})
+        else:
+            instance = self.organization_access_control.get_instance_data(self.table_object,
+                                                                               {'id': [instance_id]})
+        return instance
+
+    def get_link_instances(self, levels = 2):
+        link_data, link_tables = self.role_access_control.get_link_tables(self.table_data.id, levels)
+
+        if ids is None:
+            ids = [self.instance.id]
+
+        for descendant_table_name in descendant_table_names:
+            self.descendants[descendant_table_name] = self.organization_access_control.get_descendant_data(ids,
+                                                                                                           table_name)
+
+    def initialize_values(self):
+        self.history = []
+
+        for field, meta_data in self.fields.items():
+            if self.new and meta_data.default is not None:
+                self.field_values[meta_data.Field.display_name] = meta_data.default
+                self.original_values[meta_data.Field.display_name] = meta_data.default
+            elif self.new:
+                self.field_values[meta_data.Field.display_name] = None
+                self.original_values[meta_data.Field.display_name] = None
+            else:
+                self.field_values[meta_data.Field.display_name] = getattr(self.instance[0], meta_data.Field.display_name)
+                self.original_values[meta_data.Field.display_name] = getattr(self.instance[0], meta_data.Field.display_name)
+
+    def initialize_fields(self, field_collection = None):
+        if field_collection is None:
+            field_collection = FieldCollection(None, self.table_name)
+            field_collection.set_defaults()
+
+        for field, meta_data in field_collection.fields.items():
+            self.fields[meta_data.Field.display_name] = meta_data
+            self.field_values[meta_data.Field.display_name] = None
+            self.original_values[meta_data.Field.display_name] = None
+
+    def update_field_values(self):
+        for name, value in self.field_values.items():
+            self.field_values[name] = getattr(self.instance[0], name)
+            self.original_values[name] = getattr(self.instance[0], name)
+>>>>>>> Stashed changes
 
         if instance is None:
             instance = self.get_instance(table_name, instance_name, instance_id)
@@ -334,6 +419,7 @@ class DataInstance:
             # logging.info('instances.keys(): ')
             #  logging.info(instances.keys())
 
+<<<<<<< Updated upstream
             if table_name == 'history':
                 continue
 
@@ -351,12 +437,31 @@ class DataInstance:
                     instance['instance'].date_created = datetime.datetime.utcnow()
 
                 instance['instance'].last_modified = datetime.datetime.utcnow()
+=======
+        for instance in self.instances:
+            for field_name, value in self.field_values.items():
+                if field_name == 'name' and (value is None or value == ''):
+                    setattr(self.instance[0], field_name, self.instance_name)
+                else:
+                    setattr(self.instance[0], field_name, value)
+
+            if self.table_name != 'history':
+                self.changed_values()
+                for history in self.history:
+                    history_instance = DataInstance('history')
+                    history_instance.get_data()
+                    history_instance.set_values(history)
+                    history_instance.save()
+
+        save_msg = self.organization_access_control.save_data_instance(self.instance[0])
+>>>>>>> Stashed changes
 
                 save_msg = self.organization_access_control.save_data_instance(instance['instance'])
                 # logging.info('save_msg: ')
                 # logging.info(save_msg)
                 saved_data[save_msg['id']] = save_msg
 
+<<<<<<< Updated upstream
         # logging.info('instance_names: ')
         # logging.info(instance_names)
         for history_name, instance in self.instances['history'].items():
@@ -374,6 +479,9 @@ class DataInstance:
         self.organization_access_control.commit()
 
         return saved_data
+=======
+        return save_msg
+>>>>>>> Stashed changes
 
     def set_instance_name(self, table_name = None):
         if table_name is None:

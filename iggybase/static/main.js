@@ -86,6 +86,11 @@ $( document ).ready( function () {
         var table_level = ele.attr( "table_level" );
         var table_object_id = ele.attr( "table_object_id" );
         var link_column = $( "#linkcolumn_" + table_object_id ).val( );
+<<<<<<< Updated upstream
+=======
+        var parent_name = $( '#record_data_row_name_1' ).val( );
+
+>>>>>>> Stashed changes
         var new_tr = $( "#" + target + " tr:last" ).clone( );
         var old_id = new_tr.attr( 'row_id' );
         var parent_name = '';
