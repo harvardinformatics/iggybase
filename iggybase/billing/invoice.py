@@ -49,8 +49,8 @@ class Invoice:
         self.pdf_prefix = (
                 self.core_prefix[g.facility]
                 + self.get_organization_type_prefix()
-                + '-' + str(self.from_date.year) +  '{:02d}'.format(self.from_date.month)
-                + '-' + util.zero_pad(self.order, 4)
+                + '-' + str(self.from_date.year)[2:4] +  '{:02d}'.format(self.from_date.month)
+                + '-' + util.zero_pad(self.order, 2)
         )
 
     def populate_items(self, items):
