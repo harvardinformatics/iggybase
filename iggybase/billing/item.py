@@ -9,6 +9,7 @@ class Item:
         self.OrderChargeMethod = item.OrderChargeMethod
         self.ChargeMethod = item.ChargeMethod
         self.ChargeMethodType = item.ChargeMethodType
+        self.ServiceType = item.ServiceType
         self.Invoice = getattr(item, 'Invoice', None)
         self.amount = (int(self.LineItem.price_per_unit or 0) * int(self.LineItem.quantity or 1))
         self.display_amount = "${:.2f}".format(self.amount)

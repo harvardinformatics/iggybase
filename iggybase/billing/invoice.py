@@ -9,11 +9,14 @@ import logging
 import time
 
 class Invoice:
-    def __init__ (self, from_date, to_date, items, order):
+    def __init__ (self, from_date, to_date, items, order, service_prefix,
+            service_type_id):
         self.items = self.populate_items(items)
         self.from_date = from_date
         self.to_date = to_date
         self.order = order
+        self.service_prefix = service_prefix
+        self.service_type_id = service_type_id
 
         self.org_name = self.items[0].Organization.name
         self.org_id = self.items[0].Organization.id
@@ -47,7 +50,7 @@ class Invoice:
                 'helium': 'HU'
         }
         self.pdf_prefix = (
-                self.core_prefix[g.facility]
+                self.service_prefix.upper()
                 + self.get_organization_type_prefix()
                 + '-' + str(self.from_date.year)[2:4] +  '{:02d}'.format(self.from_date.month)
                 + '-' + util.zero_pad(self.order, 2)
@@ -96,7 +99,8 @@ class Invoice:
                 'amount': int(self.total),
                 'order_id': self.items[0].Order.id,
                 'invoice_month': self.from_date,
-                'order': self.order
+                'order': self.order,
+                'service_type_id': self.service_type_id
             }
             invoice_row = self.oac.insert_row('invoice', cols)
 
@@ -135,6 +139,7 @@ class Invoice:
                 row['order'] = item.Order.name
                 row['delivery date'] = item.LineItem.date_created
                 row['description'] = item.PriceItem.name
+                row['service type'] = item.ServiceType.description
                 row['amount'] =  item.display_amount
                 rows.append(row)
         return rows

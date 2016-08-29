@@ -56,55 +56,66 @@ class InvoiceCollection:
         # group by (org_name, 'code') for codes or (org_name, charge_method) for pos
         # set invoice_order
         for row in res:
+            # set service_type as level of grouping for invoice within facility
+            service_prefix = row.ServiceType.invoice_prefix
+            service_type_id = row.ServiceType.id
+            if not service_prefix in item_dict:
+                item_dict[service_prefix] = {}
             org_name = row.Organization.name
             if row.ChargeMethodType.name == 'code':
                 charge_method = 'code'
             else:
                 charge_method = row.ChargeMethod.name
             key = (row.Organization.name, charge_method)
-            if key in item_dict:
-                item_dict[key]['items'].append(row)
-                if not item_dict[key]['invoice_order']:
+            if key in item_dict[service_prefix]:
+                item_dict[service_prefix][key]['items'].append(row)
+                if not item_dict[service_prefix][key]['invoice_order']:
                     inv = getattr(row, 'Invoice', None)
                     if inv:
-                        item_dict[key]['invoice_order'] = inv.order
+                        item_dict[service_prefix][key]['invoice_order'] = inv.order
             else:
-                item_dict[key] = {
+                item_dict[service_prefix][key] = {
                         'invoice_order': None,
-                        'items': [row]
+                        'items': [row],
+                        'service_type_id': service_type_id
                 }
                 inv = getattr(row, 'Invoice', None)
                 if inv:
-                    item_dict[key]['invoice_order'] = inv.order
+                    item_dict[service_prefix][key]['invoice_order'] = inv.order
         # we need to order by org_name but if recreated we need to keep the old
         # order
-        new_invoices = []
+        new_invoices = {}
         max_invoice_order = 0
         # set existing invoices first, maintaining order
-        for item_list in item_dict.values():
-            if item_list['invoice_order']:
-                invoice_order = item_list['invoice_order']
-                invoices.append(
-                        Invoice(
-                            self.from_date,
-                            self.to_date,
-                            item_list['items'],
-                            invoice_order
-                        )
-                )
-                if invoice_order > max_invoice_order:
-                    max_invoice_order = invoice_order
-            else:
-                new_invoices.append(item_list)
+        for service_prefix, items in item_dict.items():
+            for item_list in items.values():
+                if item_list['invoice_order']:
+                    invoice_order = item_list['invoice_order']
+                    invoices.append(
+                            Invoice(
+                                self.from_date,
+                                self.to_date,
+                                item_list['items'],
+                                invoice_order,
+                                service_prefix,
+                                item_list['service_type_id']
+                            )
+                    )
+                    if invoice_order > max_invoice_order:
+                        max_invoice_order = invoice_order
+                else:
+                    new_invoices[service_prefix] = item_list
         # then set new invoices in order of org_name
         # increasing order after existing invoices
-        for new_invoice in new_invoices:
+        for service_prefix, new_invoice in new_invoices.items():
             invoices.append(
                     Invoice(
                         self.from_date,
                         self.to_date,
                         new_invoice['items'],
-                        (max_invoice_order + 1)
+                        (max_invoice_order + 1),
+                        service_prefix,
+                        new_invoice['service_type_id']
                     )
             )
             max_invoice_order += 1

@@ -506,9 +506,12 @@ class OrganizationAccessControl:
         except:
             self.session.rollback()
             print('rollback')
+            str_fields = ''
+            for field in fields:
+                str_fields += str(field)
             logging.info(
                 'insert_row into ' + table + ' rollback- params: ' +
-                json.dumps(fields)
+                str_fields
             )
         else:
             print('commit')
@@ -518,6 +521,7 @@ class OrganizationAccessControl:
     def get_line_items(self, from_date, to_date, org_list = []):
         line_item = util.get_table('line_item')
         price_item = util.get_table('price_item')
+        service_type = util.get_table('service_type')
         order = util.get_table('order')
         order_charge_method = util.get_table('order_charge_method')
         charge_method = util.get_table('charge_method')
@@ -531,10 +535,12 @@ class OrganizationAccessControl:
         if org_list:
             filters.append(models.Organization.name.in_(org_list))
 
-        res = (self.session.query(line_item, price_item, order,
+        res = (self.session.query(line_item, price_item, service_type, order,
             order_charge_method, charge_method, charge_method_type, models.User,
             models.Organization, models.OrganizationType, invoice)
                 .join((price_item, line_item.price_item_id == price_item.id),
+                    (service_type, price_item.service_type_id ==
+                        service_type.id),
                     (order, line_item.order_id == order.id),
                     (order_charge_method, order.id == order_charge_method.order_id),
                     (charge_method, order_charge_method.charge_method_id == charge_method.id),
