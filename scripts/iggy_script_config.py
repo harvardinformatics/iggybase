@@ -74,7 +74,7 @@ col_value_map = {
         'lab_admin_name':'func_get_fk_user',
         'billable_item':'func_get_fk_billable',
         'quantity':'func_make_numeric',
-        'sequencing_price':'func_get_fk',
+        'sequencing_price':'func_get_price_item',
         'lab_admin_email':None,
         'billable_item_type':None,
         'expense_code_percentage':None,

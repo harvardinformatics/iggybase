@@ -34,7 +34,7 @@ class LineItemScript (IggyScript):
         return cli
 
     def get_billable_run_orders(self):
-        sql = ('select r.id, o.id, i.id, s.id, m.machine_type_id from sample_sheet_item i'
+        sql = ('select r.id, o.id, i.id, s.id, m.machine_type_id, o.organization_type_id from sample_sheet_item i'
             + ' inner join sample_sheet s on i.sample_sheet_id = s.id'
             + ' inner join illumina_run r on s.illumina_run_id = r.id'
             + ' inner join machine m on r.machine_id = m.id'
@@ -79,7 +79,8 @@ class LineItemScript (IggyScript):
                 'order_id': row[1],
                 'ss_item_id': row[2],
                 'ss_id': row[3],
-                'machine_type_id': row[4]
+                'machine_type_id': row[4],
+                'organization_type_id': row[5]
         }
 
         depth = self.get_sample_data(row_dict['order_id'])
@@ -129,7 +130,7 @@ class LineItemScript (IggyScript):
             depth = row[0]
         return depth
 
-    def get_service(self, length, lane_number, machine_type_id, read_number, depth):
+    def get_service(self, organization_type_id, length, lane_number, machine_type_id, read_number, depth):
         sql = ('select p.id, l.price_per_unit, s.max_length from sequencing_service s'
                 + ' inner join price_item_assoc a on a.row_id = s.id'
                 + ' inner join price_item p on p.id = a.price_item_id'
@@ -138,7 +139,7 @@ class LineItemScript (IggyScript):
                 + ' where s.lane_number = ' + str(lane_number)
                 + ' and s.machine_type_id = ' + str(machine_type_id)
                 + ' and s.read_number = ' + str(read_number)
-                + ' and l.price_type_id = 1' # TODO: get from org?
+                + ' and l.organization_type_id = ' + str(organization_type_id)
                 + ' and t.name = "sequencing_service"')
         if depth:
             sql += ' and s.depth = "' + depth + '"'
@@ -187,6 +188,7 @@ class LineItemScript (IggyScript):
                 lanes.add(row['lane_id'])
             service_params['lane_num'] = len(list(lanes))
             price_item_id, price = self.get_service(
+                    service_params['organization_type_id'],
                     service_params['length'],
                     service_params['lane_num'],
                     service_params['machine_type_id'],

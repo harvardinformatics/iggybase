@@ -5,15 +5,39 @@ from_db = {
     'user':Config.MYSQL_MPM_USER,
     'password':Config.MYSQL_MPM_PASSWORD,
     'host':'localhost',
-    'database':'iggybase'
+    'database':'bauer_minilims'
 }
 
 # name of the semantic columns
-'''semantic_col_map = {
-        'col_name':3,
-        'value':4
+semantic_col_map = {
+        'col_name':2,
+        'value':3
 }
 
+# fk field to table
+fk_tbl_map = {
+        'group_member': 'user',
+        'group': 'organization',
+        'operator':'user',
+        'sample_name':'sample',
+        'status': 'status',
+        'plasmid': 'plasmid',
+        'strain':'strain',
+        'oligo':'oligo',
+        'requester':'user',
+        'orderer':'user',
+        'receiver':'user',
+        'canceler':'user',
+        'pi':'user',
+        'owner_institution':'institution',
+        'submitter_name':'user',
+        'investigatorname':'user',
+        'investigator_name':'user',
+        'experiment_name':'submission',
+        'experimentname':'submission',
+        'lab_admin_name':'user'
+}
+'''
 # col name old to new, base map used for all tables
 base_col_name_map = {
     'date_modified': 'last_modified',
@@ -440,31 +464,9 @@ date_col_map = {
         'invoice_month'
         ]
 }
+'''
 
-# fk field to table
-fk_tbl_map = {
-        'group_member': 'user',
-        'group': 'organization',
-        'operator':'user',
-        'sample_name':'sample',
-        'status': 'status',
-        'plasmid': 'plasmid',
-        'strain':'strain',
-        'oligo':'oligo',
-        'requester':'user',
-        'orderer':'user',
-        'receiver':'user',
-        'canceler':'user',
-        'pi':'user',
-        'owner_institution':'institution',
-        'submitter_name':'user',
-        'investigatorname':'user',
-        'investigator_name':'user',
-        'experiment_name':'submission',
-        'experimentname':'submission',
-        'lab_admin_name':'user'
-}
-
+'''
 # use to just skip some troublesome rows
 keys_to_skip = ['Weinstein_Bryan', 'Bryan Weinstein', 'Bryan_Weinstein',
         'Testy_McTesterson', 'Lester_Kobzik',

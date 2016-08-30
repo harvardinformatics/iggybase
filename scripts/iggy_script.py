@@ -30,11 +30,18 @@ class IggyScript:
         self.config = config
         # get a db connection
         db_config = self.get_config('db')
-        self.db = mysql.connector.connect(
-                user = db_config['user'],
-                password = db_config['password'],
-                host = db_config['host'],
-                database = db_config['database'])
+        self.db = self.get_connection(db_config['user'],
+                db_config['password'],
+                db_config['host'],
+                db_config['database'])
+
+    def get_connection(self, user, password, host, database):
+            db = mysql.connector.connect(
+                user = user,
+                password = password,
+                host = host,
+                database = database)
+            return db
 
     # if child passes in a config it will override the base
     def get_config(self, param):
