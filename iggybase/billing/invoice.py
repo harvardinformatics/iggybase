@@ -27,6 +27,7 @@ class Invoice:
         self.last_modified = None
         self.name = None
         self.Invoice = None
+        self.number = None
 
         self.oac = g_helper.get_org_access_control()
 
@@ -51,6 +52,7 @@ class Invoice:
         }
         self.pdf_prefix = (
                 self.service_prefix.upper()
+                + 'IG' # iggybase prefix
                 + self.get_organization_type_prefix()
                 + '-' + str(self.from_date.year)[2:4] +  '{:02d}'.format(self.from_date.month)
                 + '-' + util.zero_pad(self.order, 2)
@@ -108,6 +110,7 @@ class Invoice:
         self.name = invoice_row.name
         self.last_modified = invoice_row.last_modified
         self.Invoice = invoice_row
+        self.number = self.get_next_name()
 
         # update line_item if invoice_id not set
         if self.id:
@@ -247,6 +250,9 @@ class Invoice:
         return pdf_list
 
     def get_next_pdf_name(self):
+        return self.get_next_name() + '.pdf'
+
+    def get_next_name(self):
         url = self.get_pdf_dir()
         file_match = url + self.pdf_prefix
         past_pdfs = glob.glob(file_match + '*.pdf')
@@ -259,7 +265,7 @@ class Invoice:
                     if ver_int > max_ver:
                         max_ver = ver_int
         new_ver = max_ver + 1
-        name = self.pdf_prefix + '-' + str(new_ver) + '.pdf'
+        name = self.pdf_prefix + '-' + str(new_ver)
         return name
 
     def get_pdf_dir(self):
