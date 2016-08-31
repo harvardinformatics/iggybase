@@ -44,15 +44,16 @@ class MigrateScript (IggyScript):
         )
 
     def make_dict(self, data, tbl):
-        col_name_map = self.get_map(tbl, 'col_name')
         tbl = tbl.lower()
+        col_name_map = self.get_map(tbl, 'col_name')
         col_value_map = self.get_map(tbl, 'col_value')
         add_cols = self.get_map(tbl, 'add_cols')
 
         for col, val in add_cols.items():
             data.append(["", "", tbl, col, val])
         row_dict = {}
-
+        # get any function params from the row
+        func_with_params = {}
         for row in data:
             col = row[config.semantic_col_map['col_name']].lower()
             col = col.replace(" ",'_')
@@ -72,127 +73,38 @@ class MigrateScript (IggyScript):
                 # execute any funcs
                 if col in col_value_map:
                     value_map = col_value_map[col]
-                    if 'func_' in value_map:
-                        func_name = value_map.replace('func_', '')
-                        if hasattr(self, func_name):
-                            new_dict =  getattr(self, func_name)(col, val, col_name_map)
+                    if value_map:
+                        if 'func_' in value_map:
+                            func_name = value_map.replace('func_', '')
+                            if func_name in config.func_params:
+                                func_with_params[func_name] = {'new_col': new_col,
+                                        'params': config.func_params[func_name],
+                                        'val': val}
+                            else:
+                                if hasattr(self, func_name):
+                                    new_dict =  getattr(self, func_name)(new_col, val, col_name_map)
+                                else:
+                                    print('Error, no function defined: ' + func_name)
+                                    sys.exit(1)
                         else:
-                            print('Error, no function defined: ' + func_name)
-                            sys.exit(1)
-                    else:
-                        new_dict = {new_col: value_map}
+                            new_dict = {new_col: value_map}
                 else:
                     new_dict = {new_col: val}
                 row_dict.update(new_dict)
+        # call any functions that requrired other row values as params
+        for func_name, func_info in func_with_params.items():
+            func_params = [func_info['new_col'], func_info['val'], col_name_map]
+            for param in func_info['params']:
+                func_params.append(row_dict[param])
+            if hasattr(self, func_name):
+                new_dict = getattr(self, func_name)(*func_params)
+                row_dict.update(new_dict)
+            else:
+                print('Error, no function defined: ' + func_name)
+                sys.exit(1)
         print("\t\t" + str(row_dict))
         return row_dict
 
-    '''def do_insert(tbl, row_dict):
-        global to_db
-        global cli
-        if tbl == 'user' and 'email' in row_dict:
-            id_exists = pk_exists(row_dict['email'], 'email', tbl)
-            if id_exists:
-                print("\t\tSkipping because " + row_dict['email'] + " already exists: " +
-                        str(id_exists))
-                return False
-
-        cols, vals = row_dict.keys(), row_dict.values()
-        val_str = make_vals(tbl, cols, vals)
-        sql = 'Insert into ' + tbl + ' (`' + '`,`'.join(cols) + '`) values(' + val_str + ')'
-        try:
-            print("\t\t" + sql)
-        except:
-            print("\t\t" + 'sql has bad characters')
-        if 'insert_mode' in cli:
-            insert_mode = True
-        else:
-            insert_mode = False
-            print("\t\tNo insert: use opt --insert_mode to actually insert")
-
-        ret = False
-        if insert_mode:
-            insert = to_db.cursor()
-            insert.execute(sql)
-            to_db.commit()
-            if insert.lastrowid:
-                row_id = insert.lastrowid
-                try:
-                    print("\t\tSuccessfully inserted row : " + str(row_id) + " sql: " + sql)
-                except:
-                    print("\t\tsql has bad chars")
-                ret = row_id
-            else:
-                try:
-                    print("\t\tFailed to insert: " + sql)
-                except:
-                    print("\t\tsql has bad chars")
-        return ret
-
-    def make_vals(tbl, cols, vals):
-        val_str = ""
-        int_cols = get_map(tbl, 'int_col', True)
-        date_cols = get_map(tbl, 'date_col', True)
-
-        for i, col in enumerate(cols):
-            if i > 0:
-                val_str += ','
-            if col in int_cols:
-                vals[i] = str(vals[i]).replace(',','')
-                val_str += str(vals[i]).replace('$','')
-            elif col in date_cols:
-                formatted = False
-                if '-' in vals[i]:
-                    date_formats = [ '%Y-%m-%d', '%Y-%m', '%Y-%m-%d %H:%M:%S']
-                    for date_format in date_formats:
-                        try:
-                            val_str += '"' + str(datetime.fromtimestamp(time.mktime(time.strptime(vals[i],
-                        date_format)))) + '"'
-                            formatted = True
-                        except:
-                            pass
-                elif ':' in vals[i]:
-                    try:
-                        date_format = '%b %d %Y %H:%M:%S'
-                        val_str += '"' + str(datetime.fromtimestamp(time.mktime(time.strptime(vals[i],
-                    date_format)))) + '"'
-                        formatted = True
-                    except:
-                        val_str += 'Null'
-
-                elif '/' in vals[i]:
-                    date_formats = ['%m/%d/%y',  '%-m/%d/%y']
-                    for date_format in date_formats:
-                        try:
-                            val_str += '"' + str(datetime.fromtimestamp(time.mktime(time.strptime(vals[i],
-                            date_format)))) + '"'
-                            formatted = True
-                        except:
-                            pass
-                else:
-                    val_str += '"' + str(datetime.fromtimestamp(int(vals[i]))) + '"'
-                    formatted = True
-                if not formatted:
-                    val_str += 'Null'
-                    print('Date could not be formated ' + str(vals[i]))
-            else:
-                vals[i] = vals[i]
-                vals[i].replace("'","\'")
-                val_str += '"' + vals[i].replace('"','') + '"'
-        return val_str
-
-    def pk_exists(pk, name, tbl):
-        global to_db
-        where = name + "='" + pk.replace("'","\\\'") + "'"
-        sql = 'Select id from ' + tbl + " where " + where
-        exist = to_db.cursor()
-        exist.execute(sql)
-        row = exist.fetchone()
-        if row:
-            row_id = row[0]
-        else:
-            row_id = None
-        return row_id'''
 
     def semantic_select_row(self, pk, thing, property, tbl):
         where = "name ='" + pk.replace("'","\\\'") + "'"
@@ -233,14 +145,20 @@ class MigrateScript (IggyScript):
                 new_dict = {(new_col + '_id'): fk_id}
         return new_dict
 
+    def price_per_unit(self, col, val, col_name_map, quantity):
+        new_dict = self.make_numeric(col, val, col_name_map)
+        new_dict[self.get_col_name(col, col_name_map)] = (int(new_dict[self.get_col_name(col, col_name_map)])/int(quantity))
+        return new_dict
+
     def make_numeric(self, col, val, col_name_map):
         new_dict = {}
+        val = val.replace(',', '')
         arr = re.split('[^0-9]', val)
         number = arr[0]
         if number == '':
             number = 'NULL'
         else:
-            new_dict = {get_col_name(col, col_name_map):number}
+            new_dict = {self.get_col_name(col, col_name_map):number}
         return new_dict
 
     def get_active(self, col, val, col_name_map):
@@ -280,14 +198,14 @@ class MigrateScript (IggyScript):
             col_name = col
         # check if the long_text exists
         sql = 'select id from long_text where long_text = "' + val.replace('"','') + '"'
-        long_text = to_db.cursor()
+        long_text = self.to_db.cursor()
         long_text.execute(sql)
         long_text = long_text.fetchone()
         if long_text and long_text[0]:
             return {col_name: long_text[0]}
         if not max_id:
             sql = 'select max(id) from long_text'
-            max_id = to_db.cursor()
+            max_id = self.to_db.cursor()
             max_id.execute(sql)
             max_id = max_id.fetchone()
             if max_id:
@@ -318,7 +236,7 @@ class MigrateScript (IggyScript):
 
     def get_fk_billable(self, col, val, col_name_map):
         if 'SUB' in val:
-            new_col = 'submission'
+            new_col = 'order'
         elif 'REA' in val:
             new_col = 'reagent_request'
         else:
@@ -326,7 +244,7 @@ class MigrateScript (IggyScript):
         fk_id = self.pk_exists(val, 'name', new_col)
         if fk_id:
             if 'SUB' in val:
-                new_dict = {'submission_id': fk_id}
+                new_dict = {'order_id': fk_id}
             elif 'REA' in val:
                 new_dict = {'reagent_request_id': fk_id}
             else:
@@ -334,11 +252,13 @@ class MigrateScript (IggyScript):
         return new_dict
 
     def get_fk_user(self, col, val, col_name_map):
-        if new_col == 'user':
+        if col in col_name_map:
+            col = col_name_map[col]
+        if col == 'user':
             val = val.replace(' ','_')
-        fk_id = self.pk_exists(val, 'name', new_col)
-        if not fk_id and new_col == 'user':
-            fk_id = self.pk_exists(val, 'email', new_col)
+        fk_id = self.pk_exists(val, 'name', col)
+        if not fk_id and col == 'user':
+            fk_id = self.pk_exists(val, 'email', col)
 
         if fk_id:
             if col in ['canceler','receiver','requester','orderer', 'pi',
@@ -347,7 +267,7 @@ class MigrateScript (IggyScript):
             elif col in col_name_map:
                 new_dict = {col_name_map[col]: fk_id}
             else:
-                new_dict = {(new_col + '_id'): fk_id}
+                new_dict = {(col + '_id'): fk_id}
         return new_dict
 
     def limit_val(self, col, val, col_name_map):
@@ -355,21 +275,19 @@ class MigrateScript (IggyScript):
         new_dict = {self.get_col_name(col, col_name_map): val}
         return new_dict
 
-    def get_price_item(self, col, val, col_name_map):
+    def get_price_item(self, col, val, col_name_map, organization_id):
         row = self.semantic_select_row(val, 'Sequencing_Price', 'Display_Name',
         'semantic_data')
         price_item_name = row[config.semantic_col_map['value']]
         id_exists = self.pk_exists(price_item_name, 'name', 'price_item')
-        print(id_exists)
-        price_list = self.select_row('price_list', {'price_item_id': id_exists, })
-        sys.exit(1)
+        return {self.get_col_name(col, col_name_map): id_exists}
 
     def migrate_table(self, mini_table, thing, new_tbl):
         print("Table: " + mini_table + " thing: " + thing)
         pks = self.from_db.cursor()
-        sql = "select distinct name from " + mini_table + " where thing = '" + thing + "'"
-        sql += " and name in "
-        sql += ("('LIN27167','LIN27166','LIN27165','LIN27164','LIN27163','LIN27162','LIN27161','LIN27160','LIN27159','LIN27158','LIN27157','LIN27156','LIN27155','LIN27154','LIN27153','LIN27152','LIN27151','LIN27150','LIN27149','LIN27148','LIN27147','LIN27146','LIN27145','LIN27144','LIN27143','LIN27142','LIN27141','LIN27140','LIN27139','LIN27138','LIN27137','LIN27136','LIN27135','LIN27134','LIN27133','LIN27132','LIN27131','LIN27130','LIN27129','LIN27128','LIN27127','LIN27126','LIN27125','LIN27124','LIN27123','LIN27122','LIN27121','LIN27120','LIN27119','LIN27118','LIN27117','LIN27116','LIN27115','LIN27114','LIN27113','LIN27112','LIN27111','LIN27110','LIN27109','LIN27108','LIN27107','LIN27106','LIN27105','LIN27104','LIN27103','LIN27102','LIN27101','LIN27100','LIN27099','LIN27098','LIN27097','LIN27096','LIN27095','LIN27094','LIN27093','LIN27092','LIN27091','LIN27090','LIN27089','LIN27088','LIN27087','LIN27086','LIN27085','LIN27084','LIN27083','LIN27082','LIN27081','LIN27080','LIN27079')")
+        sql = "select distinct name from " + mini_table + " where thing = '" + thing + "' and property = 'Group'"
+        '''sql += " and name in "
+        sql += ("('LIN27167','LIN27166','LIN27165','LIN27164','LIN27163','LIN27162','LIN27161','LIN27160','LIN27159','LIN27158','LIN27157','LIN27156','LIN27155','LIN27154','LIN27153','LIN27152','LIN27151','LIN27150','LIN27149','LIN27148','LIN27147','LIN27146','LIN27145','LIN27144','LIN27143','LIN27142','LIN27141','LIN27140','LIN27139','LIN27138','LIN27137','LIN27136','LIN27135','LIN27134','LIN27133','LIN27132','LIN27131','LIN27130','LIN27129','LIN27128','LIN27127','LIN27126','LIN27125','LIN27124','LIN27123','LIN27122','LIN27121','LIN27120','LIN27119','LIN27118','LIN27117','LIN27116','LIN27115','LIN27114','LIN27113','LIN27112','LIN27111','LIN27110','LIN27109','LIN27108','LIN27107','LIN27106','LIN27105','LIN27104','LIN27103','LIN27102','LIN27101','LIN27100','LIN27099','LIN27098','LIN27097','LIN27096','LIN27095','LIN27094','LIN27093','LIN27092','LIN27091','LIN27090','LIN27089','LIN27088','LIN27087','LIN27086','LIN27085','LIN27084','LIN27083','LIN27082','LIN27081','LIN27080','LIN27079')")'''
         if 'limit' in self.cli:
             sql += ' limit ' + self.cli['limit']
         pks.execute(sql)

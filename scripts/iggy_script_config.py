@@ -28,6 +28,13 @@ base_col_name_map = {
 }
 # col name old to new, by table
 col_name_map = {
+    'submission': {
+        'submitter': 'user'
+        },
+    'line_item':{
+        'cost': 'price_per_unit',
+        'sequencing_price': 'price_item_id'
+    },
     'sample_sheet':{
         'adapter':'adapter_1',
         'adapterread2':'adapter_2',
@@ -41,7 +48,7 @@ col_name_map = {
         'single_lane/full_flowcell':'lane_type',
         },
     'group_member':{
-        'username': 'name',
+        'group': 'user_roganization_id'
     },
     'oligo_batch':{
         'receiver_date': 'receive_date'
@@ -71,15 +78,21 @@ col_value_map = {
         'lab_admin_email':None
         },
     'line_item':{
-        'lab_admin_name':'func_get_fk_user',
-        'billable_item':'func_get_fk_billable',
+        'group':'func_get_fk',
+        'lab_admin_name': None,
+        'lab_admin': None,
+        'expense_code_percentage': None,
+        'billable_item': 'func_get_fk_billable',
+        'billable_item_type': None,
+        'lab_admin_email': None,
+        'expense_code': None,
+        'delivery_date': None,
+        'month': None,
+        'group_member': None,
+        'status': None,
         'quantity':'func_make_numeric',
         'sequencing_price':'func_get_price_item',
-        'lab_admin_email':None,
-        'billable_item_type':None,
-        'expense_code_percentage':None,
-        'purchase_order':None,
-        'reagent':None
+        'cost':'func_price_per_unit'
         },
     'illumina_flowcell':{
         'illumina_run':'func_get_fk',
@@ -178,6 +191,7 @@ col_value_map = {
         },
     'submission': {
         'submitter_name':'func_get_fk_user',
+        'submitter':'func_get_fk_user',
         'comments':'func_insert_long_text',
         'purchase_order_file':None,
         'purchase_order_number':None,
@@ -187,7 +201,10 @@ col_value_map = {
         'expense_code_3':None,
         'phone':None,
         'email':None,
-        'pi':None
+        'pi':None,
+        'group': None,
+        'status': None,
+        'expense_code_percentage_1': None
         },
     'reagent_request':{
         'expense_code_percentage_1': None,
@@ -220,7 +237,7 @@ col_value_map = {
         'web_page': None,
         'location': None
     },
-    'group_member':{
+    ''''group_member':{
         'full_name': 'func_split_name',
         'admin': None,
         'phone': None,
@@ -238,6 +255,27 @@ col_value_map = {
         'postal_code': None,
         'title': None,
         'department': None
+    },'''
+    'group_member':{
+        'full_name': None,
+        'admin': None,
+        'phone': None,
+        'street_address': None,
+        'city': None,
+        'state': None,
+        'zip': None,
+        'institution': None,
+        'affiliation':None,
+        'picture': None,
+        'notes':None,
+        'state': None,
+        'institution_type': None,
+        'user_id': None,
+        'postal_code': None,
+        'title': None,
+        'department': None,
+        'group': 'func_get_fk',
+        'name': 'func_get_fk'
     },
     'oligo':{
         'sequence':'func_insert_long_text',
@@ -282,15 +320,17 @@ col_value_map = {
 # adds columns to the table
 base_add_cols_map = {
         'active': 1,
-        'organization_id':84
+        #'organization_id':84
 }
 # by table
 add_cols_map = {
         'group':{
             'organization_id':1
         },
-        'group_member':{
-            'func_user_org':'func_user_org'
+        'user_organization':{
+            #'func_user_org':'func_user_org'
+            'organization_id':1,
+            'default_organization': 1
         }
 }
 
@@ -303,6 +343,10 @@ base_int_col_map = ['id', 'active', 'organization_id', 'note_id', 'user_id',
 'module_id', 'id_length', 'admin_table', 'price_item_id', 'order_id']
 # by table
 int_col_map = {
+        'user_organization':[
+            'default_organization',
+            'user_organization_id'
+            ],
         'field':[
             'length',
             'data_type_id',
@@ -487,4 +531,5 @@ fk_tbl_map = {
 # use to just skip some troublesome rows
 keys_to_skip = ['Weinstein_Bryan', 'Bryan Weinstein', 'Bryan_Weinstein',
         'Testy_McTesterson', 'Lester_Kobzik',
-        'David_Doupe2','Kathy_LoBuglio','2150030660','0007281637']
+        'David_Doupe2','Kathy_LoBuglio','2150030660','0007281637', 'Admin',
+        'Guest']
