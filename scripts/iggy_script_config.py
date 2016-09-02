@@ -33,7 +33,8 @@ col_name_map = {
         },
     'line_item':{
         'cost': 'price_per_unit',
-        'sequencing_price': 'price_item_id'
+        'sequencing_price': 'price_item_id',
+        'billable_item': 'price_item_id'
     },
     'sample_sheet':{
         'adapter':'adapter_1',
@@ -52,6 +53,11 @@ col_name_map = {
     },
     'oligo_batch':{
         'receiver_date': 'receive_date'
+    },
+    'reagent_request':{
+        'submitter': 'user',
+        'note_id': 'comments',
+        'notes': 'comments'
     }
 }
 
@@ -78,20 +84,26 @@ col_value_map = {
         'lab_admin_email':None
         },
     'line_item':{
+        'invoice_type':None,
         'group':'func_get_fk',
         'lab_admin_name': None,
         'lab_admin': None,
         'expense_code_percentage': None,
         'billable_item': 'func_get_fk_billable',
-        'billable_item_type': None,
+        #'billable_item': None,
+        #'billable_item_type': 'func_get_reagent_price_item',
         'lab_admin_email': None,
         'expense_code': None,
         'delivery_date': None,
         'month': None,
         'group_member': None,
+        'status_id': 5,
+        'purchase_order': None,
+        'reagent': None,
         'status': None,
         'quantity':'func_make_numeric',
         'sequencing_price':'func_get_price_item',
+        #'reagent_request':'func_get_reagent_price_item',
         'cost':'func_price_per_unit'
         },
     'illumina_flowcell':{
@@ -190,30 +202,52 @@ col_value_map = {
         'notes':None
         },
     'submission': {
-        'submitter_name':'func_get_fk_user',
-        'submitter':'func_get_fk_user',
+        'index_list': None,
+        'submitter_name':'func_get_org_fk_user',
+        'submitter':'func_get_org_fk_user',
         'comments':'func_insert_long_text',
         'purchase_order_file':None,
         'purchase_order_number':None,
         'destination_directory':None,
         'run_type':None,
-        'expense_code_2':None,
-        'expense_code_3':None,
+        'expense_code_2':'func_insert_charge_method',
+        'expense_code_3': 'func_insert_charge_method',
+        'expense_code_4': 'func_insert_charge_method',
+        'expense_code_1': 'func_insert_charge_method',
+        'qpcr_service_requested': None,
         'phone':None,
         'email':None,
         'pi':None,
         'group': None,
         'status': None,
-        'expense_code_percentage_1': None
+        'expense_code_percentage_1': None,
+        'expense_code_percentage_2': None,
+        'expense_code_percentage_3': None,
+        'expense_code_percentage_4': None,
+        'invoice_month': None,
+        'illumina_run': None
         },
     'reagent_request':{
-        'expense_code_percentage_1': None,
-        'submitter_name':'func_get_fk_user',
-        'reagent':'func_get_fk',
+        'expense_code_2':'func_insert_charge_method',
+        'expense_code_3': 'func_insert_charge_method',
+        'expense_code_4': 'func_insert_charge_method',
+        'expense_code_1': 'func_insert_charge_method',
+        'submitter_name':'func_get_org_fk_user',
+        'submitter':'func_get_org_fk_user',
+        #'reagent':'func_get_fk',
+        'reagent':None,
+        'group': None,
         'purchase_order_number':None,
         'purchase_order_file':None,
         'notes':'func_insert_long_text',
-        'quantity':'func_make_numeric'
+        #'quantity':'func_make_numeric',
+        'quantity':None,
+        'expense_code_percentage_1': None,
+        'expense_code_percentage_2': None,
+        'expense_code_percentage_3': None,
+        'expense_code_percentage_4': None,
+        'status': None,
+        'invoice_month': None
         },
     'purchase_order':{
         'status':'func_get_active',
@@ -343,6 +377,9 @@ base_int_col_map = ['id', 'active', 'organization_id', 'note_id', 'user_id',
 'module_id', 'id_length', 'admin_table', 'price_item_id', 'order_id']
 # by table
 int_col_map = {
+        'charge_method': [
+            'charge_method_type_id'
+        ],
         'user_organization':[
             'default_organization',
             'user_organization_id'
@@ -422,8 +459,8 @@ int_col_map = {
             'project_id',
             'submission_id'
             ],
-        'submission':[
-            'submitter',
+        'order':[
+            'submitter_id',
             'comments'
             ],
         'illumina_adapter':[

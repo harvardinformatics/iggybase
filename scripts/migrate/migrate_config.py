@@ -39,5 +39,19 @@ fk_tbl_map = {
 }
 func_params = {
         'get_price_item': ['organization_id'],
-        'price_per_unit': ['quantity']
+        'get_fk_billable': ['organization_id', 'billable_item_type'],
+        'price_per_unit': ['quantity'],
+        'insert_charge_method': ['charge_type']
 }
+keys_to_delete = {
+        'submission':[
+            'charge_type'
+        ],
+        'reagent_request':[
+            'charge_type'
+        ],
+        'line_item': [
+            'billable_item_type'
+        ]
+}
+

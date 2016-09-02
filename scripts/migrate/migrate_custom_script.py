@@ -326,7 +326,9 @@ class MigrateCustomScript (IggyScript):
                         print("\t\tSkipping because " + pk + " already exists: " +
                                 str(row_exists[0]))
                     else:
+                        name, next_num = self.get_next_name('user_organization')
                         row_dict = {
+                                'name': name,
                                 'user_id': user_id,
                                 'organization_id': 1,
                                 'user_organization_id': org_id,
@@ -334,6 +336,13 @@ class MigrateCustomScript (IggyScript):
                                 'default_organization': org_id
                         }
                         row = self.do_insert(new_tbl, row_dict)
+                        if row:
+                            to = self.select_row('table_object',
+                            {'name':'user_organization'})
+                            to_id = to[0]
+                            updated = self.update_row('table_object', {'id':
+                                to_id}, {'new_name_id': next_num})
+
             print('\tCompleted work on name: ' + pk + "\n\n")
         print('Completed table: ' + mini_table + " thing: " + thing + "\n\n\n\n")
 

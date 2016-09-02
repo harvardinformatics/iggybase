@@ -70,11 +70,13 @@ class MigrateScript (IggyScript):
                         continue
                 else:
                     new_col = col
+                new_dict = {}
                 # execute any funcs
                 if col in col_value_map:
                     value_map = col_value_map[col]
                     if value_map:
                         if 'func_' in value_map:
+                            print(value_map)
                             func_name = value_map.replace('func_', '')
                             if func_name in config.func_params:
                                 func_with_params[func_name] = {'new_col': new_col,
@@ -90,18 +92,29 @@ class MigrateScript (IggyScript):
                             new_dict = {new_col: value_map}
                 else:
                     new_dict = {new_col: val}
-                row_dict.update(new_dict)
+                if new_dict:
+                    row_dict.update(new_dict)
         # call any functions that requrired other row values as params
         for func_name, func_info in func_with_params.items():
             func_params = [func_info['new_col'], func_info['val'], col_name_map]
+            skip = False
             for param in func_info['params']:
-                func_params.append(row_dict[param])
-            if hasattr(self, func_name):
-                new_dict = getattr(self, func_name)(*func_params)
-                row_dict.update(new_dict)
-            else:
-                print('Error, no function defined: ' + func_name)
-                sys.exit(1)
+                if param in row_dict:
+                    func_params.append(row_dict[param])
+                else:
+                    skip = True
+            if not skip:
+                if hasattr(self, func_name):
+                    new_dict = getattr(self, func_name)(*func_params)
+                    if new_dict:
+                        row_dict.update(new_dict)
+                else:
+                    print('Error, no function defined: ' + func_name)
+                    sys.exit(1)
+        if tbl in config.keys_to_delete:
+            for key in config.keys_to_delete[tbl]:
+                if key in row_dict:
+                    del row_dict[key]
         print("\t\t" + str(row_dict))
         return row_dict
 
@@ -147,6 +160,8 @@ class MigrateScript (IggyScript):
 
     def price_per_unit(self, col, val, col_name_map, quantity):
         new_dict = self.make_numeric(col, val, col_name_map)
+        if int(quantity) < 1:
+            quantity = 1
         new_dict[self.get_col_name(col, col_name_map)] = (int(new_dict[self.get_col_name(col, col_name_map)])/int(quantity))
         return new_dict
 
@@ -190,10 +205,8 @@ class MigrateScript (IggyScript):
         return new_dict
 
     def insert_long_text(self, col, val, col_name_map):
-        global to_db
-        global max_id
-        if col == 'notes':
-            col_name = 'note_id'
+        if col in col_name_map:
+            col_name = col_name_map[col]
         else:
             col_name = col
         # check if the long_text exists
@@ -203,22 +216,22 @@ class MigrateScript (IggyScript):
         long_text = long_text.fetchone()
         if long_text and long_text[0]:
             return {col_name: long_text[0]}
-        if not max_id:
+        if not self.max_id:
             sql = 'select max(id) from long_text'
-            max_id = self.to_db.cursor()
-            max_id.execute(sql)
-            max_id = max_id.fetchone()
-            if max_id:
-                max_id = max_id[0]
-        if not max_id:
-            max_id = 1
+            get_max_id = self.to_db.cursor()
+            get_max_id.execute(sql)
+            self.max_id = get_max_id.fetchone()
+            if self.max_id:
+                self.max_id = self.max_id[0]
+        if not self.max_id:
+            self.max_id = 1
         else:
-            max_id = max_id + 1
+            self.max_id = self.max_id + 1
         # TODO: we need to fix name to not have constant 4 zeros
-        if len(str(max_id)) == 1:
-            name = 'LT00000' + str(max_id)
+        if len(str(self.max_id)) == 1:
+            name = 'LT00000' + str(self.max_id)
         else:
-            name = 'LT0000' + str(max_id)
+            name = 'LT0000' + str(self.max_id)
         sql = (
             'insert into long_text (name, active, organization_id, long_text)'
             + ' values("' + name + '", 1, 8, "' + val.replace('"','') + '")'
@@ -227,29 +240,41 @@ class MigrateScript (IggyScript):
             print("\t\t\t" + sql)
         except:
             print("\t\t\t" + 'sql has bad chars')
-        note = to_db.cursor()
+        note = self.to_db.cursor()
         note.execute(sql)
-        to_db.commit()
+        self.to_db.commit()
         fk_id = note.lastrowid
         new_dict = {col_name: fk_id}
         return new_dict
 
-    def get_fk_billable(self, col, val, col_name_map):
-        if 'SUB' in val:
-            new_col = 'order'
-        elif 'REA' in val:
-            new_col = 'reagent_request'
-        else:
-            new_col = 'reagent_request'
+    def get_fk_billable(self, col, val, col_name_map, organization_id,  billable_item_type):
+        new_dict = {}
+        new_col = 'order'
         fk_id = self.pk_exists(val, 'name', new_col)
         if fk_id:
-            if 'SUB' in val:
-                new_dict = {'order_id': fk_id}
-            elif 'REA' in val:
-                new_dict = {'reagent_request_id': fk_id}
-            else:
-                new_dict = {}
+            new_dict = {'order_id': fk_id}
+        if billable_item_type == 'Reagent_Request':
+            print('reagent')
+            row = self.semantic_select_row(val, 'Reagent_Request', 'Reagent',
+            'semantic_data')
+            price_item_name = row[config.semantic_col_map['value']]
+            print(price_item_name)
+            id_exists = self.pk_exists(price_item_name, 'name', 'price_item')
+            print(id_exists)
+            if id_exists:
+                new_dict[self.get_col_name(col, col_name_map)] = id_exists
         return new_dict
+
+    def get_org_fk_user(self, col, val, col_name_map):
+        user_data = self.get_fk_user(col, val, col_name_map)
+        if 'user_id' in user_data:
+            user_id = user_data['user_id']
+            org_row = self.select_row('user_organization', {'user_id': user_id}, 1)
+            if org_row:
+                org_id = org_row[9]
+                return {'organization_id': org_id, 'submitter_id': user_id}
+        return None
+
 
     def get_fk_user(self, col, val, col_name_map):
         if col in col_name_map:
@@ -259,7 +284,7 @@ class MigrateScript (IggyScript):
         fk_id = self.pk_exists(val, 'name', col)
         if not fk_id and col == 'user':
             fk_id = self.pk_exists(val, 'email', col)
-
+        new_dict = {}
         if fk_id:
             if col in ['canceler','receiver','requester','orderer', 'pi',
             'owner_institution', 'operator']:
@@ -270,17 +295,65 @@ class MigrateScript (IggyScript):
                 new_dict = {(col + '_id'): fk_id}
         return new_dict
 
+    def insert_charge_method(self, col, val, col_name_map, charge_type):
+        print('charge')
+        charge_method_id = self.pk_exists(val, 'code', 'charge_method')
+        print(charge_method_id)
+        if not charge_method_id:
+            if charge_type == 'Purchase_Order':
+                charge_method_type_id = 1
+            else:
+                charge_method_type_id = 2
+                name, next_num = self.get_next_name('charge_method')
+                row_dict = {
+                        'name': name,
+                        'charge_method_type_id': charge_method_type_id,
+                        'organization_id': 1,
+                        'code': val,
+                        'active': 1,
+                }
+                row = self.do_insert('charge_method', row_dict)
+                print(row)
+                if row:
+                    to = self.select_row('table_object',
+                    {'name':'charge_method'})
+                    to_id = to[0]
+                    updated = self.update_row('table_object', {'id':
+                        to_id}, {'new_name_id': next_num})
+        return None
+
+
     def limit_val(self, col, val, col_name_map):
         val = val[0:50]
         new_dict = {self.get_col_name(col, col_name_map): val}
         return new_dict
 
+    def get_reagent_price_item(self, col, val, col_name_map, organization_id,
+            billable_item):
+        new_dict = {}
+        print(val)
+        print(col)
+        sys.exit(1)
+        if val == 'Reagent_Request':
+            print('reagent')
+            row = self.semantic_select_row(billable_item, 'Reagent_Request', 'Reagent',
+            'semantic_data')
+            price_item_name = row[config.semantic_col_map['value']]
+            print(price_item_name)
+            id_exists = self.pk_exists(price_item_name, 'name', 'price_item')
+            print(id_exists)
+            new_dict = {self.get_col_name(col, col_name_map): id_exists}
+        return new_dict
+
     def get_price_item(self, col, val, col_name_map, organization_id):
+        new_dict = {}
         row = self.semantic_select_row(val, 'Sequencing_Price', 'Display_Name',
         'semantic_data')
         price_item_name = row[config.semantic_col_map['value']]
         id_exists = self.pk_exists(price_item_name, 'name', 'price_item')
-        return {self.get_col_name(col, col_name_map): id_exists}
+        if id_exists:
+            new_dict = {self.get_col_name(col, col_name_map): id_exists}
+        return new_dict
 
     def migrate_table(self, mini_table, thing, new_tbl):
         print("Table: " + mini_table + " thing: " + thing)
