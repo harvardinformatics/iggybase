@@ -287,6 +287,122 @@ class MigrateCustomScript (IggyScript):
         id_exists = self.pk_exists(price_item_name, 'name', 'price_item')
         return {self.get_col_name(col, col_name_map): id_exists}
 
+    def insert_charge_method(self, item_dict, charge_type):
+        charge_id = None
+        cm = self.from_db.cursor()
+        sql = ("select * from semantic_data where thing = 'Purchase_Order' and name ='" + item_dict['code_name'] + "' and property = 'file'")
+        cm.execute(sql)
+        cm_row = cm.fetchone()
+        file = None
+        if cm_row and cm_row[config.semantic_col_map['value']]:
+                file = cm_row[config.semantic_col_map['value']]
+
+        name, next_num = self.get_next_name('charge_method')
+        row_dict = {
+                'name': name,
+                'charge_method_type_id': charge_type,
+                'organization_id': 1,
+                'code': item_dict['code_name'],
+                'active': 1,
+        }
+        if file:
+            row_dict['file'] = file
+        charge_id = self.do_insert('charge_method', row_dict)
+        if charge_id:
+            to = self.select_row('table_object',
+            {'name':'charge_method'})
+            to_id = to[0]
+            updated = self.update_row('table_object', {'id':
+                to_id}, {'new_name_id': next_num})
+        return charge_id
+
+    def migrate_order_charge_method(self, mini_table, thing, new_tbl):
+        print("Table: " + mini_table + " thing: " + thing)
+        pks = self.from_db.cursor()
+        sql = "select distinct name from " + mini_table + " where thing = '" + thing + "'"
+        if 'limit' in self.cli:
+            sql += ' limit ' + self.cli['limit']
+        pks.execute(sql)
+        pks_rows = pks.fetchall()
+        if 'start' in self.cli:
+            pks_rows = pks_rows[int(self.cli['start']):]
+        print('found rows: ' + str(len(pks_rows)))
+        for row_num, row in enumerate(pks_rows):
+            pk = row[0]
+            if pk in self.get_config('keys_to_skip'):
+                continue
+            print("\t" + str(row_num) + " Working on name: " + pk)
+            sql = "select * from " + mini_table + " where thing = '" + thing + "' and name = '" + pk + "'"
+            print(sql)
+            item = self.from_db.cursor()
+            item.execute(sql)
+            item_rows = item.fetchall()
+            line_item = {'expense': []}
+            item_dict = {}
+            for row in item_rows:
+                col_name = row[config.semantic_col_map['col_name']]
+                val = row[config.semantic_col_map['value']]
+                item_dict[col_name] = val
+            for i in range(1,5):
+                code_name = 'Expense_Code_' + str(i)
+                if code_name in item_dict:
+                    item_dict['code_name'] = item_dict[code_name]
+                    percent_col = 'Expense_Code_Percentage_' + str(i)
+                    if percent_col in item_dict:
+                        percent = int(item_dict[percent_col].split('.')[0].replace('%', ''))
+                    else:
+                        percent = 100
+
+                    charge_id = self.pk_exists(item_dict[code_name], 'code',
+                            'charge_method')
+                    charge_type = 2
+                    if ('Charge_Type' in item_dict 
+                            and item_dict['Charge_Type'] == 'Purchase_Order'):
+                        charge_type = 1
+                    if not charge_id:
+                        charge_id = self. insert_charge_method(item_dict,
+                                charge_type)
+                    line_item['expense'].append({'code_name': item_dict[code_name], 'charge_id': charge_id, 'type': 2, 'percent':
+                            percent})
+            po = None
+            if 'Purchase_Order' in item_dict:
+                po = item_dict['Purchase_Order']
+            if 'Purchase_Order_Number' in item_dict:
+                po = item_dict['Purchase_Order_Number']
+            if po:
+                item_dict['code_name'] = po
+                charge_type = 1
+                charge_id = self.pk_exists(po, 'code',
+                            'charge_method')
+                if not charge_id:
+                    charge_id = self. insert_charge_method(item_dict,
+                            charge_type)
+                line_item['expense'].append({'code_name': po, 'charge_id': charge_id, 'type': 1, 'percent':
+                        100})
+            order_id = None
+            if 'Name' in item_dict:
+                order_id = self.pk_exists(item_dict['Name'], 'name', 'order')
+            print(line_item)
+            if order_id:
+                for expense in line_item['expense']:
+                    name, next_num = self.get_next_name('order_charge_method')
+                    cm_dict = {
+                        'name': name,
+                        'order_id': order_id,
+                        'charge_method_id': charge_id,
+                        'percent': expense['percent']
+                    }
+                    print(cm_dict)
+                    cm_row = self.do_insert('order_charge_method', cm_dict)
+                    if cm_row:
+                        to = self.select_row('table_object',
+                        {'name':'order_charge_method'})
+                        to_id = to[0]
+                        updated = self.update_row('table_object', {'id':
+                            to_id}, {'new_name_id': next_num})
+            print('\tCompleted work on name: ' + pk + "\n\n")
+        print('Completed table: ' + mini_table + " thing: " + thing + "\n\n\n\n")
+     
     def migrate_user_organization(self, mini_table, thing, new_tbl):
         print("Table: " + mini_table + " thing: " + thing)
         pks = self.from_db.cursor()
@@ -364,7 +480,7 @@ class MigrateCustomScript (IggyScript):
         return cli
 
     def run(self):
-        self.migrate_user_organization(self.cli['semantic_source'], self.cli['from_tbl'], self.cli['to_tbl'])
+        self.migrate_order_charge_method(self.cli['semantic_source'], self.cli['from_tbl'], self.cli['to_tbl'])
 
 # execute run on this class
 script = MigrateCustomScript()

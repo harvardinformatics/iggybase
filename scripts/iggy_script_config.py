@@ -380,6 +380,10 @@ int_col_map = {
         'charge_method': [
             'charge_method_type_id'
         ],
+        'order_charge_method':[
+            'charge_method_id',
+            'percent'
+            ],
         'user_organization':[
             'default_organization',
             'user_organization_id'
