@@ -74,9 +74,7 @@ class OrganizationAccessControl:
         # logging.info('child_org: ' + str(parent_organization_id))
         child_orgs = self.session.query(models.Organization).filter_by(parent_id=parent_organization_id).all()
         for child_org in child_orgs:
-            #if child_org.id in self.parent_orgs:
-            if child_org.organization_type_id == 2:
-                print(child_org.id)
+            if child_org.id in self.parent_orgs:
                 self.get_child_organization(child_org.id)
             else:
                 self.org_ids.append(child_org.id)
