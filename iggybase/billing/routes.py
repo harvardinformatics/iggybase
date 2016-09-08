@@ -58,6 +58,7 @@ def generate_invoices(facility_name, year, month):
         if 'orgs' in post_params:
             orgs = post_params['orgs']
     ic = InvoiceCollection(int(year), int(month), orgs) # defaults to last complete
+    ic.populate_template_data()
     # can't update the pdf name in db after generation because pdf generation
     # borks the db_session for the request
     ic.update_pdf_names()
@@ -73,6 +74,7 @@ def invoice(facility_name, year, month, org_name = None):
     if org_name:
         org_list.append(org_name)
     ic = InvoiceCollection(int(year), int(month), org_list)
+    ic.populate_template_data()
     return render_template('invoice_base.html',
             module_name = 'billing',
             invoices=ic.invoices)

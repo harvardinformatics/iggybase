@@ -28,7 +28,6 @@ class InvoiceCollection:
         # create invoice objects
         self.oac = g_helper.get_org_access_control()
         self.invoices = self.get_invoices(self.from_date, self.to_date, self.org_list)
-        self.populate_template_data() # populates data for display
 
         # used when making table queries
         self.table_query_criteria = {

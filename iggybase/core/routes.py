@@ -438,7 +438,7 @@ def build_summary_ajax(table_name, page_form, criteria = {}):
             table_name
         )
         ret = current_app.cache.get(key)
-
+    
     if not ret:
         tqc = TableQueryCollection(table_name, criteria)
         current = time.time()
