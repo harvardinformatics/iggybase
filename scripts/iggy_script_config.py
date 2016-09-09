@@ -377,6 +377,10 @@ base_int_col_map = ['id', 'active', 'organization_id', 'note_id', 'user_id',
 'module_id', 'id_length', 'admin_table', 'price_item_id', 'order_id']
 # by table
 int_col_map = {
+        'user_organization_position': [
+            'position_id',
+            'user_organization_id'
+        ],
         'charge_method': [
             'charge_method_type_id'
         ],

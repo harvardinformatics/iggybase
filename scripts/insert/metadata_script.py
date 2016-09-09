@@ -189,7 +189,7 @@ class MetadataScript (IggyScript):
         #insert_metadata('sample_sheet', 'SS', [1, 63])
         #insert_metadata('reagent_request', 'RR', [1, 63], 31)
         #insert_metadata('illumina_flowcell', 'IF', [1, 63], 32)
-        self.insert_metadata('invoice', 'IV', [1, 63], 33)
+        #self.insert_metadata('invoice', 'IV', [1, 63], 33)
         #insert_metadata('charge_method_type', 'CMT', [1, 63], 34)
         #insert_metadata('charge_method', 'CM', [1, 63], 35)
         #insert_metadata('invoice_item', 'II', [1, 63], 36)
@@ -213,6 +213,7 @@ class MetadataScript (IggyScript):
         #self.insert_metadata('price_item_assoc', 'PA', [1, 63], 47)
         #self.insert_metadata('machine_type', 'MT', [1, 63], 1)
         #self.insert_metadata('service_type', 'ST', [1, 63], 1)
+        self.insert_metadata('user_organization_position', 'UP', [1, 63], 48)
 
 script = MetadataScript()
 script.run()

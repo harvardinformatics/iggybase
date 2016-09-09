@@ -463,6 +463,114 @@ class MigrateCustomScript (IggyScript):
         print('Completed table: ' + mini_table + " thing: " + thing + "\n\n\n\n")
 
 
+    def migrate_lab_admins(self, mini_table, thing, new_tbl):
+        print("Table: " + mini_table + " thing: " + thing)
+        pks = self.from_db.cursor()
+        sql = "select distinct name from " + mini_table + " where thing = '" + thing + "'"
+        if 'limit' in self.cli:
+            sql += ' limit ' + self.cli['limit']
+        pks.execute(sql)
+        pks_rows = pks.fetchall()
+        if 'start' in self.cli:
+            pks_rows = pks_rows[int(self.cli['start']):]
+        print('found rows: ' + str(len(pks_rows)))
+        no_skip = False
+        if 'no_skip' in self.cli:
+            if self.cli['no_skip'] == '1':
+                no_skip = True
+        for row_num, row in enumerate(pks_rows):
+            pk = row[0]
+            if pk in self.get_config('keys_to_skip'):
+                continue
+            print("\t" + str(row_num) + " Working on name: " + pk)
+            sql = "select property, value from " + mini_table + " where thing = '" + thing + "' and (property='Lab_Admin' or property ='PI') and name = '" + pk + "'"
+            print(sql)
+            users = self.from_db.cursor()
+            users.execute(sql)
+            user_rows = users.fetchall()
+            for user in user_rows:
+                position = user[0]
+                user_name = user[1]
+                print(user_name)
+                print(position)
+                if position == 'Lab_Admin':
+                    position = 'manager'
+                org_id = self.pk_exists(pk, 'name', 'organization')
+                user_id = self.pk_exists(user_name, 'name', 'user')
+                if org_id and not user_id:
+                    sql = "select * from " + mini_table + " where thing = 'Group_Member' and name = '" + user_name + "'"
+                    print(sql)
+                    add_user = self.from_db.cursor()
+                    add_user.execute(sql)
+                    add_user_rows = add_user.fetchall()
+                    email = ''
+                    for au_row in add_user_rows:
+                        print(au_row)
+                        if au_row[2] == 'Email':
+                            email = au_row[3]
+                            break
+                    if email:
+                        row_dict = {
+                                'email': email,
+                                'name': user_name,
+                                'organization_id': org_id,
+                                'active': 1
+                        }
+                        row = self.do_insert('user', row_dict)
+                        user_id = row
+                pos_id = self.pk_exists(position, 'name', 'position')
+                if user_id and org_id and pos_id:
+                    tbl_name = thing
+                    print("\t\tMapping data for: " + tbl_name + ' into: ' + new_tbl)
+                    row_exists = self.select_row('user_organization', {'user_id': user_id, 'user_organization_id':org_id}, 1)
+                    if row_exists:
+                        user_org_id = row_exists[0]
+                    else:
+                        row_dict = {
+                                'name': 'user_' + pk + '_' + user_name,
+                                'user_organization_id': org_id,
+                                'user_id': user_id,
+                                'organization_id': 1,
+                                'active': 1
+                        }
+                        row = self.do_insert('user_organization', row_dict)
+                        if row:
+                            user_org_id = row
+                    if user_org_id:
+                        row_exists = self.select_row('user_organization_position', {'position_id': pos_id, 'user_organization_id':user_org_id}, 1)
+                        if row_exists and not no_skip:
+                            print("\t\tSkipping because " + pk + " already exists: " +
+                                    str(row_exists[0]))
+
+                        else:
+                            name, next_num = self.get_next_name('user_organization_position')
+                            row_dict = {
+                                    'name': name,
+                                    'user_organization_id': user_org_id,
+                                    'organization_id': 1,
+                                    'active': 1,
+                                    'position_id': pos_id
+                            }
+                            row = self.do_insert(new_tbl, row_dict)
+                            if row:
+                                to = self.select_row('table_object',
+                                {'name':'user_organization_position'})
+                                to_id = to[0]
+                                updated = self.update_row('table_object', {'id':
+                                    to_id}, {'new_name_id': next_num})
+                    else:
+                        print('\tUser_Organization Does not exist: ' + pk + "\n\n")
+            
+                else:
+                    print('\tUser_id, Org_id or Pos_id Does not exist: ' + pk + "\n\n")
+                    print(user_id)
+                    print(org_id)
+                    print(pos_id)
+            print('\tCompleted work on name: ' + pk + "\n\n")
+        print('Completed table: ' + mini_table + " thing: " + thing + "\n\n\n\n")
+
+
+
 
     def parse_cli(self):
         cli = super(MigrateCustomScript, self).parse_cli()
@@ -480,7 +588,7 @@ class MigrateCustomScript (IggyScript):
         return cli
 
     def run(self):
-        self.migrate_order_charge_method(self.cli['semantic_source'], self.cli['from_tbl'], self.cli['to_tbl'])
+        self.migrate_lab_admins(self.cli['semantic_source'], self.cli['from_tbl'], self.cli['to_tbl'])
 
 # execute run on this class
 script = MigrateCustomScript()
