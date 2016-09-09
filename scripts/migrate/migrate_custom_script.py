@@ -503,21 +503,21 @@ class MigrateCustomScript (IggyScript):
                     add_user = self.from_db.cursor()
                     add_user.execute(sql)
                     add_user_rows = add_user.fetchall()
-                    email = ''
+                    email = user_name
                     for au_row in add_user_rows:
                         print(au_row)
                         if au_row[2] == 'Email':
-                            email = au_row[3]
+                            if au_row[3]:
+                                email = au_row[3]
                             break
-                    if email:
-                        row_dict = {
-                                'email': email,
-                                'name': user_name,
-                                'organization_id': org_id,
-                                'active': 1
-                        }
-                        row = self.do_insert('user', row_dict)
-                        user_id = row
+                    row_dict = {
+                            'email': email,
+                            'name': user_name,
+                            'organization_id': org_id,
+                            'active': 1
+                    }
+                    row = self.do_insert('user', row_dict)
+                    user_id = row
                 pos_id = self.pk_exists(position, 'name', 'position')
                 if user_id and org_id and pos_id:
                     tbl_name = thing

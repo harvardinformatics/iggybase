@@ -126,6 +126,7 @@ class Invoice:
 
     def populate_template_data(self):
         self.purchase_table = self.populate_purchase()
+        self.contacts = self.get_contact_info()
         self.to_info = self.populate_to_info()
         if self.charge_method_type == 'po':
             self.po_info = self.populate_po_info()
@@ -147,28 +148,44 @@ class Invoice:
                 rows.append(row)
         return rows
 
+    def get_contact_by_position(self, org_id, position):
+        users = self.oac.get_org_position(self.org_id, position)
+        contacts = []
+        for u in users:
+            if u.first_name and u.last_name:
+                name = u.first_name + ' ' + u.last_name
+            else:
+                name = u.name
+            contacts.append({'name':name, 'email':u.email})
+        return contacts
+    
+    def get_contact_info(self):
+        manager = self.get_contact_by_position(self.org_id, 'manager')
+        pi = self.get_contact_by_position(self.org_id, 'pi')
+        return {'manager': manager, 'pi': pi}
+
+    def get_contacts_as_list(self, position, attr):
+        attrs = []
+        if position in self.contacts:
+            for contact in self.contacts[position]:
+                if attr in contact:
+                    attrs.append(contact[attr])
+        return ', '.join(attrs)
+
     def populate_to_info(self):
         if self.charge_method_type == 'po':
             # TODO: remove test
             info = OrderedDict({
-                    'PI': 'test',
+                    'PI': self.get_contacts_as_list('pi', 'name'),
                     'Institution': 'test',
                     'PO Number': self.items[0].ChargeMethod.code
             })
         else:
-            users = self.oac.get_org_position(self.org_id, 'manager')
-            names = []
-            emails = []
-            for u in users:
-                if u.first_name and u.last_name:
-                    name = u.first_name + ' ' + u.last_name
-                else:
-                    name = u.name
-                names.append(name)
-                emails.append(u.email)
+            mng_names = self.get_contacts_as_list('manager', 'name')
+            mng_emails = self.get_contacts_as_list('manager', 'email')
             info = OrderedDict({
-                    'Sent to': ', '.join(names),
-                    'Email': ', '.join(emails)
+                    'Sent to': mng_names,
+                    'Email': mng_emails
             })
         return info
 
