@@ -227,6 +227,7 @@ class IggyScript:
             print("\t\t" + sql)
             pks.execute(sql)
             self.db.commit()
+            return True
 
     def update_table_status(self, table, ids, status, current = []):
         table_object_id = self.pk_exists(table, 'name', 'table_object')
