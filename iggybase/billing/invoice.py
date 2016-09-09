@@ -149,6 +149,7 @@ class Invoice:
 
     def populate_to_info(self):
         if self.charge_method_type == 'po':
+            # TODO: remove test
             info = OrderedDict({
                     'PI': 'test',
                     'Institution': 'test',
@@ -173,10 +174,13 @@ class Invoice:
 
     def populate_po_info(self):
         address = self.oac.get_org_billing_address(self.org_id)
+        address_3 = ''
+        if address:
+            address_3 = (address.city + ', ' + address.state + ' ' +
+                        address.postcode)
         info = {
-                'invoice address': [address.address_1, address.address_2,
-                    (address.city + ', ' + address.state + ' ' +
-                        address.postcode)],
+                'invoice address': [getattr(address, 'address_1', ''), getattr(address, 'address_2', ''),
+                    address_3],
                 'remit to': [
                     [
                         'Harvard University',
