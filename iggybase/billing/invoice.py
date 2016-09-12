@@ -174,10 +174,9 @@ class Invoice:
 
     def populate_to_info(self):
         if self.charge_method_type == 'po':
-            # TODO: remove test
             info = OrderedDict({
                     'PI': self.get_contacts_as_list('pi', 'name'),
-                    'Institution': 'test',
+                    'Institution': getattr(self.items[0].Institution, 'name', ''),
                     'PO Number': self.items[0].ChargeMethod.code
             })
         else:

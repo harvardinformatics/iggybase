@@ -527,6 +527,7 @@ class OrganizationAccessControl:
         charge_method = util.get_table('charge_method')
         charge_method_type = util.get_table('charge_method_type')
         invoice = util.get_table('invoice')
+        institution = util.get_table('institution')
         filters = [
             line_item.active == 1,
             line_item.date_created >= from_date,
@@ -537,7 +538,7 @@ class OrganizationAccessControl:
 
         res = (self.session.query(line_item, price_item, service_type, order,
             order_charge_method, charge_method, charge_method_type, models.User,
-            models.Organization, models.OrganizationType, invoice)
+            models.Organization, models.OrganizationType, invoice, institution)
                 .join((price_item, line_item.price_item_id == price_item.id),
                     (service_type, price_item.service_type_id ==
                         service_type.id),
@@ -551,7 +552,9 @@ class OrganizationAccessControl:
                     (models.OrganizationType, models.Organization.organization_type_id ==
                         models.OrganizationType.id)
                 )
-                .outerjoin(invoice, invoice.id == line_item.invoice_id)
+                .outerjoin((invoice, invoice.id == line_item.invoice_id),
+                    (institution, institution.id ==
+                        models.Organization.institution_id))
             .filter(*filters).order_by((line_item.invoice_id == None), line_item.invoice_id, models.Organization.name, charge_method.id).all())
         return res
 
