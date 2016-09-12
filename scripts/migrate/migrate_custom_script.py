@@ -519,6 +519,48 @@ class MigrateCustomScript (IggyScript):
             print('address not set')
         return address_set
 
+    def find_user_prop_as_table(self, prop, users, org_id):
+        inst_set = False
+        for u in users:
+            sql = "select value from semantic_data where thing = 'Group_Member' and name = '" + u + "' and property = '" + prop + "'"
+            print(sql)
+            add_inst = self.from_db.cursor()
+            add_inst.execute(sql)
+            add_inst_row = add_inst.fetchone()
+            if add_inst_row:
+                sys.exit(1)
+                inst = add_inst_row[0]
+                print(add_inst_row)
+                row_exists = self.select_row(prop, {'name':inst}, 1)
+                if not row_exists:
+                    row_dict = {
+                            'name': inst,
+                            'organization_id': 1,
+                            'active': 1
+                    }
+                    print(row_dict)
+                    inst_id = self.do_insert(prop, row_dict)
+                    if inst_id:
+                        updated = self.update_row('organization', {'id': org_id}, {(prop + '_id'):
+                            inst_id})
+                        inst_set = updated
+                        print(inst_set)
+                        if inst_set:
+                            break 
+                    if inst_set:
+                        break 
+                else:
+                    inst_id = row_exists[0]
+                    print(inst_id)
+                    updated = self.update_row('organization', {'id': org_id}, {(prop + '_id'):inst_id})
+                    inst_set = updated
+                    print(inst_set)
+        if inst_set:
+            print('success')
+        else:
+            print('inst not set')
+        return inst_set
+
     def migrate_address_user(self, mini_table, thing, new_tbl):
         print("Table: " + mini_table + " thing: " + thing)
         pks = self.from_db.cursor()
@@ -602,6 +644,106 @@ class MigrateCustomScript (IggyScript):
                     address_set = self.find_address(user_types['PI'], org_id)
                 if not address_set and 'Group_Member' in user_types:
                     address_set = self.find_address(user_types['PI'], org_id)
+            else:
+                print('no org or billing already set')
+            print('\tCompleted work on name: ' + pk + "\n\n")
+        print('Completed table: ' + mini_table + " thing: " + thing + "\n\n\n\n")
+
+    def migrate_department(self, mini_table, thing, new_tbl):
+        print("Table: " + mini_table + " thing: " + thing)
+        pks = self.from_db.cursor()
+        sql = "select distinct name from " + mini_table + " where thing = '" + thing + "'"
+        if 'limit' in self.cli:
+            sql += ' limit ' + self.cli['limit']
+        pks.execute(sql)
+        pks_rows = pks.fetchall()
+        if 'start' in self.cli:
+            pks_rows = pks_rows[int(self.cli['start']):]
+        print('found rows: ' + str(len(pks_rows)))
+        no_skip = False
+        if 'no_skip' in self.cli:
+            if self.cli['no_skip'] == '1':
+                no_skip = True
+        for row_num, row in enumerate(pks_rows):
+            pk = row[0]
+            if pk in self.get_config('keys_to_skip'):
+                continue
+            print("\t" + str(row_num) + " Working on name: " + pk)
+            address_set = False
+            org_exists = self.select_row('organization', {'name': pk}, 1)
+            if org_exists:
+                org_id = org_exists[0]
+            print(org_id)
+            if org_id:
+                sql = "select property, value from " + mini_table + " where thing = '" + thing + "' and (property='Lab_Admin' or property ='PI' or 'Group_Member') and name = '" + pk + "'"
+                print(sql)
+                users = self.from_db.cursor()
+                users.execute(sql)
+                user_rows = users.fetchall()
+                user_types = {}
+                for user in user_rows:
+                    position = user[0]
+                    user_name = user[1]
+                    if position not in user_types:
+                        user_types[position] = []
+                    user_types[position].append(user_name)
+                prop = 'Department'
+                if 'Lab_Admin' in user_types:
+                    address_set = self.find_user_prop_as_table(prop, user_types['Lab_Admin'], org_id)
+                if not address_set and 'PI' in user_types:
+                    address_set = self.find_user_prop_as_table(prop, user_types['PI'], org_id)
+                if not address_set and 'Group_Member' in user_types:
+                    address_set = self.find_user_prop_as_table(prop, user_types['PI'], org_id)
+            else:
+                print('no org or billing already set')
+            print('\tCompleted work on name: ' + pk + "\n\n")
+        print('Completed table: ' + mini_table + " thing: " + thing + "\n\n\n\n")
+
+    def migrate_institution(self, mini_table, thing, new_tbl):
+        print("Table: " + mini_table + " thing: " + thing)
+        pks = self.from_db.cursor()
+        sql = "select distinct name from " + mini_table + " where thing = '" + thing + "'"
+        if 'limit' in self.cli:
+            sql += ' limit ' + self.cli['limit']
+        pks.execute(sql)
+        pks_rows = pks.fetchall()
+        if 'start' in self.cli:
+            pks_rows = pks_rows[int(self.cli['start']):]
+        print('found rows: ' + str(len(pks_rows)))
+        no_skip = False
+        if 'no_skip' in self.cli:
+            if self.cli['no_skip'] == '1':
+                no_skip = True
+        for row_num, row in enumerate(pks_rows):
+            pk = row[0]
+            if pk in self.get_config('keys_to_skip'):
+                continue
+            print("\t" + str(row_num) + " Working on name: " + pk)
+            address_set = False
+            org_exists = self.select_row('organization', {'name': pk}, 1)
+            if org_exists:
+                org_id = org_exists[0]
+            print(org_id)
+            if org_id:
+                sql = "select property, value from " + mini_table + " where thing = '" + thing + "' and (property='Lab_Admin' or property ='PI' or 'Group_Member') and name = '" + pk + "'"
+                print(sql)
+                users = self.from_db.cursor()
+                users.execute(sql)
+                user_rows = users.fetchall()
+                user_types = {}
+                for user in user_rows:
+                    position = user[0]
+                    user_name = user[1]
+                    if position not in user_types:
+                        user_types[position] = []
+                    user_types[position].append(user_name)
+                prop = 'Institution'
+                if 'Lab_Admin' in user_types:
+                    address_set = self.find_user_prop_as_table(prop, user_types['Lab_Admin'], org_id)
+                if not address_set and 'PI' in user_types:
+                    address_set = self.find_user_prop_as_table(prop, user_types['PI'], org_id)
+                if not address_set and 'Group_Member' in user_types:
+                    address_set = self.find_user_prop_as_table(prop, user_types['PI'], org_id)
             else:
                 print('no org or billing already set')
             print('\tCompleted work on name: ' + pk + "\n\n")
@@ -732,7 +874,7 @@ class MigrateCustomScript (IggyScript):
         return cli
 
     def run(self):
-        self.migrate_address_user(self.cli['semantic_source'], self.cli['from_tbl'], self.cli['to_tbl'])
+        self.migrate_department(self.cli['semantic_source'], self.cli['from_tbl'], self.cli['to_tbl'])
 
 # execute run on this class
 script = MigrateCustomScript()

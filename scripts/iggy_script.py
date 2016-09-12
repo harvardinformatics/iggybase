@@ -192,7 +192,7 @@ class IggyScript:
             elif key in int_cols:
                 wheres.append(key + " = " + str(val))
             else:
-                wheres.append(key + " like '" + val.replace("'", "") + "'")
+                wheres.append(key + " like '" + val.replace("'", "\\\'") + "'")
         if wheres:
             sql += ' where ' + ' and '.join(wheres)
         if limit:

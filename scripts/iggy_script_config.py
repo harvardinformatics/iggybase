@@ -375,7 +375,7 @@ base_int_col_map = ['id', 'active', 'organization_id', 'note_id', 'user_id',
 'sample_sheet_id', 'reagent_request_id', 'sequencing_price_id', 'order',
 'field_id', 'status_id', 'passed', 'billable', 'row_id', 'line_item_id',
 'module_id', 'id_length', 'admin_table', 'price_item_id', 'order_id',
-'address_id', 'billing_address_id']
+'address_id', 'billing_address_id', 'institution_id', 'department_id']
 # by table
 int_col_map = {
         'user_organization_position': [
