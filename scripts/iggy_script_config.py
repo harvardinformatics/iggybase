@@ -578,4 +578,4 @@ fk_tbl_map = {
 keys_to_skip = ['Weinstein_Bryan', 'Bryan Weinstein', 'Bryan_Weinstein',
         'Testy_McTesterson', 'Lester_Kobzik',
         'David_Doupe2','Kathy_LoBuglio','2150030660','0007281637', 'Admin',
-        'Guest']
+        'Guest', 'Bioteam']

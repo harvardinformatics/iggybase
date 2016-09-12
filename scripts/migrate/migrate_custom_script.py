@@ -491,27 +491,26 @@ class MigrateCustomScript (IggyScript):
                             'organization_id': org_id,
                             'active': 1
                     }
+                    print(user_address)
                     row_dict.update(user_address)
                     print(row_dict)
                     row = self.do_insert('address', row_dict)
                     address_id = row
                     if address_id:
-                        updated = self.update_row('organization', {'id': org_id}, {'billing_address_id':
+                        updated = self.update_row('user', {'name': u}, {'address_id':
                             address_id})
                         address_set = updated
                         print(address_set)
-                        to = self.select_row('table_object',
-                        {'name':'address'})
-                        to_id = to[0]
-                        updated = self.update_row('table_object', {'id':
-                            to_id}, {'new_name_id': next_num})
+                        updated = self.update_row('table_object', {'name':
+                            'address'}, {'new_name_id': next_num})
                         if address_set:
                             break 
                     if address_set:
                         break 
                 else:
                     address_id = row_exists[0]
-                    updated = self.update_row('organization', {'id': org_id}, {'address_id':address_id})
+                    print(address_id)
+                    updated = self.update_row('user', {'name': u}, {'address_id':address_id})
                     address_set = updated
                     print(address_set)
         if address_set:
@@ -519,6 +518,40 @@ class MigrateCustomScript (IggyScript):
         else:
             print('address not set')
         return address_set
+
+    def migrate_address_user(self, mini_table, thing, new_tbl):
+        print("Table: " + mini_table + " thing: " + thing)
+        pks = self.from_db.cursor()
+        sql = "select distinct name from " + mini_table + " where thing = '" + thing + "'"
+        if 'limit' in self.cli:
+            sql += ' limit ' + self.cli['limit']
+        pks.execute(sql)
+        pks_rows = pks.fetchall()
+        if 'start' in self.cli:
+            pks_rows = pks_rows[int(self.cli['start']):]
+        print('found rows: ' + str(len(pks_rows)))
+        no_skip = False
+        if 'no_skip' in self.cli:
+            if self.cli['no_skip'] == '1':
+                no_skip = True
+        for row_num, row in enumerate(pks_rows):
+            pk = row[0]
+            print(pk)
+            if pk in self.get_config('keys_to_skip'):
+                continue
+            print("\t" + str(row_num) + " Working on name: " + pk)
+            address_set = False
+            org_exists = self.select_row('user', {'name': pk, 'address_id': None}, 1)
+            org_id = None
+            if org_exists:
+                org_id = org_exists[6]
+            print(org_id)
+            if org_id:
+                address_set = self.find_address([pk], org_id)
+            else:
+                print('no org or billing already set')
+            print('\tCompleted work on name: ' + pk + "\n\n")
+        print('Completed table: ' + mini_table + " thing: " + thing + "\n\n\n\n")
 
     def migrate_address(self, mini_table, thing, new_tbl):
         print("Table: " + mini_table + " thing: " + thing)
@@ -699,7 +732,7 @@ class MigrateCustomScript (IggyScript):
         return cli
 
     def run(self):
-        self.migrate_address(self.cli['semantic_source'], self.cli['from_tbl'], self.cli['to_tbl'])
+        self.migrate_address_user(self.cli['semantic_source'], self.cli['from_tbl'], self.cli['to_tbl'])
 
 # execute run on this class
 script = MigrateCustomScript()

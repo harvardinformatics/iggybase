@@ -187,10 +187,12 @@ class IggyScript:
         sql = "select * from " + tbl
         wheres = []
         for key, val in criteria.items():
-            if key in int_cols:
+            if val == None:
+                wheres.append(key + " is null")
+            elif key in int_cols:
                 wheres.append(key + " = " + str(val))
             else:
-                wheres.append(key + " like '" + val + "'")
+                wheres.append(key + " like '" + val.replace("'", "") + "'")
         if wheres:
             sql += ' where ' + ' and '.join(wheres)
         if limit:
