@@ -191,12 +191,25 @@ class Invoice:
 
     def populate_po_info(self):
         address = self.oac.get_org_billing_address(self.org_id)
+        address_1 = ''
+        address_2 = ''
         address_3 = ''
-        if address:
-            address_3 = (address.city + ', ' + address.state + ' ' +
-                        address.postcode)
+        if address is not None:
+            address_1 = (address.address_1 or '')
+            address_2 = (address.address_2 or '')
+            city = (address.city or '')
+            state = (address.state or '')
+            postcode = (address.postcode or '')
+            address_3 = city
+            if address_3 and state:
+                address_3 += ', '
+            address_3 += state
+            if address_3 and postcode:
+                address_3 += ' '
+            address_3 += postcode
+
         info = {
-                'invoice address': [getattr(address, 'address_1', ''), getattr(address, 'address_2', ''),
+                'invoice address': [address_1, address_2,
                     address_3],
                 'remit to': [
                     [
