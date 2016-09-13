@@ -5,6 +5,7 @@ from iggybase import utilities as util
 from iggybase import g_helper
 from .workflow import Workflow
 from .field_collection import FieldCollection
+import logging
 
 class status:
     IN_PROGRESS = 2

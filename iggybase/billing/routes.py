@@ -1,15 +1,17 @@
-from flask import render_template, request
 import json
-from collections import OrderedDict
+
+from flask import render_template, request
 from flask.ext.security import login_required
-from . import billing
-from iggybase import core, templating
-from iggybase.billing.invoice_collection import InvoiceCollection
-from iggybase.decorators import templated
-import iggybase.templating as templating
 from flask_weasyprint import render_pdf, HTML
+from iggybase.web_files.decorators import templated
+
+from iggybase.web_files.page_template import PageTemplate
+from iggybase import core
+from iggybase.billing.invoice_collection import InvoiceCollection
+from . import billing
 
 MODULE_NAME = 'billing'
+
 
 @billing.route( '/review/' )
 @login_required
@@ -19,9 +21,10 @@ def review(facility_name):
     ic.get_select_options()
     ic.get_table_query_collection('line_item')
     table_query = ic.tqc.get_first()
-    return templating.page_template_context('review', ic = ic,
-        table_name = 'line_item', table_query = table_query,
-        module_name=MODULE_NAME)
+
+    pt = PageTemplate(MODULE_NAME, 'review')
+    return pt.page_template_context(ic = ic, table_name = 'line_item', table_query = table_query)
+
 
 @billing.route( '/review/<year>/<month>/ajax/' )
 @login_required
@@ -29,6 +32,7 @@ def review_ajax(facility_name, year, month):
     ic = InvoiceCollection(int(year), int(month)) # year and month set in js
     return core.routes.build_summary_ajax('line_item', 'review',
             ic.table_query_criteria['line_item'])
+
 
 @billing.route( '/invoice_summary/<year>/<month>/' )
 @login_required
@@ -38,9 +42,11 @@ def invoice_summary(facility_name, year, month):
     ic.get_select_options()
     ic.get_table_query_collection('invoice')
     hidden_fields = {'year': year, 'month': month}
-    return templating.page_template_context('invoice_summary', ic = ic,
-            module_name = MODULE_NAME, table_name = 'invoice',
-            table_query = ic.tqc.queries[0], hidden_fields = hidden_fields)
+
+    pt = PageTemplate(MODULE_NAME, 'invoice_summary')
+    return pt.page_template_context(ic = ic, table_name = 'invoice', table_query = ic.tqc.queries[0],
+                                    hidden_fields = hidden_fields)
+
 
 @billing.route( '/invoice_summary/<year>/<month>/ajax/' )
 @login_required
@@ -48,6 +54,7 @@ def invoice_summary_ajax(facility_name, year, month):
     ic = InvoiceCollection(int(year), int(month)) # defaults to last complete
     return core.routes.build_summary_ajax('invoice', 'invoice_summary',
             ic.table_query_criteria['invoice'])
+
 
 @billing.route('/generate_invoices/<year>/<month>/', methods=['GET', 'POST'])
 @login_required
@@ -78,6 +85,7 @@ def invoice(facility_name, year, month, org_name = None):
     return render_template('invoice_base.html',
             module_name = 'billing',
             invoices=ic.invoices)
+
 
 @billing.route( '/invoice/invoice-<year>-<month>.pdf' )
 @billing.route( '/invoice/invoice-<year>-<month>-<org_name>.pdf' )

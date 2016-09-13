@@ -15,7 +15,7 @@
 
     {% block topbuttonbar %}
         {{ super() }}
-        {{ macros.render_buttons( top_buttons ) }}
+        {{ top_buttons|safe }}
     {%- endblock topbuttonbar %}
     {% block page_content %}
         {% if table_queries.queries[0] %}
@@ -33,7 +33,7 @@
     {% endblock %}
     {% block bottombuttonbar %}
             {{ super() }}
-            {{ macros.render_buttons( bottom_buttons ) }}
+            {{ bottom_buttons|safe }}
     {%- endblock bottombuttonbar %}
 {% endblock %}
 

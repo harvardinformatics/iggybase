@@ -167,20 +167,6 @@
 {%- endmacro %}
 
 
-
-{% macro render_buttons( buttons ) -%}
-    {% for button in buttons -%}
-        <input value="{{button.button_value}}" id="{{button.button_id}}"
-            name="{{button.button_id}}" type="{{button.button_type}}"
-            class="{{button.button_class}} {{page_context|join(' ')}}"
-            {% if button.special_props %}
-                {{ button.special_props}}
-            {% endif %}
-        >
-    {% endfor -%}
-{%- endmacro %}
-
-
 {% macro render_scripts( scripts ) -%}
     {% for script in scripts -%}
         <script type="text/javascript" src="{{ url_for('static', filename='' ) }}{{ script }}"></script>

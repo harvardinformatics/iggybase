@@ -219,6 +219,12 @@ $( document ).ready( function () {
                         return $.fn.keydownLookupField( e, $( this ) );
                     }
                 );
+
+                $( '<input>' ).attr( {
+                    style: 'display:none;',
+                    id: 'id_' + new_id,
+                    name: 'id_' + new_id
+                } ).appendTo( new_tr );
             }
         );
 
@@ -301,7 +307,7 @@ $( document ).ready( function () {
             $( '#data_entry_foreign_key_field_id_' + row_id ).attr( 'readonly', true );
             $( '#data_entry_foreign_key_display_' + row_id ).attr( 'readonly', true );
             $( '#data_entry_foreign_key_table_object_id_' + row_id ).attr( 'value', 'select_list_item' );
-            $( '#data_entry_foreign_key_field_id_' + row_id ).attr( 'value', 'F001501' );
+            $( '#data_entry_foreign_key_field_id_' + row_id ).attr( 'value', '' );
             $( '#data_entry_foreign_key_display_' + row_id ).attr( 'value', '' );
             $( "#span_foreign_key_table_object_id_"+row_id ).css( "pointer-events", "none" );
             $( "#span_foreign_key_field_id_"+row_id ).css( "pointer-events", "none" );
@@ -340,7 +346,7 @@ $( document ).ready( function () {
             var display_name = matches[ 1 ];
             var search_vals = {};
 
-            search_vals['search_name'] = ele.val();
+            search_vals['search_by_field'] = ele.val();
             search_vals['modal_input_id'] = input_id;
             search_vals['modal_table_object'] = table_object;
             search_vals['modal_field_name'] = display_name;
@@ -400,6 +406,7 @@ $( document ).ready( function () {
         $('body').removeClass('modal-open');
         $('.modal-backdrop').remove();
         $("#" + ele.attr('luid')).val(ele.val());
+        $("#id_" + ele.attr('luid')).val(ele.attr('val_id'));
     }
 
     $.fn.modal_close = function () {

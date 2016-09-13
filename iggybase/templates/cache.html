@@ -19,7 +19,7 @@
 
     {% block topbuttonbar -%}
         <div class="top_buttons">
-        {{ macros.render_buttons( top_buttons ) }}
+        {{ top_buttons|safe }}
         </div>
     {%- endblock topbuttonbar %}
 
@@ -51,7 +51,7 @@
 
     {% block bottombuttonbar -%}
         <div class="bottom_buttons">
-        {{ macros.render_buttons( bottom_buttons ) }}
+        {{ bottom_buttons|safe }}
         </div>
     {%- endblock bottombuttonbar %}
 

@@ -1,23 +1,25 @@
-from flask import request, jsonify, abort, g, render_template, current_app, redirect, send_from_directory
-from flask.ext.security import login_required
-from flask.ext import excel
 import json
-import urllib
-import time
+import logging
 import os
-from . import core
-import iggybase.form_generator as form_generator
-from iggybase import utilities as util
+import time
+import urllib
+from importlib import import_module
+
+from flask import request, jsonify, abort, g, render_template, current_app, redirect, send_from_directory
+from flask.ext import excel
+from flask.ext.security import login_required
+
 from iggybase import g_helper
-from iggybase.decorators import cached, templated
-from iggybase import forms
-import iggybase.templating as templating
-from iggybase.core.field_collection import FieldCollection
-from iggybase.core.form_parser import FormParser
+from iggybase import utilities as util
+from iggybase.web_files import forms
+from iggybase.web_files.decorators import templated
+from iggybase.web_files.form_generator import FormGenerator
+from iggybase.web_files.form_parser import FormParser
+from iggybase.web_files.modal_form import ModalForm
+from iggybase.web_files.page_template import PageTemplate
+from . import core
 from .table_query_collection import TableQueryCollection
 from .work_item_group import WorkItemGroup
-import logging
-from importlib import import_module
 
 MODULE_NAME = 'core'
 
@@ -25,7 +27,8 @@ MODULE_NAME = 'core'
 @core.route('/')
 @login_required
 def default(facility_name):
-    return templating.page_template('index.html')
+    pt = PageTemplate(MODULE_NAME, 'index.html')
+    return pt.page_template_context('index.html')
 
 
 @core.route('/summary/<table_name>/', defaults={'page_context': 'base-context'})
@@ -33,31 +36,29 @@ def default(facility_name):
 @login_required
 @templated()
 def summary(facility_name, table_name, page_context):
-    page_form = template = 'summary'
-    return build_summary(table_name, page_form, template, {'page_context': page_context.split(',')})
+    page_form = 'summary'
+    return build_summary(table_name, page_form, page_context)
 
 
 @core.route('/summary/<table_name>/ajax')
 @login_required
 def summary_ajax(facility_name, table_name, page_form='summary', criteria={}):
-    return build_summary_ajax(table_name, page_form, criteria)
+    return build_summary_ajax(table_name, criteria)
 
 
-@core.route('/action_summary/<table_name>/', defaults={'page_context': 'base-context'}, methods=['GET', 'POST'])
+@core.route('/action_summary/<table_name>/', defaults={'page_context': None}, methods=['GET', 'POST'])
 @core.route('/action_summary/<table_name>/<page_context>', methods=['GET', 'POST'])
 @login_required
 @templated()
 def action_summary(facility_name, table_name, page_context):
-    page_form = 'summary'
-    template = 'action_summary'
-    return build_summary(table_name, page_form, template, {'page_context': page_context.split(',')})
+    page_form = 'action_summary'
+    return build_summary(table_name, page_form, page_context)
 
 
 @core.route('/action_summary/<table_name>/ajax')
 @login_required
-def action_summary_ajax(facility_name, table_name, page_form='summary',
-                        criteria={}):
-    return build_summary_ajax(table_name, page_form, criteria)
+def action_summary_ajax(facility_name, table_name, page_form='action_summary', criteria={}):
+    return build_summary_ajax(table_name, criteria)
 
 
 @core.route('/detail/<table_name>/<row_name>', defaults={'page_context': 'base-context'})
@@ -65,7 +66,6 @@ def action_summary_ajax(facility_name, table_name, page_form='summary',
 @login_required
 @templated()
 def detail(facility_name, table_name, row_name, page_context):
-    page_form = template = 'detail'
     criteria = {(table_name, 'name'): row_name}
     tqc = TableQueryCollection(table_name, criteria)
     tqc.get_results()
@@ -76,9 +76,10 @@ def detail(facility_name, table_name, row_name, page_context):
     if not tqc.get_first().table_dict:
         abort(403)
     hidden_fields = {'table': table_name, 'row_name': row_name}
-    return templating.page_template_context(
-        template,
-        module_name=MODULE_NAME,
+
+    pt = PageTemplate(MODULE_NAME, 'detail', page_context)
+
+    return pt.page_template_context(
         table_name=table_name,
         row_name=row_name,
         table_queries=tqc,
@@ -141,106 +142,18 @@ def get_row(facility_name, table_name):
 
 @core.route('/search', methods=['GET', 'POST'])
 def search(facility_name):
-    table_name = request.args.get('table_object')
-    display_name = request.args.get('field_name')
-    field_key = table_name + '|' + display_name
-    input_id = request.args.get('input_id')
-
-    criteria = {'display_name': display_name}
-    fc = FieldCollection(None, table_name, criteria)
-    fc.set_fk_fields()
-    modal_html = '<div class="modal-header">'
-    modal_html += '<button type="button" class="close_modal">&times;</button>'
-    modal_html += '<h4 class="modal-title">' + table_name + ' Search</h4>'
-    modal_html += '</div>'
-    modal_html += '<div class="modal-body">'
-    modal_html += '<input id="modal_input_id" value="' + input_id + '" type="hidden">'
-    modal_html += '<input id="modal_table_object" value="' + table_name + '" type="hidden">'
-    modal_html += '<input id="modal_search_table" value="' + fc.fields[field_key].FK_TableObject.name + '" type="hidden">'
-    modal_html += '<input id="modal_field_name" value="' + display_name + '" type="hidden">'
-    modal_html += '<p>All search inputs can use partial values</p>'
-    modal_html += '<table>'
-    field = fc.fields[field_key]
-    role_filter = False # ignore role filter since this is for FK
-    search_fc = FieldCollection(None, field.FK_TableObject.name, None,
-            role_filter)
-    for row in search_fc.get_search_fields():
-        modal_html += '<tr><td><label>' + row.display_name + '</label></td>'
-        modal_html += '<td><input id="search_' + row.Field.display_name + '"></input></td></tr>'
-
-    modal_html += '</table>'
-    modal_html += '</div>'
-
-    return modal_html
-
+    search_vals = {'table_name': request.args.get('table_object'),
+                   'display_name': request.args.get('field_name'),
+                   'field_key': request.args.get('table_object') + '|' + request.args.get('field_name'),
+                   'input_id': request.args.get('input_id')}
+    sf = ModalForm(search_vals)
+    return sf.search_form()
 
 @core.route('/search_results', methods=['GET', 'POST'])
 def search_results(facility_name):
     search_vals = json.loads(request.args.get('search_vals'))
-
-    oac = g_helper.get_org_access_control()
-
-    input_id = search_vals['modal_input_id']
-    table_name = search_vals['modal_table_object']
-    display_name = search_vals['modal_field_name']
-    search_table = search_vals['modal_search_table']
-
-    search_params = {}
-    fields = []
-    for key, value in search_vals.items():
-        if key[:7] == 'search_':
-            fields.append(key[7:])
-            if value != '':
-                search_params[key[7:]] = value
-
-    if search_table == '':
-        criteria = {'display_name': display_name}
-        fc = FieldCollection(None, table_name, criteria)
-        fc.set_fk_fields()
-        search_table = fc.fields[display_name].FK_TableOjbect.name
-        search_fc = FieldCollection(None, search_table)
-        for name, row in search_fc.fields.items():
-            if row.name not in fields:
-                fields.append(row.name)
-
-    search_results = oac.get_search_results(search_table, search_params)
-
-    modal_html = '<div class="modal-header">'
-    modal_html += '<button type="button" class="close_modal">&times;</button>'
-    modal_html += '<h4 class="modal-title">Search Results</h4>'
-    modal_html += '</div>'
-    modal_html += '<div class="modal-body">'
-    modal_html += '<input id="modal_input_id" value="' + input_id + '" type="hidden">'
-    modal_html += '<input id="modal_table_object" value="' + table_name + '" type="hidden">'
-    modal_html += '<input id="modal_field_name" value="' + display_name + '" type="hidden">'
-    modal_html += '<input id="modal_search_table" value="' + search_table + '" type="hidden">'
-    modal_html += '<table class="table-sm table-striped"><tr><td>Name</td>'
-
-    for field in fields:
-        if field != 'name':
-            modal_html += '<td>' + field.replace("_", " ").title() + '</td>'
-
-    modal_html += '</tr>'
-
-    if search_results is not None and len(search_params) != 0:
-        for row in search_results:
-            modal_html += '<tr><td><input luid="' + input_id + '"class="search-results" type="button" value="' + row.name + '"></input></td>'
-            for field in fields:
-                if field != 'name':
-                    res = getattr(row, field)
-                    if res is not None:
-                        modal_html += '<td><label>' + format(res) + '</label></td>'
-                    else:
-                        modal_html += '<td></td>'
-
-            modal_html += '</tr>'
-    else:
-        modal_html += '<tr><td><label>No Results Found</label></td></tr>'
-
-    modal_html += '</table>'
-    modal_html += '</div>'
-
-    return modal_html
+    sf = ModalForm(search_vals)
+    return sf.search_results()
 
 
 @core.route('/files/<table_name>/<row_name>/<filename>')
@@ -264,25 +177,24 @@ def change_role(facility_name):
     return json.dumps({'success': success})
 
 
-@core.route('/data_entry/<table_name>/<row_name>', defaults={'page_context': 'base-context'}, methods=['GET', 'POST'])
+@core.route('/data_entry/<table_name>/<row_name>', defaults={'page_context': None}, methods=['GET', 'POST'])
 @core.route('/data_entry/<table_name>/<row_name>/<page_context>', methods=['GET', 'POST'])
 @login_required
 @templated()
 def data_entry(facility_name, table_name, row_name, page_context):
     module_name = MODULE_NAME
 
-    fg = form_generator.FormGenerator(table_name)
-    form = fg.default_data_entry_form(row_name)
+    fg = FormGenerator('data_entry', 'single', table_name, page_context, module_name)
+    fg.data_entry_form(row_name)
 
-    if form.validate_on_submit() and len(form.errors) == 0:
+    if fg.form_class.validate_on_submit() and len(fg.form_class.errors) == 0:
         fp = FormParser()
         row_names = fp.parse()
-
+        logging.info('row_names')
+        logging.info(row_names)
         return saved_data(facility_name, module_name, table_name, row_names, page_context)
 
-    return templating.page_template_context('data_entry',
-                                            module_name=module_name, form=form, table_name=table_name,
-                                            page_context = page_context, form_type='single')
+    return fg.page_template_context()
 
 
 @core.route('/multiple_entry/<table_name>/<row_names>', defaults={'page_context': 'base-context'},
@@ -294,16 +206,15 @@ def multiple_entry(facility_name, table_name, row_names, page_context):
     module_name = MODULE_NAME
     row_names = json.loads(row_names)
 
-    fg = form_generator.FormGenerator(table_name)
-    form = fg.default_multiple_entry_form(row_names)
-    if form.validate_on_submit() and len(form.errors) == 0 and len(row_names) != 0:
+    fg = FormGenerator('data_entry', 'multiple', table_name, page_context, module_name)
+    fg.multiple_data_entry_form(row_names)
+    if fg.form_class.validate_on_submit() and len(fg.form_class.errors) == 0 and len(row_names) != 0:
         fp = FormParser()
         row_names = fp.parse()
 
         return saved_data(facility_name, module_name, table_name, row_names, page_context)
 
-    return templating.page_template_context('data_entry', module_name=module_name, form=form, form_type='multiple',
-                                            table_name=table_name, page_context=page_context)
+    return fg.page_template_context()
 
 
 @core.route('/cache/', methods=['GET', 'POST'])
@@ -340,24 +251,23 @@ def cache(facility_name):
                 value += ('set version ' + form.data['refresh_obj'] + ' = ' +
                           form.data['version'])
 
-    return templating.page_template_context('cache', module_name=module_name,
-                                            form=form,
-                                            value=value)
+    pt = PageTemplate(MODULE_NAME, 'cache')
+
+    return pt.page_template_context(module_name=module_name, form=form, value=value)
 
 
-@core.route('/workflow/<workflow_name>/', defaults={'page_context': 'new-workflow'})
+@core.route('/workflow/<workflow_name>/', defaults={'page_context': None})
 @core.route('/workflow/<workflow_name>/<page_context>')
 @login_required
 @templated()
 def workflow(facility_name, workflow_name, page_context):
     table_name = 'work_item_group'
-    page_form = 'summary'
-    template = 'workflow_summary'
+    page_form = 'workflow_summary'
 
     context = {'btn_overrides': {'bottom':{'new':{'button_value':('New ' + workflow_name.title())}}}}
     context['hidden_fields'] = {'workflow_name': workflow_name}
     context['workflow_name'] = workflow_name
-    return build_summary(table_name, page_form, template, context)
+    return build_summary(table_name, page_form, page_context, context)
 
 
 @core.route('/workflow/<workflow_name>/ajax')
@@ -374,10 +284,9 @@ def workflow_summary_ajax(facility_name, workflow_name, page_form='summary',
 @templated()
 def workflow_complete(facility_name, workflow_name, work_item_group):
     wig = WorkItemGroup(work_item_group, workflow_name)
-    template = 'workflow_complete'
-    return templating.page_template_context(template,
-                                            module_name=MODULE_NAME,
-                                            wig=wig)
+    pt = PageTemplate(MODULE_NAME, 'workflow_complete')
+
+    return pt.page_template_context(wig=wig)
 
 
 @core.route('/workflow/<workflow_name>/<step>/<work_item_group>', methods=['GET', 'POST'])
@@ -410,21 +319,18 @@ def work_item_group(facility_name, workflow_name, step, work_item_group):
 """ helper functions start """
 
 
-def build_summary(table_name, page_form, template, context={}):
+def build_summary(table_name, page_form, page_context, context={}):
     tqc = TableQueryCollection(table_name)
     tq = tqc.get_first()
-    logging.info('context')
-    logging.info(context)
-    # if nothing to display then page not found
+
     if not tq.fc.fields:
         abort(404)
-    return templating.page_template_context(template,
-                                            module_name=MODULE_NAME,
-                                            table_name=table_name,
-                                            table_query=tq, **context)
+
+    pt = PageTemplate(MODULE_NAME, page_form, page_context)
+    return pt.page_template_context(table_name=table_name, table_query=tq, **context)
 
 
-def build_summary_ajax(table_name, page_form, criteria = {}):
+def build_summary_ajax(table_name, criteria = {}):
     start = time.time()
     route = util.get_path(util.ROUTE)
     # TODO: we don't want oac instantiated multiple times
@@ -486,10 +392,10 @@ def saved_data(facility_name, module_name, table_name, row_names, page_context):
                 'table': table
             })
     msg = msg[:-1]
+
     if error:
-        return templating.page_template_context('error_message', module_name=module_name, table_name=table_name,
-                                                page_msg=msg, page_context=page_context.split(','))
+        pt = PageTemplate(MODULE_NAME, 'error_message', page_context)
+        return pt.page_template_context(table_name=table_name, page_msg=msg)
     else:
-        return templating.page_template_context('save_message', module_name=module_name, table_name=table_name,
-                                                page_msg=msg, saved_rows=json.dumps(saved_rows),
-                                                page_context=page_context.split(','))
+        pt = PageTemplate(MODULE_NAME, 'save_message', page_context)
+        return pt.page_template_context(table_name=table_name, page_msg=msg, saved_rows=json.dumps(saved_rows))

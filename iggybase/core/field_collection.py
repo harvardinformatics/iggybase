@@ -63,10 +63,11 @@ class FieldCollection:
 
     def get_search_fields(self):
         search_fields = []
-        for field in self.fields.values():
+        for tablefield_name, field in self.fields.items():
             if field.FieldRole.search_field:
                 search_fields.append(field)
-        if not search_fields:
-            name_key = self.table_name + '|name'
-            search_fields.append(self.fields[name_key])
-        return search_fields
+
+        if search_fields:
+            return search_fields
+        else:
+            return [self.fields[self.table_name + '|name']]

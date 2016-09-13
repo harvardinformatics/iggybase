@@ -15,7 +15,7 @@ class FormParser():
         table_names = []
 
         # used to identify fields that contain data that needs to be saved
-        field_pattern = re.compile('(long_text|data_entry|record_data|form_data)_(\S+)_(\d+)')
+        field_pattern = re.compile('^(id_data_entry|long_text|data_entry|record_data|form_data)_(\S+)_(\d+)')
         for key in request.form:
             data = request.form.get(key)
 
@@ -28,8 +28,8 @@ class FormParser():
             if field_id is not None:
                 # logging.info('key: ' + key)
                 if field_id.group(3) not in fields.keys():
-                    fields[field_id.group(3)] = {'long_text': {}, 'form_data': {},
-                                                 'data_entry': {}, 'record_data': {}}
+                    fields[field_id.group(3)] = {'long_text': {}, 'form_data': {}, 'data_entry': {}, 'record_data': {},
+                                                 'id_data_entry': {}}
 
                 fields[field_id.group(3)][field_id.group(1)][field_id.group(2)] = data
 
@@ -137,8 +137,7 @@ class FormParser():
                         else:
                             row_data['data_entry'][field] = int(row_data['data_entry'][field])
                     except ValueError:
-                        row_data['data_entry'][field] = instance.set_foreign_key_field_id(table_name_field, field,
-                                                                                          row_data['data_entry'][field])
+                        row_data['data_entry'][field] = int(row_data['id_data_entry'][field])
                 elif meta_data.DataType.name.lower() == 'file':
                     directory = os.path.join(current_app.config['UPLOAD_FOLDER'], table_name_field,
                                              instance.instance_name)

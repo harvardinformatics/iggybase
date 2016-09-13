@@ -357,5 +357,3 @@ class IggybasePasswordField(PasswordField):
             kwargs.setdefault('readonly', True)
 
         return super(IggybasePasswordField, self).__call__(*args, **kwargs)
-
-

@@ -6,6 +6,7 @@ from iggybase.database import db_session, Base
 from types import new_class
 import datetime
 import logging, sys, inspect
+from sqlalchemy.dialects import mysql
 
 
 class TableFactory:
@@ -108,11 +109,18 @@ class TableFactory:
     def table_objects(self, active=1):
         table_objects = []
 
-        res = self.session.query(TableObject). \
-            filter(TableObject.active==active). \
-            filter(or_(TableObject.admin_table==0, TableObject.admin_table is
-                None)). \
-            order_by(TableObject.order).all()
+        res = (self.session.query(TableObject).
+               filter(TableObject.active==active).
+               filter(or_(TableObject.admin_table==0, TableObject.admin_table is None)).
+               order_by(TableObject.order))
+
+        # query = res.statement.compile(dialect=mysql.dialect())
+        # logging.info('query')
+        # logging.info(str(query))
+        # logging.info(str(query.params))
+
+        res = res.all()
+
         for row in res:
             table_objects.append(row)
         return table_objects

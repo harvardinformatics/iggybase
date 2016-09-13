@@ -23,7 +23,7 @@
 
     {% block topbuttonbar -%}
         <div class="top_buttons">
-        {{ macros.render_buttons( top_buttons ) }}
+        {{ top_buttons|safe }}
         </div>
     {%- endblock topbuttonbar %}
 
@@ -37,6 +37,7 @@
 
     {% if form is defined %}
         {% block page_content -%}
+
         <div class="page_content">
             {% set form_fields = form._fields %}
             {%- for field_name, field in form_fields.items() %}
@@ -53,13 +54,13 @@
                     {% set html_id = field.id.split("_") -%}
                     {% set table_id = html_id[2] -%}
 
+                    {%- if form_type == "single" and table_level > 0 %}
+                        <h3>{{ table_title }}</h3>
+                    {%- endif %}
+                {% elif "start_table_" in field.id -%}
                     {%- if table_level == 0 and form_type == "single" %}
                         <table id="{{ table_name }}" class="table">
                     {% else -%}
-                        {%- if form_type == "single" %}
-                            <h3>{{ table_title }}</h3>
-                        {%- endif %}
-                        <input type="button" class="add_new_child_item" table_level="{{ table_level }}" target_table="{{ table_name }}" table_object_id="{{ table_id }}" value="Add {{ field.data }}">
                         <table id="{{ table_name }}" class="table table-striped"><tr>
                         {% set field_loop = loop %}
                         {% set firstrow = 1 %}
@@ -78,6 +79,8 @@
                             {% endif %}
                         {%- endfor %}
                     {% endif -%}
+                {% elif "_buttons_top" in field.id or "_buttons_bottom" in field.id -%}
+                    {{ field.data|safe }}
                 {% elif "end_table_" in field.id -%}
                     </table></div><br>
                 {% elif 'start_row_' in field.id-%}
@@ -97,7 +100,7 @@
                             {% if field.type == "IggybaseFileField" and field.data is string %}
                                 {% set files = field.data.split('|') -%}
                                 {% for file in files -%}
-                                    <a href="/{{ g.facility }}/core/uploads/{{ table_name }}/{{ row_name }}/{{ file }}">{{ file }}</a>
+                                    <a href="/{{ g.facility }}/core/files/{{ table_name }}/{{ row_name }}/{{ file }}">{{ file }}</a>
                                 {% endfor -%}
                             {% endif -%}
                         </td>
@@ -110,7 +113,7 @@
 
     {% block bottombuttonbar -%}
         <div class="bottom_buttons">
-        {{ macros.render_buttons( bottom_buttons ) }}
+        {{ bottom_buttons|safe }}
         </div>
     {%- endblock bottombuttonbar %}
 

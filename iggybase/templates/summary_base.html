@@ -12,7 +12,7 @@
 
 {% block topbuttonbar %}
     {{ super() }}
-    {{ macros.render_buttons(top_buttons)}}
+    {{ top_buttons|safe }}
 {%- endblock topbuttonbar %}
 {% block page_content %}
     {% if table_query %}
@@ -23,7 +23,7 @@
 {%- endblock page_content %}
 {% block bottombuttonbar %}
     {{ super() }}
-    {{ macros.render_buttons(bottom_buttons)}}
+    {{ bottom_buttons|safe }}
 {%- endblock bottombuttonbar %}
 {% block scripts %}
     {{ super() }}

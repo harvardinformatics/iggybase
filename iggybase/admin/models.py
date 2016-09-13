@@ -289,14 +289,11 @@ class PageFormContext(Base):
 class PageFormButton(Base):
     table_type = 'admin'
     button_type = Column(String(100))
-    button_location_id = Column(Integer, ForeignKey('select_list_item.id'))
     button_class = Column(String(100))
     button_value = Column(String(100))
     button_id = Column(String(100))
     special_props = Column(String(255))
     submit_action_url = Column(String(255))
-
-    page_form_button_select_list_item = relationship("SelectListItem", foreign_keys=[button_location_id])
 
     def __repr__(self):
         return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
@@ -322,10 +319,12 @@ class PageFormButtonContext(Base):
     page_form_button_id = Column(Integer, ForeignKey('page_form_button.id'))
     page_form_context_id = Column(Integer, ForeignKey('page_form_context.id'))
     table_object_id = Column(Integer, ForeignKey('table_object.id'))
+    button_location_id = Column(Integer, ForeignKey('select_list_item.id'))
 
-    page_form_button_page_form = relationship("PageForm", foreign_keys=[page_form_id])
+    page_form_button_context_select_list_item = relationship("SelectListItem", foreign_keys=[button_location_id])
+    page_form_button_context_page_form = relationship("PageForm", foreign_keys=[page_form_id])
     page_form_button_context_page_form_button = relationship("PageFormButton", foreign_keys=[page_form_button_id])
-    page_form_button_context_page_form = relationship("PageFormContext", foreign_keys=[page_form_context_id])
+    page_form_button_context_page_form_context = relationship("PageFormContext", foreign_keys=[page_form_context_id])
     page_form_button_context_table_object = relationship("TableObject", foreign_keys=[table_object_id])
 
     def __repr__(self):

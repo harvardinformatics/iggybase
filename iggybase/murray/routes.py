@@ -1,19 +1,25 @@
-from flask import g, abort
-from iggybase import core, templating
+from flask import abort
 from flask.ext.security import login_required
-from . import murray
-from iggybase.decorators import templated
+from iggybase.web_files.decorators import templated
+
 import iggybase.core.table_query_collection as tqc
+from iggybase import core
+from iggybase.web_files.page_template import PageTemplate
+from . import murray
+
 
 @murray.route('/')
 @templated()
 def default():
-    return templating.page_template_context('index.html')
+    pt = PageTemplate('murray', 'index')
+    return pt.page_template_context()
+
 
 @murray.route( '/update_ordered/<table_name>/ajax' )
 @login_required
 def update_ordered_ajax(facility_name, table_name):
     return core.routes.build_summary_ajax(table_name, 'update', {('status', 'name'):'ordered'})
+
 
 @murray.route( '/update_ordered/<table_name>/' )
 @login_required
@@ -33,16 +39,16 @@ def update_ordered(facility_name, table_name):
     if not tq.fc.fields:
         abort(403)
 
-    return templating.page_template_context('update',
-            module_name = 'murray',
-            table_name = table_name,
-            table_query = tq, hidden_fields = hidden_fields)
+    pt = PageTemplate('murray', 'update')
+    return pt.page_template_context(table_name = table_name, table_query = tq, hidden_fields = hidden_fields)
+
 
 @murray.route( '/update_requested/<table_name>/ajax' )
 @login_required
 def update_requested_ajax(facility_name, table_name):
     # TODO: we should really get rid of module name being passed around
     return core.routes.build_summary_ajax(table_name, 'update', {('status', 'name'):'requested'})
+
 
 @murray.route( '/update_requested/<table_name>/' )
 @login_required
@@ -60,15 +66,15 @@ def update_requested(facility_name, table_name):
     if not tq.fc.fields:
         abort(403)
 
-    return templating.page_template_context('update',
-            module_name = 'murray',
-            table_name = table_name,
-            table_query = tq, hidden_fields = hidden_fields)
+    pt = PageTemplate('murray', 'update')
+    return pt.page_template_context(table_name = table_name, table_query = tq, hidden_fields = hidden_fields)
+
 
 @murray.route( '/cancel/<table_name>/ajax' )
 @login_required
 def cancel_ajax(facility_name, table_name):
     return core.routes.build_summary_ajax(table_name, 'update', {('status', 'name'):['ordered', 'requested']})
+
 
 @murray.route( '/cancel/<table_name>/' )
 @login_required
@@ -87,7 +93,6 @@ def cancel(facility_name, table_name):
     # if nothing to display then page not found
     if not tq.fc.fields:
         abort(403)
-    return templating.page_template_context('update',
-            module_name = 'murray',
-            table_name = table_name,
-            table_query = tq, hidden_fields = hidden_fields)
+
+    pt = PageTemplate('murray', 'update')
+    return pt.page_template_context(table_name = table_name, table_query = tq, hidden_fields = hidden_fields)

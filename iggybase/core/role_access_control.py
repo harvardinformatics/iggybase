@@ -5,7 +5,7 @@ from iggybase.admin import models
 from iggybase.admin import constants as admin_consts
 from sqlalchemy import or_
 import logging
-
+from sqlalchemy.dialects import mysql
 
 # Controls access to system based on oole (USER) and Facility
 # Uses the permissions stored in the admin db
@@ -280,7 +280,7 @@ class RoleAccessControl:
             )
             return False
 
-    def page_form_menus(self, page_form_id, active=True):
+    def page_form_menus(self, active=True):
         """Setup NavBar and Side bar menus for templating context.
         Starts with the root navbar and sidebar records.
         Menus are recursive.
@@ -315,7 +315,7 @@ class RoleAccessControl:
             subs = {}
         return subs
 
-    def get_page_form_data(self, page_form_name, page_context = [], active=1):
+    def get_page_form_data(self, page_form_name, page_context, active=1):
         page_form = None
         if page_form_name:
             page_form = (self.session.query(models.PageForm).
@@ -337,10 +337,7 @@ class RoleAccessControl:
                             if getattr(page_form, attr) == "" and value != "":
                                 setattr(page_form, attr, value)
 
-        page_form_javascript = self.page_form_javascript(page_form_ids, active)
-        page_form_buttons = self.page_form_buttons(page_form_ids, page_context, active)
-
-        return page_form, page_form_buttons, page_form_javascript
+        return page_form, page_form_ids
 
     def page_form_ancestors(self, page_form_id, active = 1):
         res = self.session.query(models.PageForm).filter_by(id=page_form_id). \
@@ -355,34 +352,48 @@ class RoleAccessControl:
         else:
             return [(res.id, res)] + self.page_form_ancestors(res.parent_id, active)
 
-    def page_form_buttons(self, page_form_ids, page_context=[], active=1):
+    def page_form_buttons(self, page_form_ids, page_context, table_object_id = None, active=1):
         page_form_buttons = {'top': [], 'bottom': []}
+<<<<<<< Updated upstream
         '''filters = [
                 models.PageFormButton.page_form_id.in_(page_form_ids),
+=======
+        filters = [
+>>>>>>> Stashed changes
                 models.PageFormButtonRole.role_id == self.role.id,
                 models.PageFormButton.active == active,
-                models.PageFormButtonRole.active == active
-        ]
-
-        # TODO: default behavior should not require us to enter another row in the db
-        if page_context and 'base-context' not in page_context:
-            filters.extend([
+                models.PageFormButtonRole.active == active,
                 models.PageFormButtonContext.active == active,
                 models.PageFormContext.active == active,
-                models.PageFormContext.context.in_(page_context)
-            ])
+                models.PageFormButtonContext.page_form_id.in_(page_form_ids),
+                models.PageFormContext.name.in_(page_context)
+        ]
+
+        if table_object_id is not None:
+            filters += [or_(models.PageFormButtonContext.table_object_id == table_object_id,
+                            models.PageFormButtonContext.table_object_id == None)]
+        else:
+            filters += [models.PageFormButtonContext.table_object_id == None]
 
         res = (self.session.query(models.PageFormButton, models.SelectListItem)
-                .join(models.PageFormButtonRole,
-                    models.PageFormButtonRole.page_form_button_id == models.PageFormButton.id)
-                .join(models.SelectListItem,
-                    models.SelectListItem.id == models.PageFormButton.button_location_id)
-                .outerjoin(models.PageFormButtonContext,
-                    models.PageFormButtonContext.page_form_button_id == models.PageFormButton.id)
-                .outerjoin(models.PageFormContext,
-                    models.PageFormButtonContext.page_form_context_id == models.PageFormContext.id)
-            .filter(*filters)
-            .order_by(models.PageFormButton.order, models.PageFormButton.id).all())
+               .join(models.PageFormButtonRole,
+                     models.PageFormButtonRole.page_form_button_id == models.PageFormButton.id)
+               .join(models.PageFormButtonContext,
+                     models.PageFormButtonContext.page_form_button_id == models.PageFormButton.id)
+               .join(models.PageFormContext,
+                     models.PageFormButtonContext.page_form_context_id == models.PageFormContext.id)
+               .join(models.SelectListItem,
+                     models.SelectListItem.id == models.PageFormButtonContext.button_location_id)
+               .order_by(models.PageFormButtonContext.order, models.PageFormButtonRole.order,
+                         models.PageFormButton.order, models.PageFormButton.name)
+               .filter(*filters))
+
+        query = res.statement.compile(dialect=mysql.dialect())
+        # logging.info('query')
+        # logging.info(str(query))
+        # logging.info(str(query.params))
+        res = res.all()
+
         for row in res:
             page_form_buttons[row.SelectListItem.display_name].append(row.PageFormButton)'''
 

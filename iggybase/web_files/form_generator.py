@@ -1,28 +1,29 @@
-from flask.ext.wtf import Form
-from flask import g
 from types import new_class
-from iggybase.iggybase_form_fields import IggybaseBooleanField, IggybaseDateField, IggybaseFloatField,\
-    IggybaseIntegerField, IggybaseLookUpField, IggybaseStringField, IggybaseTextAreaField, IggybaseSelectField,\
-    IggybaseFileField, IggybasePasswordField
+from flask.ext.wtf import Form
 from wtforms import HiddenField
 from wtforms.validators import DataRequired, Length, email, Optional
-from iggybase import g_helper
-from iggybase import constants
-from iggybase.core.field_collection import FieldCollection
 from iggybase.core.data_instance import DataInstance
-from json import dumps, loads
-import datetime, time
+from iggybase.web_files import constants
+from iggybase.web_files.page_template import PageTemplate
+from iggybase.web_files.iggybase_form_fields import IggybaseBooleanField, IggybaseDateField, IggybaseFloatField,\
+    IggybaseIntegerField, IggybaseLookUpField, IggybaseStringField, IggybaseTextAreaField, IggybaseSelectField,\
+    IggybaseFileField, IggybasePasswordField
 import logging
 
-
-class FormGenerator():
-    def __init__(self, table_name):
-        self.organization_access_control = g_helper.get_org_access_control()
-        self.role_access_control = g_helper.get_role_access_control()
+class FormGenerator(PageTemplate):
+    def __init__(self, page_form_name, form_type, table_name, page_context, module_name):
+        super(FormGenerator, self).__init__(module_name, page_form_name, page_context)
         self.table_name = table_name
+        self.form_type = form_type
         self.classattr = {}
         self.table_meta_data = None
         self.dropdowns = {}
+        self.form_class = None
+
+    def page_template_context(self):
+        return super(FormGenerator, self).page_template_context(table_name=self.table_name,
+                                                                form=self.form_class,
+                                                                form_type=self.form_type)
 
     def input_field(self, field_data, display_name, row_name, control_id, control_type, value=None):
         kwargs = {}
@@ -98,11 +99,19 @@ class FormGenerator():
                 if len(choices) > drop_down_limit:
                     kwargs['iggybase_class'] = control_type
 
-                    if value is not None:
+                    if value is None:
+                        self.classattr['id_' + control_id] = HiddenField('id_' + control_id)
+                    else:
                         value = [item for item in choices if item[0] == value]
 
                         if len(value) > 0:
+                            # logging.info(display_name + ' value[0][0]: ' + str(value[0][0]))
+                            # logging.info(display_name + ' value[0][1]: ' + str(value[0][1]))
                             kwargs['default'] = value[0][1]
+
+                            self.classattr['id_' + control_id] = HiddenField('id_' + control_id, default=value[0][0])
+                        else:
+                            self.classattr['id_' + control_id] = HiddenField('id_' + control_id)
 
                     return IggybaseLookUpField(display_name, **kwargs)
                 else:
@@ -133,21 +142,16 @@ class FormGenerator():
             return IggybaseStringField(display_name, **kwargs)
 
     def empty_form(self):
-        newclass = new_class('EmptyForm', (Form,))
+        self.form_class = new_class('EmptyForm', (Form,))
 
-        return newclass()
-
-    def default_multiple_entry_form(self, row_names=[]):
+    def multiple_data_entry_form(self, row_names=[]):
         data_instance = DataInstance(self.table_name)
         data_instance.get_multiple_data(row_names)
 
-        self.get_table(data_instance, 'multiple')
+        self.get_table(data_instance)
 
-        self.classattr['form_data_table_0'] = \
-            HiddenField('form_data_table_0', default=self.table_name)
-
-        self.classattr['form_data_type_0'] = \
-            HiddenField('form_data_type_0', default='multiple')
+        self.classattr['form_data_table_0'] = HiddenField('form_data_table_0', default=self.table_name)
+        self.classattr['form_data_type_0'] =  HiddenField('form_data_type_0', default=self.form_type)
 
         row_counter = 0
         for row_name in row_names:
@@ -162,46 +166,28 @@ class FormGenerator():
 
         self.classattr['row_counter'] = HiddenField('row_counter', default=data_instance.instance_counter)
 
-        newclass = new_class('MultipleForm', (Form,), {}, lambda ns: ns.update(self.classattr))
+        form_class = new_class('MultipleForm', (Form,), {}, lambda ns: ns.update(self.classattr))
 
-        return newclass()
+        self.form_class = form_class()
 
-    def default_data_entry_form(self, row_name='new', depth = 2):
-        # start_time = time.time()
-        # logging.info('default_data_entry_form start time: ' + datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
-
+    def data_entry_form(self, row_name='new', depth = 2):
         data_instance = DataInstance(self.table_name, row_name)
-
-        # logging.info('default_data_entry_form ' + self.table_name + ': ' + row_name)
-        # logging.info(data_instance.instances[self.table_name])
 
         if row_name != 'new':
             data_instance.get_linked_instances(depth)
 
-        self.get_table(data_instance, 'default')
+        self.get_table(data_instance)
 
-        self.classattr['form_data_type_0'] = \
-            HiddenField('form_data_type_0', default='single')
-
-        self.classattr['form_data_table_0'] = \
-            HiddenField('form_data_table_0', default=self.table_name)
-
-        self.classattr['form_data_row_name_0'] = \
-            HiddenField('form_data_row_name_0', default=row_name)
-
+        self.classattr['form_data_type_0'] = HiddenField('form_data_type_0', default=self.form_type)
+        self.classattr['form_data_table_0'] = HiddenField('form_data_table_0', default=self.table_name)
+        self.classattr['form_data_row_name_0'] = HiddenField('form_data_row_name_0', default=row_name)
         self.classattr['row_counter'] = HiddenField('row_counter', default=data_instance.instance_counter)
 
-        newclass = new_class('SingleForm', (Form,), {}, lambda ns: ns.update(self.classattr))
+        form_class = new_class('SingleForm', (Form,), {}, lambda ns: ns.update(self.classattr))
 
-        # logging.info('default_data_entry_form time: ' + str(time.time() - start_time))
+        self.form_class = form_class()
 
-        # logging.info('self.dropdowns')
-        # logging.info(self.dropdowns)
-        #logging.info('end time: ' + datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
-
-        return newclass()
-
-    def get_table(self, data_instance, form_type):
+    def get_table(self, data_instance):
         row_counter = 0
         level = 0
 
@@ -212,13 +198,11 @@ class FormGenerator():
                 continue
 
             if table_data['link_data'] is not None:
-                link_field = self.role_access_control. \
-                    has_access('Field',
-                               {'id': table_data['link_data'].child_link_field_id})
+                link_field = self.role_access_control.has_access('Field',
+                                                                 {'id': table_data['link_data'].child_link_field_id})
 
                 self.classattr['linkcolumn_' + str(table_data['table_meta_data'].id)] = \
-                    HiddenField('linkcolumn_' + str(table_data['table_meta_data'].id),
-                                default=link_field.display_name)
+                    HiddenField('linkcolumn_' + str(table_data['table_meta_data'].id), default=link_field.display_name)
 
             self.classattr['table_level_' + str(table_data['table_meta_data'].id)] = \
                 HiddenField('table_level_' + str(table_data['table_meta_data'].id), default=table_data['level'])
@@ -230,10 +214,31 @@ class FormGenerator():
                 HiddenField('table_name_' + str(table_data['table_meta_data'].id),
                             default=table_data['table_meta_data'].name)
 
-            if table_data['level'] == 0 and form_type == 'default':
+            if table_data['level'] == 0 and self.form_type == 'single':
                 control_type = 'data-control'
+                buttons = self.role_access_control.page_form_buttons(self.page_form_ids, ['main-table'],
+                                                                     table_data['table_meta_data'].id)
+            elif self.form_type == 'single':
+                control_type = 'table-control'
+                buttons = self.role_access_control.page_form_buttons(self.page_form_ids, ['child-table'],
+                                                                    table_data['table_meta_data'].id)
             else:
                 control_type = 'table-control'
+                buttons = self.role_access_control.page_form_buttons(self.page_form_ids, ['multiple'],
+                                                                     table_data['table_meta_data'].id)
+            context = {'table_name': table_data['table_meta_data'].name,
+                       'table_id': str(table_data['table_meta_data'].id),
+                       'table_level': str(table_data['level']),
+                       'table_title': table_data['table_meta_data'].name.replace("_", " ").title()}
+
+            buttons['top'], buttons['bottom'] = self.button_html_generator(buttons, context)
+
+            if buttons['top']:
+                self.classattr[table_name + '_buttons_top'] =  HiddenField('buttons_top', default=buttons['top'])
+
+            self.classattr['start_table_' + str(table_data['table_meta_data'].id)] = \
+                HiddenField('start_table_' + str(table_data['table_meta_data'].id),
+                            default=table_data['table_meta_data'].name)
 
             for instance_name, instance in data_instance.instances[table_name].items():
                 # logging.info(instance_name + ' data: ')
@@ -245,6 +250,9 @@ class FormGenerator():
                 self.get_row(data_instance, table_name, instance, control_type, row_counter)
 
                 row_counter += 1
+
+            if buttons['bottom']:
+                self.classattr[table_name + '_buttons_bottom'] =  HiddenField('buttons_bottom', default=buttons['bottom'])
 
             self.classattr['end_table_' + str(table_data['table_meta_data'].id)] = \
                 HiddenField('end_table_' + str(table_data['table_meta_data'].id),

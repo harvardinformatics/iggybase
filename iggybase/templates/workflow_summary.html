@@ -21,7 +21,7 @@
     {%- endblock hidden_fields %}
     {% block topbuttonbar %}
         {{ super() }}
-        {{ macros.render_buttons(top_buttons)}}
+        {{ top_buttons|safe }}
     {%- endblock topbuttonbar %}
     {% block page_content %}
         <div class={{ table_name ~ "_table" }}>
@@ -30,7 +30,7 @@
     {%- endblock page_content %}
     {% block bottombuttonbar %}
         {{ super() }}
-        {{ macros.render_buttons(bottom_buttons)}}
+        {{ bottom_buttons|safe }}
     {%- endblock bottombuttonbar %}
 {%- endblock content %}
 {% block scripts %}
