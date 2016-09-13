@@ -190,8 +190,7 @@ def data_entry(facility_name, table_name, row_name, page_context):
     if fg.form_class.validate_on_submit() and len(fg.form_class.errors) == 0:
         fp = FormParser()
         row_names = fp.parse()
-        logging.info('row_names')
-        logging.info(row_names)
+
         return saved_data(facility_name, module_name, table_name, row_names, page_context)
 
     return fg.page_template_context()

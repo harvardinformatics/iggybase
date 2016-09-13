@@ -33,7 +33,7 @@ class PageTemplate():
         context['page_form_name'] = self.page_form_name
         context['url_root'] = request.url_root
 
-        context['page_context'] = self.page_context
+        context['page_context'] = " ".join(self.page_context)
 
         context['module_name'] = self.module_name
         context['template'] = self.page_form.page_template
@@ -84,6 +84,7 @@ class PageTemplate():
 
     def button_html_generator(self, buttons, context):
         html_buttons = {'top': '', 'bottom': ''}
+        page_context = " ".join(self.page_context).replace("base-context", "")
 
         for button_location, btns in buttons.items():
             for button in btns:
@@ -91,8 +92,7 @@ class PageTemplate():
                                                   '" id="' + button.button_id +
                                                   '" name="' + button.button_id +
                                                   '" type="' + button.button_type +
-                                                  '" class="' + button.button_class + ' ' +
-                                                  ' '.join(self.page_context) + '"')
+                                                  '" class="' + button.button_class + " " + page_context + '"')
 
                 if button.special_props:
                     html_buttons[button_location] += button.special_props

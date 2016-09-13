@@ -132,7 +132,8 @@ class FormParser():
                     try:
                         # TODO find a better way to deal with no value in a select
                         # a top row is is added to all selects with an index of -99 (get_foreign_key_data)
-                        if row_data['data_entry'][field] == None or int(row_data['data_entry'][field]) == -99:
+                        if row_data['data_entry'][field] is None or row_data['data_entry'][field] == '' \
+                                or int(row_data['data_entry'][field]) == -99:
                             row_data['data_entry'][field] = None
                         else:
                             row_data['data_entry'][field] = int(row_data['data_entry'][field])
