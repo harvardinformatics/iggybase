@@ -354,12 +354,7 @@ class RoleAccessControl:
 
     def page_form_buttons(self, page_form_ids, page_context, table_object_id = None, active=1):
         page_form_buttons = {'top': [], 'bottom': []}
-<<<<<<< Updated upstream
-        '''filters = [
-                models.PageFormButton.page_form_id.in_(page_form_ids),
-=======
         filters = [
->>>>>>> Stashed changes
                 models.PageFormButtonRole.role_id == self.role.id,
                 models.PageFormButton.active == active,
                 models.PageFormButtonRole.active == active,
@@ -395,7 +390,7 @@ class RoleAccessControl:
         res = res.all()
 
         for row in res:
-            page_form_buttons[row.SelectListItem.display_name].append(row.PageFormButton)'''
+            page_form_buttons[row.SelectListItem.display_name].append(row.PageFormButton)
 
         return page_form_buttons
 
