@@ -191,6 +191,11 @@ class FormGenerator(PageTemplate):
         row_counter = 0
         level = 0
 
+        page_context = self.page_context
+        page_context.remove('base-context')
+        if 'workflow' in page_context:
+            page_context.remove('workflow')
+            
         for table_name, table_data in data_instance.tables.items():
             # start_time = time.time()
             # logging.info('get_table loop table_name: ' + table_name)
@@ -216,22 +221,34 @@ class FormGenerator(PageTemplate):
 
             if table_data['level'] == 0 and self.form_type == 'single':
                 control_type = 'data-control'
-                buttons = self.role_access_control.page_form_buttons(self.page_form_ids, ['main-table'],
+                temp_page_context = ['main-table'] + page_context
+                buttons = self.role_access_control.page_form_buttons(self.page_form_ids, temp_page_context,
                                                                      table_data['table_meta_data'].id)
             elif self.form_type == 'single':
                 control_type = 'table-control'
-                buttons = self.role_access_control.page_form_buttons(self.page_form_ids, ['child-table'],
+                temp_page_context = ['child-table'] + page_context
+                buttons = self.role_access_control.page_form_buttons(self.page_form_ids, temp_page_context,
                                                                     table_data['table_meta_data'].id)
             else:
                 control_type = 'table-control'
-                buttons = self.role_access_control.page_form_buttons(self.page_form_ids, ['multiple'],
+                temp_page_context = ['multiple'] + page_context
+                buttons = self.role_access_control.page_form_buttons(self.page_form_ids, temp_page_context,
                                                                      table_data['table_meta_data'].id)
+
+            logging.info('temp_page_context ' + table_name)
+            logging.info(temp_page_context)
+
             context = {'table_name': table_data['table_meta_data'].name,
                        'table_id': str(table_data['table_meta_data'].id),
                        'table_level': str(table_data['level']),
                        'table_title': table_data['table_meta_data'].name.replace("_", " ").title()}
 
             buttons['top'], buttons['bottom'] = self.button_html_generator(buttons, context)
+
+            logging.info('buttons[top] ' + table_name)
+            logging.info(buttons['top'])
+            logging.info('buttons[bottom] ' + table_name)
+            logging.info(buttons['bottom'])
 
             if buttons['top']:
                 self.classattr[table_name + '_buttons_top'] =  HiddenField('buttons_top', default=buttons['top'])

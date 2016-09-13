@@ -37,7 +37,7 @@ def default(facility_name):
 @templated()
 def summary(facility_name, table_name, page_context):
     page_form = 'summary'
-    context = {'page_context': page_context, 'table_name': table_name}
+    context = {'page_context': page_context}
     return build_summary(table_name, page_form, context)
 
 
@@ -53,7 +53,7 @@ def summary_ajax(facility_name, table_name, page_form='summary', criteria={}):
 @templated()
 def action_summary(facility_name, table_name, page_context):
     page_form = 'action_summary'
-    context = {'page_context': page_context, 'table_name': table_name}
+    context = {'page_context': page_context}
     return build_summary(table_name, page_form, context)
 
 
@@ -268,7 +268,9 @@ def workflow(facility_name, workflow_name, page_context):
     context = {'btn_overrides': {'bottom':{'new':{'button_value':('New ' + workflow_name.title())}}}}
     context['hidden_fields'] = {'workflow_name': workflow_name}
     context['workflow_name'] = workflow_name
-    context['page_context'] = 'workflow,' + page_context
+    context['page_context'] = 'workflow'
+    if page_context:
+        context['page_context'] += "," + page_context
     return build_summary(table_name, page_form, context)
 
 
