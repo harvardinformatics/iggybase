@@ -47,7 +47,7 @@ def update_ordered(facility_name, table_name):
 @login_required
 def update_requested_ajax(facility_name, table_name):
     # TODO: we should really get rid of module name being passed around
-    return core.routes.build_summary_ajax(table_name, 'update', {('status', 'name'):'requested'})
+    return core.routes.build_summary_ajax(table_name, {('status', 'name'):'requested'})
 
 
 @murray.route( '/update_requested/<table_name>/' )
