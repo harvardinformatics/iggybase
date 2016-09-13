@@ -92,12 +92,16 @@ class PageTemplate():
                                                   '" id="' + button.button_id +
                                                   '" name="' + button.button_id +
                                                   '" type="' + button.button_type +
+                                                  '" context="' + page_context +
                                                   '" class="' + button.button_class + " " + page_context + '"')
 
                 if button.special_props:
                     html_buttons[button_location] += button.special_props
 
                 html_buttons[button_location] += '>'
+
+        html_buttons['top'] = html_buttons['top'].replace('<page_context>', page_context)
+        html_buttons['bottom'] = html_buttons['bottom'].replace('<page_context>', page_context)
 
         if 'table_name' in context:
             html_buttons['top'] = html_buttons['top'].replace('<table_name>', context['table_name'])

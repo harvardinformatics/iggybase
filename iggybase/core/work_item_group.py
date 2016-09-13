@@ -86,7 +86,7 @@ class WorkItemGroup:
             step = self.workflow.steps[1]
         return step
 
-    def get_buttons(self, context_btns = None):
+    '''def get_buttons(self, context_btns = None):
         submit_btn = False
         for btn in context_btns:
             if btn.button_type == 'submit':
@@ -106,7 +106,7 @@ class WorkItemGroup:
                 workflow_button['button_id'] = 'complete'
 
             self.buttons.append(util.DictObject(workflow_button))
-
+'''
     def set_saved(self, saved_rows):
         self.saved_rows = saved_rows
 
@@ -163,7 +163,7 @@ class WorkItemGroup:
         args = []
         if self.endpoint in session['routes']:
             args = session['routes'][self.endpoint]
-        dynamic_params = {'page_context':'base-context'}
+        dynamic_params = {'page_context':'workflow,' + self.workflow.name + "_" + str(self.show_step_num)}
         if 'table_name' in args:
             dynamic_params['table_name'] = self.step.TableObject.name
         if 'facility_name' in args:

@@ -37,7 +37,8 @@ def default(facility_name):
 @templated()
 def summary(facility_name, table_name, page_context):
     page_form = 'summary'
-    return build_summary(table_name, page_form, page_context)
+    context = {'page_context': page_context, 'table_name': table_name}
+    return build_summary(table_name, page_form, context)
 
 
 @core.route('/summary/<table_name>/ajax')
@@ -52,7 +53,8 @@ def summary_ajax(facility_name, table_name, page_form='summary', criteria={}):
 @templated()
 def action_summary(facility_name, table_name, page_context):
     page_form = 'action_summary'
-    return build_summary(table_name, page_form, page_context)
+    context = {'page_context': page_context, 'table_name': table_name}
+    return build_summary(table_name, page_form, context)
 
 
 @core.route('/action_summary/<table_name>/ajax')
@@ -266,7 +268,8 @@ def workflow(facility_name, workflow_name, page_context):
     context = {'btn_overrides': {'bottom':{'new':{'button_value':('New ' + workflow_name.title())}}}}
     context['hidden_fields'] = {'workflow_name': workflow_name}
     context['workflow_name'] = workflow_name
-    return build_summary(table_name, page_form, page_context, context)
+    context['page_context'] = 'workflow,' + page_context
+    return build_summary(table_name, page_form, context)
 
 
 @core.route('/workflow/<workflow_name>/ajax')
@@ -308,7 +311,7 @@ def work_item_group(facility_name, workflow_name, step, work_item_group):
         module = import_module('iggybase.' + wig.step.Module.name + '.routes')
         func = getattr(module, wig.step.Route.url_path)
     context = func(**wig.dynamic_params)
-    wig.get_buttons(context['bottom_buttons'])
+    # wig.get_buttons(context['bottom_buttons'])
     if 'saved_rows' in context:
         wig.set_saved(context['saved_rows'])
     context['wig'] = wig
@@ -318,14 +321,14 @@ def work_item_group(facility_name, workflow_name, step, work_item_group):
 """ helper functions start """
 
 
-def build_summary(table_name, page_form, page_context, context={}):
+def build_summary(table_name, page_form, context={}):
     tqc = TableQueryCollection(table_name)
     tq = tqc.get_first()
 
     if not tq.fc.fields:
         abort(404)
 
-    pt = PageTemplate(MODULE_NAME, page_form, page_context)
+    pt = PageTemplate(MODULE_NAME, page_form, context['page_context'])
     return pt.page_template_context(table_name=table_name, table_query=tq, **context)
 
 

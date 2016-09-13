@@ -35,12 +35,11 @@
     <hr>
 {%- endblock content_title %}
 {% block bottombuttonbar -%}
-    {{super()}}
     <hr>
     <div class="workflow_buttons">
         <form id="wig_data" action="" enctype="multipart/form-data" class="form form-horizontal" method="post" role="form">
             <input id="saved_rows" type="hidden" name="saved_rows" value="{{wig.saved_rows}}">
-            {{ macros.render_buttons( wig.buttons ) }}
+            {{super()}}
         </form>
     </div>
     <br><br>
