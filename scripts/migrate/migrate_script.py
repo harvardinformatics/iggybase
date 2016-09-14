@@ -358,9 +358,7 @@ class MigrateScript (IggyScript):
     def migrate_table(self, mini_table, thing, new_tbl):
         print("Table: " + mini_table + " thing: " + thing)
         pks = self.from_db.cursor()
-        sql = "select distinct name from " + mini_table + " where thing = '" + thing + "' and property = 'Group'"
-        '''sql += " and name in "
-        sql += ("('LIN27167','LIN27166','LIN27165','LIN27164','LIN27163','LIN27162','LIN27161','LIN27160','LIN27159','LIN27158','LIN27157','LIN27156','LIN27155','LIN27154','LIN27153','LIN27152','LIN27151','LIN27150','LIN27149','LIN27148','LIN27147','LIN27146','LIN27145','LIN27144','LIN27143','LIN27142','LIN27141','LIN27140','LIN27139','LIN27138','LIN27137','LIN27136','LIN27135','LIN27134','LIN27133','LIN27132','LIN27131','LIN27130','LIN27129','LIN27128','LIN27127','LIN27126','LIN27125','LIN27124','LIN27123','LIN27122','LIN27121','LIN27120','LIN27119','LIN27118','LIN27117','LIN27116','LIN27115','LIN27114','LIN27113','LIN27112','LIN27111','LIN27110','LIN27109','LIN27108','LIN27107','LIN27106','LIN27105','LIN27104','LIN27103','LIN27102','LIN27101','LIN27100','LIN27099','LIN27098','LIN27097','LIN27096','LIN27095','LIN27094','LIN27093','LIN27092','LIN27091','LIN27090','LIN27089','LIN27088','LIN27087','LIN27086','LIN27085','LIN27084','LIN27083','LIN27082','LIN27081','LIN27080','LIN27079')")'''
+        sql = "select distinct name from " + mini_table + " where thing = '" + thing + "' and property = 'Group' and name ='LIN27143'"
         if 'limit' in self.cli:
             sql += ' limit ' + self.cli['limit']
         pks.execute(sql)

@@ -1,6 +1,5 @@
 #import mysql.connector
 #from datetime import datetime
-
 import sys
 import os
 
@@ -316,6 +315,39 @@ class MigrateCustomScript (IggyScript):
                 to_id}, {'new_name_id': next_num})
         return charge_id
 
+    def migrate_invoice_month(self, mini_table, thing, new_tbl):
+        print("Table: " + mini_table + " thing: " + thing)
+        pks = self.from_db.cursor()
+        sql = "select distinct name from " + mini_table + " where thing = '" + thing + "' and property = 'Invoice_Month'"
+        if 'limit' in self.cli:
+            sql += ' limit ' + self.cli['limit']
+        pks.execute(sql)
+        pks_rows = pks.fetchall()
+        if 'start' in self.cli:
+            pks_rows = pks_rows[int(self.cli['start']):]
+        print('found rows: ' + str(len(pks_rows)))
+        for row_num, row in enumerate(pks_rows):
+            pk = row[0]
+            if pk in self.get_config('keys_to_skip'):
+                continue
+            print("\t" + str(row_num) + " Working on name: " + pk)
+            sql = "select value from " + mini_table + " where thing = '" + thing + "' and name = '" + pk + "' and property = 'Invoice_Month'"
+            print(sql)
+            item = self.from_db.cursor()
+            item.execute(sql)
+            item_row = item.fetchone()
+            print(item_row)
+            order_id = self.pk_exists(pk, 'name', 'order')
+            if item_row and order_id:
+                if item_row[0]:
+                    val_str = str(datetime.datetime.fromtimestamp(time.mktime(time.strptime(item_row[0],
+                    '%Y-%m'))))
+
+                    updated = self.update_row('line_item', {'order_id': order_id},
+                        {'date_created': val_str}) 
+                    print(updated)
+                
+     
     def migrate_order_charge_method(self, mini_table, thing, new_tbl):
         print("Table: " + mini_table + " thing: " + thing)
         pks = self.from_db.cursor()
@@ -855,9 +887,6 @@ class MigrateCustomScript (IggyScript):
             print('\tCompleted work on name: ' + pk + "\n\n")
         print('Completed table: ' + mini_table + " thing: " + thing + "\n\n\n\n")
 
-
-
-
     def parse_cli(self):
         cli = super(MigrateCustomScript, self).parse_cli()
         if 'semantic_source' in cli and 'from_tbl' in cli and 'to_tbl' in cli:
@@ -874,7 +903,7 @@ class MigrateCustomScript (IggyScript):
         return cli
 
     def run(self):
-        self.migrate_department(self.cli['semantic_source'], self.cli['from_tbl'], self.cli['to_tbl'])
+        self.migrate_invoice_month(self.cli['semantic_source'], self.cli['from_tbl'], self.cli['to_tbl'])
 
 # execute run on this class
 script = MigrateCustomScript()
