@@ -235,8 +235,8 @@ class FormGenerator(PageTemplate):
                 buttons = self.role_access_control.page_form_buttons(self.page_form_ids, temp_page_context,
                                                                      table_data['table_meta_data'].id)
 
-            logging.info('temp_page_context ' + table_name)
-            logging.info(temp_page_context)
+            # logging.info('temp_page_context ' + table_name)
+            # logging.info(temp_page_context)
 
             context = {'table_name': table_data['table_meta_data'].name,
                        'table_id': str(table_data['table_meta_data'].id),
@@ -245,10 +245,10 @@ class FormGenerator(PageTemplate):
 
             buttons['top'], buttons['bottom'] = self.button_html_generator(buttons, context)
 
-            logging.info('buttons[top] ' + table_name)
-            logging.info(buttons['top'])
-            logging.info('buttons[bottom] ' + table_name)
-            logging.info(buttons['bottom'])
+            # logging.info('buttons[top] ' + table_name)
+            # logging.info(buttons['top'])
+            # logging.info('buttons[bottom] ' + table_name)
+            # logging.info(buttons['bottom'])
 
             if buttons['top']:
                 self.classattr[table_name + '_buttons_top'] =  HiddenField('buttons_top', default=buttons['top'])

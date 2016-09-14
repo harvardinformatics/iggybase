@@ -22,7 +22,11 @@
     {%- endblock content_title %}
 
     {% block topbuttonbar -%}
-        <div class="top_buttons">
+        {%- if "modal_form" in page_context %}
+            <div>
+        {% else -%}
+            <div class="top_buttons">
+        {% endif -%}
         {{ top_buttons|safe }}
         </div>
     {%- endblock topbuttonbar %}
@@ -43,7 +47,9 @@
             {%- for field_name, field in form_fields.items() %}
                 {% if "table_level_" in field.id -%}
                     {% set table_level = field.data -%}
-                    {%- if table_level == 0 and form_type == "single" %}
+                    {%- if "modal_form" in page_context %}
+                        <div>
+                    {%- elif table_level == 0 and form_type == "single" %}
                         <div class="col-md-4 div_level_{{ table_level }}">
                     {% else -%}
                         <div class="col-md-12 div_level_{{ table_level }}">
@@ -58,7 +64,7 @@
                         <h3>{{ table_title }}</h3>
                     {%- endif %}
                 {% elif "start_table_" in field.id -%}
-                    {%- if table_level == 0 and form_type == "single" %}
+                    {%- if (table_level == 0 and form_type == "single") or "modal" in page_context %}
                         <table id="{{ table_name }}" class="table">
                     {% else -%}
                         <table id="{{ table_name }}" class="table table-striped"><tr>
@@ -91,7 +97,7 @@
                 {% elif "record_data_row_name_" in field.id -%}
                     {% set row_name = field.data %}
                 {% elif not bootstrap_is_hidden_field( field ) -%}
-                    {% if table_level == 0 and form_type == "single" -%}
+                    {% if (table_level == 0 and form_type == "single") or "modal" in page_context -%}
                         {% set field_vars = field.id.split("_") %}
                         {{ macros.render_field( field, field_vars[field_vars|length - 1], table_name, row_name ) }}
                     {% else -%}
@@ -112,7 +118,11 @@
     {% endif -%}
 
     {% block bottombuttonbar -%}
-        <div class="bottom_buttons">
+        {%- if "modal_form" in page_context %}
+            <div>
+        {% else -%}
+            <div class="bottom_buttons">
+        {% endif -%}
         {{ bottom_buttons|safe }}
         </div>
     {%- endblock bottombuttonbar %}

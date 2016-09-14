@@ -4,6 +4,11 @@ $( document ).ready( function () {
             $.fn.addLookup( $( this ) );
         }
     );
+    $( ".modal-add" ).click(
+        function( ) {
+            $.fn.modalAdd( $( this ) );
+        }
+    );
     $( ".search-button" ).click(
         function( ) {
             $.fn.searchClick( $( this ) );
@@ -332,6 +337,20 @@ $( document ).ready( function () {
         var spancls = "ui-icon ui-icon-search search-button";
 
         $('<span id="'+new_id+'" name="'+new_id+'" class="'+spancls+'" luid="'+id+'"/>').appendTo(ele.parent());
+    }
+
+    $.fn.modalAdd = function ( ele ) {
+        alert
+        var table_name = ele.attr( 'table_name' );
+        var table_id = ele.attr( 'table_id' );
+
+        var hidden_fields = $("#hidden_fields");
+        var facility = hidden_fields.find('input[name=facility]').val()
+        var formurl = $URL_ROOT + facility + "/core/data_entry/" + table_name + "/new/modal_form";
+
+        var buttons = {};
+
+        $.fn.showModalDialog( formurl, buttons );
     }
 
     $.fn.keydownLookupField = function ( e, ele ) {

@@ -5,110 +5,116 @@
     <!DOCTYPE html>
     <html {% block html_attribs %}{% endblock html_attribs %}>
     {%- block html %}
-        <head>
-        {%- block head %}
-            <title>{% block title %}{% endblock title %}</title>
+        {%- if "modal_form" not in page_context %}
+            <head>
+            {%- block head %}
+                <title>{% block title %}{% endblock title %}</title>
 
-            {%- block metas %}
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            {%- endblock metas %}
+                {%- block metas %}
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                {%- endblock metas %}
 
-            {%- block styles %}
-            <!-- Bootstrap -->
-            <link href="{{ url_for('static', filename='reset.css') }}" rel="stylesheet">
-            <link href="{{bootstrap_find_resource('css/bootstrap.css', cdn='bootstrap')}}" rel="stylesheet">
+                {%- block styles %}
+                <!-- Bootstrap -->
+                <link href="{{ url_for('static', filename='reset.css') }}" rel="stylesheet">
+                <link href="{{bootstrap_find_resource('css/bootstrap.css', cdn='bootstrap')}}" rel="stylesheet">
 
-            <link href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.3/jquery-ui.min.css" rel="stylesheet">
+                <link href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.3/jquery-ui.min.css" rel="stylesheet">
 
-            <link href="{{ url_for('static', filename='main.css') }}" rel="stylesheet">
-            <link href="{{ url_for('static', filename='bootstrap_datepicker/css/bootstrap-datepicker.min.css') }}" rel="stylesheet">
-            {% if g.rac and g.rac.facility.css %}
-                <link href="{{ url_for('static', filename='css/' + g.rac.facility.css) }}" rel="stylesheet">
-            {% endif %}
-            {%- endblock styles %}
-        {%- endblock head %}
-        </head>
+                <link href="{{ url_for('static', filename='main.css') }}" rel="stylesheet">
+                <link href="{{ url_for('static', filename='bootstrap_datepicker/css/bootstrap-datepicker.min.css') }}" rel="stylesheet">
+                {% if g.rac and g.rac.facility.css %}
+                    <link href="{{ url_for('static', filename='css/' + g.rac.facility.css) }}" rel="stylesheet">
+                {% endif %}
+                {%- endblock styles %}
+            {%- endblock head %}
+            </head>
+        {% endif -%}
 
         <body{% block body_attribs %}{% endblock body_attribs %}>
         {% block body -%}
 
-            <div id="dialog" class="modal fade" role="dialog">
-                <div id="modal_dialog" class="modal-dialog">
-                    <div id="modal_dialog_content" class="modal-content"></div>
-                </div>
-            </div>
-
-            <div class="row banner" id="banner">
-                {% if g.rac and (g.rac.facility.banner_img or g.rac.facility.banner_title) %}
-                    {% if g.rac.facility.banner_img %}
-                    <div class="col-md-1">
-                        <div class="banner-img-wrapper">
-                            <a href="{{ url_for('index') }}"> <img class="banner-img" src="{{ url_for('static', filename='images/' + g.rac.facility.banner_img) }}"></a>
-                        </div>
+            {%- if "modal_form" not in page_context %}
+                <div id="dialog" class="modal fade" role="dialog">
+                    <div id="modal_dialog" class="modal-dialog">
+                        <div id="modal_dialog_content" class="modal-content"></div>
                     </div>
-                    {% endif %}
-                    {% if g.rac.facility.banner_title %}
-                    <div class="col-md-5">
-                        <div class="banner-title">
-                                <h1>{{g.rac.facility.banner_title}}</h1>
-                        {% if g.rac.facility.banner_subtitle %}
-                                <h3>{{g.rac.facility.banner_subtitle}}</h3>
+                </div>
+
+                <div class="row banner" id="banner">
+                    {% if g.rac and (g.rac.facility.banner_img or g.rac.facility.banner_title) %}
+                        {% if g.rac.facility.banner_img %}
+                        <div class="col-md-1">
+                            <div class="banner-img-wrapper">
+                                <a href="{{ url_for('index') }}"> <img class="banner-img" src="{{ url_for('static', filename='images/' + g.rac.facility.banner_img) }}"></a>
+                            </div>
+                        </div>
                         {% endif %}
-                        </div>
-                    </div>
-                    {% endif %}
-                {% else %}
-                    <div class="banner-img-wrapper">
-                        <a  href="{{ url_for('index') }}"> <img class="banner-img" src="{{ url_for('static', filename='iggybase.gif') }}"></a>
-                    </div>
-                {% endif %}
-                {% if current_user.is_authenticated %}
-                    <div id="logout" class="col-md-1 right">
-                        <a class="logout right" href="{{ url_for('security.logout') }}">Logout</a>
-                    </div>
-                {% endif %}
-            </div>
-
-
-            <div class="container-fluid">
-                {% block sidebar %}
-                <div class="col-sm-2 sidebar">
-                    <div class="panel-group" id="accordion">
-                        <div class="panel panel-default">
-                            {% if sidebar %}
-                                {% for item, info in sidebar.items() %}
-                                    <div class="panel-heading">
-                                        <h4 class="panel-title">
-                                            <a data-toggle="collapse" data-parent="#accordion"
-                                            href="#{{ item }}collapse">{{ info['title'] }}</a>
-                                        </h4>
-                                    </div>
-                                    <div class="panel-body">
-                                        <div id="{{ item }}collapse" class="panel-collapse collapse in">
-                                            {% for sub, sub_info in info['subs'].items() %}
-                                                <a id="{{ item }}" href="{{ sub_info['url'] }}" class="small">
-                                                    {{ sub_info['title'] }}
-                                                </a><br />
-                                            {% endfor %}
-                                        </div>
-                                    </div>
-                                {% endfor %}
+                        {% if g.rac.facility.banner_title %}
+                        <div class="col-md-5">
+                            <div class="banner-title">
+                                    <h1>{{g.rac.facility.banner_title}}</h1>
+                            {% if g.rac.facility.banner_subtitle %}
+                                    <h3>{{g.rac.facility.banner_subtitle}}</h3>
                             {% endif %}
-                        </div>  <!-- end panel -->
-                    </div> <!-- end panel-group -->
+                            </div>
+                        </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="banner-img-wrapper">
+                            <a  href="{{ url_for('index') }}"> <img class="banner-img" src="{{ url_for('static', filename='iggybase.gif') }}"></a>
+                        </div>
+                    {% endif %}
+                    {% if current_user.is_authenticated %}
+                        <div id="logout" class="col-md-1 right">
+                            <a class="logout right" href="{{ url_for('security.logout') }}">Logout</a>
+                        </div>
+                    {% endif %}
                 </div>
-                {% endblock sidebar %}
+
+
+                <div class="container-fluid">
+                    {% block sidebar %}
+                    <div class="col-sm-2 sidebar">
+                        <div class="panel-group" id="accordion">
+                            <div class="panel panel-default">
+                                {% if sidebar %}
+                                    {% for item, info in sidebar.items() %}
+                                        <div class="panel-heading">
+                                            <h4 class="panel-title">
+                                                <a data-toggle="collapse" data-parent="#accordion"
+                                                href="#{{ item }}collapse">{{ info['title'] }}</a>
+                                            </h4>
+                                        </div>
+                                        <div class="panel-body">
+                                            <div id="{{ item }}collapse" class="panel-collapse collapse in">
+                                                {% for sub, sub_info in info['subs'].items() %}
+                                                    <a id="{{ item }}" href="{{ sub_info['url'] }}" class="small">
+                                                        {{ sub_info['title'] }}
+                                                    </a><br />
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>  <!-- end panel -->
+                        </div> <!-- end panel-group -->
+                    </div>
+                    {% endblock sidebar %}
+                {% endif %}
 
                 <div class="col-sm-10">
-                    {% block navbar %}
-                    <div class="row">
-                        <nav class="navbar navbar-inverse">
-                            <div>
-                                {{ macros.render_nav_menu( navbar or None, True ) }}
-                            </div>
-                        </nav>
-                    </div>  <!-- end row -->
-                    {%- endblock navbar %}
+                    {%- if "modal_form" not in page_context %}
+                        {% block navbar %}
+                        <div class="row">
+                            <nav class="navbar navbar-inverse">
+                                <div>
+                                    {{ macros.render_nav_menu( navbar or None, True ) }}
+                                </div>
+                            </nav>
+                        </div>  <!-- end row -->
+                        {%- endblock navbar %}
+                    {% endif %}
 
                     <div  class="content">
                     {% block content -%}
@@ -148,14 +154,16 @@
 
 
 
-            {% block scripts %}
-                <script>var $URL_ROOT = {{ request.url_root|tojson|safe }};</script>
-                <script src="{{bootstrap_find_resource('jquery.js', cdn='jquery')}}"></script>
-                <script src="{{bootstrap_find_resource('js/bootstrap.js', cdn='bootstrap')}}"></script>
-                <script type="text/javascript" src="{{ url_for( 'static', filename='main.js' ) }}"></script>
-                <script type="text/javascript" src="{{ url_for( 'static', filename='bootstrap_datepicker/js/bootstrap-datepicker.min.js' ) }}"></script>
-                {{ macros.render_scripts( scripts ) }}
-            {%- endblock scripts %}
+            {%- if "modal_form" not in page_context %}
+                {% block scripts %}
+                    <script>var $URL_ROOT = {{ request.url_root|tojson|safe }};</script>
+                    <script src="{{bootstrap_find_resource('jquery.js', cdn='jquery')}}"></script>
+                    <script src="{{bootstrap_find_resource('js/bootstrap.js', cdn='bootstrap')}}"></script>
+                    <script type="text/javascript" src="{{ url_for( 'static', filename='main.js' ) }}"></script>
+                    <script type="text/javascript" src="{{ url_for( 'static', filename='bootstrap_datepicker/js/bootstrap-datepicker.min.js' ) }}"></script>
+                    {{ macros.render_scripts( scripts ) }}
+                {%- endblock scripts %}
+            {% endif %}
         {%- endblock body %}
         </body>
     {%- endblock html %}

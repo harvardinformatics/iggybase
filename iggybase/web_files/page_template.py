@@ -41,8 +41,8 @@ class PageTemplate():
         context['page_title'] = self.page_form.page_title
         context['top_buttons'], context['bottom_buttons'] = self.button_html_generator(self.buttons, context)
 
-        # logging.info('context[top_buttons]: ' + context['top_buttons'])
-        # logging.info('context[bottom_buttons]: ' + context['bottom_buttons'])
+        logging.info('context[top_buttons]: ' + context['top_buttons'])
+        logging.info('context[bottom_buttons]: ' + context['bottom_buttons'])
 
         context['scripts'] = self.page_scripts(self.scripts)
         submit_action_url = self.page_button_action(self.buttons)

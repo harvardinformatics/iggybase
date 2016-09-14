@@ -40,18 +40,23 @@ class ModalForm():
         if search_table == '':
             search_table = fc.fields[table_name + "|" + display_name].FK_TableObject.name
 
-        search_ids = {}
         search_fc = FieldCollection(None, search_table)
         for row in search_fc.get_search_fields():
-            search_ids[row.Field.id] = row.Field.display_name
             if row.Field.display_name not in fields:
                 fields.append(row.Field.display_name)
+
+        search_ids = {}
+        for table_field_name, search_field in search_fc.fields.items():
+            search_ids[search_field.Field.id] = search_field.Field.display_name
 
         search_field = fc.fields[table_name + "|" + display_name].Field.foreign_key_display
         if search_field:
             search_field = search_ids[search_field]
         else:
             search_field = 'name'
+
+        if search_field not in fields:
+            fields.append(search_field)
 
         if 'by_field' in search_params:
             value = search_params['by_field']
