@@ -52,7 +52,7 @@ class DataInstance:
                                    'table_meta_data': self.role_access_control.has_access('TableObject',
                                                                                           {'name': 'history'})}
         self.instances['history'] = OrderedDict()
-        self.fields['history'] = FieldCollection(None, 'history')
+        self.fields['history'] = FieldCollection(None, 'history', {}, False)
         self.fields['history'].set_fk_fields()
 
     def initialize_fields(self, table_name):
@@ -233,20 +233,20 @@ class DataInstance:
 
         fk_table_object = util.get_table(fk_table_data.name)
 
-        logging.info('fk_table_data.name: ' + fk_table_data.name)
-        logging.info('fk_field_display.display_name: ' + fk_field_display.display_name)
-        logging.info('table_name: ' + table_name)
-        logging.info('field: ' + field)
-        logging.info('value: ' + str(value))
-        logging.info('self.tables[table_name][table_meta_data].id: ' + str(self.tables[table_name]['table_meta_data'].id))
+        # logging.info('fk_table_data.name: ' + fk_table_data.name)
+        # logging.info('fk_field_display.display_name: ' + fk_field_display.display_name)
+        # logging.info('table_name: ' + table_name)
+        # logging.info('field: ' + field)
+        # logging.info('value: ' + str(value))
+        # logging.info('self.tables[table_name][table_meta_data].id: ' + str(self.tables[table_name]['table_meta_data'].id))
         if fk_table_data.name == 'field':
             logging.info('name is field')
             res = self.organization_access_control.session.query(fk_table_object). \
                 filter(getattr(fk_table_object, fk_field_display.display_name) == value). \
                 filter(fk_table_object.table_object_id == self.tables[table_name]['table_meta_data'].id)
 
-            logging.info('query')
-            logging.info(str(res.statement.compile(dialect=mysql.dialect())))
+            # logging.info('query')
+            # logging.info(str(res.statement.compile(dialect=mysql.dialect())))
             fk_id = res.first()
         else:
             fk_id = self.organization_access_control.session.query(fk_table_object). \
@@ -307,6 +307,9 @@ class DataInstance:
 
         exclude_list = ['id', 'last_modified', 'date_created']
 
+        # logging.info('table_name: ' + table_name)
+        # for key, value in self.fields[table_name].fields.items():
+        #     logging.info('key: ' + key)
         if self.fields[table_name].fields[table_name + "|" + field_name].is_foreign_key:
             field_value = self.set_foreign_key_field_id(table_name, field_name, field_value)
 

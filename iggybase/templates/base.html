@@ -156,7 +156,10 @@
 
             {%- if "modal_form" not in page_context %}
                 {% block scripts %}
-                    <script>var $URL_ROOT = {{ request.url_root|tojson|safe }};</script>
+                    <script>
+                        var $URL_ROOT = {{ request.url_root|tojson|safe }};
+                        var formErrors = {% if form is defined and form.errors and "modal_form" in page_context %}true{% else %}false{% endif %};
+                    </script>
                     <script src="{{bootstrap_find_resource('jquery.js', cdn='jquery')}}"></script>
                     <script src="{{bootstrap_find_resource('js/bootstrap.js', cdn='bootstrap')}}"></script>
                     <script type="text/javascript" src="{{ url_for( 'static', filename='main.js' ) }}"></script>

@@ -198,6 +198,35 @@ def data_entry(facility_name, table_name, row_name, page_context):
     return fg.page_template_context()
 
 
+@core.route('/modal_add/<table_name>', defaults={'page_context': None})
+@core.route('/modal_add/<table_name>/<page_context>')
+@login_required
+@templated()
+def modal_add(facility_name, table_name, page_context):
+    module_name = MODULE_NAME
+    if page_context:
+        page_context += ",modal_form"
+    else:
+        page_context = "modal_form"
+
+    fg = FormGenerator('modal_add', 'single', table_name, page_context, module_name)
+    fg.data_entry_form('new')
+
+    return fg.page_template_context()
+
+
+@core.route('/modal_add_submit/<table_name>', defaults={'page_context': None}, methods=['GET', 'POST'])
+@core.route('/modal_add_submit/<table_name>/<page_context>', methods=['GET', 'POST'])
+@login_required
+def modal_add_submit(facility_name, table_name, page_context):
+    data = request.get_json()
+    logging.info('called modal_add_submit')
+    fp = FormParser()
+    fp.parse(data)
+
+    return json.dumps({'error': False})
+
+
 @core.route('/multiple_entry/<table_name>/<row_names>', defaults={'page_context': 'base-context'},
             methods=['GET', 'POST'])
 @core.route('/multiple_entry/<table_name>/<row_names>/<page_context>', methods=['GET', 'POST'])

@@ -135,6 +135,7 @@ class FormGenerator(PageTemplate):
         elif field_data.Field.data_type_id == constants.PASSWORD:
             return IggybasePasswordField(display_name, **kwargs)
         elif field_data.Field.data_type_id == constants.FILE:
+            self.classattr['files_' + control_id] = HiddenField('files_' + control_id, default=value)
             return IggybaseFileField(display_name, **kwargs)
         elif field_data.Field.data_type_id == constants.TEXT_AREA:
             return IggybaseTextAreaField(display_name, **kwargs)
@@ -191,10 +192,11 @@ class FormGenerator(PageTemplate):
         row_counter = 0
         level = 0
 
-        page_context = self.page_context
-        page_context.remove('base-context')
-        if 'workflow' in page_context:
-            page_context.remove('workflow')
+        table_context = []
+
+        for context in self.page_context:
+            if context not in ['base-context', 'workflow','modal_form']:
+                table_context.append(context)
             
         for table_name, table_data in data_instance.tables.items():
             # start_time = time.time()
@@ -221,17 +223,17 @@ class FormGenerator(PageTemplate):
 
             if table_data['level'] == 0 and self.form_type == 'single':
                 control_type = 'data-control'
-                temp_page_context = ['main-table'] + page_context
+                temp_page_context = ['main-table'] + table_context
                 buttons = self.role_access_control.page_form_buttons(self.page_form_ids, temp_page_context,
                                                                      table_data['table_meta_data'].id)
             elif self.form_type == 'single':
                 control_type = 'table-control'
-                temp_page_context = ['child-table'] + page_context
+                temp_page_context = ['child-table'] + table_context
                 buttons = self.role_access_control.page_form_buttons(self.page_form_ids, temp_page_context,
                                                                     table_data['table_meta_data'].id)
             else:
                 control_type = 'table-control'
-                temp_page_context = ['multiple'] + page_context
+                temp_page_context = ['multiple'] + table_context
                 buttons = self.role_access_control.page_form_buttons(self.page_form_ids, temp_page_context,
                                                                      table_data['table_meta_data'].id)
 

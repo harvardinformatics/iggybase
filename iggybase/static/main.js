@@ -1,4 +1,7 @@
 $( document ).ready( function () {
+    if (formErrors) {
+        $('#dialog').modal('show');
+    }
     $( ".lookupfield" ).each(
         function( ) {
             $.fn.addLookup( $( this ) );
@@ -94,6 +97,7 @@ $( document ).ready( function () {
         var new_tr = $( "#" + target + " tr:last" ).clone( );
         var old_id = new_tr.attr( 'row_id' );
         var parent_name = '';
+        var new_id = '';
         if ( table_level == 1 )
             parent_name = $( '#record_data_row_name_0' ).val( );
 
@@ -156,7 +160,7 @@ $( document ).ready( function () {
             function() {
                 if ( $( this ).css( 'display' ) == 'none' ) {
                     var matches = $( this ).attr( 'id' ).match( /(\S+)_(\d+)/);
-                    var new_id = matches[ 1 ] + "_" + ( row_id );
+                    new_id = matches[ 1 ] + "_" + ( row_id );
                     var value = '';
 
                     if ( matches[ 1 ] == 'record_data_row_name' ) {
@@ -340,17 +344,57 @@ $( document ).ready( function () {
     }
 
     $.fn.modalAdd = function ( ele ) {
-        alert
         var table_name = ele.attr( 'table_name' );
-        var table_id = ele.attr( 'table_id' );
 
         var hidden_fields = $("#hidden_fields");
         var facility = hidden_fields.find('input[name=facility]').val()
-        var formurl = $URL_ROOT + facility + "/core/data_entry/" + table_name + "/new/modal_form";
+        var formurl = $URL_ROOT + facility + "/core/modal_add/" + table_name;
 
         var buttons = {};
 
         $.fn.showModalDialog( formurl, buttons );
+
+        $( document ).on("click", "#modal-add-submit", function() {
+            $.fn.modalAddSubmit( )
+        } );
+    }
+
+    $.fn.modalAddSubmit = function ( ) {
+        var table_name = $("#record_data_table_0").val( );
+        var form_data = {};
+        var hidden_fields = $("#hidden_fields");
+        var facility = hidden_fields.find('input[name=facility]').val();
+
+        $("#div-modal :input:not(:checkbox):not(:button)").each(
+            function() {;
+                if ( typeof $( this ).attr( 'id' ) != 'undefined' ) {
+                    if ( typeof $( this ).val( ) != 'undefined' ) {
+                        if ( $( this ).attr( 'id' ) == 'file ' ) {
+                            form_data[ $( this ).attr( 'id' ) ] = $( this )[0].files[0];
+                        } else {
+                            form_data[ $( this ).attr( 'id' ) ] = $( this ).val( );
+                        }
+                    }
+                }
+            }
+        );
+
+        $.ajax({
+            url:$URL_ROOT + facility + '/core/modal_add_submit/' + table_name,
+            data: form_data,
+            contentType: 'multipart/form-data',
+            processData: false,
+            type: 'POST',
+            success: function(response) {
+                response = JSON.parse(response);
+                if(response.error) {
+                    alert(response.errors);
+                } else {
+                    $.fn.modal_close( );
+                    $("#modal_dialog_content").html("");
+                }
+            }
+        });
     }
 
     $.fn.keydownLookupField = function ( e, ele ) {

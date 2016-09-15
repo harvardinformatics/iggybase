@@ -9,15 +9,24 @@ import logging
 
 class FormParser():
 
-    def parse(self):
+    def parse(self, form_data = None):
         # fields contain the data that was displayed on the form and possibly edited
         fields = {}
         table_names = []
 
+        web_request = False
+        if not form_data:
+            web_request = True
+            form_data = request.form
+
         # used to identify fields that contain data that needs to be saved
-        field_pattern = re.compile('^(id_data_entry|long_text|data_entry|record_data|form_data)_(\S+)_(\d+)')
-        for key in request.form:
-            data = request.form.get(key)
+        field_pattern = \
+            re.compile('^(files_data_entry|id_data_entry|long_text|data_entry|record_data|form_data)_(\S+)_(\d+)')
+        for key in form_data:
+            if web_request:
+                data = request.form.get(key)
+            else:
+                data = form_data[key]
 
             # logging.info(key + ': ' + data)
 
@@ -29,7 +38,7 @@ class FormParser():
                 # logging.info('key: ' + key)
                 if field_id.group(3) not in fields.keys():
                     fields[field_id.group(3)] = {'long_text': {}, 'form_data': {}, 'data_entry': {}, 'record_data': {},
-                                                 'id_data_entry': {}}
+                                                 'id_data_entry': {}, 'files_data_entry': {}}
 
                 fields[field_id.group(3)][field_id.group(1)][field_id.group(2)] = data
 
@@ -130,15 +139,16 @@ class FormParser():
                     row_data['data_entry'][field] = next(iter(msg))
                 elif field_data.foreign_key_table_object_id is not None:
                     try:
-                        # TODO find a better way to deal with no value in a select
-                        # a top row is is added to all selects with an index of -99 (get_foreign_key_data)
                         if row_data['data_entry'][field] is None or row_data['data_entry'][field] == '' \
                                 or int(row_data['data_entry'][field]) == -99:
                             row_data['data_entry'][field] = None
                         else:
                             row_data['data_entry'][field] = int(row_data['data_entry'][field])
-                    except ValueError:
-                        row_data['data_entry'][field] = int(row_data['id_data_entry'][field])
+                    except (ValueError, KeyError) as e:
+                        try:
+                            row_data['data_entry'][field] = int(row_data['id_data_entry'][field])
+                        except  (ValueError, KeyError) as e:
+                            row_data['data_entry'][field] = None
                 elif meta_data.DataType.name.lower() == 'file':
                     directory = os.path.join(current_app.config['UPLOAD_FOLDER'], table_name_field,
                                              instance.instance_name)
@@ -146,16 +156,17 @@ class FormParser():
                         os.makedirs(directory)
 
                     old_files = []
-                    if row_data['old_value'][field] != "":
-                        old_files = row_data['old_value'][field].split("|")
+                    if row_data['files_data_entry'][field] != "":
+                        old_files = row_data['files_data_entry'][field].split("|")
 
-                    for filename, file in row_data['data_entry'][field].items():
-                        if os.path.exists(os.path.join(directory, filename)):
-                            os.remove(os.path.join(directory, filename))
-                            file.save(os.path.join(directory, filename))
-                        else:
-                            file.save(os.path.join(directory, filename))
-                            old_files.append(filename)
+                    if request.files:
+                        for filename, file in row_data['data_entry'][field].items():
+                            if os.path.exists(os.path.join(directory, filename)):
+                                os.remove(os.path.join(directory, filename))
+                                file.save(os.path.join(directory, filename))
+                            else:
+                                file.save(os.path.join(directory, filename))
+                                old_files.append(filename)
 
                     if len(old_files) > 0:
                         filenames = "|".join(old_files)

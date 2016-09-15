@@ -5,7 +5,11 @@
 
 {% block content -%}
     {% if form is defined -%}
-        <form action="{{ submit_action_url }}" enctype="multipart/form-data" class="form form-horizontal" method="post" role="form">
+        {%- if "modal_form" in page_context %}
+            <div id="div-modal">
+        {% else -%}
+            <form action="{{ submit_action_url }}" enctype="multipart/form-data" class="form form-horizontal" method="post" role="form">
+        {% endif -%}
 
         {{ form.hidden_tag() }}
         {{ wtf.form_errors(form, hiddens='only') }}
@@ -46,7 +50,7 @@
             {% set form_fields = form._fields %}
             {%- for field_name, field in form_fields.items() %}
                 {% if "table_level_" in field.id -%}
-                    {% set table_level = field.data -%}
+                    {% set table_level = field.data|int -%}
                     {%- if "modal_form" in page_context %}
                         <div>
                     {%- elif table_level == 0 and form_type == "single" %}
@@ -64,7 +68,7 @@
                         <h3>{{ table_title }}</h3>
                     {%- endif %}
                 {% elif "start_table_" in field.id -%}
-                    {%- if (table_level == 0 and form_type == "single") or "modal" in page_context %}
+                    {%- if (table_level == 0 and form_type == "single") or "modal_form" in page_context %}
                         <table id="{{ table_name }}" class="table">
                     {% else -%}
                         <table id="{{ table_name }}" class="table table-striped"><tr>
@@ -97,7 +101,7 @@
                 {% elif "record_data_row_name_" in field.id -%}
                     {% set row_name = field.data %}
                 {% elif not bootstrap_is_hidden_field( field ) -%}
-                    {% if (table_level == 0 and form_type == "single") or "modal" in page_context -%}
+                    {% if (table_level == 0 and form_type == "single") or "modal_form" in page_context -%}
                         {% set field_vars = field.id.split("_") %}
                         {{ macros.render_field( field, field_vars[field_vars|length - 1], table_name, row_name ) }}
                     {% else -%}
@@ -128,6 +132,10 @@
     {%- endblock bottombuttonbar %}
 
     {% if form is defined %}
-        </form>
+        {%- if "modal_form" in page_context %}
+            </div>
+        {% else -%}
+            </form>
+        {% endif -%}
     {% endif %}
 {%- endblock content %}

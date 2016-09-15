@@ -218,10 +218,15 @@ class RoleAccessControl:
                 ).
                 join(*joins).
                 outerjoin(*outerjoins).
-                filter(*filters).order_by(*orders).all()
+                filter(*filters).order_by(*orders)
         )
 
-        return res
+        # query = res.statement.compile(dialect=mysql.dialect())
+        # logging.info('query')
+        # logging.info(str(query))
+        # logging.info(str(query.params))
+
+        return res.all()
 
     def table_query_criteria(self, table_query_id):
         criteria = (
@@ -383,7 +388,7 @@ class RoleAccessControl:
                          models.PageFormButton.order, models.PageFormButton.name)
                .filter(*filters))
 
-        query = res.statement.compile(dialect=mysql.dialect())
+        # query = res.statement.compile(dialect=mysql.dialect())
         # logging.info('query')
         # logging.info(str(query))
         # logging.info(str(query.params))
