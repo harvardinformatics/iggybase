@@ -271,7 +271,7 @@ col_value_map = {
         'web_page': None,
         'location': None
     },
-    ''''group_member':{
+    'group_member':{
         'full_name': 'func_split_name',
         'admin': None,
         'phone': None,
@@ -289,8 +289,8 @@ col_value_map = {
         'postal_code': None,
         'title': None,
         'department': None
-    },'''
-    'group_member':{
+    },
+    'user':{
         'full_name': None,
         'admin': None,
         'phone': None,

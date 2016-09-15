@@ -355,10 +355,29 @@ class MigrateScript (IggyScript):
             new_dict = {self.get_col_name(col, col_name_map): id_exists}
         return new_dict
 
+    def find_user(self, pk):
+        row = self.semantic_select_row(pk, 'Group_Member', 'Email',
+        'semantic_data')
+        email = None
+        if row:
+            email = row[3]
+        sql = 'select id from user where name = "' + pk.replace('"','') + '"'
+        if email:
+            sql += ' or email = "' + email + '"'
+        pk_user = self.to_db.cursor()
+        pk_user.execute(sql)
+        user_id = pk_user.fetchone()
+        print(user_id)
+        if user_id:
+            return user_id[0]
+        else:
+            return None
+
+
     def migrate_table(self, mini_table, thing, new_tbl):
         print("Table: " + mini_table + " thing: " + thing)
         pks = self.from_db.cursor()
-        sql = "select distinct name from " + mini_table + " where thing = '" + thing + "' and property = 'Group' and name ='LIN27143'"
+        sql = "select distinct name from " + mini_table + " where thing = '" + thing + "'"
         if 'limit' in self.cli:
             sql += ' limit ' + self.cli['limit']
         pks.execute(sql)
@@ -377,7 +396,10 @@ class MigrateScript (IggyScript):
             print("\t" + str(row_num) + " Working on name: " + pk)
             tbl_name = thing
             print("\t\tMapping data for: " + tbl_name + ' into: ' + new_tbl)
-            id_exists = self.pk_exists(pk, 'name', new_tbl, )
+            if new_tbl == 'user':
+                id_exists = self.find_user(pk)
+            else:
+                id_exists = self.pk_exists(pk, 'name', new_tbl, )
             if id_exists and not no_skip:
                 print("\t\tSkipping because " + pk + " already exists: " +
                         str(id_exists))

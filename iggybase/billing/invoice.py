@@ -105,13 +105,11 @@ class Invoice:
                 'service_type_id': self.service_type_id
             }
             invoice_row = self.oac.insert_row('invoice', cols)
-
         self.id = invoice_row.id
         self.name = invoice_row.name
         self.last_modified = invoice_row.last_modified
         self.Invoice = invoice_row
         self.number = self.get_next_name()
-
         # update line_item if invoice_id not set
         if self.id:
             to_update = []
@@ -123,6 +121,10 @@ class Invoice:
                         to_update,
                         {'invoice_id': self.id}
                 )
+                if not updated:
+                    logging.error('Invoice_id not updated to ' + str(invoice_id)
+                            + ' for line_items: ' + json.dumps(to_update))
+                            
 
     def populate_template_data(self):
         self.purchase_table = self.populate_purchase()
@@ -143,6 +145,7 @@ class Invoice:
                 row['order'] = item.Order.name
                 row['delivery date'] = item.LineItem.date_created
                 row['description'] = item.PriceItem.name
+                row['quantity'] = item.LineItem.quantity
                 row['service type'] = item.ServiceType.description
                 row['amount'] =  item.display_amount
                 rows.append(row)

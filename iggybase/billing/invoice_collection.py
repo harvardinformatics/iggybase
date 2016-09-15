@@ -126,8 +126,7 @@ class InvoiceCollection:
 
     def set_invoices(self):
         for invoice in self.invoices:
-            if invoice.total:
-                invoice.set_invoice()
+            invoice.set_invoice()
 
     def update_pdf_names(self):
         for invoice in self.invoices:

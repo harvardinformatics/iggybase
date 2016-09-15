@@ -107,10 +107,19 @@ class MigrateCustomScript (IggyScript):
         return row_dict
 
 
-    def semantic_select_row(self, pk, thing, property, tbl):
-        where = "name ='" + pk.replace("'","\\\'") + "'"
-        sql = ('Select * from ' + tbl + " where thing = '" + thing
-            + "' and property = '" + property + "' and " + where)
+    def semantic_select_row(self, pk, thing, property, value = None, tbl =
+    'semantic_data'):
+        wheres = []
+        if pk:
+            wheres.append("name ='" + pk.replace("'","\\\'") + "'")
+        if thing:
+            wheres.append("thing ='" + thing + "'")
+        if property:
+            wheres.append("property ='" + property + "'")
+        if value:
+            wheres.append("value ='" + value + "'")
+        where = " and ".join(wheres)
+        sql = ('Select * from ' + tbl + " where " + where + ' limit 1')
         print(sql)
         exist = self.from_db.cursor()
         exist.execute(sql)
@@ -328,6 +337,7 @@ class MigrateCustomScript (IggyScript):
         print('found rows: ' + str(len(pks_rows)))
         for row_num, row in enumerate(pks_rows):
             pk = row[0]
+            print(pk)
             if pk in self.get_config('keys_to_skip'):
                 continue
             print("\t" + str(row_num) + " Working on name: " + pk)
@@ -781,6 +791,124 @@ class MigrateCustomScript (IggyScript):
             print('\tCompleted work on name: ' + pk + "\n\n")
         print('Completed table: ' + mini_table + " thing: " + thing + "\n\n\n\n")
 
+    def find_user(self, pk):
+        row = self.semantic_select_row(pk, 'Group_Member', 'Email',
+        'semantic_data')
+        email = None
+        if row:
+            email = row[3]
+        sql = 'select id from user where name = "' + pk.replace('"','') + '"'
+        if email:
+            sql += ' or email = "' + email + '"'
+        pk_user = self.to_db.cursor()
+        pk_user.execute(sql)
+        user_id = pk_user.fetchone()
+        print(user_id)
+        if user_id:
+            return user_id[0]
+        else:
+            return None
+
+    def migrate_line_order(self, mini_table, thing, new_tbl):
+        db_rows = self.to_db.cursor()
+        sql = ('select name from line_item where order_id is null')
+        if 'limit' in self.cli:
+            sql += ' limit ' + self.cli['limit']
+        db_rows.execute(sql)
+        pks_rows = db_rows.fetchall()
+        if 'start' in self.cli:
+            pks_rows = pks_rows[int(self.cli['start']):]
+        print('found rows: ' + str(len(pks_rows)))
+        no_skip = False
+        if 'no_skip' in self.cli:
+            if self.cli['no_skip'] == '1':
+                no_skip = True
+        for row_num, row in enumerate(pks_rows):
+            pk = row[0]
+            old = self.semantic_select_row(pk, 'Line_Item',
+                    'Billable_Item', None, 'semantic_data')
+            print(old)
+            if old:
+                order = old[3]
+                order_id = self.pk_exists(order, 'name', 'order')
+                if order_id:
+                    updated = self.update_row('line_item', {'name':
+                        pk}, {'order_id': order_id})
+                    print(updated)
+
+    def migrate_order_org(self, mini_table, thing, new_tbl):
+        db_rows = self.to_db.cursor()
+        sql = ('select o.name, u.name, u.id from `order` o inner join user u on o.submitter_id = u.id where o.organization_id is null')
+        if 'limit' in self.cli:
+            sql += ' limit ' + self.cli['limit']
+        db_rows.execute(sql)
+        pks_rows = db_rows.fetchall()
+        if 'start' in self.cli:
+            pks_rows = pks_rows[int(self.cli['start']):]
+        print('found rows: ' + str(len(pks_rows)))
+        no_skip = False
+        if 'no_skip' in self.cli:
+            if self.cli['no_skip'] == '1':
+                no_skip = True
+        for row_num, row in enumerate(pks_rows):
+            pk = row[0]
+            user = row[1]
+            user_id = row[2]
+            old = self.semantic_select_row(None, 'Group',
+                    'Group_Member', user, 'semantic_data')
+            print(old)
+            if old:
+                group = old[0]
+                org_id = self.pk_exists(group, 'name', 'organization')
+                if org_id:
+                    updated = self.update_row('order', {'name':
+                        pk}, {'organization_id': org_id})
+                    print(updated)
+                    row_exists = self.select_row('user_organization', {'user_id': user_id, 'user_organization_id':org_id}, 1)
+                    if not row_exists:
+                        row_dict = {
+                                'name': user + '_' + group,
+                                'user_organization_id': org_id,
+                                'organization_id': 1,
+                                'active': 1,
+                                'user_id': user_id
+                        }
+                        row = self.do_insert('user_organization', row_dict)
+     
+    def migrate_submitter(self, mini_table, thing, new_tbl):
+        db_rows = self.to_db.cursor()
+        sql = 'select name from `order` where submitter_id is null'
+        if 'limit' in self.cli:
+            sql += ' limit ' + self.cli['limit']
+        db_rows.execute(sql)
+        pks_rows = db_rows.fetchall()
+        if 'start' in self.cli:
+            pks_rows = pks_rows[int(self.cli['start']):]
+        print('found rows: ' + str(len(pks_rows)))
+        no_skip = False
+        if 'no_skip' in self.cli:
+            if self.cli['no_skip'] == '1':
+                no_skip = True
+        for row_num, row in enumerate(pks_rows):
+            pk = row[0]
+            if pk:
+                if 'REA' in pk:
+                    old = self.semantic_select_row(pk, 'Reagent_Request',
+                            'Submitter_Name',
+                    'semantic_data')
+                else:
+                    old = self.semantic_select_row(pk, 'Submission',
+                            'Submitter_Name',
+                    'semantic_data')
+                if old:
+                    name = old[3]
+                    user_id = self.find_user(name)
+                    print(user_id)
+                    if user_id:
+                        updated = self.update_row('order', {'name':
+                            pk}, {'submitter_id': user_id})
+                        print(updated)
+         
     def migrate_lab_admins(self, mini_table, thing, new_tbl):
         print("Table: " + mini_table + " thing: " + thing)
         pks = self.from_db.cursor()
@@ -903,7 +1031,7 @@ class MigrateCustomScript (IggyScript):
         return cli
 
     def run(self):
-        self.migrate_invoice_month(self.cli['semantic_source'], self.cli['from_tbl'], self.cli['to_tbl'])
+        self.migrate_lab_admins(self.cli['semantic_source'], self.cli['from_tbl'], self.cli['to_tbl'])
 
 # execute run on this class
 script = MigrateCustomScript()
