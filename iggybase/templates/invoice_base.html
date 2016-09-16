@@ -65,7 +65,7 @@
                     {% if invoice.charge_method_type == 'po' %}
                         {% if 'invoice address' in invoice.po_info %}
                             <div class="po_invoice_address">
-                                Invoice Address:<br>
+                                Invoice Address:<br><br>
                                 <ul>
                                     {% for line in invoice.po_info['invoice address'] %}
                                         <li>{{line}}</li>

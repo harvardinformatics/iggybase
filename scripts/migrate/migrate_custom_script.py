@@ -875,6 +875,47 @@ class MigrateCustomScript (IggyScript):
                         }
                         row = self.do_insert('user_organization', row_dict)
      
+    def migrate_po_billing(self, mini_table, thing, new_tbl):
+        print("Table: " + mini_table + " thing: " + thing)
+        pks = self.from_db.cursor()
+        sql = "select distinct name from " + mini_table + " where thing = '" + thing + "'"
+        if 'limit' in self.cli:
+            sql += ' limit ' + self.cli['limit']
+        pks.execute(sql)
+        pks_rows = pks.fetchall()
+        if 'start' in self.cli:
+            pks_rows = pks_rows[int(self.cli['start']):]
+        print('found rows: ' + str(len(pks_rows)))
+        no_skip = False
+        if 'no_skip' in self.cli:
+            if self.cli['no_skip'] == '1':
+                no_skip = True
+        for row_num, row in enumerate(pks_rows):
+            pk = row[0]
+            if pk in self.get_config('keys_to_skip'):
+                continue
+            print("\t" + str(row_num) + " Working on name: " + pk)
+            address_set = False
+            cm_exists = self.select_row('charge_method', {'code': pk,
+                'billing_address': None}, 1)
+            cm_id = None
+            if cm_exists:
+                cm_id = cm_exists[0]
+                print(cm_id)
+            if cm_id:
+                sql = "select value from " + mini_table + " where thing = '" + thing + "' and property='Billing_Address' and name = '" + pk + "'"
+                print(sql)
+                address = self.from_db.cursor()
+                address.execute(sql)
+                address_row = address.fetchone()
+                if address_row:
+                    print(address_row)
+                    billing = address_row[0].replace("\r", '')
+                    print(billing)
+                    updated = self.update_row('charge_method', {'id':
+                        cm_id}, {'billing_address': billing})
+                    print(updated)
+
     def migrate_submitter(self, mini_table, thing, new_tbl):
         db_rows = self.to_db.cursor()
         sql = 'select name from `order` where submitter_id is null'
@@ -1031,7 +1072,7 @@ class MigrateCustomScript (IggyScript):
         return cli
 
     def run(self):
-        self.migrate_lab_admins(self.cli['semantic_source'], self.cli['from_tbl'], self.cli['to_tbl'])
+        self.migrate_po_billing(self.cli['semantic_source'], self.cli['from_tbl'], self.cli['to_tbl'])
 
 # execute run on this class
 script = MigrateCustomScript()
