@@ -229,7 +229,7 @@ class OrganizationAccessControl:
                 col = id_table_col
                 columns.append(col.label('DT_RowId'))
             id_cols.append(id_table_name + '-' + cast(id_table_col, String))
-            #wheres.append(getattr(table_model, 'organization_id').in_(self.org_ids))
+            wheres.append(getattr(table_model, 'organization_id').in_(self.org_ids))
         first = True
         for c in id_cols:
             if first:

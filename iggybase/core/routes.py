@@ -376,7 +376,6 @@ def build_summary_ajax(table_name, criteria = {}):
         )
         ret = current_app.cache.get(key)
     if not ret:
-        print(criteria)
         tqc = TableQueryCollection(table_name, criteria)
         current = time.time()
         print(str(current - start))
