@@ -185,7 +185,6 @@ class OrganizationAccessControl:
                 col = getattr(aliases[alias_name],
                     field.FK_Field.display_name)
                 columns.append(col.label(field.name))
-                criteria_key = (field.FK_TableObject.name, field.FK_Field.display_name)
 
             else:  # non-fk field
                 tables.add(table_model)
@@ -201,10 +200,10 @@ class OrganizationAccessControl:
                 else:
                     if table_model not in joins:
                         joins.append(table_model)
-                criteria_key = (field.TableObject.name, field.Field.display_name)
+            criteria_key = (field.TableObject.name, field.Field.display_name)
             # don't include criteria for self foreign keys
             if criteria_key in criteria and not (field.is_foreign_key and
-                    field.TableObject.name == first_table_named):
+                field.FK_TableObject.name == first_table_named):
                 if type(criteria[criteria_key]) is list:
                     wheres.append(col.in_(criteria[criteria_key]))
                 elif type(criteria[criteria_key]) is dict:
@@ -230,7 +229,7 @@ class OrganizationAccessControl:
                 col = id_table_col
                 columns.append(col.label('DT_RowId'))
             id_cols.append(id_table_name + '-' + cast(id_table_col, String))
-            wheres.append(getattr(table_model, 'organization_id').in_(self.org_ids))
+            #wheres.append(getattr(table_model, 'organization_id').in_(self.org_ids))
         first = True
         for c in id_cols:
             if first:

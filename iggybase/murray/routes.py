@@ -18,7 +18,7 @@ def default():
 @murray.route( '/update_ordered/<table_name>/ajax' )
 @login_required
 def update_ordered_ajax(facility_name, table_name):
-    return core.routes.build_summary_ajax(table_name, 'update', {('status', 'name'):'ordered'})
+    return core.routes.build_summary_ajax(table_name, 'update', {('oligo', 'status'):'ordered'})
 
 
 @murray.route( '/update_ordered/<table_name>/' )
@@ -27,7 +27,7 @@ def update_ordered_ajax(facility_name, table_name):
 def update_ordered(facility_name, table_name):
     # update ordered to received
     table_queries = tqc.TableQueryCollection(table_name,
-            {('status', 'name'):'ordered'})
+            {('oligo', 'status'):'ordered'})
     tq = table_queries.get_first()
     hidden_fields = {}
     hidden_fields['column_defaults'] = '{"status":1, "received":"now"}'
@@ -47,7 +47,7 @@ def update_ordered(facility_name, table_name):
 @login_required
 def update_requested_ajax(facility_name, table_name):
     # TODO: we should really get rid of module name being passed around
-    return core.routes.build_summary_ajax(table_name, {('status', 'name'):'requested'})
+    return core.routes.build_summary_ajax(table_name, {('oligo', 'status'):'requested'})
 
 
 @murray.route( '/update_requested/<table_name>/' )
@@ -56,7 +56,7 @@ def update_requested_ajax(facility_name, table_name):
 def update_requested(facility_name, table_name):
     # update requested to ordered
     table_queries = tqc.TableQueryCollection(table_name,
-            {('name', 'status'):'requested'})
+            {('oligo', 'status'):'requested'})
     tq = table_queries.get_first()
     hidden_fields = {}
     hidden_fields['column_defaults'] = '{"status":2, "ordered":"now"}'
@@ -73,7 +73,7 @@ def update_requested(facility_name, table_name):
 @murray.route( '/cancel/<table_name>/ajax' )
 @login_required
 def cancel_ajax(facility_name, table_name):
-    return core.routes.build_summary_ajax(table_name, 'update', {('status', 'name'):['ordered', 'requested']})
+    return core.routes.build_summary_ajax(table_name, 'update', {('oligo', 'status'):['ordered', 'requested']})
 
 
 @murray.route( '/cancel/<table_name>/' )
@@ -82,7 +82,7 @@ def cancel_ajax(facility_name, table_name):
 def cancel(facility_name, table_name):
     # update ordered to received
     table_queries = tqc.TableQueryCollection(table_name,
-            {('status', 'name'):['ordered', 'requested']})
+            {('oligo', 'status'):['ordered', 'requested']})
     tq = table_queries.get_first()
     hidden_fields = {}
     hidden_fields['column_defaults'] = '{"status":3}'

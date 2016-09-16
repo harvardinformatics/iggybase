@@ -23,6 +23,7 @@ class TableQuery:
         self.fc.set_fk_fields()
         results = []
         self.criteria = self.add_table_query_criteria(self.criteria)
+        print(self.criteria)
         self.oac = g_helper.get_org_access_control()
         self.results = self.oac.get_table_query_data(
                 self.fc.fields,
