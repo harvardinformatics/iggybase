@@ -219,10 +219,8 @@ def modal_add(facility_name, table_name, page_context):
 @core.route('/modal_add_submit/<table_name>/<page_context>', methods=['GET', 'POST'])
 @login_required
 def modal_add_submit(facility_name, table_name, page_context):
-    data = request.get_json()
-    logging.info('called modal_add_submit')
     fp = FormParser()
-    fp.parse(data)
+    fp.parse()
 
     return json.dumps({'error': False})
 

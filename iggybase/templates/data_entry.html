@@ -71,7 +71,7 @@
                     {%- if (table_level == 0 and form_type == "single") or "modal_form" in page_context %}
                         <table id="{{ table_name }}" class="table">
                     {% else -%}
-                        <table id="{{ table_name }}" class="table table-striped"><tr>
+                        <table id="{{ table_name }}" class="table table-striped multiline-table"><tr>
                         {% set field_loop = loop %}
                         {% set firstrow = 1 %}
                         {% set found = 0 %}

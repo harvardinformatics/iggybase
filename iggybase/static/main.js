@@ -29,9 +29,9 @@ $( document ).ready( function () {
 
         }
     );
-    $( "form .lookupfield" ).keydown(
+    $( "form .lookupfield" ).on( "keydown focusout",
         function ( e ) {
-            return $.fn.keydownLookupField( e, $( this ) );
+            return $.fn.lookupField( e, $( this ) );
         }
     );
     $( ".boolean-field" ).each(
@@ -52,6 +52,22 @@ $( document ).ready( function () {
 
     $('.disabled').click(function(e){
         e.preventDefault();
+    });
+
+    var cm = [ {'Fill Down': { onclick:function( menuItem, menu ) { $.fn.childDataFill( $( this ) ); } } } ];
+
+    $( ".multiline-table" ).find( "input" ).each( function( ) {
+        if ( ! $( this ).is('[readonly]') ) {
+            $( this ).contextMenu( cm, { theme: 'human' } );
+        }
+    });
+
+    $( ".multiline-table" ).find( "select" ).each( function( ) {
+        $( this ).contextMenu( cm, { theme: 'human' } );
+    });
+
+    $( ".multiline-table" ).find( "textarea" ).each( function( ) {
+        $( this ).contextMenu( cm, { theme: 'human' } );
     });
 
     $('.change_role').click(function(){
@@ -361,7 +377,7 @@ $( document ).ready( function () {
 
     $.fn.modalAddSubmit = function ( ) {
         var table_name = $("#record_data_table_0").val( );
-        var form_data = {};
+        var form_data = new FormData();
         var hidden_fields = $("#hidden_fields");
         var facility = hidden_fields.find('input[name=facility]').val();
 
@@ -370,9 +386,9 @@ $( document ).ready( function () {
                 if ( typeof $( this ).attr( 'id' ) != 'undefined' ) {
                     if ( typeof $( this ).val( ) != 'undefined' ) {
                         if ( $( this ).attr( 'id' ) == 'file ' ) {
-                            form_data[ $( this ).attr( 'id' ) ] = $( this )[0].files[0];
+                            form_data.append( $( this ).attr( 'id' ), $( this )[0].files[0] );
                         } else {
-                            form_data[ $( this ).attr( 'id' ) ] = $( this ).val( );
+                            form_data.append( $( this ).attr( 'id' ), $( this ).val( ) );
                         }
                     }
                 }
@@ -382,7 +398,7 @@ $( document ).ready( function () {
         $.ajax({
             url:$URL_ROOT + facility + '/core/modal_add_submit/' + table_name,
             data: form_data,
-            contentType: 'multipart/form-data',
+            contentType: false,
             processData: false,
             type: 'POST',
             success: function(response) {
@@ -397,10 +413,12 @@ $( document ).ready( function () {
         });
     }
 
-    $.fn.keydownLookupField = function ( e, ele ) {
-        var key = e.which;
-        if(key == 13)  // the enter key code
+    $.fn.lookupField = function ( e, ele ) {
+        if( e.keyCode == 13 || e.type == "focusout" )  // the enter key code
         {
+            if ( e.keyCode == 13 ) {
+                ele.off("focusout")
+            }
             var input_id = ele.attr( 'id' );
 
             var matches = input_id.match( /data_entry_(\S+)_(\d+)/);
@@ -501,4 +519,89 @@ $( document ).ready( function () {
             hash: parser.hash
         };
     }
+
+    $.fn.childDataFill = function ( ae ) {
+        if ( ae.attr( "type" ) == "checkbox" ) {
+            var check = true;
+            var value = ae.is( ":checked" ) ? true : false;
+        } else {
+            var value = ae.val();
+            var check = false;
+        }
+
+        var cont = true;
+        var id = ae.attr( 'id' );
+        var matches = id.match( /(\S+)_(\d+)/);
+        var i = matches[ 2 ];
+        var type = ae.get(0).tagName;
+        var well = false;
+        var index = false;
+
+        var prefix = "";
+        var row;
+        var col;
+
+        if ( id.match( /Child_Well(\S+)_(\d+)/ ) && value != "" ) {
+            well = true;
+            row = value.substring( 0, 1 ).toUpperCase( );
+            col = parseInt( value.substring( 1, 3 ) );
+        } else if ( id.match( /Child_Index(\S+)_(\d+)/ ) && value != "" ) {
+            var wellid = value.substr( value.length - 3, value.length + 1 );
+
+            if ( wellid.match( /[A-H][0-1][0-9]/ ) ) {
+                well = true;
+
+                if ( wellid != value ) {
+                    matches = value.match( /(\S*)(\s*)(\S)(\d*)/ )
+                    prefix = matches[ 1 ] + matches[ 2 ];
+                }
+
+                row = wellid.substring( 0, 1 ).toUpperCase( );
+                col = parseInt( wellid.substring( 1, 3 ) );
+            } else {
+                index = true;
+                matches = value.match( /(\S*)(\s*)(\d*)/ )
+                prefix = matches[ 1 ] + matches[ 2 ];
+                col = parseInt( matches[ 3 ] );
+            }
+        }
+
+        while ( cont ){
+            i++;
+            id = id.replace(/(\S+)_(\d+)/,'$1' + '_' + i );
+
+            if ( check ) {
+                $( type + "[id='" + id + "'].value" ).prop( "checked", value );
+                $( "input[id='" + id + "'].novalue" ).prop('disabled', value);
+            }else if ( well ) {
+                row = String.fromCharCode( row.charCodeAt( 0 ) + 1 );
+
+                if ( row == "I" ) {
+                    row = "A";
+                    col++;
+                }
+
+                if ( col < 10 )
+                    value = prefix + row + "0" + col;
+                else
+                    value = prefix + row + col;
+            } else if ( index ) {
+                col++;
+                if ( col < 10 )
+                    value = prefix + "0" + col;
+                else
+                    value = prefix + col;
+            }
+
+            if ( $( type + "[id='" + id + "']" ).length > 0 ) {
+                if ( !check && $( type + "[id='" + id + "']" ).closest( "tr" ).is( ":visible" ) ) {
+                    $( type + "[id='" + id + "']" ).val( value );
+                    $( type + "[id='" + id + "']" ).change( );
+                }
+            } else {
+                cont = false;
+            }
+        }
+    }
+
 } ) ( jQuery );
