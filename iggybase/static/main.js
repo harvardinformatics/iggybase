@@ -486,6 +486,11 @@ $( document ).ready( function () {
         $("#dialog").modal( "hide" );
         $('body').removeClass('modal-open');
         $('.modal-backdrop').remove();
+        $( "#" + ele.attr('luid') ).on( "focusout",
+            function ( e ) {
+                return $.fn.lookupField( e, $( this ) );
+            }
+        );
         $("#" + ele.attr('luid')).val(ele.val());
         $("#id_" + ele.attr('luid')).val(ele.attr('val_id'));
     }

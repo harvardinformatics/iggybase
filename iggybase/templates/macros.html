@@ -83,7 +83,11 @@
 
 {% macro render_field(field, row_id, table_name, row_name) -%}
     <tr row_id="{{ row_id }}"><td>
-    <label for="{{ field.id }}" class="control-label">{{ field.label }}:</label>
+    {% if field.flags.required %}
+        <label for="{{ field.id }}" class="control-label required">{{ field.label }}:</label>
+    {% else -%}
+        <label for="{{ field.id }}" class="control-label">{{ field.label }}:</label>
+    {% endif -%}
     </td>
     <td class="col-md-8">
     {{ field(**kwargs) }}
