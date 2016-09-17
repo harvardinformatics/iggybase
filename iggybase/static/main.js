@@ -1,3 +1,5 @@
+var search_click = false;
+
 $( document ).ready( function () {
     if (formErrors) {
         $('#dialog').modal('show');
@@ -260,7 +262,7 @@ $( document ).ready( function () {
         );
     }
 
-    $.fn.showModalDialog = function ( url, buttons, callback ) {
+    $.fn.showModalDialog = function ( url, buttons, callback, close_function ) {
         $("#modal_dialog_content").html("");
 
         $.ajax( {
@@ -281,7 +283,10 @@ $( document ).ready( function () {
 
                 $(tmpform).appendTo("#modal_dialog_content");
 
-                $( '.close_modal' ).click( $.fn.modal_close );
+                if ( close_function )
+                    $( '.close_modal' ).click( close_function );
+                else
+                    $( '.close_modal' ).click( $.fn.modal_close );
 
                 if ( buttons ) {
                     for (var key in buttons){
@@ -357,6 +362,7 @@ $( document ).ready( function () {
         var spancls = "ui-icon ui-icon-search search-button";
 
         $('<span id="'+new_id+'" name="'+new_id+'" class="'+spancls+'" luid="'+id+'"/>').appendTo(ele.parent());
+        $( "#" + new_id ).on( "mousedown", function () { search_click = true; } );
     }
 
     $.fn.modalAdd = function ( ele ) {
@@ -414,11 +420,15 @@ $( document ).ready( function () {
     }
 
     $.fn.lookupField = function ( e, ele ) {
-        if( e.keyCode == 13 || e.type == "focusout" )  // the enter key code
+        if( e.keyCode == 9 || e.keyCode == 13 || e.type == "focusout" )  // the enter key code
         {
-            if ( e.keyCode == 13 ) {
-                ele.off("focusout")
+            if ( search_click ) {
+                search_click = false;
+                return false;
             }
+
+            ele.off("focusout")
+
             var input_id = ele.attr( 'id' );
 
             var matches = input_id.match( /data_entry_(\S+)_(\d+)/);
@@ -437,7 +447,7 @@ $( document ).ready( function () {
             var facility = hidden_fields.find('input[name=facility]').val()
             var formurl = $URL_ROOT + facility + "/core/search_results?search_vals=" + JSON.stringify(search_vals);
 
-            $.fn.showModalDialog( formurl, {}, $.fn.searchLinks );
+            $.fn.showModalDialog( formurl, {}, $.fn.searchLinks, $.fn.searchClose );
 
             return false;
         }
@@ -445,6 +455,7 @@ $( document ).ready( function () {
 
     $.fn.searchClick = function ( ele ) {
         var input_id = ele.attr( 'luid' );
+        $( "#" + input_id ).off("focusout")
 
         var matches = input_id.match( /data_entry_(\S+)_(\d+)/);
         var table_object = $( '#record_data_table_' + matches[2] ).val( );
@@ -458,7 +469,7 @@ $( document ).ready( function () {
         var buttons = {};
         buttons[ "Search" ] = $.fn.searchResults;
 
-        $.fn.showModalDialog( formurl, buttons );
+        $.fn.showModalDialog( formurl, buttons, undefined, $.fn.searchClose( input_id ) );
     }
 
     $.fn.searchResults = function ( ) {
@@ -475,30 +486,43 @@ $( document ).ready( function () {
         var facility = hidden_fields.find('input[name=facility]').val()
         var formurl = $URL_ROOT + facility + "/core/search_results?search_vals=" + JSON.stringify(search_vals);
 
-        $.fn.showModalDialog( formurl, {}, $.fn.searchLinks );
+        $.fn.showModalDialog( formurl, {}, $.fn.searchLinks, $.fn.searchClose( $( "#modal_input_id" ).val( ) ) );
     }
 
     $.fn.searchLinks = function () {
-        $(".search-results").click( function( ){ $.fn.searchUpdate( $(this) ); } );
+        if ( $('.search-results').length == 1 ) {
+            $.fn.searchUpdate( $(".search-results").first( ) );
+        } else {
+            $(".search-results").click( function( ){ $.fn.searchUpdate( $(this) ); } );
+        }
     }
 
     $.fn.searchUpdate = function (ele) {
-        $("#dialog").modal( "hide" );
-        $('body').removeClass('modal-open');
-        $('.modal-backdrop').remove();
-        $( "#" + ele.attr('luid') ).on( "focusout",
+        $("#" + ele.attr('luid')).val(ele.val());
+        $("#id_" + ele.attr('luid')).val(ele.attr('val_id'));
+
+        $.fn.searchClose( ele.attr('luid') )
+    }
+
+    $.fn.searchClose = function ( ele_id ) {
+        search_click = false;
+
+        //make sure focusout is unbound, several ways to trigger the event, so it is easier to make sure it is here
+        $( "#" + ele_id ).off("focusout")
+        $( "#" + ele_id ).on( "focusout",
             function ( e ) {
                 return $.fn.lookupField( e, $( this ) );
             }
         );
-        $("#" + ele.attr('luid')).val(ele.val());
-        $("#id_" + ele.attr('luid')).val(ele.attr('val_id'));
+
+        $.fn.modal_close();
     }
 
     $.fn.modal_close = function () {
         $("#dialog").modal( "hide" );
         $('body').removeClass('modal-open');
         $('.modal-backdrop').remove();
+        $("#modal_dialog_content").html("");
     }
 
     $.fn.parseURL = function (url) {
