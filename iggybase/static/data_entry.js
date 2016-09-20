@@ -174,9 +174,9 @@ $( document ).ready( function () {
 
     $.fn.searchClick = function ( ele ) {
         search_input = ele.attr( 'luid' );
-        $( "#" + input_id ).off("focusout")
+        $( "#" + search_input ).off("focusout")
 
-        var matches = input_id.match( /data_entry_(\S+)_(\d+)/);
+        var matches = search_input.match( /data_entry_(\S+)_(\d+)/);
         var table_object = $( '#record_data_table_' + matches[2] ).val( );
 
         var display_name = matches[ 1 ];
@@ -372,19 +372,19 @@ $( document ).ready( function () {
             }
         );
 
-        new_tr.find( '.lookupfield' ).each(
-            function() {
-                $( this ).keydown(
-                    function ( e ) {
-                        return $.fn.lookupField( e, $( this ) );
-                    }
-                );
+        new_tr.find( 'input' ).on( "keyup keypress focusout",
+            function ( e ) {
+                $.fn.lookupField( e, $( this ) );
 
-                $( '<input>' ).attr( {
-                    style: 'display:none;',
-                    id: 'id_' + new_id,
-                    name: 'id_' + new_id
-                } ).appendTo( new_tr );
+                var ele_class = ele.attr( 'class' );
+
+                if ( ele_class.includes( 'lookupfield' ) ) {
+                    $( '<input>' ).attr( {
+                        style: 'display:none;',
+                        id: 'id_' + new_id,
+                        name: 'id_' + new_id
+                    } ).appendTo( new_tr );
+                }
             }
         );
 
