@@ -108,8 +108,12 @@ class DataInstance:
         if instance is None:
             instance = self.get_instance(table_name, instance_name, None)
 
+        # logging.info(table_name + ' new instance_name: ' + instance_name)
+
         if instance.name is None or instance.name == '' or instance_name == 'new':
             instance.name = 'new_' + str(len(self.instances[table_name]))
+
+        # logging.info(table_name + ' new instance.name: ' + instance.name)
 
         instance = {'instance': instance, 'parent_id': None, 'save': False}
 
@@ -117,7 +121,7 @@ class DataInstance:
 
         self.instances[table_name][instance['instance'].name] = instance
 
-        # logging.info(table_name + ' new instance: ' + instance.name)
+        # logging.info(table_name + ' new instance.name returned: ' + instance['instance'].name)
         return instance['instance'].name
 
     def get_instance(self, table_name, instance_name, instance_id):
@@ -210,7 +214,7 @@ class DataInstance:
         else:
             self.fields[table_name].set_defaults({self.tables[table_name]['parent']: instance['parent_id']})
 
-        if instance['instance'].name == 'new':
+        if 'new' in instance['instance'].name:
             for field, meta_data in self.fields[table_name].fields.items():
                 if meta_data.default is not None and meta_data.default != '':
                     setattr(instance['instance'], meta_data.Field.display_name, meta_data.default)
@@ -318,7 +322,7 @@ class DataInstance:
                   field_value is not None) or
                  field_value != getattr(self.instances[table_name][instance_name]['instance'], field_name)) and \
                 not (field_name == 'name' and field_value is None and
-                     self.instances[table_name][instance_name]['instance'].name == 'new'):
+                     'new' in self.instances[table_name][instance_name]['instance'].name):
             # logging.info(field_name + ' field_value: ' + str(field_value))
             # logging.info('getattr(self.instances[table_name][instance_name][instance], field_name): ' +
             #              str(getattr(self.instances[table_name][instance_name]['instance'], field_name)))
@@ -360,8 +364,8 @@ class DataInstance:
                 continue
 
             for instance_name, instance in instances.items():
-                logging.info('instance_name: ' + instance_name)
-                logging.info('instance[save]: ' + str(instance['save']))
+                # logging.info('instance_name: ' + instance_name)
+                # logging.info('instance[save]: ' + str(instance['save']))
                 if not instance['save']:
                     continue
 

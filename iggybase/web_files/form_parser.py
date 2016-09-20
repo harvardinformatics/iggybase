@@ -80,7 +80,7 @@ class FormParser():
 
             if row_data['record_data']['new'] == 1:
                 instance_name = instance.add_new_instance(table_name_field, 'new')
-                if row_data['data_entry']['name'] == '':
+                if row_data['data_entry']['name'] == '' and row_data['data_entry']['name'] != 'new':
                     instance_name = row_data['data_entry']['name']
             else:
                 # on a multiform all instances are not fetched with get_data

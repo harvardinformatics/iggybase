@@ -15,10 +15,10 @@ class ModalForm():
         display_name = self.search_vals['modal_field_name']
         search_table = self.search_vals['modal_search_table']
 
-        logging.info('input_id: ' + str(input_id))
-        logging.info('table_name: ' + str(table_name))
-        logging.info('display_name: ' + str(display_name))
-        logging.info('search_table: ' + str(search_table))
+        # logging.info('input_id: ' + str(input_id))
+        # logging.info('table_name: ' + str(table_name))
+        # logging.info('display_name: ' + str(display_name))
+        # logging.info('search_table: ' + str(search_table))
 
         search_params = {}
         fields = ['name']
@@ -30,8 +30,8 @@ class ModalForm():
                 if value != '':
                     search_params[field_name] = value
 
-        logging.info('search_params: ')
-        logging.info(search_params)
+        # logging.info('search_params: ')
+        # logging.info(search_params)
 
         criteria = {'display_name': display_name}
         fc = FieldCollection(None, table_name, criteria)
