@@ -376,7 +376,7 @@ $( document ).ready( function () {
             function() {
                 $( this ).keydown(
                     function ( e ) {
-                        return $.fn.keydownLookupField( e, $( this ) );
+                        return $.fn.lookupField( e, $( this ) );
                     }
                 );
 

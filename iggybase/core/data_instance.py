@@ -108,7 +108,7 @@ class DataInstance:
         if instance is None:
             instance = self.get_instance(table_name, instance_name, None)
 
-        if instance.name is None or instance_name == 'new':
+        if instance.name is None or instance.name == '' or instance_name == 'new':
             instance.name = 'new_' + str(len(self.instances[table_name]))
 
         instance = {'instance': instance, 'parent_id': None, 'save': False}
@@ -360,8 +360,8 @@ class DataInstance:
                 continue
 
             for instance_name, instance in instances.items():
-                # logging.info('instance_name: ' + instance_name)
-                # logging.info('instance[save]: ' + str(instance['save']))
+                logging.info('instance_name: ' + instance_name)
+                logging.info('instance[save]: ' + str(instance['save']))
                 if not instance['save']:
                     continue
 
