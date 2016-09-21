@@ -144,7 +144,7 @@ class OrganizationAccessControl:
 
         return results
 
-    def get_table_query_data(self, field_dict, criteria={}):
+    def get_table_query_data(self, field_dict, criteria={}, active = 1):
         results = []
         tables = set([])
         joins = []
@@ -230,6 +230,7 @@ class OrganizationAccessControl:
                 columns.append(col.label('DT_RowId'))
             id_cols.append(id_table_name + '-' + cast(id_table_col, String))
             wheres.append(getattr(table_model, 'organization_id').in_(self.org_ids))
+            wheres.append(getattr(table_model, 'active') == active)
         first = True
         for c in id_cols:
             if first:
