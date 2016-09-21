@@ -75,7 +75,7 @@ class MigrateScript (IggyScript):
                 if col in col_value_map:
                     value_map = col_value_map[col]
                     if value_map:
-                        if 'func_' in value_map:
+                        if (isinstance(value_map, str) and 'func_' in value_map):
                             print(value_map)
                             func_name = value_map.replace('func_', '')
                             if func_name in config.func_params:
@@ -150,7 +150,10 @@ class MigrateScript (IggyScript):
             new_col = config.fk_tbl_map[col]
         else:
             new_col = col
-        fk_id = self.pk_exists(val, 'name', new_col)
+        if col == 'invoice_organization':
+            fk_id = self.pk_exists(val, 'name', 'organization')
+        else:
+            fk_id = self.pk_exists(val, 'name', new_col)
         if fk_id:
             if col in col_name_map:
                 new_dict = {col_name_map[col]: fk_id}

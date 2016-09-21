@@ -31,6 +31,13 @@ col_name_map = {
     'submission': {
         'submitter': 'user'
         },
+    'invoice': {
+        'group': 'invoice_organization',
+        'total_cost': 'amount',
+        'month': 'invoice_month',
+        'status':'status_id',
+        'notes': 'note_id'
+        },
     'line_item':{
         'cost': 'price_per_unit',
         'sequencing_price': 'price_item_id',
@@ -79,10 +86,20 @@ col_value_map = {
         'visible':1
         },
     'invoice':{
+        'line_item':None,
+        'lab_admin_name':None,
+        'lab_admin_email':None,
+        'group': 'func_get_fk',
+        'invoice_number': None,
+        'notes': 'func_insert_long_text',
+        'status': 11,
+        'total_credit': None
+        },
+    '''invoice':{
         'line_item':'func_get_fk',
         'lab_admin_name':'func_get_fk_user',
         'lab_admin_email':None
-        },
+        },'''
     'line_item':{
         'invoice_type':None,
         'group':'func_get_fk',
@@ -378,6 +395,10 @@ base_int_col_map = ['id', 'active', 'organization_id', 'note_id', 'user_id',
 'address_id', 'billing_address_id', 'institution_id', 'department_id']
 # by table
 int_col_map = {
+        'invoice': [
+            'invoice_organization_id',
+            'notes'
+        ],
         'user_organization_position': [
             'position_id',
             'user_organization_id'
