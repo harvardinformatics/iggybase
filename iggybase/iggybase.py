@@ -147,15 +147,18 @@ def configure_error_handlers( app ):
     from iggybase import base_routes
 
     @app.errorhandler( 403 )
+    @login_required
     def forbidden_page(error):
         # we want menus to show up for this error
         return base_routes.forbidden(), 403
 
     @app.errorhandler( 404 )
+    @login_required
     def page_not_found(error):
         return base_routes.page_not_found(), 404
 
     @app.errorhandler( 500 )
+    @login_required
     def server_error_page(error):
         return render_template( "errors/server_error.html" ), 500
 
