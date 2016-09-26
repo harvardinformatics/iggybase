@@ -52,6 +52,7 @@ $( document ).ready( function () {
 
         $.ajax( {
             url: url,
+            type: "POST",
             success: function ( resp ) {
                 tmpform = resp;
                 tmpform += "<div class='modal-footer'>";

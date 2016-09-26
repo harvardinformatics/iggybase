@@ -16,4 +16,4 @@ try:
     SpinalBase.metadata.create_all(bind=spinal_engine)
 except:
     print('Spinal DB might be down')
-    logging.error('Could not connect to spinal DB')
+    logging.error('Could not connect to spinal DB') 

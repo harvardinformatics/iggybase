@@ -1,4 +1,4 @@
-var search_click = false;
+var event_fired = false;
 var search_input = '';
 
 $( document ).ready( function () {
@@ -19,19 +19,9 @@ $( document ).ready( function () {
             $.fn.setPrice( e, $( this ) );
         }
     );
-    $( ".lookupfield" ).each(
-        function( ) {
-            $.fn.addLookup( $( this ) );
-        }
-    );
-    $( "form input" ).on( "keyup keypress focusout",
+    $( "form input" ).on( "keydown focusout",
         function ( e ) {
-            return $.fn.lookupField( e, $( this ) );
-        }
-    );
-    $( ".search-button" ).click(
-        function( ) {
-            $.fn.searchClick( $( this ) );
+            return $.fn.dataEntryEventManager( e, $( this ) );
         }
     );
     $( ".add_new_child_item" ).click(
@@ -119,127 +109,107 @@ $( document ).ready( function () {
         });
     }
 
-    $.fn.addLookup = function ( ele ) {
-        var id = ele.attr( 'id' );
-        var matches = id.match( /data_entry_(\S+)_(\d+)/);
-        var new_id = "span_" + matches[ 1 ] + "_" + matches[ 2 ];
-
-        var spancls = "ui-icon ui-icon-search search-button";
-
-        $('<span id="'+new_id+'" name="'+new_id+'" class="'+spancls+'" luid="'+id+'"/>').appendTo(ele.parent());
-        $( "#" + new_id ).on( "mousedown", function () { search_click = true; } );
-    }
-
-    $.fn.lookupField = function ( e, ele ) {
+    $.fn.dataEntryEventManager = function ( e, ele ) {
         var ele_class = ele.attr( 'class' );
         var keyCode = e.keyCode || e.which;
 
-        if ( keyCode == 13 && !( ele_class.includes( 'lookupfield' ) ) ) {
+        if ( keyCode == 13 ) {
             e.preventDefault( );
-            return false;
-        }
 
-        if( ( keyCode == 13 || e.type == "focusout" ) && ele_class.includes( 'lookupfield' ) )  // the enter key code
-        {
-            if ( search_click ) {
-                return false;
+            if ( ele_class.includes( 'lookupfield' ) ) {
+                return $.fn.searchResults( ele, false );
             }
 
-            search_click = true;
-            ele.off("focusout")
-
-            search_input = ele.attr( 'id' );
-
-            var matches = search_input.match( /data_entry_(\S+)_(\d+)/);
-            var table_object = $( '#record_data_table_' + matches[2] ).val( );
-
-            var display_name = matches[ 1 ];
-            var search_vals = {};
-
-            search_vals['search_by_field'] = ele.val();
-            search_vals['modal_input_id'] = search_input;
-            search_vals['modal_table_object'] = table_object;
-            search_vals['modal_field_name'] = display_name;
-            search_vals['modal_search_table'] = '';
-
-            var hidden_fields = $("#hidden_fields");
-            var facility = hidden_fields.find('input[name=facility]').val()
-            var formurl = $URL_ROOT + facility + "/core/search_results?search_vals=" + JSON.stringify(search_vals);
-
-            $.fn.showModalDialog( formurl, {}, $.fn.searchLinks, $.fn.searchClose );
-
             return false;
+        } else if ( ele_class.includes( 'lookupfield' ) && e.type == "focusout" ) {
+            return $.fn.searchResults( ele, false );
         }
     }
 
-    $.fn.searchClick = function ( ele ) {
-        search_input = ele.attr( 'luid' );
-        $( "#" + search_input ).off("focusout")
+    $.fn.searchResults = function ( ele, modal_open, search_vals ) {
+        search_input = ele.attr( 'id' );
 
         var matches = search_input.match( /data_entry_(\S+)_(\d+)/);
         var table_object = $( '#record_data_table_' + matches[2] ).val( );
 
-        var display_name = matches[ 1 ];
+        if ( !search_vals )
+            var search_vals = {};
+
+        search_vals['table_name'] = table_object;
+        search_vals['input_id'] = search_input;
+        search_vals['display_name'] = matches[ 1 ];
+        search_vals['value'] = ele.val( );
+        search_vals['search_' + matches[ 1 ]] = ele.val( );
+        search_vals['field_key'] = table_object + "|" + matches[ 1 ];
+        search_vals['modal_open'] = modal_open;
 
         var hidden_fields = $("#hidden_fields");
-        var facility = hidden_fields.find('input[name=facility]').val()
-        var formurl = $URL_ROOT + facility + "/core/search?table_object=" + table_object + "&input_id=" + search_input + "&field_name=" + display_name;
+        search_vals['facility'] = hidden_fields.find('input[name=facility]').val()
+        var url = $URL_ROOT + search_vals['facility'] + "/core/search_results?search_vals=" + JSON.stringify(search_vals);
 
-        var buttons = {};
-        buttons[ "Search" ] = $.fn.searchResults;
+        $.ajax({
+            url: url,
+            type: 'POST',
+            success: function(response) {
+                var results = JSON.parse(response);
+                if ( results[0] == 1 ) {
+                    $( "#" + search_input ).val( results[1] );
+                    $( "#id_" + search_input ).val( results[2] );
 
-        $.fn.showModalDialog( formurl, buttons, undefined, $.fn.searchClose );
+                    return false;
+                } else {
+                    $( "#" + search_input ).val( '' );
+                    $( "#id_" + search_input ).val( '' );
+
+                    if ( modal_open )
+                        $.fn.displaySearchResults( results );
+                    else
+                        $.fn.searchModal( ele, results, search_vals );
+                }
+            }
+        });
     }
 
-    $.fn.searchResults = function ( ) {
-        $("#dialog").modal( "hide" );
-        $('body').removeClass('modal-open');
-        $('.modal-backdrop').remove();
+    $.fn.searchModal = function ( ele, search_results,search_vals ) {
+        var formurl = $URL_ROOT + search_vals['facility'] + "/core/search?search_vals=" +  JSON.stringify(search_vals);
+
+        var buttons = {};
+        buttons[ "Search" ] = $.fn.getSearchResults;
+
+        var callback = function () {
+            $.fn.displaySearchResults( search_results );
+        };
+
+        $.fn.showModalDialog( formurl, buttons, callback );
+    }
+
+    $.fn.getSearchResults = function ( ) {
         search_vals = {};
 
         $(".modal-body input").each(function() {
             search_vals[$(this).attr('id')] = $(this).val();
         });
 
-        var hidden_fields = $("#hidden_fields");
-        var facility = hidden_fields.find('input[name=facility]').val()
-        var formurl = $URL_ROOT + facility + "/core/search_results?search_vals=" + JSON.stringify(search_vals);
+        var search_results = $.fn.searchResults( $( "#" + search_input ), true, search_vals );
 
-        $.fn.showModalDialog( formurl, {}, $.fn.searchLinks, $.fn.searchClose );
+        $.fn.displaySearchResults( search_results );
     }
 
-    $.fn.searchLinks = function () {
-        if ( $('.search-results').length == 1 ) {
-            $.fn.searchUpdate( $(".search-results").first( ) );
-        } else {
-            $(".search-results").click( function( ){ $.fn.searchUpdate( $(this) ); } );
-        }
+    $.fn.displaySearchResults = function ( search_results ) {
+        $( "#modal_search_results" ).empty();
+
+        $( "#modal_search_results" ).append( search_results );
+
+        $( ".search-results" ).click( function( ){ $.fn.searchUpdate( $(this) ); } );
     }
 
     $.fn.searchUpdate = function (ele) {
-        $("#" + ele.attr('luid')).val(ele.val());
-        $("#id_" + ele.attr('luid')).val(ele.attr('val_id'));
+        $( "#" + search_input ).val( ele.val( ) );
+        $( "#id_" + search_input ).val( ele.attr( 'val_id' ) );
 
-        $.fn.searchClose( ele, true )
+        $.fn.modal_close( );
     }
 
-    $.fn.searchClose = function ( ele, updated ) {
-        search_click = false;
-        
-        if ( !(updated) ) {
-            $( "#" + search_input ).val( '' );
-        }
-
-        //make sure focusout is unbound, several ways to trigger the event, so it is easier to make sure it is here
-        $( "#" + search_input ).off("focusout")
-        $( "#" + search_input ).on( "focusout",
-            function ( e ) {
-                return $.fn.lookupField( e, $( this ) );
-            }
-        );
-
-        $.fn.modal_close();
-    }
     $.fn.addChildTableRow = function( ele ) {
         var target = ele.attr( "target_table" );
         var table_level = ele.attr( "table_level" );
@@ -320,6 +290,8 @@ $( document ).ready( function () {
                         value = table_object_id;
                     } else if ( matches[ 1 ] == 'record_data_table' ) {
                         value = target;
+                    } else if ( matches[ 1 ] == 'record_data_new' ) {
+                        value = 1;
                     }
 
                     var new_input = $( '<input>' ).attr( {
@@ -372,19 +344,19 @@ $( document ).ready( function () {
             }
         );
 
-        new_tr.find( 'input' ).on( "keyup keypress focusout",
+        new_tr.find( 'input' ).on( "keydown focusout",
             function ( e ) {
-                $.fn.lookupField( e, $( this ) );
+                $.fn.blockSubmit( e, $( this ) );
+            }
+        );
 
-                var ele_class = ele.attr( 'class' );
-
-                if ( ele_class.includes( 'lookupfield' ) ) {
-                    $( '<input>' ).attr( {
-                        style: 'display:none;',
-                        id: 'id_' + new_id,
-                        name: 'id_' + new_id
-                    } ).appendTo( new_tr );
-                }
+        new_tr.find( '.lookupfield' ).each(
+            function ( ) {
+                $( '<input>' ).attr( {
+                    style: 'display:none;',
+                    id: 'id_' + new_id,
+                    name: 'id_' + new_id
+                } ).appendTo( new_tr );
             }
         );
 
@@ -449,85 +421,35 @@ $( document ).ready( function () {
     }
 
     $.fn.childDataFill = function ( ae ) {
+        var value = ae.val();
+        var check = false;
+
         if ( ae.attr( "type" ) == "checkbox" ) {
-            var check = true;
-            var value = ae.is( ":checked" ) ? true : false;
-        } else {
-            var value = ae.val();
-            var check = false;
+            check = true;
+            value = ae.is( ":checked" ) ? true : false;
         }
 
-        var cont = true;
+        var cont = true
+        var current_tr = ae.closest( 'tr' );
+
         var id = ae.attr( 'id' );
         var matches = id.match( /(\S+)_(\d+)/);
-        var i = matches[ 2 ];
-        var type = ae.get(0).tagName;
-        var well = false;
-        var index = false;
+        var id_prefix = matches[ 1 ];
 
-        var prefix = "";
-        var row;
-        var col;
+        while ( current_tr.next('tr').length ){
+            current_tr = current_tr.next('tr');
+            current_row_number = current_tr.attr( 'row_id' );
 
-        if ( id.match( /Child_Well(\S+)_(\d+)/ ) && value != "" ) {
-            well = true;
-            row = value.substring( 0, 1 ).toUpperCase( );
-            col = parseInt( value.substring( 1, 3 ) );
-        } else if ( id.match( /Child_Index(\S+)_(\d+)/ ) && value != "" ) {
-            var wellid = value.substr( value.length - 3, value.length + 1 );
-
-            if ( wellid.match( /[A-H][0-1][0-9]/ ) ) {
-                well = true;
-
-                if ( wellid != value ) {
-                    matches = value.match( /(\S*)(\s*)(\S)(\d*)/ )
-                    prefix = matches[ 1 ] + matches[ 2 ];
-                }
-
-                row = wellid.substring( 0, 1 ).toUpperCase( );
-                col = parseInt( wellid.substring( 1, 3 ) );
-            } else {
-                index = true;
-                matches = value.match( /(\S*)(\s*)(\d*)/ )
-                prefix = matches[ 1 ] + matches[ 2 ];
-                col = parseInt( matches[ 3 ] );
-            }
-        }
-
-        while ( cont ){
-            i++;
-            id = id.replace(/(\S+)_(\d+)/,'$1' + '_' + i );
+            new_id = id_prefix + '_' + current_row_number
 
             if ( check ) {
-                $( type + "[id='" + id + "'].value" ).prop( "checked", value );
-                $( "input[id='" + id + "'].novalue" ).prop('disabled', value);
-            }else if ( well ) {
-                row = String.fromCharCode( row.charCodeAt( 0 ) + 1 );
-
-                if ( row == "I" ) {
-                    row = "A";
-                    col++;
-                }
-
-                if ( col < 10 )
-                    value = prefix + row + "0" + col;
-                else
-                    value = prefix + row + col;
-            } else if ( index ) {
-                col++;
-                if ( col < 10 )
-                    value = prefix + "0" + col;
-                else
-                    value = prefix + col;
-            }
-
-            if ( $( type + "[id='" + id + "']" ).length > 0 ) {
-                if ( !check && $( type + "[id='" + id + "']" ).closest( "tr" ).is( ":visible" ) ) {
-                    $( type + "[id='" + id + "']" ).val( value );
-                    $( type + "[id='" + id + "']" ).change( );
-                }
-            } else {
-                cont = false;
+                $( "#" + new_id ).prop( "checked", value );
+                $( "input[name=bool_" + new_id + "]" ).prop( 'disabled', value );
+                $( "input[name=bool_" + new_id + "]" ).val( value ? 'y' : 'n' );
+                alert( $( "input[name=bool_" + new_id + "]" ).val() );
+            } else if ( $( "#" + new_id ).closest( "tr" ).is( ":visible" ) ) {
+                $( "#" + new_id ).val( value );
+                $( "#" + new_id ).change( );
             }
         }
     }

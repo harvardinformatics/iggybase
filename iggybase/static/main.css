@@ -16,6 +16,29 @@
     display: block;
     overflow: auto
 }
+/*
+.lookupfield:focus {
+  background: #fff0e0;
+}
+*/
+.lookupfield {
+  background: #ECF0F1!important;
+}
+.lookupfieldex {
+    display: inline-block;
+    width: 10%;
+    height: 34px;
+    padding: 6px 12px;
+    font-size: 14px;
+    line-height: 1.42857143;
+    color: #555;
+    background-color: #ECF0F1;
+    background-image: none;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-shadow: inset 0 1px 1px rgba(0,0,0,.075);
+    transition: border-color ease-in-out .15s,box-shadow ease-in-out .15s;
+}
 .page_content {
     display: block;
     vertical-align: middle!important;
@@ -23,16 +46,6 @@
 }
 .close_modal {
     float: right ! important;
-}
-.form-control-lookup.data-control {
-  display: inline-block ! important ;
-  width: calc(100% - 18px) ! important ;
-  float:left;
-}
-.form-control-lookup.table-control {
-  display: inline-block ! important ;
-  width: calc(90% - 18px) ! important ;
-  float:left;
 }
 .search-button {
   display: inline-block ! important ;

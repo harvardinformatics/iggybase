@@ -144,10 +144,7 @@ def get_row(facility_name, table_name):
 
 @core.route('/search', methods=['GET', 'POST'])
 def search(facility_name):
-    search_vals = {'table_name': request.args.get('table_object'),
-                   'display_name': request.args.get('field_name'),
-                   'field_key': request.args.get('table_object') + '|' + request.args.get('field_name'),
-                   'input_id': request.args.get('input_id')}
+    search_vals = json.loads(request.args.get('search_vals'))
     sf = ModalForm(search_vals)
     return sf.search_form()
 

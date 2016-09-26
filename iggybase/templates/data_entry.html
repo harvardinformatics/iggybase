@@ -20,7 +20,7 @@
             {% if table_name is defined %}
                 <h1>{{ table_name.replace( '_',' ' )|title }} {{ page_header.replace( '_',' ' )|title }}</h1>
                 <br/>
-                <div style="color:red;float:left;margin-right:5px;">*</div><div style="color:black; float:left;">= required field</div>
+                <div style="color:red;float:left;margin-right:5px;">*</div><div style="color:black;float:left;margin-right:5px;">= required field <input readonly class="lookupfieldex"/> = lookup field</div>
             {% else %}
                 <h1>{{ page_header.replace( '_',' ' )|title }}</h1>
             {% endif %}
