@@ -40,7 +40,6 @@ class InvoiceCollection:
                     ('invoice', 'invoice_month'): {'from': self.from_date, 'to': self.to_date},
                 }
         }
-
         self.set_invoices() # creates invoice rows in DB
 
     def parse_dates(self):
@@ -135,20 +134,28 @@ class InvoiceCollection:
 
     def generate_pdfs(self):
         generated = []
+        # don't regenerate invoices from old system
+        old_invoice_date = datetime.date(year=2016, month=8, day=1)
         for invoice in self.invoices:
-            if invoice.total:
-                path = self.generate_pdf(invoice)
-                if path:
-                    generated.append(path)
+            if invoice.from_date > old_invoice_date:    
+                if invoice.total:
+                    path = self.generate_pdf(invoice)
+                    if path:
+                        generated.append(path)
         return generated
 
     def generate_pdf(self, invoice):
-        html = render_template('invoice_base.html',
-        module_name = 'billing',
-        invoices = [invoice])
-        path = invoice.get_pdf_path()
-        HTML(string=html).write_pdf(path)
-        return path
+        # don't regenerate invoices from old system
+        old_invoice_date = datetime.date(year=2016, month=8, day=1)
+        if invoice.from_date > old_invoice_date:    
+            html = render_template('invoice_base.html',
+            module_name = 'billing',
+            invoices = [invoice])
+            path = invoice.get_pdf_path()
+            HTML(string=html).write_pdf(path)
+            return path
+        else: 
+            return None
 
     def populate_template_data(self):
         for invoice in self.invoices:

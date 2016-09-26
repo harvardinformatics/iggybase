@@ -14,7 +14,7 @@ class PageTemplate():
         else:
             self.page_context = page_context.split(',')
             self.page_context.append('base-context')
-
+        
         self.module_name = module_name
         self.page_form_name = page_form_name
         self.organization_access_control = g_helper.get_org_access_control()

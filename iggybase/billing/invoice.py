@@ -102,7 +102,8 @@ class Invoice:
                 'order_id': self.items[0].Order.id,
                 'invoice_month': self.from_date,
                 'order': self.order,
-                'service_type_id': self.service_type_id
+                'service_type_id': self.service_type_id,
+                'active': 1
             }
             invoice_row = self.oac.insert_row('invoice', cols)
         self.id = invoice_row.id

@@ -533,7 +533,8 @@ class OrganizationAccessControl:
             line_item.date_created >= from_date,
             line_item.date_created <= to_date,
             line_item.price_per_unit > 0, 
-            order.active == 1
+            order.active == 1,
+            invoice.active == 1
         ]
         if org_list:
             filters.append(models.Organization.name.in_(org_list))
