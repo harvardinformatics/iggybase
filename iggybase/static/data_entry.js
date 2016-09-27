@@ -139,7 +139,7 @@ $( document ).ready( function () {
         search_vals['input_id'] = search_input;
         search_vals['display_name'] = matches[ 1 ];
         search_vals['value'] = ele.val( );
-        search_vals['search_' + matches[ 1 ]] = ele.val( );
+        search_vals['by_field'] = ele.val( );
         search_vals['field_key'] = table_object + "|" + matches[ 1 ];
         search_vals['modal_open'] = modal_open;
 
@@ -170,7 +170,7 @@ $( document ).ready( function () {
         });
     }
 
-    $.fn.searchModal = function ( ele, search_results,search_vals ) {
+    $.fn.searchModal = function ( ele, search_results, search_vals ) {
         var formurl = $URL_ROOT + search_vals['facility'] + "/core/search?search_vals=" +  JSON.stringify(search_vals);
 
         var buttons = {};

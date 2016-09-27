@@ -17,6 +17,7 @@ class ModalForm():
         modal_open = self.search_vals['modal_open']
         search_value = self.search_vals['value']
 
+
         logging.info('input_id: ' + str(input_id))
         logging.info('table_name: ' + str(table_name))
         logging.info('display_name: ' + str(display_name))
@@ -31,6 +32,9 @@ class ModalForm():
                     fields.append(field_name)
                 if value != '':
                     search_params[field_name] = value
+
+        logging.info('search_params: ')
+        logging.info(search_params)
 
         criteria = {'display_name': display_name}
         fc = FieldCollection(None, table_name, criteria)
@@ -56,13 +60,13 @@ class ModalForm():
         if search_field not in fields:
             fields.append(search_field)
 
-        if search_value != '':
+        if 'by_field' in self.search_vals and search_value != '':
             search_params = {search_field: search_value}
 
         logging.info('search_table: ' + search_table)
         logging.info('search_field: ' + str(search_field))
 
-        logging.info('search_params: ')
+        logging.info('final search_params: ')
         logging.info(search_params)
 
         search_results = oac.get_search_results(search_table, search_params)
