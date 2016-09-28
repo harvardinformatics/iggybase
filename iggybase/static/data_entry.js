@@ -1,4 +1,4 @@
-var event_fired = false;
+var search_open = false;
 var search_input = '';
 
 $( document ).ready( function () {
@@ -111,17 +111,16 @@ $( document ).ready( function () {
 
     $.fn.dataEntryEventManager = function ( e, ele ) {
         var ele_class = ele.attr( 'class' );
-        var keyCode = e.keyCode || e.which;
 
-        if ( keyCode == 13 ) {
+        if ( e.keyCode == 13 ) {
             e.preventDefault( );
 
-            if ( ele_class.includes( 'lookupfield' ) ) {
+            if ( ele_class.includes( 'lookupfield' ) && !search_open ) {
                 return $.fn.searchResults( ele, false );
             }
 
             return false;
-        } else if ( ele_class.includes( 'lookupfield' ) && e.type == "focusout" ) {
+        } else if ( ele_class.includes( 'lookupfield' ) && e.type == "focusout" && !search_open ) {
             return $.fn.searchResults( ele, false );
         }
     }
@@ -180,7 +179,7 @@ $( document ).ready( function () {
             $.fn.displaySearchResults( search_results );
         };
 
-        $.fn.showModalDialog( formurl, buttons, callback );
+        $.fn.showModalDialog( formurl, buttons, callback, $.fn.searchClose );
     }
 
     $.fn.getSearchResults = function ( ) {
@@ -196,6 +195,8 @@ $( document ).ready( function () {
     }
 
     $.fn.displaySearchResults = function ( search_results ) {
+        search_open = true;
+
         $( "#modal_search_results" ).empty();
 
         $( "#modal_search_results" ).append( search_results );
@@ -203,11 +204,17 @@ $( document ).ready( function () {
         $( ".search-results" ).click( function( ){ $.fn.searchUpdate( $(this) ); } );
     }
 
-    $.fn.searchUpdate = function (ele) {
+    $.fn.searchUpdate = function ( ele ) {
         var input_id = $( "#modal_input_id" ).val( );
 
         $( "#" + input_id ).val( ele.val( ) );
         $( "#id_" + input_id ).val( ele.attr( 'val_id' ) );
+
+        $.fn.searchClose( );
+    }
+
+    $.fn.searchClose = function ( ele ) {
+        search_open = false;
 
         $.fn.modal_close( );
     }
