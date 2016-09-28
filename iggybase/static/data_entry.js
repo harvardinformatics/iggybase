@@ -204,8 +204,10 @@ $( document ).ready( function () {
     }
 
     $.fn.searchUpdate = function (ele) {
-        $( "#" + search_input ).val( ele.val( ) );
-        $( "#id_" + search_input ).val( ele.attr( 'val_id' ) );
+        var input_id = $( "#modal_input_id" ).val( );
+
+        $( "#" + input_id ).val( ele.val( ) );
+        $( "#id_" + input_id ).val( ele.attr( 'val_id' ) );
 
         $.fn.modal_close( );
     }

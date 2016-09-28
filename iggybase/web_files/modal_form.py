@@ -121,6 +121,7 @@ class ModalForm():
         modal_html += '<div class="modal-body">'
         modal_html += '<input id="modal_search_table" value="' + \
                       fc.fields[self.search_vals['field_key']].FK_TableObject.name + '" type="hidden">'
+        modal_html += '<input id="modal_input_id" value="' + self.search_vals['input_id'] + '" type="hidden">'
         modal_html += '<p>All search inputs can use partial values</p>'
         modal_html += '<table>'
         field = fc.fields[self.search_vals['field_key']]
