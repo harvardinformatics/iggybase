@@ -428,7 +428,8 @@ int_col_map = {
         ],
         'line_item':[
             'price_per_unit',
-            'quantity'
+            'quantity', 
+            'invoice_id'
         ],
         'field_role':[
             'visible',

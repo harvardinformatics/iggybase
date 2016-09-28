@@ -123,7 +123,7 @@ class MigrateCustomScript (IggyScript):
         print(sql)
         exist = self.from_db.cursor()
         exist.execute(sql)
-        row = exist.fetchone()
+        row = exist.fetchall()
         return row
 
     def get_col_name(self, col, col_name_map):
@@ -1056,6 +1056,35 @@ class MigrateCustomScript (IggyScript):
             print('\tCompleted work on name: ' + pk + "\n\n")
         print('Completed table: ' + mini_table + " thing: " + thing + "\n\n\n\n")
 
+    def update_invoice_id(self, mini_table, thing, new_tbl):
+        db_rows = self.to_db.cursor()
+        sql = "select id, name from invoice where invoice_month >'2016-05-01 00:00:00' and invoice_month < '2016-07-01 00:00:00' and active = 1"
+        if 'limit' in self.cli:
+            sql += ' limit ' + self.cli['limit']
+        db_rows.execute(sql)
+        pks_rows = db_rows.fetchall()
+        if 'start' in self.cli:
+            pks_rows = pks_rows[int(self.cli['start']):]
+        print('found rows: ' + str(len(pks_rows)))
+        no_skip = False
+        if 'no_skip' in self.cli:
+            if self.cli['no_skip'] == '1':
+                no_skip = True
+        for row_num, row in enumerate(pks_rows):
+            invoice_id = row[0]
+            pk = row[1]
+            if pk:
+                old = self.semantic_select_row(pk, 'Invoice',
+                        'Line_Item')
+                print(old)
+                for old_row in  old:
+                    line_name = old_row[3]
+                    if line_name:
+                        updated = self.update_row('line_item', {'name':
+                            line_name}, {'invoice_id': invoice_id})
+                        print(updated)
+                        print('done')
+
     def parse_cli(self):
         cli = super(MigrateCustomScript, self).parse_cli()
         if 'semantic_source' in cli and 'from_tbl' in cli and 'to_tbl' in cli:
@@ -1072,7 +1101,7 @@ class MigrateCustomScript (IggyScript):
         return cli
 
     def run(self):
-        self.migrate_po_billing(self.cli['semantic_source'], self.cli['from_tbl'], self.cli['to_tbl'])
+        self.update_invoice_id(self.cli['semantic_source'], self.cli['from_tbl'], self.cli['to_tbl'])
 
 # execute run on this class
 script = MigrateCustomScript()
