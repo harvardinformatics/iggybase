@@ -70,7 +70,7 @@ class InvoiceCollection:
                 if not item_dict[service_prefix][key]['invoice_order']:
                     inv = getattr(row, 'Invoice', None)
                     if inv:
-                        item_dict[service_prefix][key]['invoice_order'] = inv.order
+                        item_dict[service_prefix][key]['invoice_order'] = (inv.invoice_number or 1)
             else:
                 item_dict[service_prefix][key] = {
                         'invoice_order': None,
@@ -79,7 +79,7 @@ class InvoiceCollection:
                 }
                 inv = getattr(row, 'Invoice', None)
                 if inv:
-                    item_dict[service_prefix][key]['invoice_order'] = inv.order
+                    item_dict[service_prefix][key]['invoice_order'] = (inv.invoice_number or 1)
         # we need to order by org_name but if recreated we need to keep the old
         # order
         new_invoices = {}
