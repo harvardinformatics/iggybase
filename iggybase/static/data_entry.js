@@ -114,7 +114,6 @@ $( document ).ready( function () {
 
         if ( e.keyCode == 13 ) {
             e.preventDefault( );
-
             if ( ele_class.includes( 'lookupfield' ) && !search_open ) {
                 return $.fn.searchResults( ele, false );
             }
@@ -355,7 +354,7 @@ $( document ).ready( function () {
 
         new_tr.find( 'input' ).on( "keydown focusout",
             function ( e ) {
-                $.fn.blockSubmit( e, $( this ) );
+                return $.fn.dataEntryEventManager( e, $( this ) );
             }
         );
 
