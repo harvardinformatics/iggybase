@@ -37,12 +37,8 @@ def default(facility_name):
 @templated()
 def summary(facility_name, table_name, page_context):
     page_form = 'summary'
-<<<<<<< Updated upstream
     context = {'page_context': page_context}
     return build_summary(table_name, page_form, context)
-=======
-    return build_summary(table_name, page_form, page_context)
->>>>>>> Stashed changes
 
 
 @core.route('/summary/<table_name>/ajax')
@@ -57,12 +53,8 @@ def summary_ajax(facility_name, table_name, page_form='summary', criteria={}):
 @templated()
 def action_summary(facility_name, table_name, page_context):
     page_form = 'action_summary'
-<<<<<<< Updated upstream
     context = {'page_context': page_context}
     return build_summary(table_name, page_form, context)
-=======
-    return build_summary(table_name, page_form, page_context)
->>>>>>> Stashed changes
 
 
 @core.route('/action_summary/<table_name>/ajax')
@@ -152,14 +144,7 @@ def get_row(facility_name, table_name):
 
 @core.route('/search', methods=['GET', 'POST'])
 def search(facility_name):
-<<<<<<< Updated upstream
     search_vals = json.loads(request.args.get('search_vals'))
-=======
-    search_vals = {'table_name': request.args.get('table_object'),
-                   'display_name': request.args.get('field_name'),
-                   'field_key': request.args.get('table_object') + '|' + request.args.get('field_name'),
-                   'input_id': request.args.get('input_id')}
->>>>>>> Stashed changes
     sf = ModalForm(search_vals)
     return sf.search_form()
 
@@ -204,12 +189,10 @@ def data_entry(facility_name, table_name, row_name, page_context):
     if fg.form_class.validate_on_submit() and len(fg.form_class.errors) == 0:
         fp = FormParser()
         row_names = fp.parse()
-        logging.info('row_names')
-        logging.info(row_names)
+
         return saved_data(facility_name, module_name, table_name, row_names, page_context)
 
     return fg.page_template_context()
-<<<<<<< Updated upstream
 
 
 @core.route('/modal_add/<table_name>', defaults={'page_context': None})
@@ -237,8 +220,6 @@ def modal_add_submit(facility_name, table_name, page_context):
     fp.parse()
 
     return json.dumps({'error': False})
-=======
->>>>>>> Stashed changes
 
 
 @core.route('/multiple_entry/<table_name>/<row_names>', defaults={'page_context': 'base-context'},
@@ -311,14 +292,10 @@ def workflow(facility_name, workflow_name, page_context):
     context = {'btn_overrides': {'bottom':{'new':{'button_value':('New ' + workflow_name.title())}}}}
     context['hidden_fields'] = {'workflow_name': workflow_name}
     context['workflow_name'] = workflow_name
-<<<<<<< Updated upstream
     context['page_context'] = 'workflow'
     if page_context:
         context['page_context'] += "," + page_context
     return build_summary(table_name, page_form, context)
-=======
-    return build_summary(table_name, page_form, page_context, context)
->>>>>>> Stashed changes
 
 
 @core.route('/workflow/<workflow_name>/ajax')
@@ -370,30 +347,17 @@ def work_item_group(facility_name, workflow_name, step, work_item_group):
 """ helper functions start """
 
 
-<<<<<<< Updated upstream
 def build_summary(table_name, page_form, context={}):
-=======
-def build_summary(table_name, page_form, page_context, context={}):
->>>>>>> Stashed changes
     tqc = TableQueryCollection(table_name)
     tq = tqc.get_first()
 
     if not tq.fc.fields:
         abort(404)
-<<<<<<< Updated upstream
 
     pt = PageTemplate(MODULE_NAME, page_form, context['page_context'])
     return pt.page_template_context(table_name=table_name, table_query=tq, **context)
-=======
->>>>>>> Stashed changes
 
-    pt = PageTemplate(MODULE_NAME, page_form, page_context)
-    return pt.page_template_context(table_name=table_name, table_query=tq, **context)
 
-<<<<<<< Updated upstream
-=======
-
->>>>>>> Stashed changes
 def build_summary_ajax(table_name, criteria = {}):
     start = time.time()
     route = util.get_path(util.ROUTE)

@@ -113,11 +113,8 @@ class DataInstance:
         if instance.name is None or instance.name == '' or instance_name == 'new':
             instance.name = 'new_' + str(len(self.instances[table_name]))
 
-<<<<<<< Updated upstream
         # logging.info(table_name + ' new instance.name: ' + instance.name)
 
-=======
->>>>>>> Stashed changes
         instance = {'instance': instance, 'parent_id': None, 'save': False}
 
         self.initialize_values(table_name, instance)
@@ -240,34 +237,20 @@ class DataInstance:
 
         fk_table_object = util.get_table(fk_table_data.name)
 
-<<<<<<< Updated upstream
         # logging.info('fk_table_data.name: ' + fk_table_data.name)
         # logging.info('fk_field_display.display_name: ' + fk_field_display.display_name)
         # logging.info('table_name: ' + table_name)
         # logging.info('field: ' + field)
         # logging.info('value: ' + str(value))
         # logging.info('self.tables[table_name][table_meta_data].id: ' + str(self.tables[table_name]['table_meta_data'].id))
-=======
-        logging.info('fk_table_data.name: ' + fk_table_data.name)
-        logging.info('fk_field_display.display_name: ' + fk_field_display.display_name)
-        logging.info('table_name: ' + table_name)
-        logging.info('field: ' + field)
-        logging.info('value: ' + str(value))
-        logging.info('self.tables[table_name][table_meta_data].id: ' + str(self.tables[table_name]['table_meta_data'].id))
->>>>>>> Stashed changes
         if fk_table_data.name == 'field':
             logging.info('name is field')
             res = self.organization_access_control.session.query(fk_table_object). \
                 filter(getattr(fk_table_object, fk_field_display.display_name) == value). \
                 filter(fk_table_object.table_object_id == self.tables[table_name]['table_meta_data'].id)
 
-<<<<<<< Updated upstream
             # logging.info('query')
             # logging.info(str(res.statement.compile(dialect=mysql.dialect())))
-=======
-            logging.info('query')
-            logging.info(str(res.statement.compile(dialect=mysql.dialect())))
->>>>>>> Stashed changes
             fk_id = res.first()
         else:
             fk_id = self.organization_access_control.session.query(fk_table_object). \
@@ -339,11 +322,7 @@ class DataInstance:
                   field_value is not None) or
                  field_value != getattr(self.instances[table_name][instance_name]['instance'], field_name)) and \
                 not (field_name == 'name' and field_value is None and
-<<<<<<< Updated upstream
                      'new' in self.instances[table_name][instance_name]['instance'].name):
-=======
-                     self.instances[table_name][instance_name]['instance'].name == 'new'):
->>>>>>> Stashed changes
             # logging.info(field_name + ' field_value: ' + str(field_value))
             # logging.info('getattr(self.instances[table_name][instance_name][instance], field_name): ' +
             #              str(getattr(self.instances[table_name][instance_name]['instance'], field_name)))
@@ -385,13 +364,8 @@ class DataInstance:
                 continue
 
             for instance_name, instance in instances.items():
-<<<<<<< Updated upstream
                 logging.info('instance_name: ' + instance_name)
                 logging.info('instance[save]: ' + str(instance['save']))
-=======
-                # logging.info('instance_name: ' + instance_name)
-                # logging.info('instance[save]: ' + str(instance['save']))
->>>>>>> Stashed changes
                 if not instance['save']:
                     continue
 

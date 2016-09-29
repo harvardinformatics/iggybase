@@ -28,15 +28,11 @@
     {%- endblock content_title %}
 
     {% block topbuttonbar -%}
-<<<<<<< Updated upstream
         {%- if "modal_form" in page_context %}
             <div>
         {% else -%}
             <div class="top_buttons">
         {% endif -%}
-=======
-        <div class="top_buttons">
->>>>>>> Stashed changes
         {{ top_buttons|safe }}
         </div>
     {%- endblock topbuttonbar %}
@@ -74,17 +70,10 @@
                         <h3>{{ table_title }}</h3>
                     {%- endif %}
                 {% elif "start_table_" in field.id -%}
-<<<<<<< Updated upstream
                     {%- if (table_level == 0 and form_type == "single") or "modal_form" in page_context %}
                         <table id="{{ table_name }}" class="table">
                     {% else -%}
                         <table id="{{ table_name }}" class="table table-striped multiline-table"><tr>
-=======
-                    {%- if table_level == 0 and form_type == "single" %}
-                        <table id="{{ table_name }}" class="table">
-                    {% else -%}
-                        <table id="{{ table_name }}" class="table table-striped"><tr>
->>>>>>> Stashed changes
                         {% set field_loop = loop %}
                         {% set firstrow = 1 %}
                         {% set found = 0 %}
@@ -135,15 +124,11 @@
     {% endif -%}
 
     {% block bottombuttonbar -%}
-<<<<<<< Updated upstream
         {%- if "modal_form" in page_context %}
             <div>
         {% else -%}
             <div class="bottom_buttons">
         {% endif -%}
-=======
-        <div class="bottom_buttons">
->>>>>>> Stashed changes
         {{ bottom_buttons|safe }}
         </div>
     {%- endblock bottombuttonbar %}

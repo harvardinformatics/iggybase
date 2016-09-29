@@ -388,11 +388,7 @@ class RoleAccessControl:
                          models.PageFormButton.order, models.PageFormButton.name)
                .filter(*filters))
 
-<<<<<<< Updated upstream
         # query = res.statement.compile(dialect=mysql.dialect())
-=======
-        query = res.statement.compile(dialect=mysql.dialect())
->>>>>>> Stashed changes
         # logging.info('query')
         # logging.info(str(query))
         # logging.info(str(query.params))
