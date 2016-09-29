@@ -33,6 +33,7 @@ def review_ajax(facility_name, year, month):
     return core.routes.build_summary_ajax('line_item', ic.table_query_criteria['line_item'])
 
 
+
 @billing.route( '/invoice_summary/<year>/<month>/' )
 @login_required
 @templated()
@@ -52,6 +53,7 @@ def invoice_summary(facility_name, year, month):
 def invoice_summary_ajax(facility_name, year, month):
     ic = InvoiceCollection(int(year), int(month)) # defaults to last complete
     return core.routes.build_summary_ajax('invoice', ic.table_query_criteria['invoice'])
+
 
 
 @billing.route('/generate_invoices/<year>/<month>/', methods=['GET', 'POST'])

@@ -14,7 +14,11 @@ class PageTemplate():
         else:
             self.page_context = page_context.split(',')
             self.page_context.append('base-context')
+<<<<<<< Updated upstream
         
+=======
+
+>>>>>>> Stashed changes
         self.module_name = module_name
         self.page_form_name = page_form_name
         self.organization_access_control = g_helper.get_org_access_control()
@@ -33,7 +37,11 @@ class PageTemplate():
         context['page_form_name'] = self.page_form_name
         context['url_root'] = request.url_root
 
+<<<<<<< Updated upstream
         context['page_context'] = " ".join(self.page_context)
+=======
+        context['page_context'] = self.page_context
+>>>>>>> Stashed changes
 
         context['module_name'] = self.module_name
         context['template'] = self.page_form.page_template
@@ -84,7 +92,10 @@ class PageTemplate():
 
     def button_html_generator(self, buttons, context):
         html_buttons = {'top': '', 'bottom': ''}
+<<<<<<< Updated upstream
         page_context = " ".join(self.page_context).replace("base-context", "")
+=======
+>>>>>>> Stashed changes
 
         for button_location, btns in buttons.items():
             for button in btns:
@@ -92,17 +103,25 @@ class PageTemplate():
                                                   '" id="' + button.button_id +
                                                   '" name="' + button.button_id +
                                                   '" type="' + button.button_type +
+<<<<<<< Updated upstream
                                                   '" context="' + page_context +
                                                   '" class="' + button.button_class + " " + page_context + '"')
+=======
+                                                  '" class="' + button.button_class + ' ' +
+                                                  ' '.join(self.page_context) + '"')
+>>>>>>> Stashed changes
 
                 if button.special_props:
                     html_buttons[button_location] += button.special_props
 
                 html_buttons[button_location] += '>'
 
+<<<<<<< Updated upstream
         html_buttons['top'] = html_buttons['top'].replace('<page_context>', page_context)
         html_buttons['bottom'] = html_buttons['bottom'].replace('<page_context>', page_context)
 
+=======
+>>>>>>> Stashed changes
         if 'table_name' in context:
             html_buttons['top'] = html_buttons['top'].replace('<table_name>', context['table_name'])
             html_buttons['bottom'] = html_buttons['bottom'].replace('<table_name>', context['table_name'])
