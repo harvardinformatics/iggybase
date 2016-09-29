@@ -128,7 +128,7 @@ class ModalForm():
         role_filter = False # ignore role filter since this is for FK
         search_fc = FieldCollection(None, field.FK_TableObject.name, None,
                 role_filter)
-
+        search_fc.set_fk_fields()
         # logging.info('self.search_vals[field_key]]: ' + str(self.search_vals['field_key']))
         # logging.info('field.Field.foreign_key_display: ' + str(field.Field.foreign_key_display))
         # logging.info('field.FK_Field.id: ' + str(field.FK_Field.id))
