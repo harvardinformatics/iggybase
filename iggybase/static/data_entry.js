@@ -78,10 +78,11 @@ $( document ).ready( function () {
         var price_item = ele.val();
         var row_sibs = ele.parent().parent().siblings();
         var hidden_fields = $("#hidden_fields");
+        
         var table_name = hidden_fields.find('input[name=table]').val();
         var facility = hidden_fields.find('input[name=facility]').val();
         // TODO: use org id to get price_type
-        var criteria = {'price_item_id': price_item, 'price_type_id': 1};
+        var criteria = {'price_item_id': price_item, 'organization_type_id': 1};
         var fields = ['price_per_unit'];
         var url = $URL_ROOT + facility + '/core/get_row/price_list/ajax';
         $.ajax({
