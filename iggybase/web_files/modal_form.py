@@ -1,6 +1,9 @@
 from iggybase import g_helper
 from iggybase.core.field_collection import FieldCollection
+<<<<<<< Updated upstream
 import json
+=======
+>>>>>>> Stashed changes
 import logging
 
 
@@ -11,17 +14,28 @@ class ModalForm():
     def search_results(self):
         oac = g_helper.get_org_access_control()
 
+<<<<<<< Updated upstream
         input_id = self.search_vals['input_id']
         table_name = self.search_vals['table_name']
         display_name = self.search_vals['display_name']
         modal_open = self.search_vals['modal_open']
         search_value = self.search_vals['value']
 
+=======
+        input_id = self.search_vals['modal_input_id']
+        table_name = self.search_vals['modal_table_object']
+        display_name = self.search_vals['modal_field_name']
+        search_table = self.search_vals['modal_search_table']
+>>>>>>> Stashed changes
 
         logging.info('input_id: ' + str(input_id))
         logging.info('table_name: ' + str(table_name))
         logging.info('display_name: ' + str(display_name))
+<<<<<<< Updated upstream
         logging.info('modal_open: ' + str(modal_open))
+=======
+        logging.info('search_table: ' + str(search_table))
+>>>>>>> Stashed changes
 
         search_params = {}
         fields = ['name']
@@ -40,6 +54,7 @@ class ModalForm():
         fc = FieldCollection(None, table_name, criteria)
         fc.set_fk_fields()
 
+<<<<<<< Updated upstream
         search_table = fc.fields[table_name + "|" + display_name].FK_TableObject.name
 
         search_fc = FieldCollection(None, search_table)
@@ -51,12 +66,25 @@ class ModalForm():
         for table_field_name, search_field in search_fc.fields.items():
             search_ids[search_field.Field.id] = search_field.Field.display_name
 
+=======
+        if search_table == '':
+            search_table = fc.fields[table_name + "|" + display_name].FK_TableObject.name
+
+        search_ids = {}
+        search_fc = FieldCollection(None, search_table)
+        for row in search_fc.get_search_fields():
+            search_ids[row.Field.id] = row.Field.display_name
+            if row.Field.display_name not in fields:
+                fields.append(row.Field.display_name)
+
+>>>>>>> Stashed changes
         search_field = fc.fields[table_name + "|" + display_name].Field.foreign_key_display
         if search_field:
             search_field = search_ids[search_field]
         else:
             search_field = 'name'
 
+<<<<<<< Updated upstream
         if search_field not in fields:
             fields.append(search_field)
 
@@ -72,13 +100,37 @@ class ModalForm():
         search_results = oac.get_search_results(search_table, search_params)
 
         modal_html = '<table class="table-sm table-striped"><tr>'
+=======
+        if 'by_field' in search_params:
+            value = search_params['by_field']
+            search_params = {search_field: value}
+
+        # logging.info('search_field: ' + str(search_field))
+
+        search_results = oac.get_search_results(search_table, search_params)
+
+        modal_html = '<div class="modal-header">'
+        modal_html += '<button type="button" class="close_modal">&times;</button>'
+        modal_html += '<h4 class="modal-title">Search Results</h4>'
+        modal_html += '</div>'
+        modal_html += '<div class="modal-body">'
+        modal_html += '<input id="modal_input_id" value="' + input_id + '" type="hidden">'
+        modal_html += '<input id="modal_table_object" value="' + table_name + '" type="hidden">'
+        modal_html += '<input id="modal_field_name" value="' + display_name + '" type="hidden">'
+        modal_html += '<input id="modal_search_table" value="' + search_table + '" type="hidden">'
+        modal_html += '<table class="table-sm table-striped"><tr>'
+>>>>>>> Stashed changes
 
         for field in fields:
             modal_html += '<th>' + field.replace("_", " ").title() + '</th>'
 
+<<<<<<< Updated upstream
 
         modal_html += '</tr>'
         results = []
+=======
+        modal_html += '</tr>'
+>>>>>>> Stashed changes
 
         if search_results is not None and len(search_params) != 0:
             for row in search_results:
@@ -86,7 +138,10 @@ class ModalForm():
                 for field in fields:
                     res = getattr(row, field)
                     if field == search_field:
+<<<<<<< Updated upstream
                         results.append([1, format(res), row.id])
+=======
+>>>>>>> Stashed changes
                         modal_html += ('<td><input luid="' + input_id + '"class="search-results" type="button" ' +
                                        'val_id="' + str(row.id) + '" value="' + format(res) + '"></input></td>')
                     else:
@@ -100,6 +155,7 @@ class ModalForm():
             modal_html += '<tr><td><label>No Results Found</label></td></tr>'
 
         modal_html += '</table>'
+<<<<<<< Updated upstream
 
         # logging.info(modal_html)
         # logging.info(results)
@@ -108,6 +164,11 @@ class ModalForm():
             return json.dumps(results[0])
         else:
             return json.dumps(modal_html)
+=======
+        modal_html += '</div>'
+
+        return modal_html
+>>>>>>> Stashed changes
 
     def search_form(self):
         criteria = {'display_name': self.search_vals['display_name']}
@@ -115,6 +176,7 @@ class ModalForm():
         fc.set_fk_fields()
         modal_html = '<div class="modal-header">'
         modal_html += '<button type="button" class="close_modal">&times;</button>'
+<<<<<<< Updated upstream
         modal_html += ('<h4 class="modal-title">' + self.search_vals['table_name'].replace("_", " ").title() +
                        ' Search</h4>')
         modal_html += '</div>'
@@ -122,12 +184,23 @@ class ModalForm():
         modal_html += '<input id="modal_search_table" value="' + \
                       fc.fields[self.search_vals['field_key']].FK_TableObject.name + '" type="hidden">'
         modal_html += '<input id="modal_input_id" value="' + self.search_vals['input_id'] + '" type="hidden">'
+=======
+        modal_html += '<h4 class="modal-title">' + self.search_vals['table_name'] + ' Search</h4>'
+        modal_html += '</div>'
+        modal_html += '<div class="modal-body">'
+        modal_html += '<input id="modal_input_id" value="' + self.search_vals['input_id'] + '" type="hidden">'
+        modal_html += '<input id="modal_table_object" value="' + self.search_vals['table_name'] + '" type="hidden">'
+        modal_html += '<input id="modal_search_table" value="' + \
+                      fc.fields[self.search_vals['field_key']].FK_TableObject.name + '" type="hidden">'
+        modal_html += '<input id="modal_field_name" value="' + self.search_vals['display_name'] + '" type="hidden">'
+>>>>>>> Stashed changes
         modal_html += '<p>All search inputs can use partial values</p>'
         modal_html += '<table>'
         field = fc.fields[self.search_vals['field_key']]
         role_filter = False # ignore role filter since this is for FK
         search_fc = FieldCollection(None, field.FK_TableObject.name, None,
                 role_filter)
+<<<<<<< Updated upstream
         search_fc.set_fk_fields()
         # logging.info('self.search_vals[field_key]]: ' + str(self.search_vals['field_key']))
         # logging.info('field.Field.foreign_key_display: ' + str(field.Field.foreign_key_display))
@@ -153,6 +226,13 @@ class ModalForm():
 
         modal_html += '</table>'
         modal_html += '<div id="modal_search_results"></div>'
+=======
+        for row in search_fc.get_search_fields():
+            modal_html += '<tr><td><label>' + row.display_name + '</label></td>'
+            modal_html += '<td><input id="search_' + row.Field.display_name + '"></input></td></tr>'
+
+        modal_html += '</table>'
+>>>>>>> Stashed changes
         modal_html += '</div>'
 
         return modal_html

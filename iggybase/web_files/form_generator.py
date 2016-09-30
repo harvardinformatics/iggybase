@@ -185,9 +185,15 @@ class FormGenerator(PageTemplate):
         self.classattr['row_counter'] = HiddenField('row_counter', default=data_instance.instance_counter)
 
         form_class = new_class('SingleForm', (Form,), {}, lambda ns: ns.update(self.classattr))
+<<<<<<< Updated upstream:iggybase/web_files/form_generator.py
 
         self.form_class = form_class()
 
+=======
+
+        self.form_class = form_class()
+
+>>>>>>> Stashed changes:iggybase/web_files/form_generator.py
     def get_table(self, data_instance):
         row_counter = 0
         level = 0
@@ -223,6 +229,7 @@ class FormGenerator(PageTemplate):
 
             if table_data['level'] == 0 and self.form_type == 'single':
                 control_type = 'data-control'
+<<<<<<< Updated upstream:iggybase/web_files/form_generator.py
                 temp_page_context = ['main-table'] + table_context
                 buttons = self.role_access_control.page_form_buttons(self.page_form_ids, temp_page_context,
                                                                      table_data['table_meta_data'].id)
@@ -240,6 +247,18 @@ class FormGenerator(PageTemplate):
             # logging.info('temp_page_context ' + table_name)
             # logging.info(temp_page_context)
 
+=======
+                buttons = self.role_access_control.page_form_buttons(self.page_form_ids, ['main-table'],
+                                                                     table_data['table_meta_data'].id)
+            elif self.form_type == 'single':
+                control_type = 'table-control'
+                buttons = self.role_access_control.page_form_buttons(self.page_form_ids, ['child-table'],
+                                                                    table_data['table_meta_data'].id)
+            else:
+                control_type = 'table-control'
+                buttons = self.role_access_control.page_form_buttons(self.page_form_ids, ['multiple'],
+                                                                     table_data['table_meta_data'].id)
+>>>>>>> Stashed changes:iggybase/web_files/form_generator.py
             context = {'table_name': table_data['table_meta_data'].name,
                        'table_id': str(table_data['table_meta_data'].id),
                        'table_level': str(table_data['level']),
@@ -247,11 +266,14 @@ class FormGenerator(PageTemplate):
 
             buttons['top'], buttons['bottom'] = self.button_html_generator(buttons, context)
 
+<<<<<<< Updated upstream:iggybase/web_files/form_generator.py
             # logging.info('buttons[top] ' + table_name)
             # logging.info(buttons['top'])
             # logging.info('buttons[bottom] ' + table_name)
             # logging.info(buttons['bottom'])
 
+=======
+>>>>>>> Stashed changes:iggybase/web_files/form_generator.py
             if buttons['top']:
                 self.classattr[table_name + '_buttons_top'] =  HiddenField('buttons_top', default=buttons['top'])
 

@@ -22,6 +22,7 @@ def update_ordered_ajax(facility_name, table_name):
 
 
 
+
 @murray.route( '/update_ordered/<table_name>/' )
 @login_required
 @templated()
@@ -52,6 +53,7 @@ def update_requested_ajax(facility_name, table_name):
 
 
 
+
 @murray.route( '/update_requested/<table_name>/' )
 @login_required
 @templated()
@@ -76,6 +78,7 @@ def update_requested(facility_name, table_name):
 @login_required
 def cancel_ajax(facility_name, table_name):
     return core.routes.build_summary_ajax(table_name, {('oligo', 'status'):['ordered', 'requested']})
+
 
 
 

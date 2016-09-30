@@ -20,6 +20,7 @@ class FormParser():
             form_data = request.form
 
         # used to identify fields that contain data that needs to be saved
+<<<<<<< Updated upstream:iggybase/web_files/form_parser.py
         field_pattern = \
             re.compile('^(files_data_entry|id_data_entry|long_text|data_entry|record_data|form_data)_(\S+)_(\d+)')
         for key in form_data:
@@ -27,6 +28,11 @@ class FormParser():
                 data = request.form.get(key)
             else:
                 data = form_data[key]
+=======
+        field_pattern = re.compile('^(id_data_entry|long_text|data_entry|record_data|form_data)_(\S+)_(\d+)')
+        for key in request.form:
+            data = request.form.get(key)
+>>>>>>> Stashed changes:iggybase/web_files/form_parser.py
 
             # logging.info(key + ': ' + data)
 
@@ -38,7 +44,11 @@ class FormParser():
                 # logging.info('key: ' + key)
                 if field_id.group(3) not in fields.keys():
                     fields[field_id.group(3)] = {'long_text': {}, 'form_data': {}, 'data_entry': {}, 'record_data': {},
+<<<<<<< Updated upstream:iggybase/web_files/form_parser.py
                                                  'id_data_entry': {}, 'files_data_entry': {}}
+=======
+                                                 'id_data_entry': {}}
+>>>>>>> Stashed changes:iggybase/web_files/form_parser.py
 
                 fields[field_id.group(3)][field_id.group(1)][field_id.group(2)] = data
 
@@ -144,11 +154,16 @@ class FormParser():
                             row_data['data_entry'][field] = None
                         else:
                             row_data['data_entry'][field] = int(row_data['data_entry'][field])
+<<<<<<< Updated upstream:iggybase/web_files/form_parser.py
                     except (ValueError, KeyError) as e:
                         try:
                             row_data['data_entry'][field] = int(row_data['id_data_entry'][field])
                         except  (ValueError, KeyError) as e:
                             row_data['data_entry'][field] = None
+=======
+                    except ValueError:
+                        row_data['data_entry'][field] = int(row_data['id_data_entry'][field])
+>>>>>>> Stashed changes:iggybase/web_files/form_parser.py
                 elif meta_data.DataType.name.lower() == 'file':
                     directory = os.path.join(current_app.config['UPLOAD_FOLDER'], table_name_field,
                                              instance.instance_name)
