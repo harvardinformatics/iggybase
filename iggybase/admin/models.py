@@ -295,10 +295,7 @@ class PageFormButton(Base):
     button_id = Column(String(100))
     special_props = Column(String(255))
     submit_action_url = Column(String(255))
-<<<<<<< Updated upstream
     display_name = Column(String(100))
-=======
->>>>>>> Stashed changes
 
     def __repr__(self):
         return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
