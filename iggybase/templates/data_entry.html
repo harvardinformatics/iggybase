@@ -8,7 +8,7 @@
         {%- if "modal_form" in page_context %}
             <div id="div-modal">
         {% else -%}
-            <form action="{{ submit_action_url }}" enctype="multipart/form-data" class="form form-horizontal" method="post" role="form">
+            <form action="{{ submit_action_url }}" enctype="multipart/form-data" class="form form-horizontal" method="post" role="form" novalidate>
         {% endif -%}
 
         {{ form.hidden_tag() }}
