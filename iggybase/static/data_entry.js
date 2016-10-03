@@ -82,9 +82,9 @@ $( document ).ready( function () {
         var table_name = hidden_fields.find('input[name=table]').val();
         var facility = hidden_fields.find('input[name=facility]').val();
         // TODO: use org id to get price_type
-        var criteria = {'price_item_id': price_item, 'organization_type_id': 1};
+        var criteria = {'price_item_id': price_item};
         var fields = ['price_per_unit'];
-        var url = $URL_ROOT + facility + '/core/get_row/price_list/ajax';
+        var url = $URL_ROOT + facility + '/billing/get_price/ajax';
         $.ajax({
             // TODO: put facility in hidden fields and access dynamically
             url: url,

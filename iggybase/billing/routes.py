@@ -5,6 +5,7 @@ from flask.ext.security import login_required
 from flask_weasyprint import render_pdf, HTML
 from iggybase.web_files.decorators import templated
 
+from iggybase import g_helper
 from iggybase.web_files.page_template import PageTemplate
 from iggybase import core
 from iggybase.billing.invoice_collection import InvoiceCollection
@@ -96,3 +97,20 @@ def invoice_pdf(facility_name, year, month, org_name = None):
     html = (invoice(facility_name = facility_name,
             year = year, month = month, org_name = org_name))
     return render_pdf(HTML(string=html))
+
+@billing.route('/get_price/ajax', methods=['GET', 'POST'])
+@login_required
+def get_price(facility_name):
+    criteria = request.json['criteria']
+    fields = request.json['fields']
+    oac = g_helper.get_org_access_control()
+    row = oac.get_price(criteria)
+    print(row)
+    price = None
+    ret = {}
+    if row:
+        for field in fields:
+            ret[field] = str(getattr(row, field))
+    return json.dumps(ret)
+
+

@@ -319,6 +319,19 @@ class OrganizationAccessControl:
 
         return result
 
+    def get_price(self, criteria):
+        result = None
+        org_row = self.get_row('organization', {'id': self.current_org_id})
+        org_type_id = getattr(org_row, 'organization_type_id')
+        if org_type_id:
+            where = []
+            table_object = util.get_table('price_list')
+            where.append(getattr(table_object, 'price_item_id') == criteria['price_item_id'])
+            where.append(getattr(table_object, 'organization_type_id') ==
+                    org_type_id)
+            result = self.session.query(table_object).filter(*where).first()
+        return result
+
     def get_table_by_id(self, table_id):
         table_object = util.get_table('table_object')
 

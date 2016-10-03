@@ -133,13 +133,11 @@ def get_row(facility_name, table_name):
     fields = request.json['fields']
     oac = g_helper.get_org_access_control()
     row = oac.get_row(table_name, criteria)
-    print(row)
     price = None
     ret = {}
     if row:
         for field in fields:
             ret[field] = str(getattr(row, field))
-            #price = row.price_per_unit
     return json.dumps(ret)
 
 
