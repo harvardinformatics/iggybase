@@ -5,14 +5,14 @@ $( document ).ready( function () {
         }
     );
     $( ".charge-method-percent" ).blur(
-        function( ) {
-            $.fn.checkCodePercent( $( this ) );
+        function( event ) {
+            $.fn.checkCodePercent( event, $( this ) );
         }
     );
 } );
 
 ( function( $ ) {
-    $.fn.checkCodePercent = function( ele ) {
+    $.fn.checkCodePercent = function( event, ele ) {
         var total = 0;
 
         $( ".charge-method-percent" ).each(
