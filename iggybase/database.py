@@ -17,6 +17,17 @@ class IggybaseBase(object):
     def __tablename__(cls):
         return to_snake_case(cls.__name__)
 
+    def __iter__(self):
+        values = vars(self)
+        for attr in self.__table__.columns.keys():
+            if attr in values:
+                yield attr, values[attr]
+            else:
+                yield attr, None
+
+    def values(self):
+        return dict(self)
+
     __table_args__ = {'mysql_engine': 'InnoDB'}
 
     id = Column(Integer, primary_key=True)

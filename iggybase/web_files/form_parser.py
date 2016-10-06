@@ -101,7 +101,7 @@ class FormParser():
                     row_org_id = instance.set_foreign_key_field_id(table_name_field, 'organization_id', row_org_id)
 
             if row_org_id is None:
-                if instance.get_value('organization_id') is not None:
+                if instance.get_value('organization_id', table_name_field, instance_name) is not None:
                     row_org_id = instance.get_value('organization_id')
                 elif instance.organization_access_control.current_org_id is not None:
                     row_org_id = g.current_org_id
