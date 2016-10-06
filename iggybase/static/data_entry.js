@@ -356,7 +356,7 @@ $( document ).ready( function () {
 
         new_tr.find( 'input' ).on( "keydown focusout",
             function ( e ) {
-                $.fn.blockSubmit( e, $( this ) );
+                return $.fn.dataEntryEventManager( e, $( this ) );
             }
         );
 

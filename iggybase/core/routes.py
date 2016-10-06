@@ -183,13 +183,18 @@ def data_entry(facility_name, table_name, row_name, page_context):
     module_name = MODULE_NAME
 
     fg = FormGenerator('data_entry', 'single', table_name, page_context, module_name)
-    fg.data_entry_form(row_name)
 
-    if fg.form_class.validate_on_submit() and len(fg.form_class.errors) == 0:
-        fp = FormParser()
-        row_names = fp.parse()
+    if request.method == 'POST':
+        fp = FormParser(table_name)
+        fp.parse()
 
-        return saved_data(facility_name, module_name, table_name, row_names, page_context)
+        fg.data_entry_form(None, fp.instance)
+
+        if fg.form_class.validate_on_submit() and len(fg.form_class.errors) == 0:
+            row_names = fp.save()
+            return saved_data(facility_name, module_name, table_name, row_names, page_context)
+    else:
+        fg.data_entry_form(row_name)
 
     return fg.page_template_context()
 
@@ -215,7 +220,7 @@ def modal_add(facility_name, table_name, page_context):
 @core.route('/modal_add_submit/<table_name>/<page_context>', methods=['GET', 'POST'])
 @login_required
 def modal_add_submit(facility_name, table_name, page_context):
-    fp = FormParser()
+    fp = FormParser(table_name)
     fp.parse()
 
     return json.dumps({'error': False})
@@ -231,12 +236,18 @@ def multiple_entry(facility_name, table_name, row_names, page_context):
     row_names = json.loads(row_names)
 
     fg = FormGenerator('data_entry', 'multiple', table_name, page_context, module_name)
-    fg.multiple_data_entry_form(row_names)
-    if fg.form_class.validate_on_submit() and len(fg.form_class.errors) == 0 and len(row_names) != 0:
-        fp = FormParser()
-        row_names = fp.parse()
 
-        return saved_data(facility_name, module_name, table_name, row_names, page_context)
+    if request.method == 'POST':
+        fp = FormParser(table_name)
+        fp.parse()
+
+        fg.multiple_data_entry_form(None, fp.instance)
+
+        if fg.form_class.validate_on_submit() and len(fg.form_class.errors) == 0 and len(row_names) != 0:
+            row_names = fp.save()
+            return saved_data(facility_name, module_name, table_name, row_names, page_context)
+    else:
+        fg.multiple_data_entry_form(row_names)
 
     return fg.page_template_context()
 

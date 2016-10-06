@@ -145,9 +145,10 @@ class FormGenerator(PageTemplate):
     def empty_form(self):
         self.form_class = new_class('EmptyForm', (Form,))
 
-    def multiple_data_entry_form(self, row_names=[]):
-        data_instance = DataInstance(self.table_name)
-        data_instance.get_multiple_data(row_names)
+    def multiple_data_entry_form(self, row_names=[], data_instance = None):
+        if data_instance is None:
+            data_instance = DataInstance(self.table_name)
+            data_instance.get_multiple_data(row_names)
 
         self.get_table(data_instance)
 
@@ -171,8 +172,9 @@ class FormGenerator(PageTemplate):
 
         self.form_class = form_class()
 
-    def data_entry_form(self, row_name='new', depth = 2):
-        data_instance = DataInstance(self.table_name, row_name)
+    def data_entry_form(self, row_name='new', data_instance = None, depth = 2):
+        if data_instance is None:
+            data_instance = DataInstance(self.table_name, row_name)
 
         if row_name != 'new':
             data_instance.get_linked_instances(depth)

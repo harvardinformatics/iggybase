@@ -8,11 +8,13 @@ from collections import OrderedDict
 import logging
 
 class FormParser():
+    def __init__(self, table_name):
+        self.instance = DataInstance(table_name)
+        self.table_names = []
 
     def parse(self, form_data = None):
         # fields contain the data that was displayed on the form and possibly edited
         fields = {}
-        table_names = []
 
         web_request = False
         if not form_data:
@@ -65,27 +67,26 @@ class FormParser():
         #         for key3, value3 in value2.items():
         #            logging.info(str(key1) + ' ' + str(key2) + ' ' + str(key3) + ': ' + str(value3))
 
-        instance = DataInstance(fields['0']['form_data']['table'])
-        instance.get_data(fields['0']['form_data']['row_name'])
+        self.instance.get_data(fields['0']['form_data']['row_name'])
 
         if fields['0']['record_data']['row_name'] != 'new' and int(fields['0']['form_data']['max_level']) > 0:
-            instance.get_linked_instances(int(fields['0']['form_data']['max_level']))
+            self.instance.get_linked_instances(int(fields['0']['form_data']['max_level']))
 
         for row_id in sorted(fields.keys()):
             row_data = fields[row_id]
 
             table_name_field = row_data['record_data']['table']
-            if table_name_field not in table_names:
-                table_names.append(table_name_field)
+            if table_name_field not in self.table_names:
+                self.table_names.append(table_name_field)
 
             if row_data['record_data']['new'] == 1:
-                instance_name = instance.add_new_instance(table_name_field, 'new')
+                instance_name = self.instance.add_new_instance(table_name_field, 'new')
                 if row_data['data_entry']['name'] == '' and row_data['data_entry']['name'] != 'new':
                     instance_name = row_data['data_entry']['name']
             else:
                 # on a multiform all instances are not fetched with get_data
-                if row_data['record_data']['row_name'] not in instance.instances[table_name_field]:
-                    instance_name = instance.add_new_instance(table_name_field, row_data['record_data']['row_name'])
+                if row_data['record_data']['row_name'] not in self.instance.instances[table_name_field]:
+                    instance_name = self.instance.add_new_instance(table_name_field, row_data['record_data']['row_name'])
                 else:
                     instance_name = row_data['record_data']['row_name']
 
@@ -98,12 +99,12 @@ class FormParser():
                 row_org_id = row_data['data_entry']['organization_id']
 
                 if not isinstance(row_org_id, int):
-                    row_org_id = instance.set_foreign_key_field_id(table_name_field, 'organization_id', row_org_id)
+                    row_org_id = self.instance.set_foreign_key_field_id(table_name_field, 'organization_id', row_org_id)
 
             if row_org_id is None:
-                if instance.get_value('organization_id', table_name_field, instance_name) is not None:
-                    row_org_id = instance.get_value('organization_id')
-                elif instance.organization_access_control.current_org_id is not None:
+                if self.instance.get_value('organization_id', table_name_field, instance_name) is not None:
+                    row_org_id = self.instance.get_value('organization_id')
+                elif self.instance.organization_access_control.current_org_id is not None:
                     row_org_id = g.current_org_id
                 else:
                     row_org_id = 1
@@ -113,7 +114,7 @@ class FormParser():
             exclude_list = ['id', 'last_modified', 'date_created', 'organization_id']
 
             # logging.info('for field in current_field_data.items(): ')
-            for table_field, meta_data in instance.fields[table_name_field].fields.items():
+            for table_field, meta_data in self.instance.fields[table_name_field].fields.items():
                 # logging.info('field: ' + field)
                 # only update fields that were on the form
 
@@ -151,7 +152,7 @@ class FormParser():
                             row_data['data_entry'][field] = None
                 elif meta_data.DataType.name.lower() == 'file':
                     directory = os.path.join(current_app.config['UPLOAD_FOLDER'], table_name_field,
-                                             instance.instance_name)
+                                             self.instance.instance_name)
                     if not os.path.exists(directory):
                         os.makedirs(directory)
 
@@ -191,10 +192,11 @@ class FormParser():
             # logging.info('form_parser instance_name: ')
             # logging.info(instance_name)
 
-            instance.set_values(row_data['data_entry'], table_name_field, instance_name)
+            self.instance.set_values(row_data['data_entry'], table_name_field, instance_name)
 
-        saved_data = instance.save()
+    def save(self):
+        saved_data = self.instance.save()
 
-        current_app.cache.increment_version(list(table_names))
+        current_app.cache.increment_version(list(self.table_names))
 
         return saved_data
