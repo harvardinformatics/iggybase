@@ -86,27 +86,27 @@ class WorkItemGroup:
             step = self.workflow.steps[1]
         return step
 
-    '''def get_buttons(self, context_btns = None):
+    def get_buttons(self, context_btns = None):
         submit_btn = False
         for btn in context_btns:
-            if btn.button_type == 'submit':
+            if btn['type'] == 'submit':
                 submit_btn = True
                 break
         if not submit_btn:
             workflow_button = {
-                'button_type': 'submit',
-                'button_value': 'Next Step',
-                'button_id': 'next_step',
-                'button_class': 'btn btn-default',
+                'type': 'submit',
+                'value': 'Next Step',
+                'id': 'next_step',
+                'class': 'btn btn-default',
                 'special_props': None,
                 'submit_action_url': None
             }
             if len(self.active_steps) == self.show_step_num: # last step
-                workflow_button['button_value'] = 'Complete'
-                workflow_button['button_id'] = 'complete'
+                workflow_button['value'] = 'Complete'
+                workflow_button['id'] = 'complete'
 
             self.buttons.append(util.DictObject(workflow_button))
-'''
+
     def set_saved(self, saved_rows):
         self.saved_rows = saved_rows
 

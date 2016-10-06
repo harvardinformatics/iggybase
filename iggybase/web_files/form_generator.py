@@ -24,7 +24,7 @@ class FormGenerator(PageTemplate):
         return super(FormGenerator, self).page_template_context(table_name=self.table_name,
                                                                 form=self.form_class,
                                                                 form_type=self.form_type)
-
+                                                                
     def input_field(self, field_data, display_name, row_name, control_id, control_type, value=None):
         logging.info('row_name: ' + str(row_name) + '  display_name: ' + str(display_name))
         kwargs = {}

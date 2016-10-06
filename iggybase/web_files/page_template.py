@@ -1,6 +1,7 @@
 from flask import render_template, abort, request, g, Markup
 from iggybase import g_helper
 import logging
+import re
 
 class PageTemplate():
     def __init__(self, module_name, page_form_name, page_context=None):
@@ -39,7 +40,7 @@ class PageTemplate():
         context['template'] = self.page_form.page_template
         context['page_header'] = self.page_form.page_header
         context['page_title'] = self.page_form.page_title
-        context['top_buttons'], context['bottom_buttons'] = self.button_html_generator(self.buttons, context)
+        context['top_buttons'], context['bottom_buttons'] = self.button_generator(self.buttons, context)
 
         # logging.info('context[top_buttons]: ' + context['top_buttons'])
         # logging.info('context[bottom_buttons]: ' + context['bottom_buttons'])
@@ -82,48 +83,31 @@ class PageTemplate():
 
         return scpts
 
-    def button_html_generator(self, buttons, context):
-        html_buttons = {'top': '', 'bottom': ''}
+    def add_context(self, val, context):
+        # replace any <placeholder context> with the value from context
+        groups = re.findall('<(.*?)>', val) 
+        for g in groups:
+            if g in context:
+                val = val.replace('<' + g + '>', context[g])
+        return val
+
+    def button_generator(self, buttons, context):
+        button_dict = {'top': [], 'bottom': []}
         page_context = " ".join(self.page_context).replace("base-context", "")
 
         for button_location, btns in buttons.items():
             for button in btns:
-                html_buttons[button_location] += ('<input value="' + button.button_value +
-                                                  '" id="' + button.button_id +
-                                                  '" name="' + button.button_id +
-                                                  '" type="' + button.button_type +
-                                                  '" context="' + page_context +
-                                                  '" class="' + button.button_class + " " + page_context + '"')
+                button_dict[button_location].append({
+                            'value': self.add_context(button.button_value, context),
+                            'id': self.add_context(button.button_id, context),
+                            'name': self.add_context(button.button_id, context),
+                            'type': self.add_context(button.button_type, context),
+                            'context': page_context,
+                            'class': self.add_context(button.button_class + " " + page_context, context),
+                            'special_props': getattr(button, 'special_props', '')
+                        })
 
-                if button.special_props:
-                    html_buttons[button_location] += button.special_props
-
-                html_buttons[button_location] += '>'
-
-        html_buttons['top'] = html_buttons['top'].replace('<page_context>', page_context)
-        html_buttons['bottom'] = html_buttons['bottom'].replace('<page_context>', page_context)
-
-        if 'table_name' in context:
-            html_buttons['top'] = html_buttons['top'].replace('<table_name>', context['table_name'])
-            html_buttons['bottom'] = html_buttons['bottom'].replace('<table_name>', context['table_name'])
-
-        if 'table_title' in context:
-            html_buttons['top'] = html_buttons['top'].replace('<table_title>', context['table_title'])
-            html_buttons['bottom'] = html_buttons['bottom'].replace('<table_title>', context['table_title'])
-
-        if 'table_id' in context:
-            html_buttons['top'] = html_buttons['top'].replace('<table_id>', context['table_id'])
-            html_buttons['bottom'] = html_buttons['bottom'].replace('<table_id>', context['table_id'])
-
-        if 'table_level' in context:
-            html_buttons['top'] = html_buttons['top'].replace('<table_level>', context['table_level'])
-            html_buttons['bottom'] = html_buttons['bottom'].replace('<table_level>', context['table_level'])
-
-        if 'row_name' in context:
-            html_buttons['top'] = html_buttons['top'].replace('<instance_name>', context['row_name'])
-            html_buttons['bottom'] = html_buttons['bottom'].replace('<instance_name>', context['row_name'])
-
-        return html_buttons['top'], html_buttons['bottom']
+        return button_dict['top'], button_dict['bottom']
 
     def page_button_action(self, buttons):
         submit_action_url = None

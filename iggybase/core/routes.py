@@ -347,7 +347,7 @@ def work_item_group(facility_name, workflow_name, step, work_item_group):
         module = import_module('iggybase.' + wig.step.Module.name + '.routes')
         func = getattr(module, wig.step.Route.url_path)
     context = func(**wig.dynamic_params)
-    # wig.get_buttons(context['bottom_buttons'])
+    wig.get_buttons(context['bottom_buttons'])
     if 'saved_rows' in context:
         wig.set_saved(context['saved_rows'])
     context['wig'] = wig

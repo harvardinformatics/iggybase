@@ -20,6 +20,19 @@
     </form>
 {%- endmacro %}
 
+{% macro render_buttons( buttons ) -%}
+    {% for button in buttons -%}
+        <input value="{{button.value}}"
+            id="{{button.id}}"
+            name="{{button.name}}"
+            type="{{button.type}}"
+            context="{{button.context}}"
+            class="{{button.class}}"
+        {{button.special_props}}
+        >
+    {% endfor -%}
+{%-endmacro%}
+
 {% macro render_select(options, id, default = None) -%}
 <select id="{{id}}">
     {% if options is mapping %}

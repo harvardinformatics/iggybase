@@ -33,7 +33,7 @@
         {% else -%}
             <div class="top_buttons">
         {% endif -%}
-        {{ top_buttons|safe }}
+        {{ macros.render_buttons(top_buttons) }}
         </div>
     {%- endblock topbuttonbar %}
 
@@ -129,7 +129,7 @@
         {% else -%}
             <div class="bottom_buttons">
         {% endif -%}
-        {{ bottom_buttons|safe }}
+        {{ macros.render_buttons(bottom_buttons) }}
         </div>
     {%- endblock bottombuttonbar %}
 
