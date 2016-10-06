@@ -277,9 +277,6 @@ class DataInstance:
         # logging.info('get_value self.instances[table_name]: ')
         # logging.info(self.instances[table_name])
 
-        logging.info('get_values self.instances[table_name]: ')
-        logging.info(self.get_values(table_name, instance_name))
-
         return getattr(self.instances[table_name][instance_name]['instance'], field_name)
 
     def get_values(self, table_name = None, instance_name = None):
