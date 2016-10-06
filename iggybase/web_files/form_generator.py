@@ -298,6 +298,49 @@ class FormGenerator(PageTemplate):
                 'record_data_new_'+str(row_count): row_new,
                 'record_data_table_id_'+str(row_count): table_id_field}
 
+    def button_html_generator(self, buttons, context):
+        html_buttons = {'top': '', 'bottom': ''}
+        page_context = " ".join(self.page_context).replace("base-context", "")
+
+        for button_location, btns in buttons.items():
+            for button in btns:
+                html_buttons[button_location] += ('<input value="' + button.button_value +
+                                                  '" id="' + button.button_id +
+                                                  '" name="' + button.button_id +
+                                                  '" type="' + button.button_type +
+                                                  '" context="' + page_context +
+                                                  '" class="' + button.button_class + " " + page_context + '"')
+
+                if button.special_props:
+                    html_buttons[button_location] += button.special_props
+
+                html_buttons[button_location] += '>'
+
+        html_buttons['top'] = html_buttons['top'].replace('<page_context>', page_context)
+        html_buttons['bottom'] = html_buttons['bottom'].replace('<page_context>', page_context)
+
+        if 'table_name' in context:
+            html_buttons['top'] = html_buttons['top'].replace('<table_name>', context['table_name'])
+            html_buttons['bottom'] = html_buttons['bottom'].replace('<table_name>', context['table_name'])
+
+        if 'table_title' in context:
+            html_buttons['top'] = html_buttons['top'].replace('<table_title>', context['table_title'])
+            html_buttons['bottom'] = html_buttons['bottom'].replace('<table_title>', context['table_title'])
+
+        if 'table_id' in context:
+            html_buttons['top'] = html_buttons['top'].replace('<table_id>', context['table_id'])
+            html_buttons['bottom'] = html_buttons['bottom'].replace('<table_id>', context['table_id'])
+
+        if 'table_level' in context:
+            html_buttons['top'] = html_buttons['top'].replace('<table_level>', context['table_level'])
+            html_buttons['bottom'] = html_buttons['bottom'].replace('<table_level>', context['table_level'])
+
+        if 'row_name' in context:
+            html_buttons['top'] = html_buttons['top'].replace('<instance_name>', context['row_name'])
+            html_buttons['bottom'] = html_buttons['bottom'].replace('<instance_name>', context['row_name'])
+
+        return html_buttons['top'], html_buttons['bottom']
+
     def get_row(self, data_instance, table_name, instance, control_type, row_counter):
         # start_time = time.time()
         # logging.info('row_name: ' + str(instance['instance'].name))
