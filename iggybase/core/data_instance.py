@@ -364,8 +364,8 @@ class DataInstance:
                 continue
 
             for instance_name, instance in instances.items():
-                logging.info('instance_name: ' + instance_name)
-                logging.info('instance[save]: ' + str(instance['save']))
+                # logging.info('instance_name: ' + instance_name)
+                # logging.info('instance[save]: ' + str(instance['save']))
                 if not instance['save']:
                     continue
 
