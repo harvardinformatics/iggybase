@@ -228,9 +228,11 @@ $( document ).ready( function () {
         var new_tr = $( "#" + target + " tr:last" ).clone( );
         var old_id = new_tr.attr( 'row_id' );
         var parent_name = '';
+        var parent_id = '';
         var new_id = '';
         if ( table_level == 1 )
             parent_name = $( '#record_data_row_name_0' ).val( );
+            parent_id = $( '#data_entry_id_0' ).val( );
 
         //alert('table_level: ' + table_level);
         //alert('parent_name: ' + parent_name);
@@ -302,6 +304,8 @@ $( document ).ready( function () {
                         value = target;
                     } else if ( matches[ 1 ] == 'record_data_new' ) {
                         value = 1;
+                    } else if ( matches[ 1 ] == 'id_data_entry_' + link_column ) {
+                        value = parent_id;
                     }
 
                     var new_input = $( '<input>' ).attr( {
@@ -311,21 +315,6 @@ $( document ).ready( function () {
                         value: value
                     } ).appendTo( new_tr );
                 }
-            }
-        )
-
-        new_tr.find( '.search-button' ).each(
-            function() {
-                $( this ).click(
-                    function( ) {
-                        $.fn.searchClick( $( this ) );
-                    }
-                );
-                var luid = $( this ).attr( "luid" ).match( /(\S+)_(\d+)/);
-                var new_luid = luid[ 1 ] + "_" + row_id
-                var id = $( this ).attr( "id" ).match( /(\S+)_(\d+)/);
-                var new_id = id[ 1 ] + "_" + row_id
-                $( this ).attr( "luid", new_luid ).attr( "id", new_id ).attr( "name",  new_id );
             }
         );
 

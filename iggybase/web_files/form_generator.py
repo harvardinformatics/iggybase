@@ -26,10 +26,11 @@ class FormGenerator(PageTemplate):
                                                                 form_type=self.form_type)
 
     def input_field(self, field_data, display_name, row_name, control_id, control_type, value=None):
+        logging.info('row_name: ' + str(row_name) + '  display_name: ' + str(display_name))
         kwargs = {}
         validators = []
         if value is not None:
-            # logging.info('input_field value: ' + str(value))
+            logging.info('input_field value: ' + str(value))
             kwargs['default'] = value
 
         # no validators or classes attached to hidden fields, as it could cause issues
@@ -170,7 +171,7 @@ class FormGenerator(PageTemplate):
 
         form_class = new_class('MultipleForm', (Form,), {}, lambda ns: ns.update(self.classattr))
 
-        self.form_class = form_class()
+        self.form_class = form_class(None)
 
     def data_entry_form(self, row_name='new', data_instance = None, depth = 2):
         if data_instance is None:
@@ -188,7 +189,7 @@ class FormGenerator(PageTemplate):
 
         form_class = new_class('SingleForm', (Form,), {}, lambda ns: ns.update(self.classattr))
 
-        self.form_class = form_class()
+        self.form_class = form_class(None)
 
     def get_table(self, data_instance):
         row_counter = 0
@@ -262,10 +263,7 @@ class FormGenerator(PageTemplate):
                             default=table_data['table_meta_data'].name)
 
             for instance_name, instance in data_instance.instances[table_name].items():
-                # logging.info(instance_name + ' data: ')
-                # logging.info(instance)
-                # logging.info(str(instance.id) + ' start time: ' +
-                #              datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
+                # logging.info(instance_name + '  ' + table_data['table_meta_data'].name)
 
                 self.classattr.update(self.row_fields(row_counter, instance_name, table_data['table_meta_data']))
                 self.get_row(data_instance, table_name, instance, control_type, row_counter)
@@ -302,7 +300,7 @@ class FormGenerator(PageTemplate):
 
     def get_row(self, data_instance, table_name, instance, control_type, row_counter):
         # start_time = time.time()
-        # logging.info('row_name: ' + instance.name)
+        # logging.info('row_name: ' + str(instance['instance'].name))
         self.classattr['start_row_'+str(row_counter)]=\
             HiddenField('start_row_'+str(row_counter))
 
