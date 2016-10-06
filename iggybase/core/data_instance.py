@@ -262,20 +262,23 @@ class DataInstance:
             return None
 
     def get_value(self, field_name, table_name = None, instance_name = None):
-        logging.info('get_value table_name: ')
-        logging.info(table_name)
-        logging.info('get_value instance_name: ')
-        logging.info(instance_name)
-        logging.info('get_value field_name: ')
-        logging.info(field_name)
+        # logging.info('get_value table_name: ')
+        # logging.info(table_name)
+        # logging.info('get_value instance_name: ')
+        # logging.info(instance_name)
+        # logging.info('get_value field_name: ')
+        # logging.info(field_name)
 
         if table_name is None:
             table_name = self.table_name
         if instance_name is None:
             instance_name = self.instance_name
 
-        logging.info('get_value self.instances[table_name]: ')
-        logging.info(self.instances[table_name])
+        # logging.info('get_value self.instances[table_name]: ')
+        # logging.info(self.instances[table_name])
+
+        logging.info('get_values self.instances[table_name]: ')
+        logging.info(self.get_values(table_name, instance_name))
 
         return getattr(self.instances[table_name][instance_name]['instance'], field_name)
 
@@ -285,7 +288,7 @@ class DataInstance:
         if instance_name is None:
             instance_name = self.instance_name
 
-        return getattr(self.instances[table_name][instance_name]['instance'].values())
+        return self.instances[table_name][instance_name]['instance'].values()
 
     def set_values(self, field_values = {}, table_name = None, instance_name = None):
         # logging.info('set_values table_name: ')
