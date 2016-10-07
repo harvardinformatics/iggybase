@@ -2,6 +2,7 @@ from types import new_class
 from flask.ext.wtf import Form
 from wtforms import HiddenField
 from wtforms.validators import DataRequired, Length, email, Optional
+from iggybase import utilities as util
 from iggybase.core.data_instance import DataInstance
 from iggybase.web_files import constants
 from iggybase.web_files.page_template import PageTemplate
@@ -248,7 +249,7 @@ class FormGenerator(PageTemplate):
                        'table_level': str(table_data['level']),
                        'table_title': table_data['table_meta_data'].name.replace("_", " ").title()}
 
-            buttons['top'], buttons['bottom'] = self.button_html_generator(buttons, context)
+            buttons['top'], buttons['bottom'] = self.button_generator(buttons, context)
 
             # logging.info('buttons[top] ' + table_name)
             # logging.info(buttons['top'])
@@ -256,7 +257,7 @@ class FormGenerator(PageTemplate):
             # logging.info(buttons['bottom'])
 
             if buttons['top']:
-                self.classattr[table_name + '_buttons_top'] =  HiddenField('buttons_top', default=buttons['top'])
+                self.classattr[table_name + '_buttons_top'] =  HiddenField('buttons_top', default=util.html_buttons(buttons['top']))
 
             self.classattr['start_table_' + str(table_data['table_meta_data'].id)] = \
                 HiddenField('start_table_' + str(table_data['table_meta_data'].id),
@@ -271,7 +272,7 @@ class FormGenerator(PageTemplate):
                 row_counter += 1
 
             if buttons['bottom']:
-                self.classattr[table_name + '_buttons_bottom'] =  HiddenField('buttons_bottom', default=buttons['bottom'])
+                self.classattr[table_name + '_buttons_bottom'] =  HiddenField('buttons_bottom', default=util.html_buttons(buttons['bottom']))
 
             self.classattr['end_table_' + str(table_data['table_meta_data'].id)] = \
                 HiddenField('end_table_' + str(table_data['table_meta_data'].id),
@@ -297,49 +298,6 @@ class FormGenerator(PageTemplate):
                 'record_data_table_'+str(row_count): table_name_field,
                 'record_data_new_'+str(row_count): row_new,
                 'record_data_table_id_'+str(row_count): table_id_field}
-
-    def button_html_generator(self, buttons, context):
-        html_buttons = {'top': '', 'bottom': ''}
-        page_context = " ".join(self.page_context).replace("base-context", "")
-
-        for button_location, btns in buttons.items():
-            for button in btns:
-                html_buttons[button_location] += ('<input value="' + button.button_value +
-                                                  '" id="' + button.button_id +
-                                                  '" name="' + button.button_id +
-                                                  '" type="' + button.button_type +
-                                                  '" context="' + page_context +
-                                                  '" class="' + button.button_class + " " + page_context + '"')
-
-                if button.special_props:
-                    html_buttons[button_location] += button.special_props
-
-                html_buttons[button_location] += '>'
-
-        html_buttons['top'] = html_buttons['top'].replace('<page_context>', page_context)
-        html_buttons['bottom'] = html_buttons['bottom'].replace('<page_context>', page_context)
-
-        if 'table_name' in context:
-            html_buttons['top'] = html_buttons['top'].replace('<table_name>', context['table_name'])
-            html_buttons['bottom'] = html_buttons['bottom'].replace('<table_name>', context['table_name'])
-
-        if 'table_title' in context:
-            html_buttons['top'] = html_buttons['top'].replace('<table_title>', context['table_title'])
-            html_buttons['bottom'] = html_buttons['bottom'].replace('<table_title>', context['table_title'])
-
-        if 'table_id' in context:
-            html_buttons['top'] = html_buttons['top'].replace('<table_id>', context['table_id'])
-            html_buttons['bottom'] = html_buttons['bottom'].replace('<table_id>', context['table_id'])
-
-        if 'table_level' in context:
-            html_buttons['top'] = html_buttons['top'].replace('<table_level>', context['table_level'])
-            html_buttons['bottom'] = html_buttons['bottom'].replace('<table_level>', context['table_level'])
-
-        if 'row_name' in context:
-            html_buttons['top'] = html_buttons['top'].replace('<instance_name>', context['row_name'])
-            html_buttons['bottom'] = html_buttons['bottom'].replace('<instance_name>', context['row_name'])
-
-        return html_buttons['top'], html_buttons['bottom']
 
     def get_row(self, data_instance, table_name, instance, control_type, row_counter):
         # start_time = time.time()

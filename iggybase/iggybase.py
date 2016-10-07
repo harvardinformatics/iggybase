@@ -13,6 +13,7 @@ from werkzeug.wsgi import DispatcherMiddleware
 from iggybase.extensions import mail, lm, bootstrap
 from iggybase.admin import models
 from iggybase.cache import Cache
+from iggybase import utilities as util
 from iggybase.database import db, init_db, db_session
 from event_action import init_app as init_act_mgr
 import logging
@@ -55,6 +56,9 @@ def configure_extensions( app, db ):
     # can't preceed the user data setup.
     # from iggybase.admin.events import StartEvents
     # StartEvents(app).configure(db_session)
+    
+    # add button function to jinja
+    app.add_template_global(util.html_button, name='html_button')
 
     return security, user_datastore
 

@@ -41,6 +41,8 @@ class PageTemplate():
         context['page_header'] = self.page_form.page_header
         context['page_title'] = self.page_form.page_title
         context['top_buttons'], context['bottom_buttons'] = self.button_generator(self.buttons, context)
+        print(context['top_buttons'])
+        print(context['bottom_buttons'])
 
         # logging.info('context[top_buttons]: ' + context['top_buttons'])
         # logging.info('context[bottom_buttons]: ' + context['bottom_buttons'])
@@ -104,7 +106,7 @@ class PageTemplate():
                             'type': self.add_context(button.button_type, context),
                             'context': page_context,
                             'class': self.add_context(button.button_class + " " + page_context, context),
-                            'special_props': getattr(button, 'special_props', '')
+                            'special_props': getattr(button, 'special_props') or ''
                         })
 
         return button_dict['top'], button_dict['bottom']

@@ -118,6 +118,22 @@ def zero_pad(num, length):
     ret += num_str
     return ret
 
+def html_buttons(buttons):
+    html = ''
+    for button in buttons:
+        html += html_button(button)
+    return html
+
+def html_button(button):
+    html = ('<input value="' + button['value'] + '"' 
+    + ' id="' + button['id'] + '"'
+    + ' name="' + button['name'] + '"'
+    + ' type="' + button['type'] + '"'
+    + ' context="' + button['context'] + '"'
+    + ' class="' + button['class'] + '"'
+    + ' ' + button['special_props'] + '>')
+    return html
+
 class DictObject(dict):
     def __init__(self, dict):
         self.__dict__ = dict

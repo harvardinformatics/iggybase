@@ -21,15 +21,8 @@
 {%- endmacro %}
 
 {% macro render_buttons( buttons ) -%}
-    {% for button in buttons -%}
-        <input value="{{button.value}}"
-            id="{{button.id}}"
-            name="{{button.name}}"
-            type="{{button.type}}"
-            context="{{button.context}}"
-            class="{{button.class}}"
-        {{button.special_props}}
-        >
+{% for button in buttons -%}
+    {{html_button(button)|safe}}
     {% endfor -%}
 {%-endmacro%}
 
