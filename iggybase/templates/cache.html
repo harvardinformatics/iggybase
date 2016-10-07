@@ -17,12 +17,6 @@
         </div>
     {%- endblock content_title %}
 
-    {% block topbuttonbar -%}
-        <div class="top_buttons">
-        {{ top_buttons|safe }}
-        </div>
-    {%- endblock topbuttonbar %}
-
     {% block hidden_fields -%}
         {{ super() }}
     {% endblock hidden_fields -%}
@@ -48,12 +42,6 @@
         </div>
         {% endblock page_content -%}
     {% endif -%}
-
-    {% block bottombuttonbar -%}
-        <div class="bottom_buttons">
-        {{ bottom_buttons|safe }}
-        </div>
-    {%- endblock bottombuttonbar %}
 
     {% if form is defined %}
 </form>

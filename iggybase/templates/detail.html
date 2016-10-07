@@ -7,34 +7,26 @@
 {%- endblock styles %}
 {% block title %}{{ page_title }}{% endblock %}
 
-{% block content %}
-    <h1>{{table_name.replace( '_', ' ' )|title}} {{ page_header }}</h1>
-    {% block hidden_fields %}
-        {{ super() }}
-    {%- endblock hidden_fields %}
+{% block content_title %}
+<h1>{{table_name.replace( '_', ' ' )|title}} {{ page_header }}</h1>
+{% endblock %}
+{% block hidden_fields %}
+    {{ super() }}
+{%- endblock hidden_fields %}
 
-    {% block topbuttonbar %}
-        {{ super() }}
-        {{ top_buttons|safe }}
-    {%- endblock topbuttonbar %}
-    {% block page_content %}
-        {% if table_queries.queries[0] %}
-            {{ macros.render_detail( table_queries.get_first() ) }}
-        {% endif %}
+{% block page_content %}
+    {% if table_queries.queries[0] %}
+        {{ macros.render_detail( table_queries.get_first() ) }}
+    {% endif %}
 
-        {% if table_queries.queries[1] %}
-            {% for table_query in table_queries.queries[1:]: %}
-        <div class={{ table_query.display_name ~ "_table_div" }}>
-            <h1>{{table_query.display_name|title}}</h1>
-            {{ macros.render_table( table_query ) }}
-        </div>
-            {% endfor %}
-        {% endif %}
-    {% endblock %}
-    {% block bottombuttonbar %}
-            {{ super() }}
-            {{ bottom_buttons|safe }}
-    {%- endblock bottombuttonbar %}
+    {% if table_queries.queries[1] %}
+        {% for table_query in table_queries.queries[1:]: %}
+    <div class={{ table_query.display_name ~ "_table_div" }}>
+        <h1>{{table_query.display_name|title}}</h1>
+        {{ macros.render_table( table_query ) }}
+    </div>
+        {% endfor %}
+    {% endif %}
 {% endblock %}
 
 {% block scripts %}

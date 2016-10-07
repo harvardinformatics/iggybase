@@ -129,6 +129,15 @@
                         {%- endblock page_msg -%}
 
                         {% block topbuttonbar -%}
+                            {%- if top_buttons %}
+                                {%- if "modal_form" in page_context %}
+                                    <div>
+                                {% else -%}
+                                    <div class="top_buttons">
+                                {% endif -%}
+                                {{ macros.render_buttons(top_buttons) }}
+                                </div>
+                            {% endif -%}
                         {%- endblock topbuttonbar %}
 
                         {% block hidden_fields -%}
@@ -145,6 +154,16 @@
                         {%- endblock page_content %}
 
                         {% block bottombuttonbar -%}
+                            {%- if bottom_buttons %}
+                                {%- if "modal_form" in page_context %}
+                                    <div>
+                                {% else -%}
+                                    <div class="top_buttons">
+                                {% endif -%}
+                                {{ macros.render_buttons(bottom_buttons) }}
+                                </div>
+                            {% endif -%}
+
                         {%- endblock bottombuttonbar %}
                     {%- endblock content %}
                     </div>

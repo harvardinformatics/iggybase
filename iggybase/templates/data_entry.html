@@ -26,24 +26,18 @@
             {% endif %}
         </div>
     {%- endblock content_title %}
-
+    
     {% block topbuttonbar -%}
-        {%- if "modal_form" in page_context %}
-            <div>
-        {% else -%}
-            <div class="top_buttons">
-        {% endif -%}
-        {{ macros.render_buttons(top_buttons) }}
-        </div>
-    {%- endblock topbuttonbar %}
+        {{ super() }}
+    {% endblock topbuttonbar -%}
 
     {% block hidden_fields -%}
         {{ super() }}
     {% endblock hidden_fields -%}
 
-    <div id="page_message">
-        <p>{{ page_msg|safe }}</p>
-    </div>
+    {% block page_msg -%}
+        {{ super() }}
+    {% endblock page_msg -%}
 
     {% if form is defined %}
         {% block page_content -%}
@@ -124,14 +118,8 @@
     {% endif -%}
 
     {% block bottombuttonbar -%}
-        {%- if "modal_form" in page_context %}
-            <div>
-        {% else -%}
-            <div class="bottom_buttons">
-        {% endif -%}
-        {{ macros.render_buttons(bottom_buttons) }}
-        </div>
-    {%- endblock bottombuttonbar %}
+        {{ super() }}
+    {% endblock bottombuttonbar -%}
 
     {% if form is defined %}
         {%- if "modal_form" in page_context %}
