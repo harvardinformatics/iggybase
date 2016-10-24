@@ -87,11 +87,14 @@ class PageTemplate():
 
     def add_context(self, val, context):
         # replace any <placeholder context> with the value from context
-        groups = re.findall('<(.*?)>', val) 
-        for g in groups:
-            if g in context:
-                val = val.replace('<' + g + '>', context[g])
-        return val
+        if val:
+            groups = re.findall('<(.*?)>', val)
+            for g in groups:
+                if g in context:
+                    val = val.replace('<' + g + '>', context[g])
+            return val
+        else:
+            return ''
 
     def button_generator(self, buttons, context):
         button_dict = {'top': [], 'bottom': []}
@@ -106,7 +109,7 @@ class PageTemplate():
                             'type': self.add_context(button.button_type, context),
                             'context': page_context,
                             'class': self.add_context(button.button_class + " " + page_context, context),
-                            'special_props': getattr(button, 'special_props') or ''
+                            'special_props': self.add_context(button.special_props, context)
                         })
 
         return button_dict['top'], button_dict['bottom']

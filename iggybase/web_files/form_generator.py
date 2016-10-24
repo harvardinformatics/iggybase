@@ -10,6 +10,7 @@ from iggybase.web_files.iggybase_form_fields import IggybaseBooleanField, Iggyba
     IggybaseIntegerField, IggybaseLookUpField, IggybaseStringField, IggybaseTextAreaField, IggybaseSelectField,\
     IggybaseFileField, IggybasePasswordField
 
+
 class FormGenerator(PageTemplate):
     def __init__(self, page_form_name, form_type, table_name, page_context, module_name):
         super(FormGenerator, self).__init__(module_name, page_form_name, page_context)
