@@ -3,7 +3,6 @@ from iggybase import utilities as util
 from iggybase.core.field_collection import FieldCollection
 from iggybase import g_helper
 from collections import OrderedDict
-import random
 import datetime
 
 
@@ -22,7 +21,6 @@ class DataInstance:
                                                                                           {'name': table_name})}
 
         self.instance_counter = 1
-        self.saved_data = {}
 
         if self.tables[table_name]['table_meta_data'] is None:
             abort(403)
@@ -30,13 +28,11 @@ class DataInstance:
         self.instances = {}
         self.fields = {}
         self.history = []
-        if instance_name is None:
-            self.instance_name = None
-        else:
-            self.instance_name = instance_name
 
         self.initialize_fields(table_name)
 
+        self.instance_id = None
+        self.instance_name = None
         if instance_name is not None:
             self.get_data(instance_name)
 
@@ -71,6 +67,7 @@ class DataInstance:
 
         if self.instance_name is None:
             self.instance_name = instance.name
+            self.instance_id = instance.id
 
         instance = {'instance': instance, 'parent_id': instance_parent_id, 'save': False}
 
@@ -259,7 +256,6 @@ class DataInstance:
             setattr(self.instances[table_name][instance_name]['instance'], field_name, field_value)
 
     def commit(self):
-        self.saved_data = {self.instance_name: {'name': self.instance_name, 'table': self.table_name}}
         instance_names = {}
         save_instances = []
 
@@ -267,13 +263,14 @@ class DataInstance:
             if table_name == 'history':
                 continue
 
+            saved_new = False
             for instance_name, instance in instances.items():
                 if not instance['save']:
                     continue
 
                 if 'new' in instance_name and (instance['instance'].name is None or instance['instance'].name == 'new'):
                     instance['instance'].name = self.set_instance_name(table_name)
-                    new = True
+                    saved_new = True
 
                 instance_names[instance_name] = instance['instance'].name
 
@@ -282,11 +279,10 @@ class DataInstance:
 
                 instance['instance'].last_modified = datetime.datetime.utcnow()
 
-                self.saved_data[instance_name] = {'name': instance_name, 'table': table_name}
-
                 save_instances.append(instance['instance'])
 
-            save_instances.append(self.tables[table_name]['table_meta_data'])
+            if saved_new:
+                save_instances.append(self.tables[table_name]['table_meta_data'])
 
         for history_name, instance in self.instances['history'].items():
             if instance['instance'].instance_name in instance_names.keys():
@@ -298,7 +294,13 @@ class DataInstance:
 
             save_instances.append(instance['instance'])
 
-        return self.organization_access_control.save_data_instance(save_instances)
+        commit_status, commit_msg = self.organization_access_control.save_data_instance(save_instances)
+
+        if self.instance_id not in commit_msg:
+            commit_msg[self.instance_id] = {'id': self.instance_id, 'name': self.instance_name,
+                                            'table': self.table_name}
+
+        return commit_status, commit_msg 
 
     def rollback(self):
         self.organization_access_control.rollback()
@@ -320,11 +322,7 @@ class DataInstance:
         if table_name is None:
             table_name = self.table_name
 
-        if self.tables[table_name]['table_meta_data'].new_name_prefix is not None and \
-                        self.tables[table_name]['table_meta_data'].new_name_prefix != "":
-            instance_name = self.organization_access_control.get_new_name(self.tables[table_name]['table_meta_data'])
-        else:
-            instance_name = table_name + str(random.randint(1000000000, 9999999999))
+        instance_name = self.tables[table_name]['table_meta_data'].get_new_name()
 
         return instance_name
 

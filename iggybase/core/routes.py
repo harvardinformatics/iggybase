@@ -197,11 +197,13 @@ def data_entry(facility_name, table_name, row_name, page_context):
         del fg.form_class.errors['csrf_token']
 
         if not fg.form_class.errors:
-            save_msg = fp.save()
-            if save_msg is True:
-                return saved_data(facility_name, module_name, table_name, fp.instance.saved_data, page_context)
+            save_status, save_msg = fp.save()
+
+            if save_status is True:
+                return saved_data(facility_name, module_name, table_name, save_msg, page_context)
             else:
                 fg.add_page_context({'page_msg': save_msg})
+                fp.undo()
         else:
             fp.undo()
             
@@ -438,17 +440,18 @@ def saved_data(facility_name, module_name, table_name, row_names, page_context):
             msg = 'Error: %s,' % str(row_info['table']).replace('<', '').replace('>', '')
             error = True
         else:
-            logging.info(row_info['name'])
             table = urllib.parse.quote(row_info['table'])
             name = urllib.parse.quote(row_info['name'])
-            msg += ' <a href=' + request.url_root + facility_name + '/' + module_name + '/detail/' + table + '/' + name + '>' + \
-                   row_info['name'] + '</a>,'
+            if table != 'table_object' and table_name != 'table_object':
+                msg += (' <a href=' + request.url_root + facility_name + '/' + module_name + '/detail/' +
+                        table + '/' + name + '>' +  row_info['name'] + '</a>,')
             # TODO: allow this to support data saving by other than name
             if not table in saved_rows:
                 saved_rows[table] = []
             saved_rows[table].append({
                 'column': 'name',
                 'value': name,
+                'id': row_info['id'],
                 'table': table
             })
     msg = msg[:-1]

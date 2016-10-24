@@ -5,6 +5,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask.ext.security import UserMixin, RoleMixin
 from iggybase.admin.constants import ROLE
 from iggybase.extensions import lm
+import random
 
 
 class Institution(Base):
@@ -74,8 +75,13 @@ class TableObject(Base):
     display_name = Column(String(100))
 
     def get_new_name(self):
-        new_name = self.new_name_prefix + str(self.new_name_id).zfill(self.id_length)
-        self.new_name_id += 1
+        if self.new_name_prefix is not None and self.new_name_prefix != "" and self.new_name_id is not None and \
+                self.id_length is not None:
+            new_name = self.new_name_prefix + str(self.new_name_id).zfill(self.id_length)
+            self.new_name_id += 1
+        else:
+            new_name = self.name + str(random.randint(1000000000, 9999999999))
+
         return new_name
 
     def __repr__(self):
@@ -113,6 +119,7 @@ class Field(Base):
 
 class DataType(Base):
     table_type = 'admin'
+    db_data_type = Column(String(50))
 
     def __repr__(self):
         return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \

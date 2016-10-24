@@ -63,8 +63,22 @@ class OrganizationAccessControl:
             return True
         except (IntegrityError, DataError, SQLAlchemyError, NoForeignKeysError, IdentifierError, NoReferenceError) as e:
             self.session.rollback()
-            logging.error(e)
-            return "Error: " + format(e)
+            logging.error("Commit Error: " + format(e))
+            return "Commit Error: " + format(e)
+
+    def flush(self, instances):
+        try:
+            self.session.flush()
+            flush_msg = {}
+            for instance in instances:
+                if instance.__tablename__ != 'history':
+                    flush_msg[instance.id] = {'id': instance.id, 'name': instance.name, 'table': instance.__tablename__}
+
+            return True, flush_msg
+        except (IntegrityError, DataError, SQLAlchemyError, NoForeignKeysError, IdentifierError, NoReferenceError) as e:
+            self.session.rollback()
+            logging.error("Flush Error: " + format(e))
+            return False, "Flush Error: " + format(e)
 
     def rollback(self):
         self.session.rollback()
@@ -296,15 +310,19 @@ class OrganizationAccessControl:
 
         return table.query.filter_by(id=lt_id).first()
 
-    def get_new_name(self, table_instance):
-        instance_name = table_instance.get_new_name()
-
-        return instance_name
-
     def save_data_instance(self, instances):
         self.session.add_all(instances)
 
-        return self.commit()
+        flush_status, flush_msg = self.flush(instances)
+
+        if flush_status:
+            commit_msg = self.commit()
+            if commit_msg is True:
+                return True, flush_msg
+            else:
+                return False, commit_msg
+        else:
+            return flush_status, flush_msg
 
     def get_row_id(self, table_name, params):
         result = self.get_row(table_name, params)

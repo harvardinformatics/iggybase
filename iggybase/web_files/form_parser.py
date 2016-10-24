@@ -174,12 +174,12 @@ class FormParser():
             self.instance.set_values(row_data['data_entry'], table_name_field, instance_name)
 
     def save(self):
-        commit_msg = self.instance.commit()
+        commit_status, commit_msg = self.instance.commit()
 
-        if commit_msg is True:
+        if commit_status is True:
             current_app.cache.increment_version(list(self.table_names))
 
-        return commit_msg
+        return commit_status, commit_msg
 
     def undo(self):
         self.instance.rollback()
