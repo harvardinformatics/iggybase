@@ -281,9 +281,9 @@ class WorkItemGroup:
 
             row = self.oac.insert_row(table, fields)
             if table in self.saved_rows:
-                self.saved_rows[table].append({'table': table, 'id': row.id})
+                self.saved_rows[table].append({'table': table, 'name': row.name})
             else:
-                self.saved_rows[table] = [{'table': table, 'id': row.id}]
+                self.saved_rows[table] = [{'table': table, 'name': row.name}]
 
     def check_item_field_value(self, item, field, name):
         if item in self.saved_rows:

@@ -8,26 +8,19 @@ from flask import render_template
 from flask.ext.security import Security, SQLAlchemyUserDatastore, UserMixin, \
 RoleMixin, login_required, current_user, LoginForm, RegisterForm, \
 user_registered, logout_user
-from flask.ext.sqlalchemy import SQLAlchemy
-from werkzeug.wsgi import DispatcherMiddleware
 from iggybase.extensions import mail, lm, bootstrap
 from iggybase.admin import models
 from iggybase.cache import Cache
 from iggybase import utilities as util
 from iggybase.database import db, init_db, db_session
-from event_action import init_app as init_act_mgr
-import logging
 
 __all__ = [ 'create_app' ]
 
-def create_app( app_name = None ):
+def create_app():
     conf = Config( )
     iggybase = Flask( __name__ )
     iggybase.config.from_object( conf )
     iggybase.cache = Cache()
-
-    if app_name is None:
-        app_name = conf.PROJECT
 
     init_db( )
 
@@ -165,8 +158,6 @@ def configure_error_handlers( app ):
     @login_required
     def server_error_page(error):
         return render_template( "errors/server_error.html" ), 500
-
-
 
 class ExtendedLoginForm(LoginForm):
     email = StringField('Username or email:')

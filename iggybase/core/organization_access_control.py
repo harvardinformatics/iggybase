@@ -1,10 +1,11 @@
 from flask import g, current_app
 from sqlalchemy import DateTime, func, cast, String
+from sqlalchemy.exc import IntegrityError, DataError, SQLAlchemyError, NoForeignKeysError, IdentifierError, \
+    NoReferenceError
 from iggybase.database import db_session
 from iggybase.admin import models
 from iggybase import utilities as util
 from sqlalchemy.orm import aliased
-from collections import OrderedDict
 import json
 import logging
 import time
@@ -15,7 +16,7 @@ class OrganizationAccessControl:
     def __init__(self):
         self.org_ids = []
         self.current_org_id = None
-        self.session = db_session()
+        self.session = self.get_session()
 
         if g.user is not None and not g.user.is_anonymous:
             self.user =  self.session.query(models.User).filter_by(id=g.user.id).first()
@@ -49,10 +50,24 @@ class OrganizationAccessControl:
             self.user = None
 
     def __del__ (self):
-        self.session.commit()
+        self.session.rollback()
+
+    def get_session(self):
+        session = db_session()
+
+        return session
 
     def commit(self):
-        self.session.commit()
+        try:
+            self.session.commit()
+            return True
+        except (IntegrityError, DataError, SQLAlchemyError, NoForeignKeysError, IdentifierError, NoReferenceError) as e:
+            self.session.rollback()
+            logging.error(e)
+            return "Error: " + format(e)
+
+    def rollback(self):
+        self.session.rollback()
 
     def get_facility_orgs(self, org_id, root_org_id, level):
         level += 1
@@ -281,24 +296,15 @@ class OrganizationAccessControl:
 
         return table.query.filter_by(id=lt_id).first()
 
-    def get_new_name(self, table_name):
-        table_object = util.get_table('table_object')
-
-        table_instance = self.session.query(table_object).filter_by(name = table_name).first()
+    def get_new_name(self, table_instance):
         instance_name = table_instance.get_new_name()
-
-        self.session.add(table_instance)
-        self.session.flush()
 
         return instance_name
 
-    def save_data_instance(self, instance):
-        self.session.add(instance)
-        self.session.flush()
+    def save_data_instance(self, instances):
+        self.session.add_all(instances)
 
-        save_msg = {'id': instance.id, 'name': instance.name, 'table': instance.__tablename__}
-
-        return save_msg
+        return self.commit()
 
     def get_row_id(self, table_name, params):
         result = self.get_row(table_name, params)

@@ -4,9 +4,6 @@ from sqlalchemy import Column, ForeignKey, UniqueConstraint, or_
 import sqlalchemy
 from iggybase.database import db_session, Base
 from types import new_class
-import datetime
-import logging, sys, inspect
-from sqlalchemy.dialects import mysql
 
 
 class TableFactory:
@@ -16,13 +13,10 @@ class TableFactory:
         self.active = active
         self.session = db_session()
 
-    def __del__(self):
-        self.session.commit()
-
     def table_object_factory(self, class_name, table_object):
         classattr = {'table_type': 'user'}
 
-        table_object_cols = self.fields(table_object.id, self.active)
+        table_object_cols = self.fields(table_object.id)
 
         if not table_object_cols:
             return None
@@ -125,11 +119,11 @@ class TableFactory:
             table_objects.append(row)
         return table_objects
 
-    def fields(self, table_object_id, active=1):
+    def fields(self, table_object_id):
         fields = []
 
         res = self.session.query(Field). \
-            filter_by(table_object_id=table_object_id, active=active).all()
+            filter_by(table_object_id=table_object_id, active=self.active).all()
 
         for row in res:
             fields.append(row)

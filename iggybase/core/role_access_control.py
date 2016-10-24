@@ -28,7 +28,6 @@ class RoleAccessControl:
 
                 self.user.current_user_role_id =  role_data.UserRole.id
                 self.session.add(self.user)
-                self.session.flush()
                 self.session.commit()
                 self.role = role_data.Role
             else:
@@ -69,7 +68,7 @@ class RoleAccessControl:
             self.facility = None
 
     def __del__(self):
-        self.session.commit()
+        self.session.rollback()
 
     def fields(self, table_object_id, filter=None, active=1):
         filters = [

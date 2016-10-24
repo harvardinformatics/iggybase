@@ -4,6 +4,7 @@ from importlib import import_module
 from iggybase.admin.models import TableObject
 from iggybase.database import db_session
 import datetime
+import re
 import logging
 
 FACILITY = 0
@@ -33,8 +34,6 @@ def get_table(table_name):
         print('Abort' + table_name)
         logging.info('abort ' + table_name)
         abort(403)
-    finally:
-        session.commit()
 
     return table_object
 
@@ -137,3 +136,8 @@ def html_button(button):
 class DictObject(dict):
     def __init__(self, dict):
         self.__dict__ = dict
+
+
+def to_snake_case(camel_str):
+    s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', camel_str)
+    return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()

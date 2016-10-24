@@ -15,7 +15,8 @@ conf = Config()
 class IggybaseBase(object):
     @declared_attr
     def __tablename__(cls):
-        return to_snake_case(cls.__name__)
+        s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', cls.__name__)
+        return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
 
     def __iter__(self):
         values = vars(self)
@@ -50,7 +51,7 @@ class IggybaseBase(object):
 
 # used to create an object that mimics the object created by SQLAlchemy(app)
 # used for flask-security
-class DB_Factory:
+class DBFactory:
     def __init__(self, query, session):
         self.session = session
         self.Query = query
@@ -61,15 +62,13 @@ class DB_Factory:
 
 
 engine = create_engine(conf.SQLALCHEMY_DATABASE_URI + conf.DATA_DB_NAME, pool_recycle=3600)
-db_session = scoped_session(sessionmaker(autocommit=False, autoflush=False, bind=engine))
+db_sessionmaker = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+db_session = scoped_session(db_sessionmaker)
 Base = declarative_base(cls=IggybaseBase)
 Base.query = db_session.query_property()
-db = DB_Factory(Base.query, db_session)
+db = DBFactory(Base.query, db_session)
+
 
 def init_db():
     getattr(__import__('iggybase', fromlist=['models']), 'models')
     Base.metadata.create_all(bind=engine)
-
-def to_snake_case(camel_str):
-    s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', camel_str)
-    return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()

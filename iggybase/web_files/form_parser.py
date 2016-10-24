@@ -4,16 +4,16 @@ from werkzeug.utils import secure_filename
 from iggybase.core.data_instance import DataInstance
 from iggybase import utilities as util
 from flask import request, g, current_app
-from collections import OrderedDict
-import logging
 
 class FormParser():
     def __init__(self, table_name):
-        self.instance = DataInstance(table_name)
+        self.table_name = table_name
         self.table_names = []
+        self.instance = None
 
     def parse(self, form_data = None):
         # fields contain the data that was displayed on the form and possibly edited
+        self.instance = DataInstance(self.table_name)
         fields = {}
 
         web_request = False
@@ -30,14 +30,11 @@ class FormParser():
             else:
                 data = form_data[key]
 
-            # logging.info(key + ': ' + data)
-
             if key.startswith('bool_'):
                 key = key[key.index('_') + 1:]
 
             field_id = field_pattern.match(key)
             if field_id is not None:
-                # logging.info('key: ' + key)
                 if field_id.group(3) not in fields.keys():
                     fields[field_id.group(3)] = {'long_text': {}, 'form_data': {}, 'data_entry': {}, 'record_data': {},
                                                  'id_data_entry': {}, 'files_data_entry': {}}
@@ -58,9 +55,6 @@ class FormParser():
                         fields[field_id.group(3)][field_id.group(1)][field_id.group(2)] = {}
 
                     fields[field_id.group(3)][field_id.group(1)][field_id.group(2)][filename] = files[key]
-
-        # logging.info("fields['0']['form_data']['table']: " + fields['0']['form_data']['table'])
-        # logging.info("fields['0']['form_data']['row_name']: " + fields['0']['form_data']['row_name'])
 
         # for key1, value1 in fields.items():
         #     for key2, value2 in value1.items():
@@ -86,13 +80,10 @@ class FormParser():
             else:
                 # on a multiform all instances are not fetched with get_data
                 if row_data['record_data']['row_name'] not in self.instance.instances[table_name_field]:
-                    instance_name = self.instance.add_new_instance(table_name_field, row_data['record_data']['row_name'])
+                    instance_name = self.instance.add_new_instance(table_name_field,
+                                                                   row_data['record_data']['row_name'])
                 else:
                     instance_name = row_data['record_data']['row_name']
-
-            # logging.info("formparser instance_name: " + instance_name)
-            # logging.info("row_data['record_data']['table_name']: " + row_data['record_data']['table_name'])
-            # logging.info("formparser row_data['record_data']['row_name']: " + row_data['record_data']['row_name'])
 
             if ('organization_id' in row_data['data_entry'].keys() and
                     row_data['data_entry']['organization_id']):
@@ -113,18 +104,13 @@ class FormParser():
 
             exclude_list = ['id', 'last_modified', 'date_created', 'organization_id']
 
-            # logging.info('for field in current_field_data.items(): ')
             for table_field, meta_data in self.instance.fields[table_name_field].fields.items():
-                # logging.info('field: ' + field)
                 # only update fields that were on the form
-
                 if meta_data.Field.display_name not in row_data['data_entry'].keys():
                     continue
 
                 field_data = meta_data.Field
                 field = field_data.display_name
-                # logging.info(field + ' ' + str(field_data.data_type_id))
-                # logging.info("pre row_data['data_entry'][field]: " + str(row_data['data_entry'][field]))
 
                 if 'text' == meta_data.DataType.name.lower and row_data['data_entry'][field] != '':
                     if row_data['long_text'][field] == '':
@@ -185,18 +171,15 @@ class FormParser():
                         else:
                             row_data['data_entry'][field] = False
 
-                # logging.info(field + " post row_data['data_entry'][field]: " + str(row_data['data_entry'][field]))
-
-            # logging.info('form_parser table_name_field: ')
-            # logging.info(table_name_field)
-            # logging.info('form_parser instance_name: ')
-            # logging.info(instance_name)
-
             self.instance.set_values(row_data['data_entry'], table_name_field, instance_name)
 
     def save(self):
-        saved_data = self.instance.save()
+        commit_msg = self.instance.commit()
 
-        current_app.cache.increment_version(list(self.table_names))
+        if commit_msg is True:
+            current_app.cache.increment_version(list(self.table_names))
 
-        return saved_data
+        return commit_msg
+
+    def undo(self):
+        self.instance.rollback()

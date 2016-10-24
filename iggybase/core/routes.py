@@ -5,7 +5,7 @@ import time
 import urllib
 from importlib import import_module
 
-from flask import request, jsonify, abort, g, render_template, current_app, redirect, send_from_directory
+from flask import request, jsonify, abort, g, render_template, current_app, redirect, send_from_directory, session
 from flask.ext import excel
 from flask.ext.security import login_required
 
@@ -183,19 +183,27 @@ def data_entry(facility_name, table_name, row_name, page_context):
     module_name = MODULE_NAME
 
     fg = FormGenerator('data_entry', 'single', table_name, page_context, module_name)
+    fg.data_entry_form(row_name)
 
-    if request.method == 'POST':
+    if request.method == 'POST' and fg.form_class.validate_csrf_data(request.form.get('csrf_token')):
         fp = FormParser(table_name)
         fp.parse()
 
-        fg.data_entry_form(None, fp.instance)
+        fg.data_entry_form(row_name, fp.instance)
+        fg.form_class.validate_on_submit()
 
-        if fg.form_class.validate_on_submit() and len(fg.form_class.errors) == 0:
-            row_names = fp.save()
-            return saved_data(facility_name, module_name, table_name, row_names, page_context)
-    else:
-        fg.data_entry_form(row_name)
+        # Token has been validated above, this removes the error since the form was regenerated with dynamically
+        # added fields and the new token is no longer valid with the session token
+        del fg.form_class.errors['csrf_token']
 
+        if not fg.form_class.errors:
+            save_msg = fp.save()
+            if save_msg is True:
+                return saved_data(facility_name, module_name, table_name, fp.instance.saved_data, page_context)
+            else:
+                fg.add_page_context({'page_msg': save_msg})
+        else:
+            fp.undo()
     return fg.page_template_context()
 
 
@@ -236,18 +244,24 @@ def multiple_entry(facility_name, table_name, row_names, page_context):
     row_names = json.loads(row_names)
 
     fg = FormGenerator('data_entry', 'multiple', table_name, page_context, module_name)
+    fg.multiple_data_entry_form(row_names)
 
-    if request.method == 'POST':
+    if request.method == 'POST' and fg.form_class.validate_csrf_data(request.form.get('csrf_token')):
         fp = FormParser(table_name)
         fp.parse()
 
         fg.multiple_data_entry_form(None, fp.instance)
+        fg.form_class.validate_on_submit()
 
-        if fg.form_class.validate_on_submit() and len(fg.form_class.errors) == 0 and len(row_names) != 0:
+        # Token has been validated above, this removes the error since the form was regenerated with dynamically
+        # added fields and the token is no longer valid with the session token
+        del fg.form_class.errors['csrf_token']
+
+        if len(fg.form_class.errors) == 0 and len(row_names) != 0:
             row_names = fp.save()
             return saved_data(facility_name, module_name, table_name, row_names, page_context)
-    else:
-        fg.multiple_data_entry_form(row_names)
+        else:
+            fp.undo()
 
     return fg.page_template_context()
 
@@ -431,7 +445,6 @@ def saved_data(facility_name, module_name, table_name, row_names, page_context):
             saved_rows[table].append({
                 'column': 'name',
                 'value': name,
-                'id': row_info['id'],
                 'table': table
             })
     msg = msg[:-1]
