@@ -204,6 +204,7 @@ def data_entry(facility_name, table_name, row_name, page_context):
                 fg.add_page_context({'page_msg': save_msg})
         else:
             fp.undo()
+            
     return fg.page_template_context()
 
 
@@ -250,16 +251,19 @@ def multiple_entry(facility_name, table_name, row_names, page_context):
         fp = FormParser(table_name)
         fp.parse()
 
-        fg.multiple_data_entry_form(None, fp.instance)
+        fg.multiple_data_entry_form(row_names, fp.instance)
         fg.form_class.validate_on_submit()
 
         # Token has been validated above, this removes the error since the form was regenerated with dynamically
-        # added fields and the token is no longer valid with the session token
+        # added fields and the new token is no longer valid with the session token
         del fg.form_class.errors['csrf_token']
 
-        if len(fg.form_class.errors) == 0 and len(row_names) != 0:
-            row_names = fp.save()
-            return saved_data(facility_name, module_name, table_name, row_names, page_context)
+        if not fg.form_class.errors:
+            save_msg = fp.save()
+            if save_msg is True:
+                return saved_data(facility_name, module_name, table_name, fp.instance.saved_data, page_context)
+            else:
+                fg.add_page_context({'page_msg': save_msg})
         else:
             fp.undo()
 
