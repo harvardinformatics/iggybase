@@ -445,7 +445,6 @@ $( document ).ready( function () {
                 $( "#" + new_id ).prop( "checked", value );
                 $( "input[name=bool_" + new_id + "]" ).prop( 'disabled', value );
                 $( "input[name=bool_" + new_id + "]" ).val( value ? 'y' : 'n' );
-                alert( $( "input[name=bool_" + new_id + "]" ).val() );
             } else if ( $( "#" + new_id ).closest( "tr" ).is( ":visible" ) ) {
                 $( "#" + new_id ).val( value );
                 $( "#" + new_id ).change( );

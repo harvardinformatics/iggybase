@@ -383,7 +383,7 @@ class OrganizationAccessControl:
         for index, row in enumerate(rows):
             row_data.append({'parent_id': getattr(row, field.display_name), 'instance': row})
 
-        return row_data
+        return field.display_name, row_data
 
     def update_obj_rows(self, items, updates):
         updated = []

@@ -4,6 +4,8 @@ from werkzeug.utils import secure_filename
 from iggybase.core.data_instance import DataInstance
 from iggybase import utilities as util
 from flask import request, g, current_app
+import logging
+
 
 class FormParser():
     def __init__(self, table_name):
@@ -73,9 +75,9 @@ class FormParser():
             if table_name_field not in self.table_names:
                 self.table_names.append(table_name_field)
 
-            if row_data['record_data']['new'] == 1:
+            if row_data['record_data']['new'] == '1':
                 instance_name = self.instance.add_new_instance(table_name_field, 'new')
-                if row_data['data_entry']['name'] == '' and row_data['data_entry']['name'] != 'new':
+                if row_data['data_entry']['name'] != '' and row_data['data_entry']['name'] != 'new':
                     instance_name = row_data['data_entry']['name']
             else:
                 # on a multiform all instances are not fetched with get_data

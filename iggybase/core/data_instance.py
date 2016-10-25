@@ -4,7 +4,7 @@ from iggybase.core.field_collection import FieldCollection
 from iggybase import g_helper
 from collections import OrderedDict
 import datetime
-
+import logging
 
 class DataInstance:
     def __init__(self, table_name, instance_name = None):
@@ -14,6 +14,7 @@ class DataInstance:
         self.table_name = table_name
         self.tables = OrderedDict()
         self.tables[table_name] = {'level': 0,
+                                   'link_display_name': None,
                                    'parent': None,
                                    'link_data': None,
                                    'table_object': util.get_table(table_name),
@@ -37,10 +38,11 @@ class DataInstance:
             self.get_data(instance_name)
 
         self.tables['history'] = {'level': 0,
-                                   'parent': None,
-                                   'link_data': None,
-                                   'table_object': util.get_table('history'),
-                                   'table_meta_data': self.role_access_control.has_access('TableObject',
+                                  'parent': None,
+                                  'link_display_name': None,
+                                  'link_data': None,
+                                  'table_object': util.get_table('history'),
+                                  'table_meta_data': self.role_access_control.has_access('TableObject',
                                                                                           {'name': 'history'})}
         self.instances['history'] = OrderedDict()
         self.fields['history'] = FieldCollection(None, 'history', {}, False)
@@ -97,6 +99,9 @@ class DataInstance:
         if instance.name is None or instance.name == '' or instance_name == 'new':
             instance.name = 'new_' + str(len(self.instances[table_name]))
 
+            if self.tables[table_name]['link_display_name'] is not None and self.tables[table_name]['level'] == 1:
+                setattr(instance, self.tables[table_name]['link_display_name'], self.instance_id)
+
         instance = {'instance': instance, 'parent_id': None, 'save': False}
 
         self.initialize_values(table_name, instance)
@@ -127,21 +132,23 @@ class DataInstance:
                                        'parent': link_data['parent'],
                                        'link_data': link_data['link_data'],
                                        'table_object': util.get_table(table_name),
-                                       'table_meta_data': link_data['table_meta_data']}
+                                       'table_meta_data': link_data['table_meta_data'],
+                                       'link_display_name': None}
 
             self.initialize_fields(table_name)
 
             if link_data['level'] == 1:
-                ids = [self.instances[self.table_name][self.instance_name]['instance'].id]
+                ids = [self.instance_id]
 
             if link_data['link_type'] == "child":
-                child_rows = self.organization_access_control. \
+                link_display_name, child_rows = self.organization_access_control. \
                     get_descendant_data(table_name, link_data['link_data'].child_link_field_id, ids)
 
                 ids = []
 
+                self.tables[table_name]['link_display_name'] = link_display_name
                 # always increment instance, since empty table rows will be added to the form
-                if len(child_rows) > 0:
+                if child_rows:
                     for row in child_rows:
                         self.get_data(None, row['instance'].id, table_name, row['instance'], row['parent_id'])
                         ids.append(row['instance'].id)
@@ -236,7 +243,6 @@ class DataInstance:
                  field_value != getattr(self.instances[table_name][instance_name]['instance'], field_name)) and \
                 not (field_name == 'name' and field_value is None and
                      'new' in self.instances[table_name][instance_name]['instance'].name):
-
             self.instances[table_name][instance_name]['save'] = True
             new_key = self.add_new_instance('history', 'new')
 
