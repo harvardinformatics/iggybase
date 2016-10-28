@@ -269,6 +269,7 @@ class WorkItemGroup:
                     success = self.oac.set_work_items(self.WorkItemGroup.id, tbl_items, parent, self.work_items[tbl])
                 else: # insert new
                     success = self.oac.set_work_items(self.WorkItemGroup.id, tbl_items, parent)
+        # TODO: handle failure
         return success
 
     def insert_row(self, tables, fields = {}):
@@ -282,9 +283,10 @@ class WorkItemGroup:
 
             row = self.oac.insert_row(table, fields)
             if table in self.saved_rows:
-                self.saved_rows[table].append({'table': table, 'name': row.name})
+                self.saved_rows[table].append({'table': table, 'name': row.name, 'id': row.id})
             else:
-                self.saved_rows[table] = [{'table': table, 'name': row.name}]
+                self.saved_rows[table] = [{'table': table, 'name': row.name,
+                    'id':row.id}]
 
     def check_item_field_value(self, item, field, name):
         if item in self.saved_rows:

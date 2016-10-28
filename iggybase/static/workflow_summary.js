@@ -50,7 +50,6 @@ $(document).ready(function(){
             table: table,
             success: function(response) {
                 response = JSON.parse(response);
-                console.log(response);
                 var url = window.location.href + '1/' + response.work_item_group;
                 window.location = (url);
             }
