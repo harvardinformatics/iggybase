@@ -22,7 +22,9 @@
 
 {% macro render_buttons( buttons ) -%}
 {% for button in buttons -%}
-    {{html_button(button)|safe}}
+    {% if button %}
+        {{html_button(button)|safe}}
+        {% endif %}    
     {% endfor -%}
 {%-endmacro%}
 

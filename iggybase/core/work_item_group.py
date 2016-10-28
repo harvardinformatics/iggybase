@@ -97,15 +97,16 @@ class WorkItemGroup:
                 'type': 'submit',
                 'value': 'Next Step',
                 'id': 'next_step',
+                'name': 'next_step',
                 'class': 'btn btn-default',
-                'special_props': None,
-                'submit_action_url': None
+                'special_props': '',
+                'submit_action_url': '',
+                'context': ''
             }
             if len(self.active_steps) == self.show_step_num: # last step
                 workflow_button['value'] = 'Complete'
                 workflow_button['id'] = 'complete'
-
-            self.buttons.append(util.DictObject(workflow_button))
+            self.buttons.append(workflow_button)
 
     def set_saved(self, saved_rows):
         self.saved_rows = saved_rows

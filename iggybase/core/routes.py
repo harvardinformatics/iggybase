@@ -368,6 +368,8 @@ def work_item_group(facility_name, workflow_name, step, work_item_group):
         func = getattr(module, wig.step.Route.url_path)
     context = func(**wig.dynamic_params)
     wig.get_buttons(context['bottom_buttons'])
+    if wig.buttons:
+        context['bottom_buttons'].extend(wig.buttons)
     if 'saved_rows' in context:
         wig.set_saved(context['saved_rows'])
     context['wig'] = wig

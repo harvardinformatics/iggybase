@@ -120,7 +120,8 @@ def zero_pad(num, length):
 def html_buttons(buttons):
     html = ''
     for button in buttons:
-        html += html_button(button)
+        if button:
+            html += html_button(button)
     return html
 
 def html_button(button):
