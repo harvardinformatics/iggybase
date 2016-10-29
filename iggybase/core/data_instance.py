@@ -7,52 +7,25 @@ import datetime
 import logging
 
 class DataInstance:
-    def __init__(self, table_name, instance_name = None):
+    def __init__(self, table_name, instance_name = None, depth = 2):
         self.role_access_control = g_helper.get_role_access_control()
         self.organization_access_control = g_helper.get_org_access_control()
 
         self.table_name = table_name
         self.tables = OrderedDict()
-        self.tables[table_name] = {'level': 0,
-                                   'link_display_name': None,
-                                   'parent': None,
-                                   'link_data': None,
-                                   'table_object': util.get_table(table_name),
-                                   'table_meta_data': self.role_access_control.has_access('TableObject',
-                                                                                          {'name': table_name})}
+        self.fields = {}
+        self.instances = {}
+        self.get_tables(depth)
 
         self.instance_counter = 1
 
         if self.tables[table_name]['table_meta_data'] is None:
             abort(403)
 
-        self.instances = {}
-        self.fields = {}
-        self.history = []
-
-        self.initialize_fields(table_name)
-
         self.instance_id = None
         self.instance_name = None
         if instance_name is not None:
             self.get_data(instance_name)
-
-        self.tables['history'] = {'level': 0,
-                                  'parent': None,
-                                  'link_display_name': None,
-                                  'link_data': None,
-                                  'table_object': util.get_table('history'),
-                                  'table_meta_data': self.role_access_control.has_access('TableObject',
-                                                                                          {'name': 'history'})}
-        self.instances['history'] = OrderedDict()
-        self.fields['history'] = FieldCollection(None, 'history', {}, False)
-        self.fields['history'].set_fk_fields()
-
-    def initialize_fields(self, table_name):
-        if table_name not in self.instances.keys():
-            self.instances[table_name] = OrderedDict()
-            self.fields[table_name] = FieldCollection(None, table_name)
-            self.fields[table_name].set_fk_fields()
 
     def get_data(self, instance_name = 'new', instance_id = None, table_name = None, instance = None,
                  instance_parent_id = None):
@@ -111,54 +84,90 @@ class DataInstance:
         return instance['instance'].name
 
     def get_instance(self, table_name, instance_name, instance_id):
-        table_object = self.tables[table_name]['table_object']
-
         if instance_id is None:
-            instance = self.organization_access_control.get_instance_data(table_object, {'name': instance_name})
+            instance = self.organization_access_control.get_instance_data(self.tables[table_name]['table_object'],
+                                                                          {'name': instance_name})
         else:
-            instance = self.organization_access_control.get_instance_data(table_object, {'id': instance_id})
+            instance = self.organization_access_control.get_instance_data(self.tables[table_name]['table_object'],
+                                                                          {'id': instance_id})
 
         return instance
 
-    def get_linked_instances(self, depth = 2):
-        data = self.role_access_control.get_link_tables(self.tables[self.table_name]['table_meta_data'].name,
-                                                        self.tables[self.table_name]['table_meta_data'].id, depth)
+    def get_tables(self, depth = 2):
+        self.tables[self.table_name] = {'level': 0,
+                                        'link_display_name': None,
+                                        'parent': None,
+                                        'link_data': None,
+                                        'link_type': None,
+                                        'table_object': util.get_table(self.table_name),
+                                        'table_meta_data': (self.role_access_control.has_access
+                                                            ('TableObject', {'name': self.table_name}))}
+        self.initialize_fields(self.table_name)
 
-        for index, link_data in enumerate(data):
-            # link_data - {'parent': table_object_name, 'level': level, 'table_meta_data': table_meta_data,
-            #              'link_data': row.TableObjectChildren, 'link_type': 'child'}
-            table_name = link_data['table_meta_data'].name
-            self.tables[table_name] = {'level': link_data['level'],
-                                       'parent': link_data['parent'],
-                                       'link_data': link_data['link_data'],
-                                       'table_object': util.get_table(table_name),
-                                       'table_meta_data': link_data['table_meta_data'],
-                                       'link_display_name': None}
+        self.tables['history'] = {'level': 0,
+                                  'parent': None,
+                                  'link_display_name': None,
+                                  'link_data': None,
+                                  'link_type': None,
+                                  'table_object': util.get_table('history'),
+                                  'table_meta_data': self.role_access_control.has_access('TableObject',
+                                                                                          {'name': 'history'})}
+        self.initialize_fields('history')
 
-            self.initialize_fields(table_name)
+        if depth > 0:
+            data = self.role_access_control.get_link_tables(self.tables[self.table_name]['table_meta_data'].name,
+                                                            self.tables[self.table_name]['table_meta_data'].id, depth)
 
-            if link_data['level'] == 1:
+            for index, link_data in enumerate(data):
+                # link_data - {'parent': table_object_name, 'level': level, 'table_meta_data': table_meta_data,
+                #              'link_data': row.TableObjectChildren, 'link_type': 'child'}
+                table_name = link_data['table_meta_data'].name
+                self.initialize_fields(table_name)
+                link_display_name = self.fields[table_name].fields_by_id[(link_data['link_data'].child_table_object_id,
+                                                                          link_data['link_data'].child_link_field_id)] \
+                    .Field.display_name
+
+                self.tables[table_name] = {'level': link_data['level'],
+                                           'parent': link_data['parent'],
+                                           'link_data': link_data['link_data'],
+                                           'table_object': util.get_table(table_name),
+                                           'table_meta_data': link_data['table_meta_data'],
+                                           'link_display_name': link_display_name,
+                                           'link_type': link_data['link_type']}
+
+    def initialize_fields(self, table_name):
+        self.instances[table_name] = OrderedDict()
+        if table_name == 'history':
+            self.fields[table_name] = FieldCollection(None, table_name, {}, False)
+        else:
+            self.fields[table_name] = FieldCollection(None, table_name)
+        self.fields[table_name].set_fk_fields()
+
+    def get_linked_instances(self):
+        for table_name, table_data in self.tables.items():
+            if table_data['level'] == 0:
+                continue
+            elif table_data['level'] == 1:
                 ids = [self.instance_id]
 
-            if link_data['link_type'] == "child":
-                link_display_name, child_rows = self.organization_access_control. \
-                    get_descendant_data(table_name, link_data['link_data'].child_link_field_id, ids)
+            if table_data['link_type'] == "child":
+                child_rows = self.organization_access_control. \
+                    get_descendant_data(table_name, table_data['link_data'].child_link_field_id, ids)
 
                 ids = []
 
-                self.tables[table_name]['link_display_name'] = link_display_name
                 # always increment instance, since empty table rows will be added to the form
                 if child_rows:
                     for row in child_rows:
                         self.get_data(None, row['instance'].id, table_name, row['instance'], row['parent_id'])
                         ids.append(row['instance'].id)
-                elif link_data['level'] == 1:
+                elif table_data['level'] == 1:
                     self.get_data('new', None, table_name, None,
                                   self.instances[self.table_name][self.instance_name]['instance'].id)
                 else:
                     self.get_data('new', None, table_name)
 
-            elif link_data['link_type'] == "many":
+            elif table_data['link_type'] == "many":
                 pass
 
     def initialize_values(self, table_name, instance):
@@ -274,7 +283,7 @@ class DataInstance:
                 if not instance['save']:
                     continue
 
-                if 'new' in instance_name and (instance['instance'].name is None or instance['instance'].name == 'new'):
+                if 'new' in instance_name and (instance['instance'].name is None or 'new' in instance['instance'].name):
                     instance['instance'].name = self.set_instance_name(table_name)
                     saved_new = True
 

@@ -15,7 +15,6 @@ class FormParser():
 
     def parse(self, form_data = None):
         # fields contain the data that was displayed on the form and possibly edited
-        self.instance = DataInstance(self.table_name)
         fields = {}
 
         web_request = False
@@ -63,10 +62,8 @@ class FormParser():
         #         for key3, value3 in value2.items():
         #            logging.info(str(key1) + ' ' + str(key2) + ' ' + str(key3) + ': ' + str(value3))
 
+        self.instance = DataInstance(self.table_name, None, int(fields['0']['form_data']['max_level']))
         self.instance.get_data(fields['0']['form_data']['row_name'])
-
-        if fields['0']['record_data']['row_name'] != 'new' and int(fields['0']['form_data']['max_level']) > 0:
-            self.instance.get_linked_instances(int(fields['0']['form_data']['max_level']))
 
         for row_id in sorted(fields.keys()):
             row_data = fields[row_id]
@@ -79,6 +76,8 @@ class FormParser():
                 instance_name = self.instance.add_new_instance(table_name_field, 'new')
                 if row_data['data_entry']['name'] != '' and row_data['data_entry']['name'] != 'new':
                     instance_name = row_data['data_entry']['name']
+                else:
+                    fields[row_id]['data_entry']['name'] = instance_name
             else:
                 # on a multiform all instances are not fetched with get_data
                 if row_data['record_data']['row_name'] not in self.instance.instances[table_name_field]:

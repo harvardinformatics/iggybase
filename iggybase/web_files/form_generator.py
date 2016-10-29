@@ -9,6 +9,7 @@ from iggybase.web_files.page_template import PageTemplate
 from iggybase.web_files.iggybase_form_fields import IggybaseBooleanField, IggybaseDateField, IggybaseFloatField,\
     IggybaseIntegerField, IggybaseLookUpField, IggybaseStringField, IggybaseTextAreaField, IggybaseSelectField,\
     IggybaseFileField, IggybasePasswordField
+import logging
 
 
 class FormGenerator(PageTemplate):
@@ -151,7 +152,7 @@ class FormGenerator(PageTemplate):
         self.form_class = None
 
         if data_instance is None:
-            data_instance = DataInstance(self.table_name)
+            data_instance = DataInstance(self.table_name, None, 0)
             data_instance.get_multiple_data(row_names)
 
         self.get_table(data_instance)
@@ -175,10 +176,10 @@ class FormGenerator(PageTemplate):
         self.form_class = None
 
         if data_instance is None:
-            data_instance = DataInstance(self.table_name, row_name)
+            data_instance = DataInstance(self.table_name, row_name, depth)
 
             if row_name != 'new':
-                data_instance.get_linked_instances(depth)
+                data_instance.get_linked_instances()
 
         self.instance = data_instance
 
@@ -294,7 +295,7 @@ class FormGenerator(PageTemplate):
 
             value = getattr(instance['instance'], field.Field.display_name)
 
-            if field.Field.display_name == 'name' and value == 'new':
+            if field.Field.display_name == 'name' and value is not None and 'new' in value:
                 value = None
 
             control_id = 'data_entry_' + field.Field.display_name + "_" + str(row_counter)
