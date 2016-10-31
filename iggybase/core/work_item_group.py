@@ -47,7 +47,7 @@ class WorkItemGroup:
         self.url = url_for(self.endpoint, **self.dynamic_params)
 
         # default set on init, actions can change this
-        self.next_step = self.step_num + 1
+        self.next_step = self.show_step_num + 1
 
         # not all steps are necessary depending on items
         self.active_steps = self.get_active_steps(self.workflow.steps)
@@ -294,12 +294,14 @@ class WorkItemGroup:
             # get the price_item_id for sample
             table = field.replace('_id', '')
             sam = self.oac.get_row(table, {'name': name})
+            sam_items = []
             if sam:
                 skip_step = True
                 # see if any items are samples
                 for work_item in work_items:
                     res = self.oac.get_row(item, {'id': work_item['id']})
                     if res and getattr(res, field) == sam.id:
+                        sam_items.append(res)
                         skip_step = False
 
                 if skip_step: # if there are no samples
@@ -307,10 +309,11 @@ class WorkItemGroup:
                     self.oac.update_rows('work_item_group', {'status': status.COMPLETE}, [self.WorkItemGroup.id])
                 else:
                     none_list = []
-                    if res.quantity:
-                        for i in range(0, res.quantity):
-                            new_sample = {'table': 'sample', 'id': None }
-                            none_list.append(new_sample)
-                        parent_item = {'table': item, 'id': res.id}
-                        success = self.oac.set_work_items(self.WorkItemGroup.id, none_list, parent_item)
+                    for res in sam_items:
+                        if res.quantity:
+                            for i in range(0, res.quantity):
+                                new_sample = {'table': 'sample', 'id': None }
+                                none_list.append(new_sample)
+                            parent_item = {'table': item, 'id': res.id}
+                            success = self.oac.set_work_items(self.WorkItemGroup.id, none_list, parent_item)
 

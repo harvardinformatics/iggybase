@@ -51,13 +51,13 @@ class DataInstance:
         self.instances[table_name][instance['instance'].name] = instance
 
     def get_multiple_data(self, instance_names = []):
-        for instance_name in instance_names:
+        for i, instance_name in enumerate(instance_names):
             self.instance_name = instance_name
 
             instance = self.get_instance(self.table_name, instance_name, None)
 
             if instance.name is None or instance.name == '' or instance_name == 'new':
-                instance.name = 'new'
+                instance.name = 'new_' + str(i)
 
             instance = {'instance': instance, 'parent_id': None, 'save': False}
 
