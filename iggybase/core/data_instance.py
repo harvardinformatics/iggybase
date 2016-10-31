@@ -17,7 +17,7 @@ class DataInstance:
         self.instances = {}
         self.get_tables(depth)
 
-        self.instance_counter = 1
+        self.instance_counter = 0
 
         if self.tables[table_name]['table_meta_data'] is None:
             abort(403)
@@ -29,20 +29,13 @@ class DataInstance:
 
     def get_data(self, instance_name = 'new', instance_id = None, table_name = None, instance = None,
                  instance_parent_id = None):
-        self.instance_counter += 1
-
         if table_name is None:
             table_name = self.table_name
 
         if instance is None:
             instance = self.get_instance(table_name, instance_name, instance_id)
 
-        if instance.name is None or instance.name == '' or instance_name == 'new':
-            instance.name = 'new'
-
-        if self.instance_name is None:
-            self.instance_name = instance.name
-            self.instance_id = instance.id
+        self.set_name(table_name, instance, instance_name)
 
         instance = {'instance': instance, 'parent_id': instance_parent_id, 'save': False}
 
@@ -56,8 +49,7 @@ class DataInstance:
 
             instance = self.get_instance(self.table_name, instance_name, None)
 
-            if instance.name is None or instance.name == '' or instance_name == 'new':
-                instance.name = 'new_' + str(i)
+            self.set_name(self.table_name, instance, instance_name)
 
             instance = {'instance': instance, 'parent_id': None, 'save': False}
 
@@ -69,11 +61,11 @@ class DataInstance:
         if instance is None:
             instance = self.get_instance(table_name, instance_name, None)
 
-        if instance.name is None or instance.name == '' or instance_name == 'new':
-            instance.name = 'new_' + str(len(self.instances[table_name]))
+        self.set_name(table_name, instance, instance_name)
 
-            if self.tables[table_name]['link_display_name'] is not None and self.tables[table_name]['level'] == 1:
-                setattr(instance, self.tables[table_name]['link_display_name'], self.instance_id)
+        if self.tables[table_name]['level'] == 1 and 'new' in instance.name and \
+                        self.tables[table_name]['link_display_name'] is not None:
+            setattr(instance, self.tables[table_name]['link_display_name'], self.instance_id)
 
         instance = {'instance': instance, 'parent_id': None, 'save': False}
 
@@ -82,6 +74,16 @@ class DataInstance:
         self.instances[table_name][instance['instance'].name] = instance
 
         return instance['instance'].name
+
+    def set_name(self, table_name, instance, instance_name):
+        self.instance_counter += 1
+
+        if instance.name is None or instance.name == '' or instance_name == 'new':
+            instance.name = 'new_' + str(len(self.instances[table_name]))
+
+        if self.instance_name is None:
+            self.instance_name = instance.name
+            self.instance_id = instance.id
 
     def get_instance(self, table_name, instance_name, instance_id):
         if instance_id is None:

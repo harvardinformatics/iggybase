@@ -63,7 +63,6 @@ class FormParser():
         #            logging.info(str(key1) + ' ' + str(key2) + ' ' + str(key3) + ': ' + str(value3))
 
         self.instance = DataInstance(self.table_name, None, int(fields['0']['form_data']['max_level']))
-        self.instance.get_data(fields['0']['form_data']['row_name'])
 
         for row_id in sorted(fields.keys()):
             row_data = fields[row_id]
