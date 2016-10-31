@@ -197,9 +197,9 @@ def data_entry(facility_name, table_name, row_name, page_context):
         del fg.form_class.errors['csrf_token']
 
         if not fg.form_class.errors:
-            save_status, save_msg = fp.save()
+            save_msg = fp.save()
 
-            if save_status is True:
+            if save_msg is True:
                 return saved_data(facility_name, module_name, table_name, save_msg, page_context)
             else:
                 fg.add_page_context({'page_msg': save_msg})
