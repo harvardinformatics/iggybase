@@ -57,6 +57,15 @@ class DataInstance:
 
             self.instances[self.table_name][instance['instance'].name] = instance
 
+    def add_new_instances(self, table_name, quantity = 0):
+        instance_names = []
+
+        i = 0
+        while i < quantity:
+            instance_names.append(self.add_new_instance(table_name, 'new'))
+
+        return instance_names
+
     def add_new_instance(self, table_name, instance_name, instance = None):
         if instance is None:
             instance = self.get_instance(table_name, instance_name, None)
@@ -75,7 +84,7 @@ class DataInstance:
 
         return instance['instance'].name
 
-    def set_name(self, table_name, instance, instance_name):
+    def set_name(self, table_name, instance, instance_name = 'new'):
         self.instance_counter += 1
 
         if instance.name is None or instance.name == '' or instance_name == 'new':
