@@ -63,6 +63,7 @@ class DataInstance:
         i = 0
         while i < quantity:
             instance_names.append(self.add_new_instance(table_name, 'new'))
+            i += 1
 
         return instance_names
 
