@@ -106,6 +106,7 @@ class WorkItemGroup:
             if len(self.active_steps) == self.show_step_num: # last step
                 workflow_button['value'] = 'Complete'
                 workflow_button['id'] = 'complete'
+                workflow_button['name'] = 'complete'
             self.buttons.append(workflow_button)
 
     def set_saved(self, saved_rows):
@@ -135,7 +136,6 @@ class WorkItemGroup:
         if self.step_num == 1 and self.name == 'new' and not self.is_complete():
             table = 'work_item_group'
             # TODO: this should be in a generic locaion, maybe the data_instance
-            # class
             fields = {'workflow_id': self.workflow.id,
                 'status': status.IN_PROGRESS, 'step_id': self.step.Step.id}
             fc = FieldCollection(None, table)
