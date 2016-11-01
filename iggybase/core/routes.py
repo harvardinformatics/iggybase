@@ -182,8 +182,10 @@ def change_role(facility_name):
 def data_entry(facility_name, table_name, row_name, page_context):
     module_name = MODULE_NAME
 
+    depth = request.args.get('depth', 2, int)
+
     fg = FormGenerator('data_entry', 'single', table_name, page_context, module_name)
-    fg.data_entry_form(row_name)
+    fg.data_entry_form(row_name, None, depth)
 
     if request.method == 'POST' and fg.form_class.validate_csrf_data(request.form.get('csrf_token')):
         fp = FormParser(table_name)

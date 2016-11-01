@@ -511,7 +511,7 @@ class RoleAccessControl:
                     # logging.info('get_link_tables row.TableObjectChildren ' + table_object_name)
                     # logging.info(row.TableObjectChildren)
 
-                    if level <= levels:
+                    if level < levels:
                         # logging.info('level: ' + str(level))
                         link_tables = link_tables + self.get_link_tables(row.TableObject.name, row.TableObject.id,
                                                                          levels, level + 1, True)
