@@ -50,7 +50,11 @@ $(document).ready(function(){
             table: table,
             success: function(response) {
                 response = JSON.parse(response);
-                var url = window.location.href + '1/' + response.work_item_group;
+                var params = '';
+                if (response.params) {
+                    params = '?' + response.params;
+                }
+                var url = window.location.href + '1/' + response.work_item_group + params;
                 window.location = (url);
             }
         });

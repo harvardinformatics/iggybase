@@ -1,4 +1,4 @@
-from flask import request, g, url_for, session
+from flask import request, g, session
 import json
 from collections import OrderedDict
 from iggybase import utilities as util
@@ -44,7 +44,7 @@ class WorkItemGroup:
         # set the url for current step
         self.endpoint = self.step.Module.name + '.' + self.step.Route.url_path
         self.dynamic_params = self.set_dynamic_params()
-        self.url = url_for(self.endpoint, **self.dynamic_params)
+        self.url = self.workflow.get_step_url(self.show_step_num, self.name)
 
         # default set on init, actions can change this
         self.next_step = self.show_step_num + 1
@@ -179,8 +179,6 @@ class WorkItemGroup:
             params = self.get_dynamic_param_from_items()
             if params:
                 dynamic_params['row_names'] = json.dumps(params)
-            else:
-                dynamic_params['row_names'] = json.dumps(['new','new','new'])
         return dynamic_params
 
     def get_dynamic_param_from_items(self):
