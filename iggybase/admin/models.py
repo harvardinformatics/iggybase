@@ -190,7 +190,8 @@ class Route(Base):
     table_type = 'admin'
     module_id = Column(Integer, ForeignKey('module.id'))
     url_path = Column(String(512), unique=True)
-
+    display_name = Column(String(50))
+    
     route_module = relationship("Module", foreign_keys=[module_id])
 
     def __repr__(self):
