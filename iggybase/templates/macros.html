@@ -89,15 +89,15 @@
     </ul>
 {%- endmacro %}
 
-{% macro render_field(field, row_id, table_name, row_name) -%}
-    <tr row_id="{{ row_id }}"><td>
+{% macro render_field(field, row_id, table_name, row_name, col_style, label_style) -%}
+    <div class="row main-row" row_id="{{ row_id }}"><div class="{{ label_style }}">
     {% if field.flags.required %}
         <label for="{{ field.id }}" class="control-label required">{{ field.label }}:</label>
     {% else -%}
         <label for="{{ field.id }}" class="control-label">{{ field.label }}:</label>
     {% endif -%}
-    </td>
-    <td class="col-md-8">
+    </div>
+    <div class="{{ col_style }}">
     {{ field(**kwargs) }}
     {% if field.errors -%}
         {% for e in field.errors -%}
@@ -110,7 +110,7 @@
             <a href="/{{ g.facility }}/core/file/{{ table_name }}/{{ row_name }}/{{ file }}">{{ file }}</a>
         {% endfor -%}
     {% endif -%}
-    </td></tr>
+    </div></div>
 {%- endmacro %}
 
 {% macro render_table_headers( table_query, page_form_name = None ) -%}
@@ -279,14 +279,14 @@ the necessary fix for required=False attributes, but will also not set the requi
     </div>
     {%- endmacro %}
 
-{% macro form_field_th(field) -%}
+{% macro form_field_th(field, label_style) -%}
     {% if not bootstrap_is_hidden_field( field ) %}
         {% if field.flags.required %}
-            <th class='required'>
+            <div class='{{ label_style }} label-header required'>
         {% else %}
-            <th>
+            <div class='{{ label_style }} label-header'>
         {% endif %}
-        {{ field.label }}</th>
+        {{ field.label }}</div>
     {% endif %}
 {%- endmacro %}
 

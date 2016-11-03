@@ -42,32 +42,39 @@
     {% if form is defined %}
         {% block page_content -%}
 
-        <div class="page_content">
+        <div class="page_content md-col-12">
             {% set form_fields = form._fields %}
             {%- for field_name, field in form_fields.items() %}
                 {% if "table_level_" in field.id -%}
                     {% set table_level = field.data|int -%}
-                    {%- if "modal_form" in page_context %}
-                        <div>
-                    {%- elif table_level == 0 and form_type == "single" %}
-                        <div class="col-md-4 div_level_{{ table_level }}">
-                    {% else -%}
-                        <div class="col-md-12 div_level_{{ table_level }}">
-                    {% endif -%}
                 {% elif "table_name_" in field.id -%}
                     {% set table_name = field.data -%}
                     {% set table_title = field.data|replace("_", " ")|title -%}
                     {% set html_id = field.id.split("_") -%}
                     {% set table_id = html_id[2] -%}
 
-                    {%- if form_type == "single" and table_level > 0 %}
-                        <h3>{{ table_title }}</h3>
-                    {%- endif %}
-                {% elif "start_table_" in field.id -%}
-                    {%- if (table_level == 0 and form_type == "single") or "modal_form" in page_context %}
-                        <table id="{{ table_name }}" class="table">
+                    {%- if "modal_form" in page_context %}
+                        <div class="div_level_0">
+                        {% set col_style = 'col-md-4' -%}
+                        {% set label_style = 'col-md-2' -%}
+                    {%- elif (table_level == 0 and form_type == "single") %}
+                        <div class="div_level_0">
+                        {% set col_style = 'col-md-4' -%}
+                        {% set label_style = 'col-md-2' -%}
                     {% else -%}
-                        <table id="{{ table_name }}" class="table table-striped multiline-table"><tr>
+                        <div class="div_level_{{ table_level }}">
+                        {% set col_style = 'col-md-2' -%}
+                        {% set label_style = 'col-md-2' -%}
+                        <h3>{{ table_title }}</h3>
+                    {% endif -%}
+                {% elif "start_table_" in field.id -%}
+                    {%- if "modal_form" in page_context %}
+                        <div class="container">
+                    {%- elif (table_level == 0 and form_type == "single") %}
+                        <div id="{{ table_name }}" class="container">
+                    {% else -%}
+                        <div class="container multi-row-entry">
+                        <div class="row multi-row-header" id="{{ table_name }}_header" name="{{ table_name }}_header">
                         {% set field_loop = loop %}
                         {% set firstrow = 1 %}
                         {% set found = 0 %}
@@ -77,31 +84,37 @@
                             {% endif %}
 
                             {% if found == 1 %}
-                                {{ macros.form_field_th( field_header ) }}
+                                {{ macros.form_field_th( field_header, label_style ) }}
                             {% endif %}
 
                             {% if field_name == field_header_name %}
                                 {% set found = 1 %}
                             {% endif %}
                         {%- endfor %}
+                        </div>
+                        <div id="{{ table_name }}" name="{{ table_name }}" class="multi-row-data pre-scrollable">
                     {% endif -%}
                 {% elif "_buttons_top" in field.id or "_buttons_bottom" in field.id -%}
                     {{ field.data|safe }}
                 {% elif "end_table_" in field.id -%}
-                    </table></div><br>
+                    {%- if form_type == "single" and table_level > 0 %}
+                        </div></div></div><br>
+                    {% else %}
+                        </div><br>
+                    {% endif -%}
                 {% elif 'start_row_' in field.id-%}
                     {% set field_vars = field.id.split("_") %}
-                    <tr row_id="{{ field_vars[field_vars|length - 1] }}" table_object_name="{{ table_name }}">
+                    <div class="row" row_id="{{ field_vars[field_vars|length - 1] }}" table_object_name="{{ table_name }}">
                 {% elif 'end_row_' in field.id-%}
-                    </tr>
+                    </div>
                 {% elif "record_data_row_name_" in field.id -%}
                     {% set row_name = field.data %}
                 {% elif not bootstrap_is_hidden_field( field ) -%}
                     {% if (table_level == 0 and form_type == "single") or "modal_form" in page_context -%}
                         {% set field_vars = field.id.split("_") %}
-                        {{ macros.render_field( field, field_vars[field_vars|length - 1], table_name, row_name ) }}
+                        {{ macros.render_field( field, field_vars[field_vars|length - 1], table_name, row_name, col_style, label_style ) }}
                     {% else -%}
-                        <td>
+                        <div class="{{ col_style }}">
                             {{ macros.table_field( field ) }}
                             {% if field.type == "IggybaseFileField" and field.data is string %}
                                 {% set files = field.data.split('|') -%}
@@ -109,7 +122,7 @@
                                     <a href="/{{ g.facility }}/core/files/{{ table_name }}/{{ row_name }}/{{ file }}">{{ file }}</a>
                                 {% endfor -%}
                             {% endif -%}
-                        </td>
+                        </div>
                     {%- endif -%}
                 {% endif -%}
             {%- endfor -%}

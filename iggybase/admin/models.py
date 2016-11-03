@@ -191,7 +191,11 @@ class Route(Base):
     module_id = Column(Integer, ForeignKey('module.id'))
     url_path = Column(String(512), unique=True)
     display_name = Column(String(50))
+<<<<<<< Updated upstream
     
+=======
+
+>>>>>>> Stashed changes
     route_module = relationship("Module", foreign_keys=[module_id])
 
     def __repr__(self):

@@ -51,17 +51,15 @@ $( document ).ready( function () {
             $.fn.updateTableField( $( this ) )
         }
     );
-    $( ".multiline-table" ).find( "input" ).each( function( ) {
+    $( ".multi-row-data" ).on( 'scroll',
+        function( ) {
+            $.fn.updateScrollBar( $( this ) )
+        }
+    );
+    $( ".multi-row-entry" ).find( "input, select, textarea" ).each( function( ) {
         if ( ! $( this ).is('[readonly]') ) {
             $( this ).contextMenu( cm, { theme: 'human' } );
         }
-    });
-    $( ".multiline-table" ).find( "select" ).each( function( ) {
-        $( this ).contextMenu( cm, { theme: 'human' } );
-    });
-
-    $( ".multiline-table" ).find( "textarea" ).each( function( ) {
-        $( this ).contextMenu( cm, { theme: 'human' } );
     });
 } );
 
@@ -225,8 +223,8 @@ $( document ).ready( function () {
         var table_level = ele.attr( "table_level" );
         var table_object_id = ele.attr( "table_object_id" );
         var link_column = $( "#linkcolumn_" + table_object_id ).val( );
-        var new_tr = $( "#" + target + " tr:last" ).clone( );
-        var old_id = new_tr.attr( 'row_id' );
+        var new_row = $( "#" + target + " .row:last" ).clone( );
+        var old_id = new_row.attr( 'row_id' );
         var parent_name = '';
         var parent_id = '';
         var new_id = '';
@@ -241,12 +239,12 @@ $( document ).ready( function () {
         var row_id = parseInt( $( '#row_counter' ).val( ) ) + 1;
         $( '#row_counter' ).val( parseInt( row_id ) );
 
-        new_tr.attr( 'row_id', row_id );
+        new_row.attr( 'row_id', row_id );
 
         var values = new Array();
         var inputs = new Array();
 
-        new_tr.find( "input, select" ).each(
+        new_row.find( "input, select" ).each(
             function() {
                 if ( $( this ).css( 'display' ) == 'none' ) {
                     $( this ).remove( );
@@ -313,12 +311,12 @@ $( document ).ready( function () {
                         id: new_id,
                         name: new_id,
                         value: value
-                    } ).appendTo( new_tr );
+                    } ).appendTo( new_row );
                 }
             }
         );
 
-        new_tr.find( '.boolean-field' ).change(
+        new_row.find( '.boolean-field' ).change(
             function() {
                 $( this ).change(
                     function( ) {
@@ -333,7 +331,7 @@ $( document ).ready( function () {
             }
         );
 
-        new_tr.find( '.datepicker-field' ).each(
+        new_row.find( '.datepicker-field' ).each(
             function() {
                 $( this ).datepicker({
                     format: 'yyyy-mm-dd',
@@ -343,23 +341,23 @@ $( document ).ready( function () {
             }
         );
 
-        new_tr.find( 'input' ).on( "keydown focusout",
+        new_row.find( 'input' ).on( "keydown focusout",
             function ( e ) {
                 return $.fn.dataEntryEventManager( e, $( this ) );
             }
         );
 
-        new_tr.find( '.lookupfield' ).each(
+        new_row.find( '.lookupfield' ).each(
             function ( ) {
                 $( '<input>' ).attr( {
                     style: 'display:none;',
                     id: 'id_' + new_id,
                     name: 'id_' + new_id
-                } ).appendTo( new_tr );
+                } ).appendTo( new_row );
             }
         );
 
-        new_tr.find( ".field_select_list" ).change(
+        new_row.find( ".field_select_list" ).change(
             function( ) {
                 $.fn.updateTableField( $( this ) )
             }
@@ -429,15 +427,15 @@ $( document ).ready( function () {
         }
 
         var cont = true
-        var current_tr = ae.closest( 'tr' );
+        var current_row = ae.closest( 'div.row' );
 
         var id = ae.attr( 'id' );
         var matches = id.match( /(\S+)_(\d+)/);
         var id_prefix = matches[ 1 ];
 
-        while ( current_tr.next('tr').length ){
-            current_tr = current_tr.next('tr');
-            current_row_number = current_tr.attr( 'row_id' );
+        while ( current_row.next('div.row').length ){
+            current_row = current_row.next('div.row');
+            current_row_number = current_row.attr( 'row_id' );
 
             new_id = id_prefix + '_' + current_row_number
 
@@ -445,10 +443,16 @@ $( document ).ready( function () {
                 $( "#" + new_id ).prop( "checked", value );
                 $( "input[name=bool_" + new_id + "]" ).prop( 'disabled', value );
                 $( "input[name=bool_" + new_id + "]" ).val( value ? 'y' : 'n' );
-            } else if ( $( "#" + new_id ).closest( "tr" ).is( ":visible" ) ) {
+            } else if ( $( "#" + new_id ).closest( "div.row" ).is( ":visible" ) ) {
                 $( "#" + new_id ).val( value );
                 $( "#" + new_id ).change( );
             }
         }
+    }
+
+    $.fn.updateScrollBar = function( data_div ) {
+        var table_name = data_div.attr( 'name' );
+
+        $( '#' + table_name + '_header' ).scrollLeft( data_div.scrollLeft( ) )
     }
 } ) ( jQuery );

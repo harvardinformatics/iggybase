@@ -211,6 +211,47 @@ pre {
     color: red;
     font-weight:bold;
 }
+.div_level_0 {
+    margin-left: 0px;
+    display:inline-block;
+    width: 50%;
+}
+.multi-row-header {
+    overflow-x:hidden;
+    overflow-y:hidden;
+    white-space:nowrap;
+    background-color: #f0f0f0;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    margin-right: 2px;
+    margin-left: 2px;
+    float:none;
+}
+.label-header {
+    float:none;
+    display:inline-block;
+}
+.multi-row-data {
+    overflow-x:scroll;
+    overflow-y:scroll;
+    white-space:nowrap;
+}
+.multi-row-data > .row {
+    margin-right: 2px;
+    margin-left: 2px;
+    float:none;
+}
+.multi-row-data > .row [class*="col-md"] {
+    float:none;
+    display:inline-block;
+}
+.main-row {
+    margin-bottom: 10px;
+}
+.div_level_1 {
+    margin-left: 0px;
+    width: 100%;
+}
 .div_level_2 {
     margin-left: 50px;
     width: calc(100% - 50px);
