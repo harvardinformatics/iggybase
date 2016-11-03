@@ -213,8 +213,8 @@ def data_entry(facility_name, table_name, row_name, page_context):
     return fg.page_template_context()
 
 
-@core.route('/modal_add/<table_name>', defaults={'page_context': None})
-@core.route('/modal_add/<table_name>/<page_context>')
+@core.route('/modal_add/<table_name>', defaults={'page_context': None}, methods=['GET', 'POST'])
+@core.route('/modal_add/<table_name>/<page_context>', methods=['GET', 'POST'])
 @login_required
 @templated()
 def modal_add(facility_name, table_name, page_context):
