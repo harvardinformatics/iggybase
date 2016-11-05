@@ -42,7 +42,7 @@
     {% if form is defined %}
         {% block page_content -%}
 
-        <div class="page_content">
+        <div class="page_content md-col-12">
             {% set form_fields = form._fields %}
             {%- for field_name, field in form_fields.items() %}
                 {% if "table_level_" in field.id -%}
@@ -55,7 +55,11 @@
 
                     {%- if "modal_form" in page_context %}
                         <div class="div_level_0">
+<<<<<<< Updated upstream
                         {% set col_style = 'col-md-2' -%}
+=======
+                        {% set col_style = 'col-md-4' -%}
+>>>>>>> Stashed changes
                         {% set label_style = 'col-md-2' -%}
                     {%- elif (table_level == 0 and form_type == "single") %}
                         <div class="div_level_0">
