@@ -236,6 +236,24 @@ pre {
     overflow-y:scroll;
     white-space:nowrap;
 }
+
+/* fix to make scroll bar visibile in chrome with mac */
+::-webkit-scrollbar {
+    -webkit-appearance: none;
+}
+::-webkit-scrollbar:vertical {
+    width: 11px;
+}
+::-webkit-scrollbar:horizontal {
+    height: 11px;
+}
+::-webkit-scrollbar-thumb {
+    border-radius: 4px;
+    border: 2px white solid;
+    background-color: rgba(0, 0, 0, .5);
+    -webkit-box-shadow: 0 0 1px rgba(255, 255, 255, .5);
+}
+
 .multi-row-data > .row {
     margin-right: 2px;
     margin-left: 2px;

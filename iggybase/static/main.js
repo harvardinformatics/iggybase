@@ -1,6 +1,14 @@
 var search_click = false;
 
 $( document ).ready( function () {
+    /* add a hack to get mac firefox scrollbars to show, no way in pure css */
+    //constantly update the scroll position:
+    sc=setInterval($.fn.scrollDown,200);
+    //optional:stop the updating if it gets a click
+    jQuery('.multi-row-data').mousedown(function(e){
+        clearInterval(sc);
+    });
+
     if (formErrors) {
         $('#dialog').modal('show');
     }
@@ -171,5 +179,16 @@ $( document ).ready( function () {
             searchObject: searchObject,
             hash: parser.hash
         };
+    }
+
+    $.fn.scrollDown = function () {
+        for(i=0;i<=jQuery('.multi-row-data').length;i++){
+            try{
+                var g=jQuery('.multi-row-data')[i];
+                g.scrollTop+=1;
+                g.scrollTop-=1;
+            } catch(e){
+            }
+        }
     }
 } ) ( jQuery );
