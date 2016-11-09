@@ -2,10 +2,10 @@ from config import Config
 
 # db connection information
 from_db = {
-    'user':Config.MYSQL_MPM_USER,
-    'password':Config.MYSQL_MPM_PASSWORD,
-    'host':'localhost',
-    'database':'bauer_minilims'
+    'user':Config.DB_USER,
+    'password':Config.DB_PASSWORD,
+    'host': Config.DB_HOST,
+    'database': Config.SEMANTIC_DB_NAME
 }
 
 # name of the semantic columns

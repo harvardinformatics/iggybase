@@ -34,11 +34,12 @@ class LineItemScript (IggyScript):
         return cli
 
     def get_billable_run_orders(self):
-        sql = ('select r.id, o.id, i.id, s.id, m.machine_type_id, o.organization_type_id from sample_sheet_item i'
+        sql = ('select r.id, o.id, i.id, s.id, m.machine_type_id, g.organization_type_id, o.organization_id from sample_sheet_item i'
             + ' inner join sample_sheet s on i.sample_sheet_id = s.id'
             + ' inner join illumina_run r on s.illumina_run_id = r.id'
             + ' inner join machine m on r.machine_id = m.id'
             + ' inner join `order` o on i.order_id = o.id'
+            + ' inner join organization g on g.id = o.organization_id '
             + ' left join ('
             + ' select t.order_id as t, a.row_id as a from line_item t'
             + ' left join line_item_assoc a on t.id = a.line_item_id'
@@ -47,6 +48,7 @@ class LineItemScript (IggyScript):
             + ') as line on r.id = line.a and o.id = line.t'
             + ' where r.passed = 1'
             + ' and o.billable = 1'
+            + " and o.date_created > '2016-08-01 01:00:01'"
             + ' and line.t is null')
         print("\t\t" + sql)
         exist = self.db.cursor()
@@ -54,13 +56,14 @@ class LineItemScript (IggyScript):
         rows = exist.fetchall()
         return rows
 
-    def parse_line_item(self, price_item_id, price, order_id):
+    def parse_line_item(self, price_item_id, price, order_id, organization_id):
         row_dict = {
                 'price_item_id': price_item_id,
                 'price_per_unit': float(price),
                 'quantity': 1,
                 'order_id': order_id,
-                'date_created': 'now'
+                'date_created': 'now',
+                'organization_id': organization_id
         }
         return row_dict
 
@@ -80,7 +83,8 @@ class LineItemScript (IggyScript):
                 'ss_item_id': row[2],
                 'ss_id': row[3],
                 'machine_type_id': row[4],
-                'organization_type_id': row[5]
+                'organization_type_id': row[5],
+                'organization_id': row[6]
         }
 
         depth = self.get_sample_data(row_dict['order_id'])
@@ -96,7 +100,7 @@ class LineItemScript (IggyScript):
         sql = ('select count(re.id) as read_num, max(re.cycles) as length from `read` re'
                 + ' inner join sample_sheet s'
                 + ' on s.illumina_run_id = re.illumina_run_id'
-                + ' where s.id = ' + str(ss_id))
+                + ' where s.id = ' + str(ss_id) + ' and re.indexed = 0')
         print("\t\t" + sql)
         exist = self.db.cursor()
         exist.execute(sql)
@@ -143,6 +147,7 @@ class LineItemScript (IggyScript):
                 + ' and t.name = "sequencing_service"')
         if depth:
             sql += ' and s.depth = "' + depth + '"'
+        sql += ' order by max_length desc'
 
         print("\t\t" + sql)
         exist = self.db.cursor()
@@ -152,10 +157,9 @@ class LineItemScript (IggyScript):
         service_id = None
         for row in rows:
             if not max_length:
-                if row[2] >= length:
-                    max_length = row[2]
-                    service_id = row[0]
-                    price = row[1]
+                max_length = row[2]
+                service_id = row[0]
+                price = row[1]
             else:
                 if row[2] >= length and row[2] < max_length:
                     max_length = row[2]
@@ -187,6 +191,8 @@ class LineItemScript (IggyScript):
                     service_params = row
                 lanes.add(row['lane_id'])
             service_params['lane_num'] = len(list(lanes))
+            if service_params['lane_num'] > 2:
+                service_params['lane_num'] = 8
             price_item_id, price = self.get_service(
                     service_params['organization_type_id'],
                     service_params['length'],
@@ -196,7 +202,7 @@ class LineItemScript (IggyScript):
                     service_params['depth']
             )
             line_item_table = 'line_item'
-            row_dict = self.parse_line_item(price_item_id, price, order_id)
+            row_dict = self.parse_line_item(price_item_id, price, order_id, rows[0]['organization_id'])
             name, next_num = self.get_next_name(line_item_table)
             row_dict.update({'name': name})
             line_item_id = self.do_insert(line_item_table, row_dict)

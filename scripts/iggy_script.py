@@ -23,7 +23,8 @@ python process_illumina_data.py --insert_mode --path='/n/seq/sequencing/'
     --filename=RunInfo.xml
 """
 
-class IggyScript:
+#class IggyScript: python3 
+class IggyScript(object):
 
     def __init__(self, config = None):
         self.cli = self.parse_cli()
@@ -51,11 +52,12 @@ class IggyScript:
         return val
 
     def pk_exists(self, pk, name, tbl, select = 'id'):
-        if isinstance(pk, str):
+        #if isinstance(pk, str): python3
+        if isinstance(pk, basestring):
             where = name + "='" + pk.replace("'","\\\'") + "'"
         else:
             where = name + "=" + str(pk)
-        sql = 'Select ' + select + ' from `' + tbl + "` where " + where
+        sql = 'Select ' + select + ' from `' + tbl + "` where " + where + ' limit 1'
         exist = self.db.cursor()
         exist.execute(sql)
         row = exist.fetchone()
@@ -259,10 +261,10 @@ class IggyScript:
     def get_next_name(self, table_name):
         table_meta = self.select_row('table_object', {'name':
             table_name})
-        name = table_meta[9]
-        num = table_meta[10]
+        name = table_meta[8]
+        num = table_meta[9]
         next_num = num + 1
-        dig = table_meta[11] - len(str(num))
+        dig = table_meta[10] - len(str(num))
         for i in range(0,dig):
             name += '0'
         name += str(num)

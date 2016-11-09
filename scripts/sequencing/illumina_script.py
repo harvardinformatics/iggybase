@@ -67,13 +67,11 @@ class IlluminaScript (IggyScript):
 
     def parse_sample_sheet(self, data, file):
         data_split = data.split('_')
-        machine_id = self.pk_exists(data_split[1], 'name', 'machine')
         flowcell_id = self.pk_exists(data_split[3][1:], 'name', 'illumina_flowcell')
         run_id = self.pk_exists(flowcell_id, 'id', 'illumina_flowcell', 'illumina_run_id')
         row_dict = {
             'name': data,
             'run_date': (data_split[0][2:4] + '/' + data_split[0][4:6] + '/' + data_split[0][0:2]),
-            'machine_id': machine_id,
             'slot': data_split[3][0:1],
             'illumina_flowcell_id': flowcell_id,
             'illumina_run_id': run_id,
@@ -323,19 +321,23 @@ class IlluminaScript (IggyScript):
             sys.exit(1)
         if not 'dir_match' in cli:
             cli['dir_match'] = ''
+
+        if 'days' in cli:
+            cli['days'] = cli['days'].split(',')
+        else:
+            today = datetime.datetime.now()
+            yesterday = today + relativedelta(days=-1)
+            # within two days
+            cli['days'] = [today.strftime("%y%m%d"), yesterday.strftime("%y%m%d")]
+            cli['days'] = ['161101', '161102']
         return cli
 
 
     def run(self):
         # check path for filename
         print('Checking for filename: ' + self.cli['filename'] + ' in dir: ' + self.cli['path'])
-        today = datetime.datetime.now()
-        yesterday = today + relativedelta(days=-1)
-        # within two days, TODO: days could be a cli
-        days = [today.strftime("%y%m%d"), yesterday.strftime("%y%m%d")]
-        days = ['160720', '160721'] # TODO: remove, this is for testing
         files = []
-        for day in days:
+        for day in cli['days']:
             file_path = self.cli['path'] + '/' + day + '*' + self.cli['dir_match'] + '*/' + self.cli['filename']
             files.extend(glob.glob(file_path))
         print("\tfound " + str(len(files)) + " files to process")
