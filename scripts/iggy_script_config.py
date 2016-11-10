@@ -56,7 +56,7 @@ col_name_map = {
         'single_lane/full_flowcell':'lane_type',
         },
     'group_member':{
-        'group': 'user_roganization_id'
+        'group': 'oganization_id'
     },
     'oligo_batch':{
         'receiver_date': 'receive_date'

@@ -182,14 +182,14 @@ class LineItemScript (IggyScript):
                 ros[run_order] = [row_dict]
         for ro, rows in ros.items():
             print("\t\tstarting to process run_order: " + ro)
-            run_id = ro[0]
-            order_id = ro[1]
             service_params = {}
             lanes = set([])
             for i, row in enumerate(rows):
                 if i == 0:
                     service_params = row
                 lanes.add(row['lane_id'])
+            run_id = service_params['run_id']
+            order_id = service_params['order_id']
             service_params['lane_num'] = len(list(lanes))
             if service_params['lane_num'] > 2:
                 service_params['lane_num'] = 8

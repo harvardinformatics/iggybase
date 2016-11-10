@@ -424,7 +424,6 @@ class MigrateCustomScript (IggyScript):
             order_id = None
             if 'Name' in item_dict:
                 order_id = self.pk_exists(item_dict['Name'], 'name', 'order')
-            print(line_item)
             if order_id:
                 for expense in line_item['expense']:
                     name, next_num = self.get_next_name('order_charge_method')
@@ -434,7 +433,6 @@ class MigrateCustomScript (IggyScript):
                         'charge_method_id': charge_id,
                         'percent': expense['percent']
                     }
-                    print(cm_dict)
                     cm_row = self.do_insert('order_charge_method', cm_dict)
                     if cm_row:
                         to = self.select_row('table_object',
@@ -1101,7 +1099,7 @@ class MigrateCustomScript (IggyScript):
         return cli
 
     def run(self):
-        self.update_invoice_id(self.cli['semantic_source'], self.cli['from_tbl'], self.cli['to_tbl'])
+        self.migrate_order_charge_method(self.cli['semantic_source'], self.cli['from_tbl'], self.cli['to_tbl'])
 
 # execute run on this class
 script = MigrateCustomScript()
