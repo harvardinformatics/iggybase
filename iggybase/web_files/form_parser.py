@@ -12,11 +12,10 @@ class FormParser():
         self.table_name = table_name
         self.table_names = []
         self.instance = None
-
+        self.files = {}
+        
     def parse(self, form_data = None):
-        # fields contain the data that was displayed on the form and possibly edited
         fields = {}
-
         web_request = False
         if not form_data:
             web_request = True
@@ -43,6 +42,7 @@ class FormParser():
                 fields[field_id.group(3)][field_id.group(1)][field_id.group(2)] = data
 
         if request.files:
+            # http://werkzeug.pocoo.org/docs/0.11/datastructures/#werkzeug.datastructures.FileStorage
             files = request.files
 
             # http://werkzeug.pocoo.org/docs/0.11/datastructures/#werkzeug.datastructures.FileStorage
@@ -137,23 +137,27 @@ class FormParser():
                         except  (ValueError, KeyError) as e:
                             row_data['data_entry'][field] = None
                 elif meta_data.DataType.name.lower() == 'file':
-                    directory = os.path.join(current_app.config['UPLOAD_FOLDER'], table_name_field,
-                                             self.instance.instance_name)
-                    if not os.path.exists(directory):
-                        os.makedirs(directory)
-
                     old_files = []
+                    self.files[instance_name] = []
+
                     if row_data['files_data_entry'][field] != "":
                         old_files = row_data['files_data_entry'][field].split("|")
 
                     if request.files:
+                        directory = (os.path.join(current_app.config['UPLOAD_FOLDER'], table_name_field,
+                                                  instance_name)).strip()
+
+                        if not os.path.exists(directory):
+                            os.makedirs(directory)
+
                         for filename, file in row_data['data_entry'][field].items():
                             if os.path.exists(os.path.join(directory, filename)):
                                 os.remove(os.path.join(directory, filename))
-                                file.save(os.path.join(directory, filename))
                             else:
-                                file.save(os.path.join(directory, filename))
                                 old_files.append(filename)
+
+                            self.files[instance_name].append({'filename': filename, 'directory': directory,
+                                                              'file': file})
 
                     if len(old_files) > 0:
                         filenames = "|".join(old_files)
@@ -173,10 +177,23 @@ class FormParser():
 
             self.instance.set_values(row_data['data_entry'], table_name_field, instance_name)
 
+        logging.info('fp.parse files: ')
+        logging.info(self.files)
+
     def save(self):
+        logging.info('fp.save files: ')
+        logging.info(self.files)
+
+        logging.info(self.instance.list_instances())
         commit_status, commit_msg = self.instance.commit()
 
         if commit_status is True:
+            for instance_name, files in self.files.items():
+                logging.info('instance_name: ' +  instance_name)
+                for file_data in files:
+                    logging.info('file_data[filename]: ' +  file_data['filename'])
+                    file_data['file'].save(os.path.join(file_data['directory'], file_data['filename']))
+
             current_app.cache.increment_version(list(self.table_names))
 
         return commit_status, commit_msg

@@ -126,7 +126,7 @@ class DataInstance:
                                                                                           {'name': 'history'})}
         self.initialize_fields('history')
 
-        if depth > 0:
+        if depth > 0 and self.tables[self.table_name]['table_meta_data']:
             data = self.role_access_control.get_link_tables(self.tables[self.table_name]['table_meta_data'].name,
                                                             self.tables[self.table_name]['table_meta_data'].id, depth)
 
@@ -284,6 +284,7 @@ class DataInstance:
 
     def commit(self):
         instance_names = {}
+        reverse_names = {}
         save_instances = []
 
         for table_name, instances in self.instances.items():
@@ -300,6 +301,7 @@ class DataInstance:
                     saved_new = True
 
                 instance_names[instance_name] = instance['instance'].name
+                reverse_names[instance['instance'].name] = instance_name
 
                 if instance['instance'].date_created is None:
                     instance['instance'].date_created = datetime.datetime.utcnow()
@@ -321,11 +323,12 @@ class DataInstance:
 
             save_instances.append(instance['instance'])
 
-        commit_status, commit_msg = self.organization_access_control.save_data_instance(save_instances)
+        commit_status, commit_msg = self.organization_access_control.save_data_instance(save_instances, reverse_names)
 
-        if self.instance_id not in commit_msg:
-            commit_msg[self.instance_id] = {'id': self.instance_id, 'name': self.instance_name,
-                                            'table': self.table_name}
+        if commit_status:
+            if self.instance_id not in commit_msg:
+                commit_msg[self.instance_id] = {'id': self.instance_id, 'name': self.instance_name,
+                                                'table': self.table_name, 'old_name': self.instance_name}
 
         return commit_status, commit_msg 
 

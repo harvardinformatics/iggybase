@@ -236,6 +236,7 @@ def modal_add(facility_name, table_name, page_context):
 def modal_add_submit(facility_name, table_name, page_context):
     fp = FormParser(table_name)
     fp.parse()
+    save_status, save_msg = fp.save()
 
     return json.dumps({'error': False})
 
