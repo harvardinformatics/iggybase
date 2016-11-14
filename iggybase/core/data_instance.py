@@ -15,6 +15,7 @@ class DataInstance:
         self.tables = OrderedDict()
         self.fields = {}
         self.instances = {}
+        self.instance_names = {}
         self.get_tables(depth)
 
         self.instance_counter = 0
@@ -283,9 +284,10 @@ class DataInstance:
             setattr(self.instances[table_name][instance_name]['instance'], field_name, field_value)
 
     def commit(self):
-        instance_names = {}
-        reverse_names = {}
+        self.instance_names = {}
+        inst_names = {}
         save_instances = []
+        background_save_instances = []
 
         for table_name, instances in self.instances.items():
             if table_name == 'history':
@@ -300,8 +302,10 @@ class DataInstance:
                     instance['instance'].name = self.set_instance_name(table_name)
                     saved_new = True
 
-                instance_names[instance_name] = instance['instance'].name
-                reverse_names[instance['instance'].name] = instance_name
+                # logging.error("instance['instance'].name: " + instance['instance'].name)
+                # logging.error("instance_name: " + instance_name)
+                self.instance_names[(instance_name, table_name)] = instance['instance'].name
+                inst_names[instance_name] = instance['instance'].name
 
                 if instance['instance'].date_created is None:
                     instance['instance'].date_created = datetime.datetime.utcnow()
@@ -311,19 +315,20 @@ class DataInstance:
                 save_instances.append(instance['instance'])
 
             if saved_new:
-                save_instances.append(self.tables[table_name]['table_meta_data'])
+                background_save_instances.append(self.tables[table_name]['table_meta_data'])
 
         for history_name, instance in self.instances['history'].items():
-            if instance['instance'].instance_name in instance_names.keys():
-                instance['instance'].instance_name = instance_names[instance['instance'].instance_name]
+            if instance['instance'].instance_name in inst_names.keys():
+                instance['instance'].instance_name = inst_names[instance['instance'].instance_name]
 
             instance['instance'].name = self.set_instance_name('history')
             instance['instance'].date_created = datetime.datetime.utcnow()
             instance['instance'].last_modified = datetime.datetime.utcnow()
 
-            save_instances.append(instance['instance'])
+            background_save_instances.append(instance['instance'])
 
-        commit_status, commit_msg = self.organization_access_control.save_data_instance(save_instances, reverse_names)
+        commit_status, commit_msg = self.organization_access_control.save_data_instance(save_instances,
+                                                                                        background_save_instances)
 
         if commit_status:
             if self.instance_id not in commit_msg:
@@ -331,9 +336,6 @@ class DataInstance:
                                                 'table': self.table_name, 'old_name': self.instance_name}
 
         return commit_status, commit_msg 
-
-    def rollback(self):
-        self.organization_access_control.rollback()
 
     def rollback(self):
         self.organization_access_control.rollback()

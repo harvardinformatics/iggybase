@@ -449,9 +449,9 @@ def saved_data(facility_name, module_name, table_name, row_names, page_context):
         else:
             table = urllib.parse.quote(row_info['table'])
             name = urllib.parse.quote(row_info['name'])
-            if table != 'table_object' and table_name != 'table_object':
-                msg += (' <a href=' + request.url_root + facility_name + '/' + module_name + '/detail/' +
-                        table + '/' + name + '>' +  row_info['name'] + '</a>,')
+            msg += (' <a href=' + request.url_root + facility_name + '/' + module_name + '/detail/' +
+                    table + '/' + name + '>' +  row_info['name'] + '</a>,')
+
             # TODO: allow this to support data saving by other than name
             if not table in saved_rows:
                 saved_rows[table] = []

@@ -66,14 +66,12 @@ class OrganizationAccessControl:
             logging.error("Commit Error: " + format(e))
             return "Commit Error: " + format(e)
 
-    def flush(self, instances, reverse_names):
+    def flush(self, instances):
         try:
             self.session.flush()
             flush_msg = {}
             for instance in instances:
-                if instance.__tablename__ != 'history':
-                    flush_msg[instance.id] = {'id': instance.id, 'name': instance.name, 'table': instance.__tablename__,
-                                              'old_name': reverse_names[instance.name]}
+                flush_msg[instance.id] = {'id': instance.id, 'name': instance.name, 'table': instance.__tablename__}
 
             return True, flush_msg
         except (IntegrityError, DataError, SQLAlchemyError, NoForeignKeysError, IdentifierError, NoReferenceError) as e:
@@ -311,13 +309,10 @@ class OrganizationAccessControl:
 
         return table.query.filter_by(id=lt_id).first()
 
-    def save_data_instance(self, instances, reverse_names):
-        self.session.add_all(instances)
+    def save_data_instance(self, instances, background_instances = []):
+        self.session.add_all((instances + background_instances))
 
-        flush_status, flush_msg = self.flush(instances, reverse_names)
-
-        logging.info('flush_msg:')
-        logging.info(flush_msg)
+        flush_status, flush_msg = self.flush(instances)
 
         if flush_status:
             commit_msg = self.commit()

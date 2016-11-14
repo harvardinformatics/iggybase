@@ -107,9 +107,23 @@ $( document ).ready( function () {
 
         $.fn.showModalDialog( formurl, buttons );
 
-        $( document ).on("click", "#modal-add-submit", function() {
-            $.fn.modalAddSubmit( )
+        $( document ).off("click", "#modal-add-submit");
+
+        $( document ).on("click", "#modal-add-submit", function ( ) {
+            $.fn.modalAddSubmit( );
         } );
+
+        $( document ).off("click", "#modal-add-submit");
+
+        $( document ).on("click", "#modal-add-submit", function ( ) {
+            $.fn.modalAddSubmit( );
+        } );
+
+        $( ".boolean-field" ).each(
+            function( ) {
+                $.fn.changeCheckBox( $( this) );
+            }
+        );
     }
 
     $.fn.modalAddSubmit = function ( ) {
@@ -122,7 +136,9 @@ $( document ).ready( function () {
             function() {;
                 if ( typeof $( this ).attr( 'id' ) != 'undefined' ) {
                     if ( typeof $( this ).val( ) != 'undefined' ) {
-                        if ( $( this ).attr( 'id' ) == 'file ' ) {
+                        if ( $( this ).attr( 'type' ) == 'file' ) {
+                            form_data.append( $( this ).attr( 'id' ), $( this )[0].files[0] );
+                        } else if ( $( this ).attr( 'type' ) == 'checkbox' ) {
                             form_data.append( $( this ).attr( 'id' ), $( this )[0].files[0] );
                         } else {
                             form_data.append( $( this ).attr( 'id' ), $( this ).val( ) );
