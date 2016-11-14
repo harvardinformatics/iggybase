@@ -193,7 +193,10 @@ class Invoice:
         return info
 
     def populate_po_info(self):
-        address = self.items[0].ChargeMethod.billing_address.split(",")
+        if self.items[0].ChargeMethod.billing_address:
+            address = self.items[0].ChargeMethod.billing_address.split(",")
+        else:
+            address = []
 
         info = {
                 'invoice address': address,
