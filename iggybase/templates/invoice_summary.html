@@ -4,7 +4,7 @@
 
 {% block content_title -%}
     <div class="content_title">
-        <h1>Invoice Summary: {{ic.month_str}} {{ic.year}}</h1>
-        <a href="{{ic.get_all_pdf_link()}}" target="_blank">PDF of all invoices</a>
+        <h1>Invoice Summary: {{from_date.strftime('%b')}} {{year}}</h1>
+        <a href="{{url_for('billing.invoice_pdf', facility_name = facility_name, year = year, month = month)}}" target="_blank">PDF of all invoices</a>
     </div>
 {%- endblock content_title %}

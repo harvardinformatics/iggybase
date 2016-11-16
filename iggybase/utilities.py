@@ -1,6 +1,7 @@
 from flask import abort, request, current_app
 from collections import OrderedDict
 from importlib import import_module
+from dateutil.relativedelta import relativedelta
 from iggybase.admin.models import TableObject
 from iggybase.database import db_session
 import datetime
@@ -142,3 +143,11 @@ class DictObject(dict):
 def to_snake_case(camel_str):
     s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', camel_str)
     return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
+
+def get_last_month():
+    return datetime.datetime.now() + relativedelta(months=-1)
+
+def start_and_end_month(year, month):
+    from_date = datetime.date(year=year, month=month, day=1)
+    to_date = from_date + relativedelta(months=1) - relativedelta(days=1)
+    return from_date, to_date

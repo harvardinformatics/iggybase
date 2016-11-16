@@ -1,13 +1,13 @@
 import json
-
 from flask import render_template, request
 from flask.ext.security import login_required
 from flask_weasyprint import render_pdf, HTML
 from iggybase.web_files.decorators import templated
-
+from iggybase import utilities as util
 from iggybase import g_helper
 from iggybase.web_files.page_template import PageTemplate
-from iggybase import core
+from iggybase.core import routes as core_routes
+from iggybase.core.table_query_collection import TableQueryCollection
 from iggybase.billing.invoice_collection import InvoiceCollection
 from . import billing
 
@@ -18,20 +18,40 @@ MODULE_NAME = 'billing'
 @login_required
 @templated()
 def review(facility_name):
-    ic = InvoiceCollection() # defaults to last complete
-    ic.get_select_options()
-    ic.get_table_query_collection('line_item')
-    table_query = ic.tqc.get_first()
+    # options for dropdowns
+    select_years = util.get_last_x_years(5)
+    select_months = util.get_months_dict()
 
+    # default to last month, get start and end dates
+    last_month = util.get_last_month()
+    year = last_month.year
+    month = last_month.month
+    from_date, to_date = util.start_and_end_month(year, month)
+
+    # get line_items for last month
+    criteria = {
+            ('line_item', 'date_created'): {'from': from_date, 'to': to_date},
+            ('line_item', 'price_per_unit'): {'compare': 'greater than', 'value': 0}
+    }
+    tqc = TableQueryCollection('line_item', criteria)
+    table_query = tqc.get_first()
     pt = PageTemplate(MODULE_NAME, 'review')
-    return pt.page_template_context(ic = ic, table_name = 'line_item', table_query = table_query)
+    return pt.page_template_context(
+            year = year, month = month,
+            select_years = select_years, select_months = select_months,
+            table_name = 'line_item', table_query = table_query
+    )
 
 
 @billing.route( '/review/<year>/<month>/ajax/' )
 @login_required
 def review_ajax(facility_name, year, month):
-    ic = InvoiceCollection(int(year), int(month)) # year and month set in js
-    return core.routes.build_summary_ajax('line_item', ic.table_query_criteria['line_item'])
+    from_date, to_date = util.start_and_end_month(int(year), int(month))
+    criteria = {
+            ('line_item', 'date_created'): {'from': from_date, 'to': to_date},
+            ('line_item', 'price_per_unit'): {'compare': 'greater than', 'value': 0}
+    }
+    return core_routes.build_summary_ajax('line_item', criteria)
 
 
 
@@ -40,21 +60,32 @@ def review_ajax(facility_name, year, month):
 @login_required
 @templated()
 def invoice_summary(facility_name, year, month):
-    ic = InvoiceCollection(int(year), int(month)) # defaults to last complete
-    ic.get_select_options()
-    ic.get_table_query_collection('invoice')
-    hidden_fields = {'year': year, 'month': month}
+    # options for dropdowns
+    select_years = util.get_last_x_years(5)
+    select_months = util.get_months_dict()
+    from_date, to_date = util.start_and_end_month(int(year), int(month))
 
+    criteria = {
+            ('invoice', 'invoice_month'): {'from': from_date, 'to': to_date},
+    }
+    tqc = TableQueryCollection('invoice', criteria)
+    hidden_fields = {'year': year, 'month': month}
     pt = PageTemplate(MODULE_NAME, 'invoice_summary')
-    return pt.page_template_context(ic = ic, table_name = 'invoice', table_query = ic.tqc.queries[0],
-                                    hidden_fields = hidden_fields)
+    return pt.page_template_context(
+            select_years = select_years, select_months = select_months,
+            year = year, month = month, from_date = from_date, table_name = 'invoice', table_query = tqc.queries[0],
+            hidden_fields = hidden_fields
+    )
 
 
 @billing.route( '/invoice_summary/<year>/<month>/ajax/' )
 @login_required
 def invoice_summary_ajax(facility_name, year, month):
-    ic = InvoiceCollection(int(year), int(month)) # defaults to last complete
-    return core.routes.build_summary_ajax('invoice', ic.table_query_criteria['invoice'])
+    from_date, to_date = util.start_and_end_month(int(year), int(month))
+    criteria = {
+            ('invoice', 'invoice_month'): {'from': from_date, 'to': to_date},
+    }
+    return core_routes.build_summary_ajax('invoice', criteria)
 
 
 
