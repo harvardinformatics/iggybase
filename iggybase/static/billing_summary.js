@@ -3,7 +3,12 @@ $(document).ready(function(){
     $('th').each(function(){
         columns.push({data: $(this).data('name')});
     });
-    var ajax_url = $('#year_select').val() + '/' + $('#month_select').val() + '/ajax';
+    var path = window.location.pathname;
+    var last_path_part = path.split('/').slice(-2)[0];
+    var ajax_url = 'ajax';
+    if (last_path_part == 'review') { // add year and month
+        ajax_url = $('#year').val() + '/' + $('#month').val() + '/ajax';
+    }
     var table = $('.summary_table').DataTable({
         deferRender:true,
         scrollX:true,
@@ -23,9 +28,9 @@ $(document).ready(function(){
         }
     });
     $( '#edit' ).click( function(){ return $.fn.editSelected(table);} );
-    $( '#create_invoice' ).click( function(){ return $.fn.createInvoice(table);} );
-    $('#year_select, #month_select').change(function() {
-        var ajax_url = $('#year_select').val() + '/' + $('#month_select').val() + '/ajax';
+    $( '#create_invoice, #regenerate' ).click( function(){ return $.fn.createInvoice(table);} );
+    $('#year, #month').change(function() {
+        var ajax_url = $('#year').val() + '/' + $('#month').val() + '/ajax';
         table.ajax.url(ajax_url).load();
     });
 } );
@@ -50,29 +55,38 @@ $(document).ready(function(){
             alert("No rows selected.  Select rows to edit by clicking.");
         }
     }
-
     $.fn.createInvoice = function (table) {
         var hidden_fields = $("#hidden_fields");
+        var table_name = hidden_fields.find('input[name=table]').val();
+        var column_name = table_name + '|';
+        // this code runs on line_item and invoice tables
+        if (table_name == 'invoice') {
+            column_name += 'invoice_organization_id';
+        } else {
+            column_name += 'organization_id';
+        }
+        var test = table.rows('.selected').data();
+        var orgs = $.map(table.rows('.selected').data(), function (i) { return $(i[column_name]).text()});
         var url_prefix = $URL_ROOT + hidden_fields.find('input[name=facility]').val()
             + '/' + hidden_fields.find('input[name=mod]').val() + '/';
-        var year_month_url = '/' + $('#year_select').val() + '/' + $('#month_select').val() + '/';
+        var year_month_url = '/' + $('#year').val() + '/' + $('#month').val() + '/';
+        var message = '';
         $.ajax({
-                // TODO: put facility in hidden fields and access dynamically
                 url:url_prefix + 'generate_invoices' + year_month_url,
+                data: JSON.stringify({'orgs': orgs}),
                 contentType: 'application/json;charset=UTF-8',
                 type: 'POST',
                 table: table,
                 success: function(response) {
                     response = JSON.parse(response);
-                    var message = '';
                     if(response.generated.length > 0) {
-                        message = 'Successfully Generated:<br>' + response.generated.join(',');
+                        // success message will be flask flashed
+                        window.location = url_prefix + 'invoice_summary' + year_month_url;
                     } else {
-                        message = 'Unable to update any rows.';
+                        message = 'Unable to regenerate any rows.';
+                        $('#page_message p').html(message);
                     }
-                    $('#page_message p').html(message);
                 }
         });
-        window.location = url_prefix + 'invoice_summary' + year_month_url;
     }
 } ) ( jQuery );

@@ -1,5 +1,5 @@
 import json
-from flask import render_template, request
+from flask import render_template, request, flash
 from flask.ext.security import login_required
 from flask_weasyprint import render_pdf, HTML
 from iggybase.web_files.decorators import templated
@@ -15,20 +15,23 @@ MODULE_NAME = 'billing'
 
 
 @billing.route( '/review/' )
+@billing.route( '/review/<int:year>/<int:month>/' )
 @login_required
 @templated()
-def review(facility_name):
+def review(facility_name, year = None, month = None):
     # options for dropdowns
     select_years = util.get_last_x_years(5)
     select_months = util.get_months_dict()
 
-    # default to last month, get start and end dates
-    last_month = util.get_last_month()
-    year = last_month.year
-    month = last_month.month
+    if not month or not year: #mostly we default to last_month
+        # default to last month, get start and end dates
+        last_month = util.get_last_month()
+        year = last_month.year
+        month = last_month.month
+
     from_date, to_date = util.start_and_end_month(year, month)
 
-    # get line_items for last month
+    # get line_items for month
     criteria = {
             ('line_item', 'date_created'): {'from': from_date, 'to': to_date},
             ('line_item', 'price_per_unit'): {'compare': 'greater than', 'value': 0}
@@ -43,10 +46,10 @@ def review(facility_name):
     )
 
 
-@billing.route( '/review/<year>/<month>/ajax/' )
+@billing.route( '/review/<int:year>/<int:month>/ajax/' )
 @login_required
 def review_ajax(facility_name, year, month):
-    from_date, to_date = util.start_and_end_month(int(year), int(month))
+    from_date, to_date = util.start_and_end_month(year, month)
     criteria = {
             ('line_item', 'date_created'): {'from': from_date, 'to': to_date},
             ('line_item', 'price_per_unit'): {'compare': 'greater than', 'value': 0}
@@ -56,14 +59,14 @@ def review_ajax(facility_name, year, month):
 
 
 
-@billing.route( '/invoice_summary/<year>/<month>/' )
+@billing.route( '/invoice_summary/<int:year>/<int:month>/' )
 @login_required
 @templated()
 def invoice_summary(facility_name, year, month):
     # options for dropdowns
     select_years = util.get_last_x_years(5)
     select_months = util.get_months_dict()
-    from_date, to_date = util.start_and_end_month(int(year), int(month))
+    from_date, to_date = util.start_and_end_month(year, month)
 
     criteria = {
             ('invoice', 'invoice_month'): {'from': from_date, 'to': to_date},
@@ -78,10 +81,10 @@ def invoice_summary(facility_name, year, month):
     )
 
 
-@billing.route( '/invoice_summary/<year>/<month>/ajax/' )
+@billing.route( '/invoice_summary/<int:year>/<int:month>/ajax/' )
 @login_required
 def invoice_summary_ajax(facility_name, year, month):
-    from_date, to_date = util.start_and_end_month(int(year), int(month))
+    from_date, to_date = util.start_and_end_month(year, month)
     criteria = {
             ('invoice', 'invoice_month'): {'from': from_date, 'to': to_date},
     }
@@ -90,7 +93,7 @@ def invoice_summary_ajax(facility_name, year, month):
 
 
 
-@billing.route('/generate_invoices/<year>/<month>/', methods=['GET', 'POST'])
+@billing.route('/generate_invoices/<int:year>/<int:month>/', methods=['GET', 'POST'])
 @login_required
 def generate_invoices(facility_name, year, month):
     orgs = []
@@ -98,31 +101,33 @@ def generate_invoices(facility_name, year, month):
         post_params = request.get_json()
         if 'orgs' in post_params:
             orgs = post_params['orgs']
-    ic = InvoiceCollection(int(year), int(month), orgs) # defaults to last complete
+    ic = InvoiceCollection(year, month, orgs) # defaults to last complete
     ic.populate_template_data()
     # can't update the pdf name in db after generation because pdf generation
     # borks the db_session for the request
     ic.update_pdf_names()
     generated = ic.generate_pdfs()
+    if generated:
+        flash('Successfully generated: ' + ', '.join(generated))
     return json.dumps({'generated':generated})
 
 
-@billing.route( '/invoice/<year>/<month>/' )
-@billing.route( '/invoice/<year>/<month>/<org_name>/' )
+@billing.route( '/invoice/<int:year>/<int:month>/' )
+@billing.route( '/invoice/<int:year>/<int:month>/<org_name>/' )
 @login_required
 def invoice(facility_name, year, month, org_name = None):
     org_list = []
     if org_name:
         org_list.append(org_name)
-    ic = InvoiceCollection(int(year), int(month), org_list)
+    ic = InvoiceCollection(year, month, org_list)
     ic.populate_template_data()
     return render_template('invoice_base.html',
             module_name = 'billing',
             invoices=ic.invoices)
 
 
-@billing.route( '/invoice/invoice-<year>-<month>.pdf' )
-@billing.route( '/invoice/invoice-<year>-<month>-<org_name>.pdf' )
+@billing.route( '/invoice/invoice-<int:year>-<int:month>.pdf' )
+@billing.route( '/invoice/invoice-<int:year>-<int:month>-<org_name>.pdf' )
 @login_required
 def invoice_pdf(facility_name, year, month, org_name = None):
     html = (invoice(facility_name = facility_name,

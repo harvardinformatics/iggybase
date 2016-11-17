@@ -10,7 +10,7 @@
     </div>
 {%- endblock content_title %}
 {% block topbuttonbar %}
-    {{ macros.render_select(select_years, 'year_select', year)}}
-    {{ macros.render_select(select_months, 'month_select', month)}}
+    {{ macros.render_select(select_years, 'year', year)}}
+    {{ macros.render_select(select_months, 'month', month)}}
     {{ super() }}
 {%- endblock topbuttonbar %}
