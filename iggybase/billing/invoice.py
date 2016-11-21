@@ -103,7 +103,8 @@ class Invoice:
                 'invoice_month': self.from_date,
                 'order': self.order,
                 'service_type_id': self.service_type_id,
-                'active': 1
+                'active': 1,
+                'invoice_number': self.order
             }
             invoice_row = self.oac.insert_row('invoice', cols)
         self.id = invoice_row.id
@@ -111,12 +112,11 @@ class Invoice:
         self.last_modified = invoice_row.last_modified
         self.Invoice = invoice_row
         self.number = self.get_next_name()
-        # update line_item if invoice_id not set
+        # update line_item with invoice_id
         if self.id:
             to_update = []
             for item in self.items:
-                if not item.LineItem.invoice_id:
-                        to_update.append(item.LineItem)
+                to_update.append(item.LineItem)
             if to_update:
                 updated = self.oac.update_obj_rows(
                         to_update,
@@ -125,7 +125,7 @@ class Invoice:
                 if not updated:
                     logging.error('Invoice_id not updated to ' + str(invoice_id)
                             + ' for line_items: ' + json.dumps(to_update))
-                            
+
 
     def populate_template_data(self):
         self.purchase_table = self.populate_purchase()
@@ -162,7 +162,7 @@ class Invoice:
                 name = u.name
             contacts.append({'name':name, 'email':u.email})
         return contacts
-    
+
     def get_contact_info(self):
         manager = self.get_contact_by_position(self.org_id, 'manager')
         pi = self.get_contact_by_position(self.org_id, 'pi')
