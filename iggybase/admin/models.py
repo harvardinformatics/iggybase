@@ -314,6 +314,7 @@ class PageFormButtonRole(Base):
     table_type = 'admin'
     role_id = Column(Integer, ForeignKey('role.id'))
     page_form_button_id = Column(Integer, ForeignKey('page_form_button.id'))
+    display_name = Column(String(50))
 
     page_form_button_role_role = relationship("Role", foreign_keys=[role_id])
     page_form_button_role_page_form = relationship("PageFormButton", foreign_keys=[page_form_button_id])

@@ -55,8 +55,8 @@ $( document ).ready( function () {
 } );
 
 ( function( $ ) {
-    $.fn.showModalDialog = function ( url, buttons, callback, close_function ) {
-        $("#modal_dialog_content").html("");
+    $.fn.showModalDialog = function ( modal_div, modal_content, url, buttons, callback, close_function ) {
+        modal_content.html("");
 
         $.ajax( {
             url: url,
@@ -75,7 +75,7 @@ $( document ).ready( function () {
 
                 tmpform += "</div>";
 
-                $(tmpform).appendTo("#modal_dialog_content");
+                $(tmpform).appendTo(modal_content);
 
                 if ( close_function )
                     $( '.close_modal' ).click( close_function );
@@ -89,9 +89,9 @@ $( document ).ready( function () {
                 }
 
                 if ( callback )
-                    $('#dialog').on('shown.bs.modal', function(e){ callback(); } );
+                    modal_div.on('shown.bs.modal', function(e){ callback(); } );
 
-                $("#dialog").modal( "show" );
+                modal_div.modal( "show" );
             }
         } );
     }
@@ -105,7 +105,7 @@ $( document ).ready( function () {
 
         var buttons = {};
 
-        $.fn.showModalDialog( formurl, buttons );
+        $.fn.showModalDialog( $( '#dialog' ), $( '#modal_dialog_content' ), formurl, buttons );
 
         $( document ).off("click", "#modal-add-submit");
 
@@ -113,17 +113,7 @@ $( document ).ready( function () {
             $.fn.modalAddSubmit( );
         } );
 
-        $( document ).off("click", "#modal-add-submit");
-
-        $( document ).on("click", "#modal-add-submit", function ( ) {
-            $.fn.modalAddSubmit( );
-        } );
-
-        $( ".boolean-field" ).each(
-            function( ) {
-                $.fn.changeCheckBox( $( this) );
-            }
-        );
+        $.fn.addInputEvents()
     }
 
     $.fn.modalAddSubmit = function ( ) {
@@ -168,8 +158,8 @@ $( document ).ready( function () {
 
     $.fn.modal_close = function () {
         $("#dialog").modal( "hide" );
-        $('body').removeClass('modal-open');
-        $('.modal-backdrop').remove();
+        //$('body').removeClass('modal-open');
+        //$('.modal-backdrop').remove();
         $("#modal_dialog_content").html("");
     }
 
@@ -206,5 +196,35 @@ $( document ).ready( function () {
             } catch(e){
             }
         }
+    }
+
+    $.fn.addInputEvents = function () {
+        $( document ).off( "change", ".boolean-field" );
+        $( document ).on( "change", ".boolean-field", function ( ) {
+            $.fn.changeCheckBox( $( this ) );
+        } );
+
+        $( document ).off( "keydown focusout", ".table-control" );
+        $( document ).on( "keydown focusout", ".table-control", function ( e ) {
+            return $.fn.dataEntryEventManager( e, $( this ) );
+        } );
+
+
+        $( document ).off( "keydown focusout", ".data-control" );
+        $( document ).on( "keydown focusout", ".data-control", function ( e ) {
+            return $.fn.dataEntryEventManager( e, $( this ) );
+        } );
+
+        $( document ).off( "change", ".field_select_list" );
+        $( document ).on( "change", ".field_select_list", function() {
+                $.fn.updateTableField( $( this ) )
+        } );
+
+        $( ".datepicker-field" ).datepicker(
+            {
+                format: 'yyyy-mm-dd',
+                autoclose: true
+            }
+        );
     }
 } ) ( jQuery );

@@ -28,6 +28,8 @@ class IggybaseLookUpField(StringField):
         if self.title is not None:
             kwargs['title'] = self.title
 
+        kwargs.setdefault('data-toggle', "modal")
+
         kwargs['class'] = self.iggybase_class
         return super(IggybaseLookUpField, self).__call__(*args, **kwargs)
 

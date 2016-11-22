@@ -4,6 +4,8 @@ var search_input = '';
 $( document ).ready( function () {
     var cm = [ {'Fill Down': { onclick:function( menuItem, menu ) { $.fn.childDataFill( $( this ) ); } } } ];
 
+    $.fn.addInputEvents()
+
     $( ".sequence_length" ).each(
         function( ) {
             $.fn.addSequenceLabel( $( this ) );
@@ -19,36 +21,9 @@ $( document ).ready( function () {
             $.fn.setPrice( e, $( this ) );
         }
     );
-    $( "form input" ).on( "keydown focusout",
-        function ( e ) {
-            return $.fn.dataEntryEventManager( e, $( this ) );
-        }
-    );
     $( ".add_new_child_item" ).click(
         function( ) {
             $.fn.addChildTableRow( $( this ) );
-        }
-    );
-    $( ".datepicker-field" ).datepicker(
-        {
-            format: 'yyyy-mm-dd',
-            autoclose: true
-
-        }
-    );
-    $( ".boolean-field" ).each(
-        function( ) {
-            $.fn.changeCheckBox( $( this) );
-        }
-    );
-    $( ".boolean-field" ).change(
-        function( ) {
-            $.fn.changeCheckBox( $( this ) );
-        }
-    );
-    $( ".field_select_list" ).change(
-        function( ) {
-            $.fn.updateTableField( $( this ) )
         }
     );
     $( ".multi-row-data" ).on( 'scroll',
@@ -161,8 +136,9 @@ $( document ).ready( function () {
 
                     if ( modal_open )
                         $.fn.displaySearchResults( results );
-                    else
+                    else {
                         $.fn.searchModal( ele, results, search_vals );
+                    }
                 }
             }
         });
@@ -178,13 +154,13 @@ $( document ).ready( function () {
             $.fn.displaySearchResults( search_results );
         };
 
-        $.fn.showModalDialog( formurl, buttons, callback, $.fn.searchClose );
+        $.fn.showModalDialog( $( '#search-dialog' ), $( '#modal_search_content' ), formurl, buttons, callback, $.fn.searchClose );
     }
 
     $.fn.getSearchResults = function ( ) {
         search_vals = {};
 
-        $(".modal-body input").each(function() {
+        $(".search-body input").each(function() {
             search_vals[$(this).attr('id')] = $(this).val();
         });
 
@@ -215,7 +191,10 @@ $( document ).ready( function () {
     $.fn.searchClose = function ( ele ) {
         search_open = false;
 
-        $.fn.modal_close( );
+        $("#search-dialog").modal( "hide" );
+        //$('body').removeClass('modal-open');
+        //$('.modal-backdrop').remove();
+        $("#modal_search_content").html("");
     }
 
     $.fn.addChildTableRow = function( ele ) {

@@ -118,7 +118,7 @@ class ModalForm():
         modal_html += ('<h4 class="modal-title">' + self.search_vals['table_name'].replace("_", " ").title() +
                        ' Search</h4>')
         modal_html += '</div>'
-        modal_html += '<div class="modal-body">'
+        modal_html += '<div class="search-body">'
         modal_html += '<input id="modal_search_table" value="' + \
                       fc.fields[self.search_vals['field_key']].FK_TableObject.name + '" type="hidden">'
         modal_html += '<input id="modal_input_id" value="' + self.search_vals['input_id'] + '" type="hidden">'

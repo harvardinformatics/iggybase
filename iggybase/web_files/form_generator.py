@@ -148,8 +148,9 @@ class FormGenerator(PageTemplate):
     def empty_form(self):
         self.form_class = new_class('EmptyForm', (Form,))
 
-    def multiple_data_entry_form(self, row_names=[], data_instance = None, csrf_enabled = None):
+    def multiple_data_entry_form(self, row_names=[], data_instance = None):
         self.form_class = None
+        self.classattr = {}
 
         if data_instance is None:
             data_instance = DataInstance(self.table_name, None, 0)
@@ -170,10 +171,11 @@ class FormGenerator(PageTemplate):
 
         form_class = new_class('MultipleForm', (Form,), {}, lambda ns: ns.update(self.classattr))
 
-        self.form_class = form_class(None, None, '', None, None, csrf_enabled)
+        self.form_class = form_class(None)
 
-    def data_entry_form(self, row_name='new', data_instance = None, depth = 2, csrf_enabled = None):
+    def data_entry_form(self, row_name='new', data_instance = None, depth = 2):
         self.form_class = None
+        self.classattr = {}
 
         if data_instance is None:
             data_instance = DataInstance(self.table_name, row_name, depth)
@@ -192,7 +194,10 @@ class FormGenerator(PageTemplate):
 
         form_class = new_class('SingleForm', (Form,), {}, lambda ns: ns.update(self.classattr))
 
-        self.form_class = form_class(None, None, '', None, None, csrf_enabled)
+        logging.info(self.classattr)
+        logging.info(self.classattr)
+
+        self.form_class = form_class(None)
 
     def get_table(self, data_instance):
         row_counter = 0
