@@ -161,7 +161,9 @@ class LineItemScript (IggyScript):
                 service_id = row[0]
                 price = row[1]
             else:
-                if row[2] >= length and row[2] < max_length:
+                # there is sometimes an extra base pair or two
+                # so we subtract 2 from length
+                if row[2] >= (length - 2) and row[2] < max_length:
                     max_length = row[2]
                     service_id = row[0]
                     price = row[1]
