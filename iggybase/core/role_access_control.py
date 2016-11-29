@@ -305,12 +305,12 @@ class RoleAccessControl:
     def make_role_menu(self):
         role_menu_subs = OrderedDict({})
         if self.user is not None:
-            for role in self.user.roles:
-                if role.id != self.role.id:
-                    facility = self.session.query(models.Facility).filter_by(id=role.facility_id).first()
-                    role_menu_subs[role.name] = {'title': role.name,
+            for user_role in self.user.user_roles:
+                if user_role.role_id != self.role.id and user_role.active == 1 and user_role.role.active == 1:
+                    facility = self.session.query(models.Facility).filter_by(id=user_role.role.facility_id).first()
+                    role_menu_subs[user_role.role.name] = {'title': user_role.role.name,
                                                  'class': 'change_role',
-                                                 'data': {'role_id': role.id, 'facility': facility.name}}
+                                                 'data': {'role_id': user_role.role.id, 'facility': facility.name}}
 
         if role_menu_subs:
             subs = {'title': 'Change Role',

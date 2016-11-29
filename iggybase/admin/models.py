@@ -641,8 +641,8 @@ class UserRole(Base):
     director = Column(Boolean)
     manager = Column(Boolean)
 
-    user_role_user = relationship("User", foreign_keys=[user_id])
-    user_role_role = relationship("Role", foreign_keys=[role_id])
+    user = relationship("User", foreign_keys=[user_id])
+    role = relationship("Role", foreign_keys=[role_id])
 
     def __repr__(self):
         return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
@@ -661,6 +661,8 @@ class User(Base, UserMixin):
     current_user_role_id = Column(Integer, ForeignKey('user_role.id'))
 
     user_user_role = relationship("UserRole", foreign_keys=[current_user_role_id])
+    user_roles = relationship('UserRole', primaryjoin='user_role.c.user_id == User.id',
+                              backref=backref('users'))
     roles = relationship('Role', secondary='user_role', primaryjoin='user_role.c.user_id == User.id',
                          secondaryjoin='user_role.c.role_id == Role.id', order_by='Role.name',
                          backref=backref('users', lazy='dynamic'))
