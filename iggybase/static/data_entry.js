@@ -330,6 +330,7 @@ $( document ).ready( function () {
 
     $.fn.updateTableField = function ( ele ) {
         // editing field data - prevents someone from selecting select list and foreign key info
+        // only for editing table_object field
         var id = ele.attr( 'id' );
         var matches = id.match( /data_entry_(\S+)_(\d+)/);
         var row_id = matches[ 2 ];
