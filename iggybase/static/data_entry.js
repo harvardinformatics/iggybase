@@ -295,34 +295,10 @@ $( document ).ready( function () {
             }
         );
 
-        new_row.find( '.boolean-field' ).change(
-            function() {
-                $( this ).change(
-                    function( ) {
-                        $.fn.changeCheckBox( $( this ) );
-                    }
-                );
-            }
-        ).each(
+        new_row.find( '.boolean-field' ).each(
             function() {
                 $.fn.changeCheckBox( $( this ) );
                 $.fn.updateOldValue( $( this ) );
-            }
-        );
-
-        new_row.find( '.datepicker-field' ).each(
-            function() {
-                $( this ).datepicker({
-                    format: 'yyyy-mm-dd',
-                    autoclose: true
-
-                });
-            }
-        );
-
-        new_row.find( 'input' ).on( "keydown focusout",
-            function ( e ) {
-                return $.fn.dataEntryEventManager( e, $( this ) );
             }
         );
 
@@ -336,11 +312,7 @@ $( document ).ready( function () {
             }
         );
 
-        new_row.find( ".field_select_list" ).change(
-            function( ) {
-                $.fn.updateTableField( $( this ) )
-            }
-        );
+        $.fn.addInputEvents()
     }
 
     $.fn.changeCheckBox = function ( ele ) {
