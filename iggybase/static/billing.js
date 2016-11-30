@@ -1,16 +1,3 @@
-$( document ).ready( function () {
-    $( ".charge-method-code" ).blur(
-        function( ) {
-            $.fn.checkCodeFormat( $( this ) );
-        }
-    );
-    $( ".charge-method-percent" ).blur(
-        function( event ) {
-            $.fn.checkCodePercent( event, $( this ) );
-        }
-    );
-} );
-
 ( function( $ ) {
     $.fn.checkCodePercent = function( event, ele ) {
         var total = 0;

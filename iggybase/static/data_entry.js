@@ -16,11 +16,6 @@ $( document ).ready( function () {
             $.fn.getSequenceLength( e, $( this ) );
         }
     );
-    $( ".set_price" ).change(
-        function( e ) {
-            $.fn.setPrice( e, $( this ) );
-        }
-    );
     $( ".add_new_child_item" ).click(
         function( ) {
             $.fn.addChildTableRow( $( this ) );
@@ -39,6 +34,51 @@ $( document ).ready( function () {
 } );
 
 ( function( $ ) {
+    $.fn.addInputEvents = function () {
+        $( document ).off( "change", ".boolean-field" );
+        $( document ).on( "change", ".boolean-field", function ( ) {
+            $.fn.changeCheckBox( $( this ) );
+        } );
+
+        $( document ).off( "change", ".set_price" );
+        $( document ).on( "change", ".set_price", function ( e ) {
+            $.fn.setPrice( e, $( this ) );
+        } );
+
+        $( document ).off( "change", ".field_select_list" );
+        $( document ).on( "change", ".field_select_list", function() {
+            $.fn.updateTableField( $( this ) )
+        } );
+
+        $( document ).off( "blur", ".charge-method-code" );
+        $( document ).on( "blur", ".charge-method-code", function() {
+            $.fn.checkCodeFormat( $( this ) );
+        } );
+
+        $( document ).off( "blur", ".charge-method-percent" );
+        $( document ).on( "blur", ".charge-method-percent", function( e ) {
+            $.fn.checkCodePercent( e, $( this ) );
+        } );
+
+        $( document ).off( "keydown focusout", ".table-control" );
+        $( document ).on( "keydown focusout", ".table-control", function ( e ) {
+            return $.fn.dataEntryEventManager( e, $( this ) );
+        } );
+
+
+        $( document ).off( "keydown focusout", ".data-control" );
+        $( document ).on( "keydown focusout", ".data-control", function ( e ) {
+            return $.fn.dataEntryEventManager( e, $( this ) );
+        } );
+
+        $( ".datepicker-field" ).datepicker(
+            {
+                format: 'yyyy-mm-dd',
+                autoclose: true
+            }
+        );
+    }
+
     $.fn.addSequenceLabel = function ( ele ) {
         $('<label id="label_'+ele.attr('id')+'" class="control-label">Sequence Length: '+(ele.val().length)+'</label>').appendTo(ele.parent());
     }

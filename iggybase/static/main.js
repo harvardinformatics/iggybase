@@ -197,34 +197,4 @@ $( document ).ready( function () {
             }
         }
     }
-
-    $.fn.addInputEvents = function () {
-        $( document ).off( "change", ".boolean-field" );
-        $( document ).on( "change", ".boolean-field", function ( ) {
-            $.fn.changeCheckBox( $( this ) );
-        } );
-
-        $( document ).off( "keydown focusout", ".table-control" );
-        $( document ).on( "keydown focusout", ".table-control", function ( e ) {
-            return $.fn.dataEntryEventManager( e, $( this ) );
-        } );
-
-
-        $( document ).off( "keydown focusout", ".data-control" );
-        $( document ).on( "keydown focusout", ".data-control", function ( e ) {
-            return $.fn.dataEntryEventManager( e, $( this ) );
-        } );
-
-        $( document ).off( "change", ".field_select_list" );
-        $( document ).on( "change", ".field_select_list", function() {
-                $.fn.updateTableField( $( this ) )
-        } );
-
-        $( ".datepicker-field" ).datepicker(
-            {
-                format: 'yyyy-mm-dd',
-                autoclose: true
-            }
-        );
-    }
 } ) ( jQuery );
