@@ -157,7 +157,8 @@ class OrganizationAccessControl:
             if params is None:
                 rows = self.session.query(getattr(fk_table_object, 'id'),
                                                          getattr(fk_table_object, fk_field_data.display_name).
-                                          label('name')).all()
+                                          label('name')).filter(getattr(fk_table_object,
+                                              'active') == 1).order_by('order').all()
             else:
                 criteria = []
                 for key, value in params.items():
@@ -165,7 +166,7 @@ class OrganizationAccessControl:
 
                 rows = self.session.query(getattr(fk_table_object, 'id'),
                                           getattr(fk_table_object,
-                                                  fk_field_data['foreign_key'])).filter(*criteria).all()
+                                                  fk_field_data['foreign_key'])).filter(*criteria).order_by('order').all()
 
             for row in rows:
                 results.append((row.id, row.name))
