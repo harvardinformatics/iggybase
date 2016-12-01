@@ -74,6 +74,10 @@ def add_base_routes( app, conf, security, user_datastore ):
         logout_user()
         return render_template( 'registration_sucess.html')
 
+    @app.route( '/welcome' )
+    def welcome():
+        return render_template( 'welcome.html')
+
     @app.after_request
     def remove_session(resp):
         db_session.remove()
@@ -116,7 +120,7 @@ def configure_hook( app ):
         path = request.path.split('/')
 
         # TODO: consider caching this for the session
-        ignore_facility = ['static', 'logout', 'home', 'favicon.ico']
+        ignore_facility = ['static', 'logout', 'home', 'favicon.ico', 'welcome', 'registration_success']
         if (current_user.is_authenticated and path and path[1] not in ignore_facility):
             import iggybase.core.role_access_control as rac
 

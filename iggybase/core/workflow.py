@@ -1,6 +1,7 @@
 from flask import g, url_for
 from collections import OrderedDict
 from iggybase import g_helper
+import logging
 
 class Workflow:
     def __init__ (self, name):
