@@ -4,7 +4,7 @@ from sqlalchemy import Column, ForeignKey, UniqueConstraint, or_
 import sqlalchemy
 from iggybase.database import db_session, Base
 from types import new_class
-
+import logging
 
 class TableFactory:
     predefined_columns = ['id','name','description','date_created','last_modified','active','organization_id','order']
@@ -31,6 +31,7 @@ class TableFactory:
                 foreign_table =  self.session.query(TableObject).filter_by(id=col.foreign_key_table_object_id).first()
                 foreign_column = self.session.query(Field).filter_by(id=col.foreign_key_field_id).first()
 
+                logging.info('foreign_table.name: ' +foreign_table.name)
                 classattr[col.display_name] = self.create_column(col, foreign_table.name, foreign_column.display_name)
 
                 if foreign_table is not None and foreign_column is not None:
