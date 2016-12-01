@@ -220,10 +220,10 @@ class RoleAccessControl:
                 filter(*filters).order_by(*orders)
         )
 
-        query = res.statement.compile(dialect=mysql.dialect())
+        '''query = res.statement.compile(dialect=mysql.dialect())
         logging.info('query')
         logging.info(str(query))
-        logging.info(str(query.params))
+        logging.info(str(query.params))'''
 
         return res.all()
 
