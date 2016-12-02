@@ -122,7 +122,7 @@ class MigrateScript (IggyScript):
     def semantic_select_row(self, pk, thing, property, tbl):
         where = "name ='" + pk.replace("'","\\\'") + "'"
         sql = ('Select * from ' + tbl + " where thing = '" + thing
-            + "' and property = '" + property + "' and " + where)
+            + "' and property = '" + property + "' and " + where + ' limit 1')
         print(sql)
         exist = self.from_db.cursor()
         exist.execute(sql)
@@ -259,7 +259,7 @@ class MigrateScript (IggyScript):
         if billable_item_type == 'Reagent_Request':
             print('reagent')
             row = self.semantic_select_row(val, 'Reagent_Request', 'Reagent',
-            'semantic_data')
+            self.cli['semantic_source'])
             price_item_name = row[config.semantic_col_map['value']]
             print(price_item_name)
             id_exists = self.pk_exists(price_item_name, 'name', 'price_item')
@@ -340,7 +340,7 @@ class MigrateScript (IggyScript):
         if val == 'Reagent_Request':
             print('reagent')
             row = self.semantic_select_row(billable_item, 'Reagent_Request', 'Reagent',
-            'semantic_data')
+            self.cli['semantic_source'])
             price_item_name = row[config.semantic_col_map['value']]
             print(price_item_name)
             id_exists = self.pk_exists(price_item_name, 'name', 'price_item')
@@ -351,7 +351,7 @@ class MigrateScript (IggyScript):
     def get_price_item(self, col, val, col_name_map, organization_id):
         new_dict = {}
         row = self.semantic_select_row(val, 'Sequencing_Price', 'Display_Name',
-        'semantic_data')
+        self.cli['semantic_source'])
         price_item_name = row[config.semantic_col_map['value']]
         id_exists = self.pk_exists(price_item_name, 'name', 'price_item')
         if id_exists:
@@ -360,13 +360,14 @@ class MigrateScript (IggyScript):
 
     def find_user(self, pk):
         row = self.semantic_select_row(pk, 'Group_Member', 'Email',
-        'semantic_data')
+        self.cli['semantic_source'])
         email = None
         if row:
             email = row[3]
         sql = 'select id from user where name = "' + pk.replace('"','') + '"'
         if email:
             sql += ' or email = "' + email + '"'
+        sql += ' limit 1'
         pk_user = self.to_db.cursor()
         pk_user.execute(sql)
         user_id = pk_user.fetchone()

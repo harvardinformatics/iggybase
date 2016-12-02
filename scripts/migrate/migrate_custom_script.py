@@ -354,10 +354,10 @@ class MigrateCustomScript (IggyScript):
                     '%Y-%m'))))
 
                     updated = self.update_row('line_item', {'order_id': order_id},
-                        {'date_created': val_str}) 
+                        {'date_created': val_str})
                     print(updated)
-                
-     
+
+
     def migrate_order_charge_method(self, mini_table, thing, new_tbl):
         print("Table: " + mini_table + " thing: " + thing)
         pks = self.from_db.cursor()
@@ -398,7 +398,7 @@ class MigrateCustomScript (IggyScript):
                     charge_id = self.pk_exists(item_dict[code_name], 'code',
                             'charge_method')
                     charge_type = 2
-                    if ('Charge_Type' in item_dict 
+                    if ('Charge_Type' in item_dict
                             and item_dict['Charge_Type'] == 'Purchase_Order'):
                         charge_type = 1
                     if not charge_id:
@@ -442,15 +442,14 @@ class MigrateCustomScript (IggyScript):
                             to_id}, {'new_name_id': next_num})
             print('\tCompleted work on name: ' + pk + "\n\n")
         print('Completed table: ' + mini_table + " thing: " + thing + "\n\n\n\n")
-     
+
     def migrate_user_organization(self, mini_table, thing, new_tbl):
         print("Table: " + mini_table + " thing: " + thing)
         pks = self.from_db.cursor()
         sql = "select distinct name from " + mini_table + " where thing = '" + thing + "'"
-        '''sql += " and name in "
-        sql += ("('LIN27167','LIN27166','LIN27165','LIN27164','LIN27163','LIN27162','LIN27161','LIN27160','LIN27159','LIN27158','LIN27157','LIN27156','LIN27155','LIN27154','LIN27153','LIN27152','LIN27151','LIN27150','LIN27149','LIN27148','LIN27147','LIN27146','LIN27145','LIN27144','LIN27143','LIN27142','LIN27141','LIN27140','LIN27139','LIN27138','LIN27137','LIN27136','LIN27135','LIN27134','LIN27133','LIN27132','LIN27131','LIN27130','LIN27129','LIN27128','LIN27127','LIN27126','LIN27125','LIN27124','LIN27123','LIN27122','LIN27121','LIN27120','LIN27119','LIN27118','LIN27117','LIN27116','LIN27115','LIN27114','LIN27113','LIN27112','LIN27111','LIN27110','LIN27109','LIN27108','LIN27107','LIN27106','LIN27105','LIN27104','LIN27103','LIN27102','LIN27101','LIN27100','LIN27099','LIN27098','LIN27097','LIN27096','LIN27095','LIN27094','LIN27093','LIN27092','LIN27091','LIN27090','LIN27089','LIN27088','LIN27087','LIN27086','LIN27085','LIN27084','LIN27083','LIN27082','LIN27081','LIN27080','LIN27079')")'''
         if 'limit' in self.cli:
             sql += ' limit ' + self.cli['limit']
+        print(sql)
         pks.execute(sql)
         pks_rows = pks.fetchall()
         if 'start' in self.cli:
@@ -470,6 +469,7 @@ class MigrateCustomScript (IggyScript):
             users = self.from_db.cursor()
             users.execute(sql)
             user_rows = users.fetchall()
+            print(user_rows)
             for user in user_rows:
                 user_name = user[0]
                 user_id = self.pk_exists(user_name, 'name', 'user')
@@ -491,6 +491,7 @@ class MigrateCustomScript (IggyScript):
                                 'active': 1,
                                 'default_organization': org_id
                         }
+                        print(row_dict)
                         row = self.do_insert(new_tbl, row_dict)
                         if row:
                             to = self.select_row('table_object',
@@ -544,9 +545,9 @@ class MigrateCustomScript (IggyScript):
                         updated = self.update_row('table_object', {'name':
                             'address'}, {'new_name_id': next_num})
                         if address_set:
-                            break 
+                            break
                     if address_set:
-                        break 
+                        break
                 else:
                     address_id = row_exists[0]
                     print(address_id)
@@ -586,9 +587,9 @@ class MigrateCustomScript (IggyScript):
                         inst_set = updated
                         print(inst_set)
                         if inst_set:
-                            break 
+                            break
                     if inst_set:
-                        break 
+                        break
                 else:
                     inst_id = row_exists[0]
                     print(inst_id)
@@ -872,7 +873,7 @@ class MigrateCustomScript (IggyScript):
                                 'user_id': user_id
                         }
                         row = self.do_insert('user_organization', row_dict)
-     
+
     def migrate_po_billing(self, mini_table, thing, new_tbl):
         print("Table: " + mini_table + " thing: " + thing)
         pks = self.from_db.cursor()
@@ -947,7 +948,7 @@ class MigrateCustomScript (IggyScript):
                         updated = self.update_row('order', {'name':
                             pk}, {'submitter_id': user_id})
                         print(updated)
-         
+
     def migrate_lab_admins(self, mini_table, thing, new_tbl):
         print("Table: " + mini_table + " thing: " + thing)
         pks = self.from_db.cursor()
@@ -1045,7 +1046,7 @@ class MigrateCustomScript (IggyScript):
                                     to_id}, {'new_name_id': next_num})
                     else:
                         print('\tUser_Organization Does not exist: ' + pk + "\n\n")
-            
+
                 else:
                     print('\tUser_id, Org_id or Pos_id Does not exist: ' + pk + "\n\n")
                     print(user_id)
@@ -1099,7 +1100,7 @@ class MigrateCustomScript (IggyScript):
         return cli
 
     def run(self):
-        self.migrate_order_charge_method(self.cli['semantic_source'], self.cli['from_tbl'], self.cli['to_tbl'])
+        self.migrate_user_organization(self.cli['semantic_source'], self.cli['from_tbl'], self.cli['to_tbl'])
 
 # execute run on this class
 script = MigrateCustomScript()

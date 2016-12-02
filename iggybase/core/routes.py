@@ -126,11 +126,11 @@ def new_workflow(facility_name, workflow_name):
     return json.dumps({'work_item_group': wig.name,
         'params':wig.workflow.steps[1].Step.params})
 
-@core.route('/new_order/', methods=['GET', 'POST'])
+@core.route('/new_order/<workflow_name>/', methods=['GET', 'POST'])
 @login_required
-def new_order(facility_name):
-    wig = WorkItemGroup('new', 'order', 1)
-    return work_item_group(facility_name, 'order', 1, wig.name)
+def new_order(facility_name, workflow_name):
+    wig = WorkItemGroup('new', workflow_name, 1)
+    return work_item_group(facility_name, workflow_name, 1, wig.name)
 
 
 # TODO: maybe we should move this to the api module
@@ -393,7 +393,6 @@ def work_item_group(facility_name, workflow_name, step, work_item_group):
 def build_summary(table_name, page_form, context={}):
     tqc = TableQueryCollection(table_name)
     tq = tqc.get_first()
-
     if not tq.fc.fields:
         abort(404)
 

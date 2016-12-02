@@ -305,7 +305,10 @@ col_value_map = {
         'user_id': None,
         'postal_code': None,
         'title': None,
-        'department': None
+        'department': None,
+        'comments': None,
+        'rc_login_id': None,
+        'spinal_expense_code': None
     },
     'user':{
         'full_name': None,
@@ -375,8 +378,9 @@ base_add_cols_map = {
 }
 # by table
 add_cols_map = {
-        'group':{
-            'organization_id':1
+        'organization':{
+            'organization_id':1,
+            'parent_id':1040
         },
         'user_organization':{
             #'func_user_org':'func_user_org'
@@ -392,7 +396,8 @@ base_int_col_map = ['id', 'active', 'organization_id', 'note_id', 'user_id',
 'sample_sheet_id', 'reagent_request_id', 'sequencing_price_id', 'order',
 'field_id', 'status_id', 'passed', 'billable', 'row_id', 'line_item_id',
 'module_id', 'id_length', 'admin_table', 'price_item_id', 'order_id',
-'address_id', 'billing_address_id', 'institution_id', 'department_id']
+'address_id', 'billing_address_id', 'institution_id', 'department_id',
+'parent_id']
 # by table
 int_col_map = {
         'invoice': [
@@ -412,7 +417,8 @@ int_col_map = {
             ],
         'user_organization':[
             'default_organization',
-            'user_organization_id'
+            'user_organization_id',
+            'user_id'
             ],
         'field':[
             'length',
@@ -428,7 +434,7 @@ int_col_map = {
         ],
         'line_item':[
             'price_per_unit',
-            'quantity', 
+            'quantity',
             'invoice_id'
         ],
         'field_role':[

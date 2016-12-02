@@ -23,7 +23,7 @@ python process_illumina_data.py --insert_mode --path='/n/seq/sequencing/'
     --filename=RunInfo.xml
 """
 
-#class IggyScript: python3 
+#class IggyScript: python3
 class IggyScript(object):
 
     def __init__(self, config = None):

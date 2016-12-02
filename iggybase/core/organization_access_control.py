@@ -89,7 +89,6 @@ class OrganizationAccessControl:
             return level
 
         root_org = self.session.query(models.Organization).filter_by(id=org_id).first()
-
         if root_org is None:
             return None
         elif root_org.parent_id is None:
@@ -153,20 +152,19 @@ class OrganizationAccessControl:
         results = [(-99, '')]
         if fk_field_data is not None:
             fk_table_object = util.get_table(fk_table_data.name)
-
+            filters = [
+                getattr(fk_table_object, 'organization_id').in_(self.org_ids),
+                getattr(fk_table_object, 'active') == 1
+            ]
             if params is None:
-                rows = self.session.query(getattr(fk_table_object, 'id'),
-                                                         getattr(fk_table_object, fk_field_data.display_name).
-                                          label('name')).filter(getattr(fk_table_object,
-                                              'active') == 1).order_by('order').all()
+                rows = self.session.query(getattr(fk_table_object, 'id'), getattr(fk_table_object, fk_field_data.display_name).label('name')).filter(*filters).order_by('order').all()
             else:
-                criteria = []
                 for key, value in params.items():
-                    criteria.append(getattr(fk_table_object, key) == value)
+                    filters.append(getattr(fk_table_object, key) == value)
 
                 rows = self.session.query(getattr(fk_table_object, 'id'),
                                           getattr(fk_table_object,
-                                                  fk_field_data['foreign_key'])).filter(*criteria).order_by('order').all()
+                                                  fk_field_data['foreign_key'])).filter(*filters).order_by('order').all()
 
             for row in rows:
                 results.append((row.id, row.name))

@@ -137,18 +137,17 @@ class WorkItemGroup:
             table = 'work_item_group'
             # TODO: this should be in a generic locaion, maybe the data_instance
             fields = {'workflow_id': self.workflow.id,
-                'status': status.IN_PROGRESS, 'step_id': self.step.Step.id}
+                'status': status.IN_PROGRESS, 'step_id': self.step.Step.id, 'before_action_complete': 0}
             fc = FieldCollection(None, table)
             fc.set_fk_fields()
             fc.set_defaults()
             for field in fc.fields.values():
                 if not field.Field.display_name in fields and field.default:
                     fields[field.Field.display_name] = field.default
-
             row = self.oac.insert_row(table, fields)
             self.name = row.name
             self.get_work_item_group()
-        if time != timing.BEFORE or (time == timing.BEFORE and self.WorkItemGroup.before_action_complete == 0):
+        if time != timing.BEFORE or (time == timing.BEFORE and not self.WorkItemGroup.before_action_complete):
             actions = self.oac.get_step_actions(self.step.Step.id, time)
             for action in actions:
                 if hasattr(self, action.function):
