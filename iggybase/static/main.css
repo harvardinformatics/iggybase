@@ -206,8 +206,7 @@ pre {
 .container-fluid {
     clear: both;
 }
-.required:after {
-    content:'*';
+.required {
     color: red;
     font-weight:bold;
 }
@@ -227,9 +226,13 @@ pre {
     margin-left: 2px;
     float:none;
 }
-.label-header {
+.label-row {
     float:none;
     display:inline-block;
+}
+.label-th {
+    float:left;
+    white-space: pre-wrap;
 }
 .multi-row-data {
     overflow-x:scroll;
