@@ -126,20 +126,22 @@ $( document ).ready( function () {
     $.fn.dataEntryEventManager = function ( e, ele ) {
         var ele_class = ele.attr( 'class' );
 
-        if ( ele.val() ) {
-            if ( e.keyCode == 13 ) {
-                e.preventDefault( );
+        if ( e.keyCode == 13 ) {
+            e.preventDefault( );
 
-                if ( ele_class.includes( 'lookupfield' ) && !search_open ) {
+            if ( ele_class.includes( 'lookupfield' ) && !search_open ) {
+                if ( ele.val() )
                     return $.fn.searchResults( ele, false );
-                }
-
-                return false;
-            } else if ( ele_class.includes( 'lookupfield' ) && e.type == "focusout" && !search_open ) {
-                return $.fn.searchResults( ele, false );
+                else
+                    $( "#id_" + ele.attr( 'id' ) ).val( '' );
             }
-        } else {
-            $( "#id_" + ele.attr( 'id' ) ).val( '' );
+
+            return false;
+        } else if ( ele_class.includes( 'lookupfield' ) && e.type == "focusout" && !search_open ) {
+            if ( ele.val() )
+                return $.fn.searchResults( ele, false );
+            else
+                $( "#id_" + ele.attr( 'id' ) ).val( '' );
         }
     }
 
