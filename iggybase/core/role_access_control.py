@@ -70,32 +70,6 @@ class RoleAccessControl:
     def __del__(self):
         self.session.rollback()
 
-    def fields(self, table_object_id, filter=None, active=1):
-        filters = [
-            (models.FieldRole.role_id == self.role.id),
-            (models.Field.table_object_id == table_object_id),
-            (models.Field.active == active),
-            (models.FieldRole.active == active)
-        ]
-        if filter is not None:
-            for display_name, value in filter.items():
-                field_data = display_name.split(".")
-                if field_data[0] == "field":
-                    filters.append((getattr(models.Field, field_data[1]) == value))
-                else:
-                    filters.append((getattr(models.FieldRole, field_data[1]) == value))
-
-        res = self.session.query(models.Field, models.FieldRole, models.DataType). \
-            join(models.FieldRole). \
-            join(models.DataType). \
-            filter(*filters). \
-            order_by(models.FieldRole.order, models.FieldRole.display_name).all()
-
-        if res is None:
-            return {'Field': {}, 'FieldRole': {}, 'DataType': {}}
-        else:
-            return res
-
     def table_queries(self, route, table_name=None, active=1):
         """Get the table queries
         """

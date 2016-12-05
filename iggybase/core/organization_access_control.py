@@ -5,7 +5,7 @@ from sqlalchemy.exc import IntegrityError, DataError, SQLAlchemyError, NoForeign
 from iggybase.database import db_session
 from iggybase.admin import models
 from iggybase import utilities as util
-from sqlalchemy.orm import aliased
+from sqlalchemy.orm import aliased, defer
 import json
 import logging
 import time
@@ -106,6 +106,16 @@ class OrganizationAccessControl:
             else:
                 self.org_ids.append(child_org.id)
         return
+
+    def dynamic_field_data(self, dynamic_field_id, field_definition_id):
+        dynamic_field = self.session.query(models.Fields).filter_by(id=dynamic_field_id).all()
+
+        dynamic_table = util.get_table_by_id(dynamic_field.foreign_key_table_object_id)
+
+        return (self.session.query(dynamic_table).
+                options(defer('id','name','order','description','date_created','last_modified','active',
+                              'organization_id','display_name')).
+                filter_by(id=field_definition_id).first())
 
     def get_instance_data(self, table_object, criteria):
         # logging.info('get_instance_data')

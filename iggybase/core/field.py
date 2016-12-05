@@ -16,6 +16,9 @@ class Field:
         self.FK_TableObject = None
         self.FK_FieldRole = None
 
+        self.DYN_TableObject = None
+        self.DYN_Field_Definition = None
+
         # None if table_query by table_name rather than id
         self.TableQueryField = table_query_field
         self.TableQueryCalculation = calculation
@@ -33,6 +36,7 @@ class Field:
         self.calculation_fields = self._get_calculation_fields(calculation)
         self.type = self._get_type()
         self.is_foreign_key = (self.Field.foreign_key_table_object_id is not None)
+        self.is_dynamic_field = (self.Field.dynamic_field_definition_field_id is not None)
         self.is_title_field = (self.TableObject.id == self.Field.table_object_id and self.Field.display_name == 'name')
         self.order = self.get_field_order()
 
@@ -129,6 +133,14 @@ class Field:
             self.FK_TableObject = fk_field.TableObject
         else:
             self.is_foreign_key = False # maybe no role access
+
+    def set_dynamic_field(self, field_definition_id):
+        oac = g_helper.get_org_access_control()
+        dyn_data = oac.dynamic_field_data(self.Field.dynamic_field_definition_field_id, field_definition_id)
+
+        for field, value in dyn_data:
+            if hasattr(self.Field, field):
+                setattr(self.Field, field, value)
 
     def _get_type(self):
         return self.DataType.name.lower()

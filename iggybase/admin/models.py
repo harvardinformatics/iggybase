@@ -104,6 +104,7 @@ class Field(Base):
     foreign_key_field_id = Column(Integer, ForeignKey('field.id'))
     foreign_key_display = Column(Integer, ForeignKey('field.id'))
     drop_down_list_limit = Column(Integer)
+    dynamic_field_definition_field_id  = Column(Integer, ForeignKey('field.id'))
 
     field_type = relationship("TableObject", foreign_keys=[table_object_id])
     field_data_type = relationship("DataType", foreign_keys=[data_type_id])
@@ -111,6 +112,7 @@ class Field(Base):
     field_foreign_key_table_object = relationship("TableObject", foreign_keys=[foreign_key_table_object_id])
     field_foreign_key_field = relationship("Field", foreign_keys=[foreign_key_field_id])
     field_foreign_key_display = relationship("Field", foreign_keys=[foreign_key_display])
+    field_dynamic_field_definition_field = relationship("Field", foreign_keys=[dynamic_field_definition_field_id])
 
     def __repr__(self):
         return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \

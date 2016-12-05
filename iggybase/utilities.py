@@ -39,6 +39,26 @@ def get_table(table_name):
     return table_object
 
 
+def get_table_by_id(table_id):
+    session = db_session()
+    table = session.query(TableObject).filter_by(id=table_id).first()
+
+    try:
+        if hasattr(table, 'admin_table') and table.admin_table == 1:
+            module_model = import_module('iggybase.admin.models')
+        else:
+            module_model = import_module('iggybase.models')
+
+        # logging.info('after if  ' + table_name)
+        table_object = getattr(module_model, to_camel_case(table.name))
+    except AttributeError:
+        print('Abort' + table_id)
+        logging.info('abort ' + table_id)
+        abort(403)
+
+    return table_object
+
+
 def get_func(module_name, func_name):
     """Return function from it's name.
     Returns None if unsuccessful.
