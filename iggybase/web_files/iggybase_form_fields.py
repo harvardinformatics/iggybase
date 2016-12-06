@@ -20,6 +20,7 @@ class IggybaseLookUpField(StringField):
         if kwargs['readonly']:
             self.iggybase_class = temp_class
 
+        self.readonly = kwargs['readonly']
         del kwargs['readonly']
 
         super(IggybaseLookUpField, self).__init__(*args, **kwargs)
@@ -28,7 +29,10 @@ class IggybaseLookUpField(StringField):
         if self.title is not None:
             kwargs['title'] = self.title
 
-        kwargs.setdefault('data-toggle', "modal")
+        if self.readonly:
+            kwargs.setdefault('readonly', True)
+        else:
+            kwargs.setdefault('data-toggle', "modal")
 
         kwargs['class'] = self.iggybase_class
         return super(IggybaseLookUpField, self).__call__(*args, **kwargs)
