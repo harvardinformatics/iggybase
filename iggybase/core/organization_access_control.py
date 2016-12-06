@@ -14,9 +14,9 @@ import time
 # all data db access should run through this class
 class OrganizationAccessControl:
     def __init__(self):
-        self.org_ids = []
         self.current_org_id = None
         self.session = self.get_session()
+        self.org_ids = self.get_default_org_ids()
 
         if g.user is not None and not g.user.is_anonymous:
             self.user =  self.session.query(models.User).filter_by(id=g.user.id).first()
@@ -81,6 +81,17 @@ class OrganizationAccessControl:
 
     def rollback(self):
         self.session.rollback()
+
+    def get_default_org_ids(self):
+        filters = [
+                models.Organization.name == 'Everyone',
+                models.Organization.active == 1
+        ]
+        everyone = self.session.query(models.Organization).filter(*filters).first()
+        if everyone:
+            return [everyone.id]
+        else:
+            return []
 
     def get_facility_orgs(self, org_id, root_org_id, level):
         level += 1
