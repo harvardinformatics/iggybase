@@ -123,7 +123,7 @@ class FormParser():
                     msg = lt.save()
 
                     row_data['data_entry'][field] = next(iter(msg))
-                elif field_data.foreign_key_table_object_id is not None:
+                elif field_data.foreign_key_table_object_id is not None or field_data.select_list_id is not None:
                     try:
                         if row_data['data_entry'][field] is None or row_data['data_entry'][field] == '' \
                                 or int(row_data['data_entry'][field]) == -99:
