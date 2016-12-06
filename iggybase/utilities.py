@@ -19,45 +19,24 @@ def get_column(module, table_name, display_name):
     return getattr(table_model, display_name)
 
 
-def get_table(table_name):
+def get_table(table, attr = 'name'):
     session = db_session()
-    table = session.query(TableObject).filter_by(name=table_name).first()
+    filters = [getattr(TableObject, attr) == table]
+    row = session.query(TableObject).filter(*filters).first()
 
     try:
-        if hasattr(table, 'admin_table') and table.admin_table == 1:
+        if hasattr(row, 'admin_table') and row.admin_table == 1:
             module_model = import_module('iggybase.admin.models')
         else:
             module_model = import_module('iggybase.models')
 
-        # logging.info('after if  ' + table_name)
-        table_object = getattr(module_model, to_camel_case(table_name))
+        table_object = getattr(module_model, to_camel_case(table))
     except AttributeError:
-        print('Abort' + table_name)
-        logging.info('abort ' + table_name)
+        print('Abort' + table)
+        logging.info('abort ' + table)
         abort(403)
 
     return table_object
-
-
-def get_table_by_id(table_id):
-    session = db_session()
-    table = session.query(TableObject).filter_by(id=table_id).first()
-
-    try:
-        if hasattr(table, 'admin_table') and table.admin_table == 1:
-            module_model = import_module('iggybase.admin.models')
-        else:
-            module_model = import_module('iggybase.models')
-
-        # logging.info('after if  ' + table_name)
-        table_object = getattr(module_model, to_camel_case(table.name))
-    except AttributeError:
-        print('Abort' + table_id)
-        logging.info('abort ' + table_id)
-        abort(403)
-
-    return table_object
-
 
 def get_func(module_name, func_name):
     """Return function from it's name.
@@ -146,7 +125,7 @@ def html_buttons(buttons):
     return html
 
 def html_button(button):
-    html = ('<input value="' + button['value'] + '"' 
+    html = ('<input value="' + button['value'] + '"'
     + ' id="' + button['id'] + '"'
     + ' name="' + button['name'] + '"'
     + ' type="' + button['type'] + '"'

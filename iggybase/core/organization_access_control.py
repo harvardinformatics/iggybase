@@ -110,7 +110,7 @@ class OrganizationAccessControl:
     def dynamic_field_data(self, dynamic_field_id, field_definition_id):
         dynamic_field = self.session.query(models.Fields).filter_by(id=dynamic_field_id).all()
 
-        dynamic_table = util.get_table_by_id(dynamic_field.foreign_key_table_object_id)
+        dynamic_table = util.get_table(dynamic_field.foreign_key_table_object_id, 'id')
 
         return (self.session.query(dynamic_table).
                 options(defer('id','name','order','description','date_created','last_modified','active',
