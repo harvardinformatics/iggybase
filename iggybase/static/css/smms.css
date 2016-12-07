@@ -1,0 +1,17 @@
+.banner-title h1 {
+    font-family:   Baskerville, Verdana, Geneva, Arial, Helvetica, sans-serif;
+    color:         white;
+}
+
+.banner-title h3 {
+    font-family:   Baskerville,Verdana, Geneva, Arial, Helvetica, sans-serif;
+    color:         white;
+}
+
+.banner {
+    background-color: #7f7f7f;
+}
+
+.logout, .logout:hover, .logout:visited {
+    color: white;
+}
