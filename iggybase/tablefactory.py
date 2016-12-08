@@ -115,7 +115,7 @@ class TableFactory:
     def table_objects(self, active=1):
         table_objects = []
 
-        Extension = aliased(TableObject)
+        Extension = aliased(TableObject, name='Extension')
 
         res = (self.session.query(TableObject, Extension).
                join(Extension, TableObject.extends_table_object_id == Extension.id).
