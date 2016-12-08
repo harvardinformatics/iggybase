@@ -5,7 +5,6 @@ import logging
 table_factory = TableFactory()
 
 tables = table_factory.table_objects()
-
 for table_object in tables:
     if table_object.TableObject.name not in Base.metadata.tables:
         class_name = TableFactory.to_camel_case(table_object.TableObject.name)
