@@ -4,7 +4,7 @@ from sqlalchemy import Column, ForeignKey, UniqueConstraint, or_
 import sqlalchemy
 from iggybase.database import db_session, Base
 from types import new_class
-from iggybase import utilities as util
+from sqlalchemy.dialects import mysql
 import logging
 
 class TableFactory:
