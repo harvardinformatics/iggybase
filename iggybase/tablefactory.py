@@ -4,6 +4,7 @@ from sqlalchemy import Column, ForeignKey, UniqueConstraint, or_
 import sqlalchemy
 from iggybase.database import db_session, Base
 from types import new_class
+from iggybase import utilities as util
 import logging
 
 class TableFactory:
@@ -31,16 +32,27 @@ class TableFactory:
                 foreign_table =  self.session.query(TableObject).filter_by(id=col.foreign_key_table_object_id).first()
                 foreign_column = self.session.query(Field).filter_by(id=col.foreign_key_field_id).first()
 
-                classattr[col.display_name] = self.create_column(col, foreign_table.name, foreign_column.display_name)
-
                 if foreign_table is not None and foreign_column is not None:
+                    classattr[col.display_name] = self.create_column(col, foreign_table.name,
+                                                                     foreign_column.display_name)
+
                     classattr[table_object.name + "_" + col.display_name + "_" + foreign_table.name] = \
                         self.create_foreign_key(TableFactory.to_camel_case(foreign_table.name), \
                                                 classattr[col.display_name])
+                else:
+                    classattr[col.display_name] = self.create_column(col)
             else:
                 classattr[col.display_name] = self.create_column(col)
 
-        newclass = new_class(class_name, (Base,), {}, lambda ns: ns.update(classattr))
+        if table_object.extends_table_object_id is not None:
+            table_base = __import__('iggybase.models.' +
+                                           self.to_camel_case(table_object.extends_table_object.name))
+
+            classattr = {'__mapper_args__': {'polymorphic_identity': table_object.name,}}
+        else:
+            table_base = Base
+
+        newclass = new_class(class_name, (table_base,), {}, lambda ns: ns.update(classattr))
 
         return newclass
 
