@@ -115,11 +115,9 @@ class TableFactory:
     def table_objects(self, active=1):
         table_objects = []
 
-        Extension = aliased(TableObject, name='Extension')
-
-        res = (self.session.query(TableObject, Extension).
-               outerjoin(Extension, TableObject.extends_table_object_id == Extension.id).
+        res = (self.session.query(TableObject).
                filter(TableObject.active==active).
+               filter(TableObject.extends_table_object_id is None).
                filter(or_(TableObject.admin_table==0, TableObject.admin_table is None)).
                order_by(TableObject.order))
         # query = res.statement.compile(dialect=mysql.dialect())
@@ -130,10 +128,24 @@ class TableFactory:
         res = res.all()
 
         for row in res:
-            if row.TableObject.extends_table_object_id:
-                logging(row.TableObject.name + " " + row.Extension.name)
-            else:
-                logging(row.TableObject.name)
+            table_objects.append(row)
+
+        return table_objects
+
+    def extended_table_objects(self, active=1):
+        table_objects = []
+
+        Extension = aliased(TableObject, name='Extension')
+
+        res = (self.session.query(TableObject, Extension).
+               join(Extension, TableObject.extends_table_object_id == Extension.id).
+               filter(TableObject.active==active).
+               filter(or_(TableObject.admin_table==0, TableObject.admin_table is None)).
+               order_by(TableObject.order))
+
+        res = res.all()
+
+        for row in res:
             table_objects.append(row)
 
         return table_objects
