@@ -14,7 +14,7 @@ class TableFactory:
         self.active = active
         self.session = db_session()
 
-    def table_object_factory(self, class_name, table_object, extend_table_object = None):
+    def table_object_factory(self, class_name, table_object, extend_table = None):
         classattr = {'table_type': 'user'}
 
         table_object_cols = self.fields(table_object.id)
@@ -44,8 +44,8 @@ class TableFactory:
             else:
                 classattr[col.display_name] = self.create_column(col)
 
-        if extend_table_object is not None:
-            table_base = globals()[self.to_camel_case(extend_table_object.name)]
+        if extend_table is not None:
+            table_base = extend_table
 
             classattr = {'__mapper_args__': {'polymorphic_identity': table_object.name,}}
         else:
