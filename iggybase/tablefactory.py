@@ -45,8 +45,7 @@ class TableFactory:
                 classattr[col.display_name] = self.create_column(col)
 
         if extend_table_object is not None:
-            table_base = __import__('iggybase.models.' +
-                                           self.to_camel_case(extend_table_object.name))
+            table_base = globals()[self.to_camel_case(extend_table_object.name)]
 
             classattr = {'__mapper_args__': {'polymorphic_identity': table_object.name,}}
         else:
@@ -113,26 +112,6 @@ class TableFactory:
         return relationship(foreign_table_name, **arg)
 
     def table_objects(self, active=1):
-        table_objects = []
-
-        res = (self.session.query(TableObject).
-               filter(TableObject.active==active).
-               filter(TableObject.extends_table_object_id is None).
-               filter(or_(TableObject.admin_table==0, TableObject.admin_table is None)).
-               order_by(TableObject.order))
-        # query = res.statement.compile(dialect=mysql.dialect())
-        # logging.info('query')
-        # logging.info(str(query))
-        # logging.info(str(query.params))
-
-        res = res.all()
-
-        for row in res:
-            table_objects.append(row)
-
-        return table_objects
-
-    def extended_table_objects(self, active=1):
         table_objects = []
 
         Extension = aliased(TableObject, name='Extension')

@@ -8,17 +8,11 @@ tables = table_factory.table_objects()
 for table_object in tables:
     if table_object.TableObject.name not in Base.metadata.tables:
         class_name = TableFactory.to_camel_case(table_object.TableObject.name)
-        new_table = table_factory.table_object_factory(class_name, table_object.TableObject)
-
-        if new_table is not None:
-            globals()[class_name] = new_table
-            globals()[class_name].__module__ = __name__
-
-tables = table_factory.extended_table_objects()
-for table_object in tables:
-    if table_object.TableObject.name not in Base.metadata.tables:
-        class_name = TableFactory.to_camel_case(table_object.TableObject.name)
-        new_table = table_factory.table_object_factory(class_name, table_object.TableObject, table_object.Extension)
+        if hasattr(table_object, 'Extension'):
+            new_table = table_factory.table_object_factory(class_name, table_object.TableObject,
+                                                           table_object.Extension)
+        else:
+            new_table = table_factory.table_object_factory(class_name, table_object.TableObject)
 
         if new_table is not None:
             globals()[class_name] = new_table
