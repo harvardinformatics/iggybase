@@ -131,7 +131,7 @@ class TableFactory:
         res = res.all()
 
         for row in res:
-            if row.Extension:
+            if row.TableObject.extends_table_object_id:
                 logging(row.TableObject.name + " " + row.Extension.name)
             else:
                 logging(row.TableObject.name)
