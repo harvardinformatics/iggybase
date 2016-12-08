@@ -12,7 +12,7 @@ class TableFactory:
         self.active = active
         self.session = db_session()
 
-    def table_object_factory(self, class_name, table_object, extend_table = None):
+    def table_object_factory(self, class_name, table_object, extend_class = None):
         classattr = {'table_type': 'user'}
 
         table_object_cols = self.fields(table_object.id)
@@ -22,7 +22,7 @@ class TableFactory:
 
         # logging.info( 'table name: ' + class_name )
         for col in table_object_cols:
-            if col.display_name in self.predefined_columns:
+            if col.display_name in self.predefined_columns and extend_class is None:
                 continue
 
             # logging.info( col.field_name )
@@ -42,12 +42,15 @@ class TableFactory:
             else:
                 classattr[col.display_name] = self.create_column(col)
 
-        if extend_table is not None:
-            table_base = extend_table
+        if extend_class is not None:
+            table_base = extend_class
 
-            classattr = {'__mapper_args__': {'polymorphic_identity': table_object.name,}}
+            classattr['__mapper_args__'] = {'polymorphic_identity': table_object.name,}
         else:
             table_base = Base
+            if table_object.name == 'sample':
+                classattr['__mapper_args__'] = {'polymorphic_identity': table_object.name,'polymorphic_on': classattr['type']}
+
 
         newclass = new_class(class_name, (table_base,), {}, lambda ns: ns.update(classattr))
 

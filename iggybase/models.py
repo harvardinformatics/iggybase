@@ -8,11 +8,10 @@ tables = table_factory.table_objects()
 for table_object in tables:
     if table_object.TableObject.name not in Base.metadata.tables:
         class_name = TableFactory.to_camel_case(table_object.TableObject.name)
-        logging.info('class_name: ' + class_name)
-        if table_object.Extension:
-            extended_class_name = TableFactory.to_camel_case(table_object.Extension.name)
+        if getattr(table_object, 'Extension') is not None:
+            extend_class = globals()[TableFactory.to_camel_case(table_object.Extension.name)]
             new_table = table_factory.table_object_factory(class_name, table_object.TableObject,
-                                                           globals()[extended_class_name])
+                                                           extend_class)
         else:
             new_table = table_factory.table_object_factory(class_name, table_object.TableObject)
 
