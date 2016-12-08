@@ -1,6 +1,5 @@
 from iggybase.admin.models import DataType, TableObject, Field
-from sqlalchemy.orm import relationship
-from sqlalchemy.sql.expression import alias
+from sqlalchemy.orm import relationship, aliased
 from sqlalchemy import Column, ForeignKey, UniqueConstraint, or_
 import sqlalchemy
 from iggybase.database import db_session, Base
@@ -116,7 +115,7 @@ class TableFactory:
     def table_objects(self, active=1):
         table_objects = []
 
-        Extension = alias(TableObject)
+        Extension = aliased(TableObject)
 
         res = (self.session.query(TableObject, Extension).
                join(Extension, TableObject.extends_table_object_id == Extension.id).
