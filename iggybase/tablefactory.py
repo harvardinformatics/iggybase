@@ -132,6 +132,7 @@ class TableFactory:
 
         for row in res:
             table_objects.append(row)
+
         return table_objects
 
     def fields(self, table_object_id):
