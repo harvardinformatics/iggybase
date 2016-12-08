@@ -76,9 +76,6 @@ class TableObject(Base):
     extends_table_object_id  = Column(Integer, ForeignKey('table_object.id'))
 
     table_object_extends_table_object = relationship("TableObject", foreign_keys=[extends_table_object_id])
-    extends_table_object = relationship('TableObject',
-                                        primaryjoin='table_object.c.extends_table_object_id == table_object.id',
-                                        backref=backref('table_object'))
 
     def get_new_name(self):
         if self.new_name_prefix is not None and self.new_name_prefix != "" and self.new_name_id is not None and \
