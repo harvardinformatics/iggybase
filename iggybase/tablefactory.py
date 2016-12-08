@@ -117,7 +117,7 @@ class TableFactory:
 
         Extension = aliased(TableObject)
 
-        res = (self.session.query(TableObject, Extension.name).
+        res = (self.session.query(TableObject, Extension).
                join(Extension, TableObject.extends_table_object_id == Extension.id).
                filter(TableObject.active==active).
                filter(or_(TableObject.admin_table==0, TableObject.admin_table is None)).
