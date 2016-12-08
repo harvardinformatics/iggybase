@@ -131,6 +131,10 @@ class TableFactory:
         res = res.all()
 
         for row in res:
+            if row.Extension:
+                logging(row.TableObject.name + " " + row.Extension.name)
+            else:
+                logging(row.TableObject.name)
             table_objects.append(row)
 
         return table_objects
