@@ -4,8 +4,6 @@ from sqlalchemy import Column, ForeignKey, UniqueConstraint, or_
 import sqlalchemy
 from iggybase.database import db_session, Base
 from types import new_class
-from sqlalchemy.dialects import mysql
-import logging
 
 class TableFactory:
     predefined_columns = ['id','name','description','date_created','last_modified','active','organization_id','order']
@@ -104,10 +102,7 @@ class TableFactory:
         return col
 
     def create_foreign_key(self, foreign_table_name, foreign_column):
-
-        arg = {}
-
-        arg['foreign_keys'] = [foreign_column]
+        arg = {'foreign_keys': foreign_column}
 
         return relationship(foreign_table_name, **arg)
 
