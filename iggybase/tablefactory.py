@@ -12,7 +12,7 @@ class TableFactory:
         self.active = active
         self.session = db_session()
 
-    def table_object_factory(self, class_name, table_object, extend_class = None):
+    def table_object_factory(self, class_name, table_object, extend_class = None, is_base = None):
         classattr = {'table_type': 'user'}
 
         table_object_cols = self.fields(table_object.id)
@@ -48,7 +48,7 @@ class TableFactory:
             classattr['__mapper_args__'] = {'polymorphic_identity': table_object.name,}
         else:
             table_base = Base
-            if table_object.name == 'sample':
+            if is_base:
                 classattr['__mapper_args__'] = {'polymorphic_identity': table_object.name,'polymorphic_on': classattr['type']}
 
 
@@ -113,9 +113,11 @@ class TableFactory:
         table_objects = []
 
         Extension = aliased(TableObject, name='Extension')
+        Base = aliased(TableObject, name='Base')
 
-        res = (self.session.query(TableObject, Extension).
+        res = (self.session.query(TableObject, Extension, Base).
                outerjoin(Extension, TableObject.extends_table_object_id == Extension.id).
+               outerjoin(Base, TableObject.id == Base.extends_table_object_id).
                filter(TableObject.active==active).
                filter(or_(TableObject.admin_table==0, TableObject.admin_table is None)).
                order_by(TableObject.order))
