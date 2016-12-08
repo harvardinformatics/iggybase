@@ -123,10 +123,10 @@ class TableFactory:
                filter(or_(TableObject.admin_table==0, TableObject.admin_table is None)).
                order_by(TableObject.order))
 
-        # query = res.statement.compile(dialect=mysql.dialect())
-        # logging.info('query')
-        # logging.info(str(query))
-        # logging.info(str(query.params))
+        query = res.statement.compile(dialect=mysql.dialect())
+        logging.info('query')
+        logging.info(str(query))
+        logging.info(str(query.params))
 
         res = res.all()
 
