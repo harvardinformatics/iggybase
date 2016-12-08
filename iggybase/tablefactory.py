@@ -45,6 +45,7 @@ class TableFactory:
                 classattr[col.display_name] = self.create_column(col)
 
         if table_object.extends_table_object_id is not None:
+            logging.info('table_object.extends_table_object.name: ' + str(table_object.extends_table_object_id))
             table_base = __import__('iggybase.models.' +
                                            self.to_camel_case(table_object.extends_table_object.name))
 
