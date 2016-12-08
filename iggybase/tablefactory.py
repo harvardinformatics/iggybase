@@ -14,7 +14,7 @@ class TableFactory:
         self.active = active
         self.session = db_session()
 
-    def table_object_factory(self, class_name, table_object, extend_table_object):
+    def table_object_factory(self, class_name, table_object, extend_table_object = None):
         classattr = {'table_type': 'user'}
 
         table_object_cols = self.fields(table_object.id)
@@ -44,7 +44,7 @@ class TableFactory:
             else:
                 classattr[col.display_name] = self.create_column(col)
 
-        if table_object.extends_table_object_id is not None:
+        if extend_table_object is not None:
             table_base = __import__('iggybase.models.' +
                                            self.to_camel_case(extend_table_object.name))
 
