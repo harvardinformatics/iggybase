@@ -1,5 +1,6 @@
 from iggybase.admin.models import DataType, TableObject, Field
 from sqlalchemy.orm import relationship
+from sqlalchemy.sql.expression import alias
 from sqlalchemy import Column, ForeignKey, UniqueConstraint, or_
 import sqlalchemy
 from iggybase.database import db_session, Base
@@ -14,7 +15,7 @@ class TableFactory:
         self.active = active
         self.session = db_session()
 
-    def table_object_factory(self, class_name, table_object):
+    def table_object_factory(self, class_name, table_object, extend_table_object):
         classattr = {'table_type': 'user'}
 
         table_object_cols = self.fields(table_object.id)
@@ -45,10 +46,8 @@ class TableFactory:
                 classattr[col.display_name] = self.create_column(col)
 
         if table_object.extends_table_object_id is not None:
-            logging.info('table_object.extends_table_object_id: ' + str(table_object.extends_table_object_id))
-            logging.info('table_object.extends_table_object.name: ' + str(table_object.extends_table_object.name))
             table_base = __import__('iggybase.models.' +
-                                           self.to_camel_case(table_object.extends_table_object.name))
+                                           self.to_camel_case(extend_table_object.name))
 
             classattr = {'__mapper_args__': {'polymorphic_identity': table_object.name,}}
         else:
@@ -117,7 +116,10 @@ class TableFactory:
     def table_objects(self, active=1):
         table_objects = []
 
-        res = (self.session.query(TableObject).
+        Extension = alias(TableObject)
+
+        res = (self.session.query(TableObject, Extension).
+               join(Extension, TableObject.extends_table_object_id == Extension.id).
                filter(TableObject.active==active).
                filter(or_(TableObject.admin_table==0, TableObject.admin_table is None)).
                order_by(TableObject.order))
