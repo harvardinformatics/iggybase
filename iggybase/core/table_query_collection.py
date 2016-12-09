@@ -32,7 +32,11 @@ class TableQueryCollection:
                 )
                 queries.append(query)
         elif self.table_name: # use table_name, show all fields, one table_query
-            query = TableQuery(None, 1, self.table_name, self.table_name,
+            oac = g_helper.get_org_access_control()
+            table_object_row = oac.get_row('table_object', {'name': self.table_name})
+            query = TableQuery(None, 1,
+                    table_object_row.display_name,
+                    self.table_name,
                     self.criteria)
             queries.append(query)
         return queries
