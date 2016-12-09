@@ -122,6 +122,8 @@ class TableQuery:
                             or self.fc.fields[name].type == 'float')
                 ):
                     col = int(col)
+                elif col != None and self.fc.fields[name].type == 'datetime':
+                    col = col.strftime("%m/%d/%Y")
                 row_dict[name] = col
             if row_dict:
                 # store values as a dict of dict so we can access any of the
