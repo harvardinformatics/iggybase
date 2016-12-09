@@ -13,6 +13,17 @@ conf = Config()
 
 
 class IggybaseBase(object):
+    def __init__(self, *args, **kwargs):
+        if 'extendable' in kwargs:
+            self.extendable = kwargs['extendable']
+        else:
+            self.extendable = None
+
+        if 'extended_table' in kwargs:
+            self.extended_table = kwargs['extended_table']
+        else:
+            self.extended_table = None
+
     @declared_attr
     def __tablename__(cls):
         s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', cls.__name__)
@@ -30,6 +41,11 @@ class IggybaseBase(object):
         return dict(self)
 
     __table_args__ = {'mysql_engine': 'InnoDB'}
+
+    @declared_attr
+    def id(cls):
+        if self.extendable:
+        return Column('organization_id', ForeignKey('organization.id'))
 
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True)
