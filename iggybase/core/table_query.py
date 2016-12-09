@@ -45,7 +45,13 @@ class TableQuery:
         )
         for row in res:
             criteria_key = (row.TableObject.name, row.Field.display_name)
-            criteria[criteria_key] = row.TableQueryCriteria.value
+            if row.TableQueryCriteria.comparator != None:
+                criteria[criteria_key] = {
+                        'compare': row.TableQueryCriteria.comparator,
+                        'value': row.TableQueryCriteria.value
+                }
+            else:
+                criteria[criteria_key] = row.TableQueryCriteria.value
 
         criteria.update(orig_criteria)
         return criteria

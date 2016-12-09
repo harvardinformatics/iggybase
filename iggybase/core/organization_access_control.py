@@ -297,6 +297,8 @@ class OrganizationAccessControl:
                     ):
                         if criteria[criteria_key]['compare'] == 'greater than':
                             wheres.append(col > criteria[criteria_key]['value'])
+                        elif criteria[criteria_key]['compare'] == '!=':
+                            wheres.append(col != criteria[criteria_key]['value'])
                 else:
                     wheres.append(col == criteria[criteria_key])
         id_cols = []
