@@ -42,11 +42,6 @@ class IggybaseBase(object):
 
     __table_args__ = {'mysql_engine': 'InnoDB'}
 
-    @declared_attr
-    def id(cls):
-        if self.extendable:
-        return Column('organization_id', ForeignKey('organization.id'))
-
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True)
     description = Column(String(255))
