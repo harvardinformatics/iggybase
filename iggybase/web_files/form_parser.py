@@ -160,7 +160,8 @@ class FormParser():
                     elif field_data.data_type_id == 8:
                         row_data['data_entry'][field] = float(row_data['data_entry'][field])
                     elif field_data.data_type_id == 3:
-                        if row_data['data_entry'][field] == 'y' or row_data['data_entry'][field] == 'True':
+                        if row_data['data_entry'][field] == 'y' or row_data['data_entry'][field] == 'True' or \
+                                        row_data['data_entry'][field] == '1':
                             row_data['data_entry'][field] = True
                         else:
                             row_data['data_entry'][field] = False

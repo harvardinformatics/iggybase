@@ -49,8 +49,8 @@ class TableFactory:
         else:
             table_base = Base
             if is_base:
-                classattr['__mapper_args__'] = {'polymorphic_identity': table_object.name,'polymorphic_on': classattr['type']}
-
+                classattr['__mapper_args__'] = {'polymorphic_identity': table_object.name,'polymorphic_on':
+                    classattr['type']}
 
         newclass = new_class(class_name, (table_base,), {}, lambda ns: ns.update(classattr))
 
