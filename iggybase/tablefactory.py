@@ -40,7 +40,7 @@ class TableFactory:
                 elif col.select_list_id is not None:
                     classattr[col.display_name] = self.create_column(col, 'select_list_item','name')
 
-                    classattr[table_object.name + "_" + col.display_name + "_select_list_item" = \
+                    classattr[table_object.name + "_" + col.display_name + "_select_list_item"] = \
                         self.create_foreign_key('SelectListItem', classattr[col.display_name])
                 else:
                     classattr[col.display_name] = self.create_column(col)
