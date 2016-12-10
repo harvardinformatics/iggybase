@@ -13,8 +13,11 @@ for table_object in tables:
         if getattr(table_object, 'Extended') is not None:
             is_extended = True
 
+        logging.info(table_object.TableObject.name)
+
         extend_class = None
         if getattr(table_object, 'Extension') is not None:
+            logging.info('extension: ' + table_object.Extension.name)
             extend_class = globals()[TableFactory.to_camel_case(table_object.Extension.name)]
 
         new_table = table_factory.table_object_factory(class_name, table_object.TableObject, extend_class, is_extended)
