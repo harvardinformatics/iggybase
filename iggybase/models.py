@@ -7,14 +7,17 @@ table_factory = TableFactory()
 tables = table_factory.table_objects()
 for table_object in tables:
     if table_object.TableObject.name not in Base.metadata.tables:
-        is_base = False
         class_name = TableFactory.to_camel_case(table_object.TableObject.name)
-        if getattr(table_object, 'Base') is not None:
-            is_base = True
+
+        is_extended = False
+        if getattr(table_object, 'Extended') is not None:
+            is_extended = True
+
         extend_class = None
         if getattr(table_object, 'Extension') is not None:
             extend_class = globals()[TableFactory.to_camel_case(table_object.Extension.name)]
-        new_table = table_factory.table_object_factory(class_name, table_object.TableObject, extend_class, is_base)
+
+        new_table = table_factory.table_object_factory(class_name, table_object.TableObject, extend_class, is_extended)
 
         if new_table is not None:
             globals()[class_name] = new_table

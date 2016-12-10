@@ -73,7 +73,6 @@ class TableObject(Base):
     new_name_id = Column(Integer)
     id_length = Column(Integer)
     display_name = Column(String(100))
-    extendable = Column(Boolean)
     extends_table_object_id  = Column(Integer, ForeignKey('table_object.id'))
 
     table_object_extends_table_object = relationship("TableObject", foreign_keys=[extends_table_object_id])

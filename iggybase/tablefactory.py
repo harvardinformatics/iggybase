@@ -12,7 +12,7 @@ class TableFactory:
         self.active = active
         self.session = db_session()
 
-    def table_object_factory(self, class_name, table_object, extend_class = None, is_base = None):
+    def table_object_factory(self, class_name, table_object, extend_class = None, is_extended = None):
         classattr = {'table_type': 'user'}
 
         table_object_cols = self.fields(table_object.id)
@@ -22,7 +22,7 @@ class TableFactory:
 
         # logging.info( 'table name: ' + class_name )
         for col in table_object_cols:
-            if col.display_name in self.predefined_columns and extend_class is None:
+            if col.display_name in self.predefined_columns:
                 continue
 
             # logging.info( col.field_name )
@@ -37,18 +37,36 @@ class TableFactory:
                     classattr[table_object.name + "_" + col.display_name + "_" + foreign_table.name] = \
                         self.create_foreign_key(TableFactory.to_camel_case(foreign_table.name), \
                                                 classattr[col.display_name])
+                elif col.select_list_id is not None:
+                    classattr[col.display_name] = self.create_column(col, 'select_list_item','name')
+
+                    classattr[table_object.name + "_" + col.display_name + "_select_list_item" = \
+                        self.create_foreign_key('SelectListItem', classattr[col.display_name])
                 else:
                     classattr[col.display_name] = self.create_column(col)
             else:
                 classattr[col.display_name] = self.create_column(col)
 
         if extend_class is not None:
+            # this will always join on id
+            id_col = lambda: None
+            id_col.data_type_id = 1
+            id_col.select_list_id = None
+            id_col.primary_key = 1
+            id_col.default = ''
+            id_col.unique = 0
+
+            classattr['id'] = self.create_column(col, extend_class.name, 'id')
+
+            classattr[table_object.name + "_id_" + extend_class.name] = \
+                self.create_foreign_key(TableFactory.to_camel_case(extend_class.name), classattr['id'])
+
             table_base = extend_class
 
             classattr['__mapper_args__'] = {'polymorphic_identity': table_object.name,}
         else:
             table_base = Base
-            if is_base:
+            if is_extended:
                 classattr['__mapper_args__'] = {'polymorphic_identity': table_object.name,'polymorphic_on':
                     classattr['type']}
 
@@ -86,6 +104,10 @@ class TableFactory:
             else:
                 dtinst = dtcname()
 
+        if attributes.select_list_id is not None:
+            foreign_table_name = 'select_list_item'
+            foreign_column_name = 'name'
+
         arg = {}
 
         if attributes.primary_key == 1:
@@ -113,16 +135,14 @@ class TableFactory:
         table_objects = []
 
         Extension = aliased(TableObject, name='Extension')
-        Base = aliased(TableObject, name='Base')
+        Extended = aliased(TableObject, name='Extended')
 
-        res = (self.session.query(TableObject, Extension, Base).
+        res = (self.session.query(TableObject, Extension, Extended).
                outerjoin(Extension, TableObject.extends_table_object_id == Extension.id).
-               outerjoin(Base, TableObject.id == Base.extends_table_object_id).
+               outerjoin(Extended, TableObject.id == Extended.extends_table_object_id).
                filter(TableObject.active==active).
                filter(or_(TableObject.admin_table==0, TableObject.admin_table is None)).
-               order_by(TableObject.order))
-
-        res = res.all()
+               order_by(TableObject.order)).all()
 
         for row in res:
             table_objects.append(row)

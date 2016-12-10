@@ -397,7 +397,7 @@ $( document ).ready( function () {
             $( '#data_entry_foreign_key_table_object_id_' + row_id ).attr( 'readonly', true );
             $( '#data_entry_foreign_key_field_id_' + row_id ).attr( 'readonly', true );
             $( '#data_entry_foreign_key_display_' + row_id ).attr( 'readonly', true );
-            $( '#data_entry_foreign_key_table_object_id_' + row_id ).attr( 'value', 'select_list_item' );
+            $( '#data_entry_foreign_key_table_object_id_' + row_id ).attr( 'value', '' );
             $( '#data_entry_foreign_key_field_id_' + row_id ).attr( 'value', '' );
             $( '#data_entry_foreign_key_display_' + row_id ).attr( 'value', '' );
             $( "#span_foreign_key_table_object_id_"+row_id ).css( "pointer-events", "none" );
