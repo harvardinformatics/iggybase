@@ -19,7 +19,8 @@ for table_object in tables:
             extend_table = table_object.Extension.name
             extend_class = globals()[TableFactory.to_camel_case(extend_table)]
 
-        new_table = table_factory.table_object_factory(class_name, table_object.TableObject, extend_class, extend_table, is_extended)
+        new_table = table_factory.table_object_factory(class_name, table_object.TableObject, extend_class, extend_table,
+                                                       is_extended)
 
         if new_table is not None:
             globals()[class_name] = new_table

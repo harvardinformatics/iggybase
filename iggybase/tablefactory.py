@@ -13,7 +13,8 @@ class TableFactory:
         self.active = active
         self.session = db_session()
 
-    def table_object_factory(self, class_name, table_object, extend_class = None, extend_table = None, is_extended = None):
+    def table_object_factory(self, class_name, table_object, extend_class = None, extend_table = None,
+                             is_extended = None):
         classattr = {'table_type': 'user'}
 
         table_object_cols = self.fields(table_object.id)

@@ -13,17 +13,6 @@ conf = Config()
 
 
 class IggybaseBase(object):
-    def __init__(self, *args, **kwargs):
-        if 'extendable' in kwargs:
-            self.extendable = kwargs['extendable']
-        else:
-            self.extendable = None
-
-        if 'extended_table' in kwargs:
-            self.extended_table = kwargs['extended_table']
-        else:
-            self.extended_table = None
-
     @declared_attr
     def __tablename__(cls):
         s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', cls.__name__)
