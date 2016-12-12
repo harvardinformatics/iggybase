@@ -258,7 +258,7 @@ class OrganizationAccessControl:
                 # create alias to the fk table
                 # solves the case of more than one join to same table
                 alias_name = field.Field.display_name + '_' + field.FK_TableObject.name + '_' + field.FK_Field.display_name
-                aliases[alias_name] = aliased(table_model)
+                aliases[alias_name] = aliased(table_model, name = alias_name)
                 outer_joins.append((
                     aliases[alias_name],
                     getattr(fk_table_model, field.Field.display_name) == aliases[alias_name].id
