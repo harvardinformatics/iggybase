@@ -4,6 +4,7 @@ from sqlalchemy import Column, ForeignKey, UniqueConstraint, or_
 import sqlalchemy
 from iggybase.database import db_session, Base
 from types import new_class
+import logging
 
 class TableFactory:
     predefined_columns = ['id','name','description','date_created','last_modified','active','organization_id','order']
@@ -12,7 +13,7 @@ class TableFactory:
         self.active = active
         self.session = db_session()
 
-    def table_object_factory(self, class_name, table_object, extend_class = None, is_extended = None):
+    def table_object_factory(self, class_name, table_object, extend_class = None, extend_table = None, is_extended = None):
         classattr = {'table_type': 'user'}
 
         table_object_cols = self.fields(table_object.id)
@@ -56,10 +57,10 @@ class TableFactory:
             id_col.default = ''
             id_col.unique = 0
 
-            classattr['id'] = self.create_column(col, extend_class.name, 'id')
+            classattr['id'] = self.create_column(id_col, extend_table, 'id')
 
-            classattr[table_object.name + "_id_" + extend_class.name] = \
-                self.create_foreign_key(TableFactory.to_camel_case(extend_class.name), classattr['id'])
+            classattr[table_object.name + "_id_" + extend_table] = \
+                self.create_foreign_key(TableFactory.to_camel_case(extend_table), classattr['id'])
 
             table_base = extend_class
 
