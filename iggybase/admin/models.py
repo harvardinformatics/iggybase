@@ -73,9 +73,11 @@ class TableObject(Base):
     new_name_id = Column(Integer)
     id_length = Column(Integer)
     display_name = Column(String(100))
-    extends_table_object_id  = Column(Integer, ForeignKey('table_object.id'))
+    access_control_table_object_id = Column(Integer, ForeignKey('table_object.id'))
+    extends_table_object_id = Column(Integer, ForeignKey('table_object.id'))
 
     table_object_extends_table_object = relationship("TableObject", foreign_keys=[extends_table_object_id])
+    access_control_table_object_table_object = relationship("TableObject", foreign_keys=[extends_table_object_id])
 
     def get_new_name(self):
         if self.new_name_prefix is not None and self.new_name_prefix != "" and self.new_name_id is not None and \
@@ -465,8 +467,6 @@ class TableQueryField(Base):
     field_id = Column(Integer, ForeignKey('field.id'))
     display_name = Column(String(100))
     visible = Column(Boolean)
-    group_func = Column(String(50))
-    group_by = Column(Boolean)
 
     table_query_field_field = relationship("Field", foreign_keys=[field_id])
     table_query_field_table_query = relationship("TableQuery", foreign_keys=[table_query_id])
