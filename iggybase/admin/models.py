@@ -196,7 +196,7 @@ class Route(Base):
     module_id = Column(Integer, ForeignKey('module.id'))
     url_path = Column(String(512), unique=True)
     display_name = Column(String(50))
-    
+
     route_module = relationship("Module", foreign_keys=[module_id])
 
     def __repr__(self):
@@ -465,6 +465,8 @@ class TableQueryField(Base):
     field_id = Column(Integer, ForeignKey('field.id'))
     display_name = Column(String(100))
     visible = Column(Boolean)
+    group_func = Column(String(50))
+    group_by = Column(Boolean)
 
     table_query_field_field = relationship("Field", foreign_keys=[field_id])
     table_query_field_table_query = relationship("TableQuery", foreign_keys=[table_query_id])

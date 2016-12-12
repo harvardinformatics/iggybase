@@ -192,14 +192,8 @@ class RoleAccessControl:
                 join(*joins).
                 outerjoin(*outerjoins).
                 filter(*filters).order_by(*orders)
-        )
-
-        '''query = res.statement.compile(dialect=mysql.dialect())
-        logging.info('query')
-        logging.info(str(query))
-        logging.info(str(query.params))'''
-
-        return res.all()
+        ).all()
+        return res
 
     def table_query_criteria(self, table_query_id):
         criteria = (

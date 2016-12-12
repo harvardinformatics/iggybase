@@ -234,6 +234,7 @@ class OrganizationAccessControl:
         fk_columns = []
         aliases = {}
         wheres = []
+        group_by = []
         first_table_named = None  # set to first table name, dont add to joins
         for field in field_dict.values():
             # Get the table to display, fk table for fks
@@ -264,7 +265,6 @@ class OrganizationAccessControl:
                 ))
                 col = getattr(aliases[alias_name],
                     field.FK_Field.display_name)
-                columns.append(col.label(field.name))
 
             else:  # non-fk field
                 tables.add(table_model)
@@ -272,14 +272,20 @@ class OrganizationAccessControl:
                 if field.type == 'file': # give name as well
                     col = getattr(table_model, 'name') + '/' + col
 
-                columns.append(col.label(field.name))
-                                # add to joins if not first table, avoid joining to self
+                # add to joins if not first table, avoid joining to self
                 if (not first_table_named
                     or (first_table_named == field.TableObject.name)):
                     first_table_named = field.TableObject.name
                 else:
                     if table_model not in joins:
                         joins.append(table_model)
+
+            if field.group_by == 1:
+                group_by.append(col)
+            if field.group_func:
+                col = getattr(func, field.group_func)(col.op('SEPARATOR')(', '))
+            columns.append(col.label(field.name))
+
             criteria_key = (field.TableObject.name, field.Field.display_name)
             # don't include criteria for self foreign keys
             if criteria_key in criteria and not (field.is_foreign_key and
@@ -326,7 +332,7 @@ class OrganizationAccessControl:
             self.session.query(*columns).
                 join(*joins).
                 outerjoin(*outer_joins).
-                filter(*wheres).all()
+                filter(*wheres).group_by(*group_by).all()
         )
         print('query: ' + str(time.time() - start))
         return results
