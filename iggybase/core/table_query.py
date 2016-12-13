@@ -108,7 +108,7 @@ class TableQuery:
                         col_arr = col_str.split(',')
                         link_arr = []
                         for item in col_arr:
-                            link_arr.append('<a href="' + link_fields[name] + col_str + '">' +
+                            link_arr.append('<a href="' + link_fields[name] + item + '">' +
                                 item + '</a>')
                         col = ', '.join(link_arr)
                     else:
