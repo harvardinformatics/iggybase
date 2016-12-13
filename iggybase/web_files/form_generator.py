@@ -72,13 +72,19 @@ class FormGenerator(PageTemplate):
             kwargs['readonly'] = True
 
         if field_data.Field.select_list_id is not None:
-            if value is not None:
-                kwargs['default'] = value
+            choices = self.organization_access_control.get_select_list(field_data.Field.select_list_id)
 
             if kwargs['readonly']:
+                value = [item for item in choices if item[0] == value]
+
+                if len(value) > 0:
+                    kwargs['default'] = value[0][1]
+
                 return IggybaseStringField(display_name, **kwargs)
             else:
-                choices = self.organization_access_control.get_select_list(field_data.Field.select_list_id)
+                if value is not None:
+                    kwargs['default'] = value
+
                 kwargs['coerce'] = int
                 kwargs['choices'] = choices
 
