@@ -72,12 +72,17 @@ class FormGenerator(PageTemplate):
             kwargs['readonly'] = True
 
         if field_data.Field.select_list_id is not None:
-            choices = self.organization_access_control.get_select_list(field_data.Field.select_list_id)
+            if value is not None:
+                kwargs['default'] = value
 
-            kwargs['coerce'] = int
-            kwargs['choices'] = choices
+            if kwargs['readonly']:
+                return IggybaseStringField(display_name, **kwargs)
+            else:
+                choices = self.organization_access_control.get_select_list(field_data.Field.select_list_id)
+                kwargs['coerce'] = int
+                kwargs['choices'] = choices
 
-            return IggybaseSelectField(display_name, **kwargs)
+                return IggybaseSelectField(display_name, **kwargs)
         elif field_data.is_foreign_key:
             long_text = self.role_access_control.has_access("TableObject", {'name': 'long_text'})
 
