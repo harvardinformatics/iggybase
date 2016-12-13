@@ -118,6 +118,11 @@ class FormGenerator(PageTemplate):
                             self.classattr['id_' + control_id] = HiddenField('id_' + control_id)
 
                     return IggybaseLookUpField(display_name, **kwargs)
+                elif kwargs['readonly']:
+                    if value is not None:
+                        kwargs['default'] = value
+
+                    return IggybaseStringField(display_name, **kwargs)
                 else:
                     kwargs['coerce'] = int
                     kwargs['choices'] = choices
@@ -125,10 +130,7 @@ class FormGenerator(PageTemplate):
                     if value is not None:
                         kwargs['default'] = value
 
-                    if kwargs['readonly']:
-                        return IggybaseStringField(display_name, **kwargs)
-                    else:
-                        return IggybaseSelectField(display_name, **kwargs)
+                    return IggybaseSelectField(display_name, **kwargs)
         elif field_data.Field.data_type_id == constants.INTEGER:
             return IggybaseIntegerField(display_name, **kwargs)
         elif field_data.Field.data_type_id == constants.FLOAT:
