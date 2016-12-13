@@ -125,7 +125,10 @@ class FormGenerator(PageTemplate):
                     if value is not None:
                         kwargs['default'] = value
 
-                    return IggybaseSelectField(display_name, **kwargs)
+                    if kwargs['readonly']:
+                        return IggybaseStringField(display_name, **kwargs)
+                    else:
+                        return IggybaseSelectField(display_name, **kwargs)
         elif field_data.Field.data_type_id == constants.INTEGER:
             return IggybaseIntegerField(display_name, **kwargs)
         elif field_data.Field.data_type_id == constants.FLOAT:
