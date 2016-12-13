@@ -3,6 +3,7 @@ from flask import g, request, session, current_app
 from iggybase.database import db_session
 from iggybase.admin import models
 from iggybase.admin import constants as admin_consts
+from iggybase import utilities as util
 from sqlalchemy import or_
 import logging
 from sqlalchemy.dialects import mysql
@@ -588,3 +589,18 @@ class RoleAccessControl:
                 filter(models.Route.active == active).
                 order_by(models.Step.order).all())
         return res
+
+    def get_role_row(self, table_name, params):
+        table_object = util.get_table(table_name)
+        table_object_role = util.get_table(table_name + '_role')
+
+        criteria = [
+                table_object_role.role_id == self.role.id,
+                table_object.id == table_object_role.table_object_id
+        ]
+
+        for key, value in params.items():
+            criteria.append(getattr(table_object, key) == value)
+
+        result = self.session.query(table_object, table_object_role).filter(*criteria).first()
+        return result
