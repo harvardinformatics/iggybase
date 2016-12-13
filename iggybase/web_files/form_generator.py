@@ -130,6 +130,11 @@ class FormGenerator(PageTemplate):
 
                     return IggybaseLookUpField(display_name, **kwargs)
                 elif kwargs['readonly']:
+                    value = [item for item in choices if item[0] == value]
+
+                    if len(value) > 0:
+                        kwargs['default'] = value[0][1]
+
                     if value is not None:
                         kwargs['default'] = value
 
