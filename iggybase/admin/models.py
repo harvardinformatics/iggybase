@@ -717,10 +717,10 @@ class UserOrganization(Base):
 
 class UserOrganizationPosition(Base):
     table_type = 'admin'
-    user_organization_id = Column(Integer, ForeignKey('user_organization.id'))
+    user_id = Column(Integer, ForeignKey('user.id'))
     position_id = Column(Integer, ForeignKey('position.id'))
 
-    user_organization_position_user_organization = relationship('UserOrganization', foreign_keys=[user_organization_id])
+    user_organization_position_user_organization = relationship('User', foreign_keys=[user_id])
     user_organization_position_position = relationship('Position', foreign_keys=[position_id])
 
 
