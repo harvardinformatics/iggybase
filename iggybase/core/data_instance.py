@@ -16,7 +16,8 @@ class DataInstance:
         self.fields = {}
         self.instances = {}
         self.instance_names = {}
-        self.get_tables(depth)
+        if instance_name is not None or instance_name != 'new':
+            self.get_tables(depth)
 
         self.instance_counter = 0
 
