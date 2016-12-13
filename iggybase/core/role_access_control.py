@@ -467,7 +467,7 @@ class RoleAccessControl:
                  models.TableObjectChildren.child_table_object_id == models.TableObjectRole.table_object_id). \
             filter(models.TableObjectChildren.table_object_id==table_object_id). \
             filter(models.TableObjectChildren.active==active). \
-            filter(models.TableObjectRole.role_id==self.role_id). \
+            filter(models.TableObjectRole.role_id==self.role.id). \
             order_by(models.TableObjectChildren.order, models.TableObject.name).all()
 
         # logging.info('get_link_tables res: ' + table_object_name)
