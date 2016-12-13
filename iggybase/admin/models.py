@@ -75,6 +75,7 @@ class TableObject(Base):
     display_name = Column(String(100))
     access_control_table_object_id = Column(Integer, ForeignKey('table_object.id'))
     extends_table_object_id = Column(Integer, ForeignKey('table_object.id'))
+    note_enabled = Column(Boolean)
 
     table_object_extends_table_object = relationship("TableObject", foreign_keys=[extends_table_object_id])
     access_control_table_object_table_object = relationship("TableObject",
