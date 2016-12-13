@@ -461,10 +461,13 @@ class RoleAccessControl:
         # logging.info('get_link_tables (models.TableObjectChildren.__table__.columns: ')
         # logging.info(models.TableObjectChildren.__table__.columns)
 
-        res = self.session.query(models.TableObjectChildren, models.TableObject). \
+        res = self.session.query(models.TableObjectChildren, models.TableObject, models.TableObjectRole). \
             join(models.TableObject, models.TableObjectChildren.child_table_object_id == models.TableObject.id). \
+            join(models.TableObject,
+                 models.TableObjectChildren.child_table_object_id == models.TableObjectRole.table_object_id). \
             filter(models.TableObjectChildren.table_object_id==table_object_id). \
             filter(models.TableObjectChildren.active==active). \
+            filter(models.TableObjectRole.role_id==self.role_id). \
             order_by(models.TableObjectChildren.order, models.TableObject.name).all()
 
         # logging.info('get_link_tables res: ' + table_object_name)
