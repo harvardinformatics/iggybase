@@ -104,8 +104,16 @@ class TableQuery:
                                 keys)
                 elif name in link_fields and col:
                     col_str = str(col)
-                    col = ('<a href="' + link_fields[name] + col_str + '">' +
-                            col_str + '</a>')
+                    if ',' in col_str:
+                        col_arr = col_str.split(',')
+                        link_arr = []
+                        for item in col_arr:
+                            link_arr.append('<a href="' + link_fields[name] + col_str + '">' +
+                                item + '</a>')
+                        col = ', '.join(link_arr)
+                    else:
+                        col = ('<a href="' + link_fields[name] + col_str + '">' +
+                                col_str + '</a>')
                 elif col != None and self.fc.fields[name].type == 'file':
                     filelist = col.split('|')
                     file_links = []
