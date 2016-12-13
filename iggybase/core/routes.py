@@ -190,7 +190,10 @@ def change_role(facility_name):
 def data_entry(facility_name, table_name, row_name, page_context):
     module_name = MODULE_NAME
 
-    depth = request.args.get('depth', 2, int)
+    if row_name == 'new':
+        depth = 0
+    else:
+        depth = request.args.get('depth', 2, int)
 
     fg = FormGenerator('data_entry', 'single', table_name, page_context, module_name)
     fg.data_entry_form(row_name, None, depth)
