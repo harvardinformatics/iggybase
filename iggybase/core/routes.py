@@ -191,10 +191,9 @@ def data_entry(facility_name, table_name, row_name, page_context):
     module_name = MODULE_NAME
 
     if row_name == 'new':
-        depth = 0
+        depth = request.args.get('depth', 0, int)
     else:
         depth = request.args.get('depth', 2, int)
-
     fg = FormGenerator('data_entry', 'single', table_name, page_context, module_name)
     fg.data_entry_form(row_name, None, depth)
 
