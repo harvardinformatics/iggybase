@@ -91,8 +91,6 @@ def invoice_summary_ajax(facility_name, year, month):
     return core_routes.build_summary_ajax('invoice', criteria)
 
 
-
-
 @billing.route('/generate_invoices/<int:year>/<int:month>/', methods=['GET', 'POST'])
 @login_required
 def generate_invoices(facility_name, year, month):
@@ -148,5 +146,28 @@ def get_price(facility_name):
         for field in fields:
             ret[field] = str(getattr(row, field))
     return json.dumps(ret)
+
+@billing.route( '/reports/' )
+@billing.route( '/reports/<int:year>/<int:month>/' )
+@login_required
+@templated()
+def reports(facility_name, year = None, month = None):
+    # options for dropdowns
+    select_years = util.get_last_x_years(5)
+    select_months = util.get_months_dict()
+
+    if not month or not year: #mostly we default to last_month
+        # default to last month, get start and end dates
+        last_month = util.get_last_month()
+        year = last_month.year
+        month = last_month.month
+
+    ic = InvoiceCollection(year, month)
+    ic.populate_report_data()
+    pt = PageTemplate(MODULE_NAME, 'reports')
+    return pt.page_template_context(
+            ic = ic, year = year, month = month,
+            select_years = select_years, select_months = select_months)
+
 
 

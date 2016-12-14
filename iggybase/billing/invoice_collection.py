@@ -3,36 +3,23 @@ from collections import OrderedDict
 import datetime
 from iggybase import g_helper
 from iggybase import utilities as util
+from .line_item_collection import LineItemCollection
 from .invoice import Invoice
 from flask_weasyprint import HTML
 import logging
 import os
 
-class InvoiceCollection:
-    def __init__ (self, year = None, month = None, org_list = []):
-        # default to last month
-        last_month = util.get_last_month()
-        if not year:
-            year = last_month.year
-        if not month:
-            month = last_month.month
-
-        self.month = month
-        self.year = year
-        self.org_list = org_list
-        self.from_date, self.to_date = util.start_and_end_month(self.year,
-                self.month)
-
-        # create invoice objects
-        self.oac = g_helper.get_org_access_control()
+class InvoiceCollection(LineItemCollection):
+    def __init__ (self, year = None, month = None, org_list = [], invoiced =
+            False):
+        super(InvoiceCollection, self).__init__(year, month, org_list, invoiced)
         self.invoices = self.get_invoices(self.from_date, self.to_date, self.org_list)
         self.set_invoices() # creates invoice rows in DB
 
     def get_invoices(self, from_date, to_date, org_list = []):
         invoices = []
-        res = self.oac.get_line_items(from_date, to_date, org_list)
         # group line items by group and service_type as well as "code" or PO
-        item_dict = self.group_line_items(res)
+        item_dict = self.group_line_items(self.line_items)
         # we need to order by org_name but if recreated we need to keep the old
         # order
         new_invoices = {}

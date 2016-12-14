@@ -616,7 +616,7 @@ class OrganizationAccessControl:
             self.session.commit()
         return new_row
 
-    def get_line_items(self, from_date, to_date, org_list = []):
+    def get_line_items(self, from_date, to_date, org_list = [], invoiced = False):
         line_item = util.get_table('line_item')
         price_item = util.get_table('price_item')
         service_type = util.get_table('service_type')
@@ -633,6 +633,8 @@ class OrganizationAccessControl:
             line_item.price_per_unit > 0,
             order.active == 1
         ]
+        if invoiced:
+            filters.append(invoice.id != None)
         if org_list:
             filters.append(models.Organization.name.in_(org_list))
         res = (self.session.query(line_item, price_item, service_type, order,
