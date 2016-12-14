@@ -13,19 +13,51 @@ class InvoiceCollection(LineItemCollection):
     def __init__ (self, year = None, month = None, org_list = [], invoiced =
             False):
         super(InvoiceCollection, self).__init__(year, month, org_list, invoiced)
+        # keys and data needed for grouping line items
+        key_types = [
+                {
+                    'func':'get_table_col',
+                    'table_object':'ServiceType',
+                    'field':'invoice_prefix'
+                },
+                {
+                    'func':'org_charge_tuple'
+                }
+        ]
+        data_types = {
+                'per_row':[
+                    {
+                        'type':'row',
+                        'key':'items'
+                    }
+                ],
+                'once':[
+                    {
+                        'func':'check_invoice_order',
+                        'key':'invoice_order'
+                    },
+                    {
+                        'func':'get_table_col',
+                        'table_object':'ServiceType',
+                        'field':'id',
+                        'key':'service_type_id'
+                    }
+                ]
+        }
+        # group line items by group and service_type as well as "code" or PO
+        self.item_dict = self.group_line_items(key_types, data_types)
+        self.invoices = []
         self.invoices = self.get_invoices(self.from_date, self.to_date, self.org_list)
         self.set_invoices() # creates invoice rows in DB
 
     def get_invoices(self, from_date, to_date, org_list = []):
         invoices = []
-        # group line items by group and service_type as well as "code" or PO
-        item_dict = self.group_line_items(self.line_items)
         # we need to order by org_name but if recreated we need to keep the old
         # order
         new_invoices = {}
         max_invoice_order = 0
         # set existing invoices first, maintaining order
-        for service_prefix, groups in item_dict.items():
+        for service_prefix, groups in self.item_dict.items():
             for group, item_list in groups.items():
                 if item_list['invoice_order']:
                     invoice_order = item_list['invoice_order']
@@ -64,35 +96,10 @@ class InvoiceCollection(LineItemCollection):
                 max_invoice_order = new_invoice_num
         return invoices
 
-    def group_line_items(self, res):
-        # group by (org_name, 'code') for codes or (org_name, charge_method) for pos
-        # set invoice_order
-        item_dict = OrderedDict()
-        for row in res:
-            # set service_type as level of grouping for invoice within facility
-            service_prefix = row.ServiceType.invoice_prefix
-            service_type_id = row.ServiceType.id
-            if not service_prefix in item_dict:
-                item_dict[service_prefix] = {}
-            key = self.org_charge_tuple(row)
-            if key in item_dict[service_prefix]:
-                item_dict[service_prefix][key]['items'].append(row)
-                # if key exists and order not yet set then try to set or stay None
-                if not item_dict[service_prefix][key]['invoice_order']:
-                    item_dict[service_prefix][key]['invoice_order'] = self.check_invoice_order(row)
-            else:
-                item_dict[service_prefix][key] = {
-                        'invoice_order': None,
-                        'items': [row],
-                        'service_type_id': service_type_id
-                }
-                item_dict[service_prefix][key]['invoice_order'] = self.check_invoice_order(row)
-        return item_dict
-
-    def org_charge_tuple(self, row):
-        ''' creates tuple from Org name, charge method
+    def org_charge_tuple(self, x, row):
+         creates tuple from Org name, charge method
         if method is PO then uses number, for code uses
-        'code' so that they are all on same invoice '''
+        'code' so that they are all on same invoice
         org_name = row.Organization.name
         if row.ChargeMethodType.name == 'code':
             charge_method = 'code'
@@ -100,8 +107,8 @@ class InvoiceCollection(LineItemCollection):
             charge_method = row.ChargeMethod.name
         return (row.Organization.name, charge_method)
 
-    def check_invoice_order(self, row):
-        ''' if invoice has an invoice_order return otherwise None'''
+    def check_invoice_order(self, x, row):
+        if invoice has an invoice_order return otherwise None
         inv = getattr(row, 'Invoice', None)
         if inv and hasattr(inv, 'invoice_number'):
             return inv.invoice_number

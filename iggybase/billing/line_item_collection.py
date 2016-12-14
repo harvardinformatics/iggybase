@@ -1,5 +1,5 @@
 from flask import render_template, request, g
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 import datetime
 from iggybase import g_helper
 from iggybase import utilities as util
@@ -28,48 +28,46 @@ class LineItemCollection:
         self.line_items = self.oac.get_line_items(self.from_date, self.to_date, self.org_list,
                 self.invoiced)
 
-    def group_line_items(self, res):
+    def group_line_items(self, key_types, data_types):
         # group by (org_name, 'code') for codes or (org_name, charge_method) for pos
         # set invoice_order
         item_dict = OrderedDict()
-        for row in res:
-            # set service_type as level of grouping for invoice within facility
-            service_prefix = row.ServiceType.invoice_prefix
-            service_type_id = row.ServiceType.id
-            if not service_prefix in item_dict:
-                item_dict[service_prefix] = {}
-            key = self.org_charge_tuple(row)
-            if key in item_dict[service_prefix]:
-                item_dict[service_prefix][key]['items'].append(row)
-                # if key exists and order not yet set then try to set or stay None
-                if not item_dict[service_prefix][key]['invoice_order']:
-                    item_dict[service_prefix][key]['invoice_order'] = self.check_invoice_order(row)
-            else:
-                item_dict[service_prefix][key] = {
-                        'invoice_order': None,
-                        'items': [row],
-                        'service_type_id': service_type_id
-                }
-                item_dict[service_prefix][key]['invoice_order'] = self.check_invoice_order(row)
+        for row in self.line_items:
+            # calculate key values for this row
+            keys = [getattr(self, x['func'])(x, row) for x in key_types]
+            item_dict = self.group_row(item_dict, 0, keys, data_types, row)
         return item_dict
 
-    def org_charge_tuple(self, row):
-        ''' creates tuple from Org name, charge method
-        if method is PO then uses number, for code uses
-        'code' so that they are all on same invoice '''
-        org_name = row.Organization.name
-        if row.ChargeMethodType.name == 'code':
-            charge_method = 'code'
-        else:
-            charge_method = row.ChargeMethod.name
-        return (row.Organization.name, charge_method)
+    def group_row(self, item_dict, index, keys, data_types, row):
+        while(index < len(keys)):
+            key_val = keys[index]
+            index += 1
+            if key_val not in item_dict:
+                item_dict[key_val] = defaultdict()
+            val = self.group_row(item_dict[key_val], index, keys, data_types,
+                    row)
+            item_dict[key_val] = val
+            return item_dict
+        if not item_dict:
+            item_dict = defaultdict()
+        # append any per_row data
+        if 'per_row' in data_types:
+            for data in data_types['per_row']:
+                if data['key'] not in item_dict:
+                    item_dict[data['key']] = []
+                item_dict[data['key']].append(row)
+        # add any once time data if not yet set
+        if 'once' in data_types:
+            once_vals = defaultdict()
+            for x in data_types['once']:
+                once_vals[x['key']] = getattr(self, x['func'])(x, row)
+            item_dict.update(once_vals)
+        # return the data which will be set to the dict with nested grouping
+        return item_dict
 
-    def check_invoice_order(self, row):
-        ''' if invoice has an invoice_order return otherwise None'''
-        inv = getattr(row, 'Invoice', None)
-        if inv and hasattr(inv, 'invoice_number'):
-            return inv.invoice_number
-        return None
+    def get_table_col(self, x, row):
+        return getattr(getattr(row, x['table_object']),
+                            x['field'])
 
     def populate_report_data(self):
         self.report = self.group_line_items('expense_code')
