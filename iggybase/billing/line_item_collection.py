@@ -74,8 +74,63 @@ class LineItemCollection:
     def populate_report_data(self):
         # TODO: consider a report class
         # and how line items and invoices relate
+        self.populate_user_report()
         self.populate_code_report()
         self.populate_po_report()
+
+    def populate_user_report(self):
+        key_types = [
+                {
+                    'func':'get_table_col',
+                    'table_object':'User',
+                    'field':'name'
+                }
+        ]
+        data_types = [
+                {
+                    'key':'group',
+                    'func':'get_table_col',
+                    'table_object':'Organization',
+                    'field':'name'
+                },
+                {
+                    'key':'user',
+                    'func':'get_table_col',
+                    'table_object':'User',
+                    'field':'name'
+                },
+                {
+                    'key':'institution',
+                    'func':'get_table_col',
+                    'table_object':'Institution',
+                    'field':'name'
+                },
+                {
+                    'key':'department',
+                    'func':'get_table_col',
+                    'table_object':'Department',
+                    'field':'name'
+                },
+                {
+                    'key':'email',
+                    'func':'get_table_col',
+                    'table_object':'User',
+                    'field':'email'
+                },
+                {
+                    'key':'cost',
+                    'per_row':True,
+                    'func':'sum_charges'
+                },
+                {
+                    'key':'quantity',
+                    'per_row':True,
+                    'func':'sum_quantity'
+                }
+        ]
+        group_by = self.group_line_items(key_types, data_types)
+
+        self.reports['User Monthly Usage'] = list(group_by.values())
 
     def populate_code_report(self):
         key_types = [
@@ -101,9 +156,9 @@ class LineItemCollection:
                     'per_row':True
                 }
         ]
-        group_by_code = self.group_line_items(key_types, data_types,
+        group_by = self.group_line_items(key_types, data_types,
                 {'table':'ChargeMethodType', 'field':'name', 'value':'code'})
-        self.reports['Expense Code Monthly Usage'] = self.format_code_report(group_by_code)
+        self.reports['Expense Code Monthly Usage'] = self.format_code_report(group_by)
 
     def populate_po_report(self):
         key_types = [
@@ -143,9 +198,9 @@ class LineItemCollection:
                     'per_row':True
                 }
         ]
-        group_by_code = self.group_line_items(key_types, data_types,
+        group_by = self.group_line_items(key_types, data_types,
                 {'table':'ChargeMethodType', 'field':'name', 'value':'po'})
-        self.reports['Purchase Order Monthly Usage'] = list(group_by_code.values())
+        self.reports['Purchase Order Monthly Usage'] = list(group_by.values())
 
 
     def format_code_report(self, group):
@@ -162,8 +217,8 @@ class LineItemCollection:
     ''' Group functions below '''
 
     def get_table_col(self, x, row):
-        return getattr(getattr(row, x['table_object']),
-                            x['field'])
+        return getattr(getattr(row, x['table_object'], None),
+                            x['field'], None)
 
     def item_list(self, x, row, curr_val = None):
         if curr_val == None:
@@ -175,6 +230,11 @@ class LineItemCollection:
         total = curr_val or 0
         total += (float(row.LineItem.price_per_unit) * row.LineItem.quantity *
                 (row.OrderChargeMethod.percent/100))
+        return total
+
+    def sum_quantity(self, x, row, curr_val = None):
+        total = curr_val or 0
+        total += row.LineItem.quantity
         return total
 
     def split_code (self, x, row):

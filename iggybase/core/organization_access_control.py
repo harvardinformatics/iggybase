@@ -639,7 +639,8 @@ class OrganizationAccessControl:
             filters.append(models.Organization.name.in_(org_list))
         res = (self.session.query(line_item, price_item, service_type, order,
             order_charge_method, charge_method, charge_method_type, models.User,
-            models.Organization, models.OrganizationType, invoice, institution)
+            models.Organization, models.OrganizationType, invoice, institution,
+            models.Department)
                 .join((price_item, line_item.price_item_id == price_item.id),
                     (service_type, price_item.service_type_id ==
                         service_type.id),
@@ -654,8 +655,10 @@ class OrganizationAccessControl:
                         models.OrganizationType.id)
                 )
                 .outerjoin((invoice, invoice.id == line_item.invoice_id),
-                    (institution, institution.id ==
-                        models.Organization.institution_id))
+                    (institution, institution.id == models.Organization.institution_id),
+                    (models.Department, models.Department.id ==
+                        models.Organization.department_id)
+                )
             .filter(*filters).order_by((line_item.invoice_id == None), line_item.invoice_id, models.Organization.name, charge_method.id).all())
         return res
 
