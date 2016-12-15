@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+{% import 'macros.html' as macros %}
+{% block styles %}
+    {{ super() }}
+    <link href="{{ url_for('static', filename='reports.css') }}" rel="stylesheet">
+{%- endblock styles %}
+{% block content_title -%}
+    <div class="content_title">
+        <h1>Billing Reports</h1>
+        <p>Choose a month and year</p>
+    </div>
+
+{%- endblock content_title %}
+{% block topbuttonbar %}
+    {{ macros.render_select(select_years, 'year', year)}}
+    {{ macros.render_select(select_months, 'month', month)}}
+    {{ super() }}
+{%- endblock topbuttonbar %}
+{% block page_content -%}
+    <div  class="content">
+        <div  class="reports" style="overflow-x:auto;">
+        {% for name, report in lc.reports.items() %}
+            {{ macros.invoice_table(name, report) }}
+        {% endfor %}
+        </div>
+    </div>
+{% endblock page_content -%}

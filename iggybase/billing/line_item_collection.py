@@ -84,7 +84,7 @@ class LineItemCollection:
         key_types = [
                 {
                     'func':'get_table_col',
-                    'fields':{'Price_Item': 'name'}
+                    'fields':{'PriceItem': 'name'}
                 }
         ]
         data_types = [
@@ -116,7 +116,7 @@ class LineItemCollection:
         key_types = [
                 {
                     'func':'get_table_col',
-                    'fields':{'Department': 'name', 'Price_Item': 'name'}
+                    'fields':{'Department': 'name', 'PriceItem': 'name'}
                 }
         ]
         data_types = [
@@ -180,7 +180,7 @@ class LineItemCollection:
                 {
                     'key':'email',
                     'func':'get_table_col',
-                    'fields':{'User': 'name'}
+                    'fields':{'User': 'email'}
                 },
                 {
                     'key':'cost',
