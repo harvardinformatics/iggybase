@@ -24,29 +24,25 @@ class InvoiceCollection(LineItemCollection):
                     'func':'org_charge_tuple'
                 }
         ]
-        data_types = {
-                'per_row':[
-                    {
-                        'type':'row',
-                        'key':'items'
-                    }
-                ],
-                'once':[
-                    {
-                        'func':'check_invoice_order',
-                        'key':'invoice_order'
-                    },
-                    {
-                        'func':'get_table_col',
-                        'table_object':'ServiceType',
-                        'field':'id',
-                        'key':'service_type_id'
-                    }
-                ]
-        }
+        data_types = [
+                {
+                    'type':'row',
+                    'key':'items',
+                    'format':'list'
+                },
+                {
+                    'func':'check_invoice_order',
+                    'key':'invoice_order'
+                },
+                {
+                    'func':'get_table_col',
+                    'table_object':'ServiceType',
+                    'field':'id',
+                    'key':'service_type_id'
+                }
+        ]
         # group line items by group and service_type as well as "code" or PO
         self.item_dict = self.group_line_items(key_types, data_types)
-        self.invoices = []
         self.invoices = self.get_invoices(self.from_date, self.to_date, self.org_list)
         self.set_invoices() # creates invoice rows in DB
 

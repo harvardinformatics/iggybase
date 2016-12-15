@@ -50,18 +50,15 @@ class LineItemCollection:
             return item_dict
         if not item_dict:
             item_dict = defaultdict()
-        # append any per_row data
-        if 'per_row' in data_types:
-            for data in data_types['per_row']:
+        # append any data to the group
+        for data in data_types:
+            if 'format' in data and data['format'] == 'list':
                 if data['key'] not in item_dict:
                     item_dict[data['key']] = []
                 item_dict[data['key']].append(row)
-        # add any once time data if not yet set
-        if 'once' in data_types:
-            once_vals = defaultdict()
-            for x in data_types['once']:
-                once_vals[x['key']] = getattr(self, x['func'])(x, row)
-            item_dict.update(once_vals)
+            else:
+                if data['key'] not in item_dict:
+                    item_dict[data['key']] = getattr(self, data['func'])(data, row)
         # return the data which will be set to the dict with nested grouping
         return item_dict
 
