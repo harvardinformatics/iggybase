@@ -150,3 +150,10 @@ def start_and_end_month(year, month):
     from_date = datetime.date(year=year, month=month, day=1)
     to_date = from_date + relativedelta(months=1) - relativedelta(days=1)
     return from_date, to_date
+
+def clean_billing_code(code):
+    # replace non numbers and dots with dashes
+    clean_code = re.sub(r'[^0-9\-]', '', code.replace('.', '-'))
+    # replace prefix dash
+    clean_code = re.sub(r'^\-+', '', clean_code)
+    return clean_code

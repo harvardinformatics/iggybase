@@ -26,9 +26,9 @@ class InvoiceCollection(LineItemCollection):
         ]
         data_types = [
                 {
-                    'type':'row',
                     'key':'items',
-                    'format':'list'
+                    'func':'item_list',
+                    'per_row':True
                 },
                 {
                     'func':'check_invoice_order',

@@ -9,6 +9,7 @@ from iggybase.web_files.page_template import PageTemplate
 from iggybase.core import routes as core_routes
 from iggybase.core.table_query_collection import TableQueryCollection
 from iggybase.billing.invoice_collection import InvoiceCollection
+from iggybase.billing.line_item_collection import LineItemCollection
 from . import billing
 
 MODULE_NAME = 'billing'
@@ -139,7 +140,6 @@ def get_price(facility_name):
     fields = request.json['fields']
     oac = g_helper.get_org_access_control()
     row = oac.get_price(criteria)
-    print(row)
     price = None
     ret = {}
     if row:
@@ -162,11 +162,12 @@ def reports(facility_name, year = None, month = None):
         year = last_month.year
         month = last_month.month
 
-    ic = InvoiceCollection(year, month)
-    ic.populate_report_data()
+    lc = LineItemCollection(year, month, ['OShea'])
+    lc.populate_report_data()
+    print(lc.reports)
     pt = PageTemplate(MODULE_NAME, 'reports')
     return pt.page_template_context(
-            ic = ic, year = year, month = month,
+            lc = lc, year = year, month = month,
             select_years = select_years, select_months = select_months)
 
 

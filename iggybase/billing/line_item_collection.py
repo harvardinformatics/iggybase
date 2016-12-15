@@ -1,6 +1,6 @@
 from flask import render_template, request, g
 from collections import OrderedDict, defaultdict
-import datetime
+import datetime, re
 from iggybase import g_helper
 from iggybase import utilities as util
 from flask_weasyprint import HTML
@@ -23,6 +23,9 @@ class LineItemCollection:
         self.invoiced = invoiced
         self.from_date, self.to_date = util.start_and_end_month(self.year,
                 self.month)
+        self.reports = {}
+
+
 
         self.oac = g_helper.get_org_access_control()
         self.line_items = self.oac.get_line_items(self.from_date, self.to_date, self.org_list,
@@ -52,20 +55,91 @@ class LineItemCollection:
             item_dict = defaultdict()
         # append any data to the group
         for data in data_types:
-            if 'format' in data and data['format'] == 'list':
-                if data['key'] not in item_dict:
-                    item_dict[data['key']] = []
-                item_dict[data['key']].append(row)
+            if 'per_row' in data and data['per_row']:
+                print(data['key'])
+                item_dict[data['key']] = getattr(self, data['func'])(data, row,
+                        item_dict.get(data['key'], None))
             else:
                 if data['key'] not in item_dict:
                     item_dict[data['key']] = getattr(self, data['func'])(data, row)
         # return the data which will be set to the dict with nested grouping
         return item_dict
 
+    def populate_report_data(self):
+        key_types = [
+                {
+                    'func':'get_table_col',
+                    'table_object':'ChargeMethodType',
+                    'field':'name'
+                },
+                {
+                    'func':'get_table_col',
+                    'table_object':'ChargeMethod',
+                    'field':'code'
+                }
+        ]
+        data_types = [
+                {
+                    'key':'total',
+                    'per_row':True,
+                    'func':'sum_charges'
+                },
+                {
+                    'key':'split_code',
+                    'func':'split_code'
+                },
+                {
+                    'key':'invoice',
+                    'func':'get_invoice_pdf',
+                    'per_row':True
+                }
+        ]
+        group_by_code = self.group_line_items(key_types, data_types)
+        self.reports['Expense Code Monthly Usage'] = self.format_code_report(group_by_code['code'])
+
+    def format_code_report(self, group):
+        tbl = []
+        for item in group.values():
+            row = item['split_code']
+            row['Total Cost'] = item['total']
+            row['Invoice'] = item['invoice']
+            tbl.append(row)
+        return tbl
+
+
+
+    ''' Group functions below '''
+
     def get_table_col(self, x, row):
         return getattr(getattr(row, x['table_object']),
                             x['field'])
 
-    def populate_report_data(self):
-        self.report = self.group_line_items('expense_code')
+    def item_list(self, x, row, curr_val = None):
+        if curr_val == None:
+            curr_val = []
+        curr_val.append(row)
+        return curr_val
 
+    def sum_charges(self, x, row, curr_val = None):
+        total = curr_val or 0
+        total += (float(row.LineItem.price_per_unit) * row.LineItem.quantity *
+                (row.OrderChargeMethod.percent/100))
+        return total
+
+    def split_code (self, x, row):
+        split_code = OrderedDict()
+        code_parts = ['Tub', 'Org', 'Object', 'Fund', 'Activity', 'Sub-activity', 'Root']
+        clean_code = util.clean_billing_code(row.ChargeMethod.code)
+        code_arr = clean_code.split('-')
+        code_arr_len = len(code_arr)
+        for i, part in enumerate(code_parts):
+            split_code[part] = None
+            if i < code_arr_len:
+                split_code[part] = code_arr[i]
+        return split_code
+
+    def get_invoice_pdf(self, x, row, curr_val = None):
+        if curr_val == None:
+            curr_val = []
+        curr_val.append(row.Invoice.pdf)
+        return curr_val
