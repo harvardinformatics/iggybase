@@ -23,7 +23,7 @@ class LineItemCollection:
         self.invoiced = invoiced
         self.from_date, self.to_date = util.start_and_end_month(self.year,
                 self.month)
-        self.reports = {}
+        self.reports = OrderedDict()
 
 
 
@@ -74,48 +74,29 @@ class LineItemCollection:
     def populate_report_data(self):
         # TODO: consider a report class
         # and how line items and invoices relate
+        self.populate_item_report()
+        self.populate_department_report()
         self.populate_user_report()
         self.populate_code_report()
         self.populate_po_report()
 
-    def populate_user_report(self):
+    def populate_item_report(self):
         key_types = [
                 {
                     'func':'get_table_col',
-                    'table_object':'User',
-                    'field':'name'
+                    'fields':{'Price_Item': 'name'}
                 }
         ]
         data_types = [
                 {
-                    'key':'group',
+                    'key':'group type',
                     'func':'get_table_col',
-                    'table_object':'Organization',
-                    'field':'name'
+                    'fields':{'OrganizationType': 'name'}
                 },
                 {
-                    'key':'user',
+                    'key':'analysis type',
                     'func':'get_table_col',
-                    'table_object':'User',
-                    'field':'name'
-                },
-                {
-                    'key':'institution',
-                    'func':'get_table_col',
-                    'table_object':'Institution',
-                    'field':'name'
-                },
-                {
-                    'key':'department',
-                    'func':'get_table_col',
-                    'table_object':'Department',
-                    'field':'name'
-                },
-                {
-                    'key':'email',
-                    'func':'get_table_col',
-                    'table_object':'User',
-                    'field':'email'
+                    'fields':{'PriceItem': 'name'}
                 },
                 {
                     'key':'cost',
@@ -129,15 +110,97 @@ class LineItemCollection:
                 }
         ]
         group_by = self.group_line_items(key_types, data_types)
+        self.reports['Monthly Usage'] = list(group_by.values())
 
+    def populate_department_report(self):
+        key_types = [
+                {
+                    'func':'get_table_col',
+                    'fields':{'Department': 'name', 'Price_Item': 'name'}
+                }
+        ]
+        data_types = [
+                {
+                    'key':'group type',
+                    'func':'get_table_col',
+                    'fields':{'OrganizationType': 'name'}
+                },
+                {
+                    'key':'analysis type',
+                    'func':'get_table_col',
+                    'fields':{'PriceItem': 'name'}
+                },
+                {
+                    'key':'department',
+                    'func':'get_table_col',
+                    'fields':{'Department': 'name'}
+                },
+                {
+                    'key':'cost',
+                    'per_row':True,
+                    'func':'sum_charges'
+                },
+                {
+                    'key':'quantity',
+                    'per_row':True,
+                    'func':'sum_quantity'
+                }
+        ]
+        group_by = self.group_line_items(key_types, data_types)
+        self.reports['Department Monthly Usage'] = list(group_by.values())
+
+    def populate_user_report(self):
+        key_types = [
+                {
+                    'func':'get_table_col',
+                    'fields':{'Organization': 'name','User': 'name'}
+                }
+        ]
+        data_types = [
+                {
+                    'key':'group',
+                    'func':'get_table_col',
+                    'fields':{'Organization': 'name'}
+                },
+                {
+                    'key':'user',
+                    'func':'get_table_col',
+                    'fields':{'User': 'name'}
+                },
+                {
+                    'key':'institution',
+                    'func':'get_table_col',
+                    'fields':{'Institution': 'name'}
+                },
+                {
+                    'key':'department',
+                    'func':'get_table_col',
+                    'fields':{'Department': 'name'}
+                },
+                {
+                    'key':'email',
+                    'func':'get_table_col',
+                    'fields':{'User': 'name'}
+                },
+                {
+                    'key':'cost',
+                    'per_row':True,
+                    'func':'sum_charges'
+                },
+                {
+                    'key':'quantity',
+                    'per_row':True,
+                    'func':'sum_quantity'
+                }
+        ]
+        group_by = self.group_line_items(key_types, data_types)
         self.reports['User Monthly Usage'] = list(group_by.values())
 
     def populate_code_report(self):
         key_types = [
                 {
                     'func':'get_table_col',
-                    'table_object':'ChargeMethod',
-                    'field':'code'
+                    'fields':{'ChargeMethod': 'code'}
                 }
         ]
         data_types = [
@@ -164,16 +227,14 @@ class LineItemCollection:
         key_types = [
                 {
                     'func':'get_table_col',
-                    'table_object':'ChargeMethod',
-                    'field':'code'
+                    'fields':{'ChargeMethod': 'code'}
                 }
         ]
         data_types = [
                 {
                     'key':'purchase order',
                     'func':'get_table_col',
-                    'table_object':'ChargeMethod',
-                    'field':'code'
+                    'fields':{'ChargeMethod': 'code'}
                 },
                 {
                     'key':'total',
@@ -183,14 +244,12 @@ class LineItemCollection:
                 {
                     'key':'original',
                     'func':'get_table_col',
-                    'table_object':'ChargeMethod',
-                    'field':'original_value'
+                    'fields':{'ChargeMethod': 'original_value'}
                 },
                 {
                     'key':'remaining',
                     'func':'get_table_col',
-                    'table_object':'ChargeMethod',
-                    'field':'remaining_value'
+                    'fields':{'ChargeMethod': 'remaining_value'}
                 },
                 {
                     'key':'invoice',
@@ -217,8 +276,12 @@ class LineItemCollection:
     ''' Group functions below '''
 
     def get_table_col(self, x, row):
-        return getattr(getattr(row, x['table_object'], None),
-                            x['field'], None)
+        val = ''
+        # can be a compound of multiple fields
+        for table_object, field in x['fields'].items():
+            val += str(getattr(getattr(row, table_object, None),
+                            field, None))
+        return val
 
     def item_list(self, x, row, curr_val = None):
         if curr_val == None:
