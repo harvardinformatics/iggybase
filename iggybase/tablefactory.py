@@ -161,4 +161,3 @@ class TableFactory:
             fields.append(row)
 
         return fields
-SET GLOBAL group_concat_max_len = 1024;

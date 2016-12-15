@@ -97,9 +97,9 @@ class InvoiceCollection(LineItemCollection):
         return invoices
 
     def org_charge_tuple(self, x, row):
-         creates tuple from Org name, charge method
-        if method is PO then uses number, for code uses
-        'code' so that they are all on same invoice
+        # creates tuple from Org name, charge method
+        # if method is PO then uses number, for code uses
+        # 'code' so that they are all on same invoice
         org_name = row.Organization.name
         if row.ChargeMethodType.name == 'code':
             charge_method = 'code'
@@ -108,7 +108,7 @@ class InvoiceCollection(LineItemCollection):
         return (row.Organization.name, charge_method)
 
     def check_invoice_order(self, x, row):
-        if invoice has an invoice_order return otherwise None
+        # if invoice has an invoice_order return otherwise None
         inv = getattr(row, 'Invoice', None)
         if inv and hasattr(inv, 'invoice_number'):
             return inv.invoice_number
