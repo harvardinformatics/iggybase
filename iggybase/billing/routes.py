@@ -162,7 +162,7 @@ def reports(facility_name, year = None, month = None):
         year = last_month.year
         month = last_month.month
 
-    lc = LineItemCollection(year, month, ['OShea'])
+    lc = LineItemCollection(year, month, ['Zhao'])
     lc.populate_report_data()
     print(lc.reports)
     pt = PageTemplate(MODULE_NAME, 'reports')

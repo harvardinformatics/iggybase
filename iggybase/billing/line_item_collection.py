@@ -31,14 +31,21 @@ class LineItemCollection:
         self.line_items = self.oac.get_line_items(self.from_date, self.to_date, self.org_list,
                 self.invoiced)
 
-    def group_line_items(self, key_types, data_types):
+    def group_line_items(self, key_types, data_types, criteria = None):
         # group by (org_name, 'code') for codes or (org_name, charge_method) for pos
         # set invoice_order
         item_dict = OrderedDict()
         for row in self.line_items:
-            # calculate key values for this row
-            keys = [getattr(self, x['func'])(x, row) for x in key_types]
-            item_dict = self.group_row(item_dict, 0, keys, data_types, row)
+            if criteria:
+                if getattr(getattr(row, criteria['table']), criteria['field']) == criteria['value']:
+                    # calculate key values for this row
+                    keys = [getattr(self, x['func'])(x, row) for x in key_types]
+                    item_dict = self.group_row(item_dict, 0, keys, data_types, row)
+            else:
+                # calculate key values for this row
+                keys = [getattr(self, x['func'])(x, row) for x in key_types]
+                item_dict = self.group_row(item_dict, 0, keys, data_types, row)
+
         return item_dict
 
     def group_row(self, item_dict, index, keys, data_types, row):
@@ -52,11 +59,10 @@ class LineItemCollection:
             item_dict[key_val] = val
             return item_dict
         if not item_dict:
-            item_dict = defaultdict()
+            item_dict = OrderedDict()
         # append any data to the group
         for data in data_types:
             if 'per_row' in data and data['per_row']:
-                print(data['key'])
                 item_dict[data['key']] = getattr(self, data['func'])(data, row,
                         item_dict.get(data['key'], None))
             else:
@@ -66,12 +72,13 @@ class LineItemCollection:
         return item_dict
 
     def populate_report_data(self):
+        # TODO: consider a report class
+        # and how line items and invoices relate
+        self.populate_code_report()
+        self.populate_po_report()
+
+    def populate_code_report(self):
         key_types = [
-                {
-                    'func':'get_table_col',
-                    'table_object':'ChargeMethodType',
-                    'field':'name'
-                },
                 {
                     'func':'get_table_col',
                     'table_object':'ChargeMethod',
@@ -94,8 +101,52 @@ class LineItemCollection:
                     'per_row':True
                 }
         ]
-        group_by_code = self.group_line_items(key_types, data_types)
-        self.reports['Expense Code Monthly Usage'] = self.format_code_report(group_by_code['code'])
+        group_by_code = self.group_line_items(key_types, data_types,
+                {'table':'ChargeMethodType', 'field':'name', 'value':'code'})
+        self.reports['Expense Code Monthly Usage'] = self.format_code_report(group_by_code)
+
+    def populate_po_report(self):
+        key_types = [
+                {
+                    'func':'get_table_col',
+                    'table_object':'ChargeMethod',
+                    'field':'code'
+                }
+        ]
+        data_types = [
+                {
+                    'key':'purchase order',
+                    'func':'get_table_col',
+                    'table_object':'ChargeMethod',
+                    'field':'code'
+                },
+                {
+                    'key':'total',
+                    'per_row':True,
+                    'func':'sum_charges'
+                },
+                {
+                    'key':'original',
+                    'func':'get_table_col',
+                    'table_object':'ChargeMethod',
+                    'field':'original_value'
+                },
+                {
+                    'key':'remaining',
+                    'func':'get_table_col',
+                    'table_object':'ChargeMethod',
+                    'field':'remaining_value'
+                },
+                {
+                    'key':'invoice',
+                    'func':'get_invoice_pdf',
+                    'per_row':True
+                }
+        ]
+        group_by_code = self.group_line_items(key_types, data_types,
+                {'table':'ChargeMethodType', 'field':'name', 'value':'po'})
+        self.reports['Purchase Order Monthly Usage'] = list(group_by_code.values())
+
 
     def format_code_report(self, group):
         tbl = []
