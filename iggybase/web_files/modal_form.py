@@ -123,6 +123,7 @@ class ModalForm():
                       fc.fields[self.search_vals['field_key']].FK_TableObject.name + '" type="hidden">'
         modal_html += '<input id="modal_input_id" value="' + self.search_vals['input_id'] + '" type="hidden">'
         modal_html += '<p>All search inputs can use partial values</p>'
+        modal_html += '<div class="modal-top-buttons"></div>'
         modal_html += '<table>'
         field = fc.fields[self.search_vals['field_key']]
         role_filter = False # ignore role filter since this is for FK

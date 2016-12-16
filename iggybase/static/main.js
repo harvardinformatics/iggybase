@@ -65,12 +65,6 @@ $( document ).ready( function () {
                 tmpform = resp;
                 tmpform += "<div class='modal-footer'>";
 
-                if ( buttons ) {
-                    for (var key in buttons){
-                        tmpform += "<button id='"+key+"' type='button' class='btn btn-default'>"+key+"</button>";
-                    }
-                }
-
                 tmpform += "<button type='button' class='btn btn-default close_modal'>Close</button>";
 
                 tmpform += "</div>";
@@ -84,6 +78,8 @@ $( document ).ready( function () {
 
                 if ( buttons ) {
                     for (var key in buttons){
+                        "<button id='"+key+"' type='button' class='btn btn-default'>"+key+"</button>".append_to( $( '.' + buttons[key]['append_to'] ) );
+
                         $( '.' + buttons[key]['append_to'] + ' #' + key ).click( buttons[key]['function'] );
                     }
                 }
