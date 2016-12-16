@@ -78,7 +78,7 @@ $( document ).ready( function () {
 
                 if ( buttons ) {
                     for (var key in buttons){
-                        $( '#' + buttons[key]['append_to'] + ' #' + key ).click( buttons[key]['function'] );
+                        $("<button id='"+key+"' type='button' class='btn btn-default'>"+key+"</button>").appendTo( $( '#' + buttons[key]['append_to'] ) );
                     }
                 }
 
