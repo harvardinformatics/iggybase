@@ -128,8 +128,18 @@ class DataInstance:
         self.initialize_fields('history')
 
         if depth > 0 and self.tables[self.table_name]['table_meta_data']:
-            data = self.role_access_control.get_link_tables(self.tables[self.table_name]['table_meta_data'].name,
-                                                            self.tables[self.table_name]['table_meta_data'].id, depth)
+            # if self.tables[self.table_name]['table_meta_data'].note_enabled == 1:
+            #     self.tables['history'] = {'level': 1,
+            #                               'parent': self.table_name,
+            #                               'link_display_name': 'entry_id',
+            #                               'link_data': None,
+            #                               'link_type': 'table_id',
+            #                               'table_object': util.get_table('note'),
+            #                               'table_meta_data': self.role_access_control.has_access('TableObject',
+            #                                                                                       {'name': 'note'})}
+            #     self.initialize_fields('note')
+
+            data = self.role_access_control.get_link_tables(self.tables[self.table_name]['table_meta_data'], depth)
 
             for index, link_data in enumerate(data):
                 # link_data - {'parent': table_object_name, 'level': level, 'table_meta_data': table_meta_data,
@@ -181,6 +191,8 @@ class DataInstance:
                     self.get_data('new', None, table_name)
 
             elif table_data['link_type'] == "many":
+                pass
+            elif table_data['link_type'] == "table_id":
                 pass
 
     def initialize_values(self, table_name, instance):

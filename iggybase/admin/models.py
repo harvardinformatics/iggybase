@@ -392,9 +392,16 @@ class TableObjectChildren(Base):
     table_object_children_child_table_object = relationship("TableObject", foreign_keys=[child_table_object_id])
     table_object_children_field = relationship("Field", foreign_keys=[child_link_field_id])
 
-    def __repr__(self):
-        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
-               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+
+class TableObjectDynamicLink(Base):
+    table_type = 'admin'
+    table_object_id = Column(Integer, ForeignKey('table_object.id'))
+    dynamic_table_object_id = Column(Integer, ForeignKey('table_object.id'))
+    dynamic_field_id = Column(Integer, ForeignKey('field.id'))
+
+    table_object_dynamic_table_object = relationship("TableObject", foreign_keys=[table_object_id])
+    table_object_dynamic_child_table_object = relationship("TableObject", foreign_keys=[dynamic_table_object_id])
+    table_object_dynamic_field = relationship("Field", foreign_keys=[dynamic_field_id])
 
 
 class FieldRole(Base):

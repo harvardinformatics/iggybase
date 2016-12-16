@@ -455,7 +455,7 @@ class RoleAccessControl:
         else:
             return False
 
-    def get_link_tables(self, table_object_name, table_object_id, levels=2, level=1, child_only=False, active=1):
+    def get_link_tables(self, table_object, levels=2, level=1, child_only=False, active=1):
         link_tables = []
 
         # logging.info('get_link_tables (models.TableObjectChildren.__table__.columns: ')
@@ -465,7 +465,7 @@ class RoleAccessControl:
             join(models.TableObject, models.TableObjectChildren.child_table_object_id == models.TableObject.id). \
             join(models.TableObjectRole,
                  models.TableObjectChildren.child_table_object_id == models.TableObjectRole.table_object_id). \
-            filter(models.TableObjectChildren.table_object_id==table_object_id). \
+            filter(models.TableObjectChildren.table_object_id==table_object.id). \
             filter(models.TableObjectChildren.active==active). \
             filter(models.TableObjectRole.role_id==self.role.id). \
             filter(models.TableObjectRole.active==active). \
@@ -478,7 +478,7 @@ class RoleAccessControl:
             for row in res:
                 table_data = self.has_access('TableObject', {'id': row.TableObjectChildren.child_table_object_id})
                 if table_data:
-                    link_tables.append({'parent': table_object_name, 'level': level, 'table_meta_data': table_data,
+                    link_tables.append({'parent': table_object.name, 'level': level, 'table_meta_data': table_data,
                                         'link_data': row.TableObjectChildren, 'link_type': 'child'})
 
                     # logging.info('get_link_tables row.TableObjectChildren ' + table_object_name)
@@ -486,26 +486,25 @@ class RoleAccessControl:
 
                     if level < levels:
                         # logging.info('level: ' + str(level))
-                        link_tables = link_tables + self.get_link_tables(row.TableObject.name, row.TableObject.id,
-                                                                         levels, level + 1, True)
+                        link_tables = link_tables + self.get_link_tables(row.TableObject,levels, level + 1, True)
 
 
         if not child_only:
             res = self.session.query(models.TableObjectMany). \
-                filter(or_(models.TableObjectMany.first_table_object_id==table_object_id,
-                           models.TableObjectMany.second_table_object_id==table_object_id)).\
+                filter(or_(models.TableObjectMany.first_table_object_id==table_object.id,
+                           models.TableObjectMany.second_table_object_id==table_object.id)).\
                 filter_by(active=active). \
                 order_by(models.TableObjectMany.order, models.TableObjectMany.id).all()
 
             if len(res) > 0:
                 for row in res:
-                    if row.first_table_object_id == table_object_id:
+                    if row.first_table_object_id == table_object.id:
                         table_data = self.has_access('TableObject', {'id': row.second_table_object_id})
                     else:
                         table_data = self.has_access('TableObject', {'id': row.first_table_object_id})
 
                     if table_data:
-                        link_tables.append({'parent': table_object_name, 'level': level, 'table_meta_data': table_data,
+                        link_tables.append({'parent': table_object.name, 'level': level, 'table_meta_data': table_data,
                                             'link_data': row.TableObjectMany, 'link_type': 'many'})
 
         return link_tables
