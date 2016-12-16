@@ -78,14 +78,18 @@ $( document ).ready( function () {
 
                 if ( buttons ) {
                     for (var key in buttons){
-                        $("<button id='"+key+"' type='button' class='btn btn-default'>"+key+"</button>").appendTo( $( '#' + buttons[key]['append_to'] ) );
-
-                        $( '.' + buttons[key]['append_to'] + ' #' + key ).click( buttons[key]['function'] );
+                        $( '#' + buttons[key]['append_to'] + ' #' + key ).click( buttons[key]['function'] );
                     }
                 }
 
                 if ( callback )
                     modal_div.on('shown.bs.modal', function(e){ callback(); } );
+
+                if ( buttons ) {
+                    for (var key in buttons){
+                        $( '#' + buttons[key]['append_to'] + ' #' + key ).click( buttons[key]['function'] );
+                    }
+                }
 
                 modal_div.modal( "show" );
             }
