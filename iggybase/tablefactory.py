@@ -92,13 +92,13 @@ class TableFactory:
             dtinst = dtcname(250)
         elif attributes.data_type_id == 10 or attributes.data_type_id == 11:
             dtcname = getattr(sqlalchemy, 'Integer')
-            dtinst = dtcname(11)
+            dtinst = dtcname()
         elif attributes.data_type_id == 8 or attributes.data_type_id == 9:
             dtcname = getattr(sqlalchemy, 'Numeric')
             dtinst = dtcname(10, 2)
         elif attributes.data_type_id == 7:
             dtcname = getattr(sqlalchemy, 'Integer')
-            dtinst = dtcname(11)
+            dtinst = dtcname()
             foreign_table_name = 'long_text'
             foreign_column_name = 'long_text'
         else:
