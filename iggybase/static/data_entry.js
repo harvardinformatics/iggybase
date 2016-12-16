@@ -194,7 +194,7 @@ $( document ).ready( function () {
         var formurl = $URL_ROOT + search_vals['facility'] + "/core/search?search_vals=" +  JSON.stringify(search_vals);
 
         var buttons = {};
-        buttons[ "Search" ] = $.fn.getSearchResults;
+        buttons[ "Search" ] = {'function': $.fn.getSearchResults, 'append_to': 'search-body'};
 
         var callback = function () {
             $.fn.displaySearchResults( search_results );

@@ -84,7 +84,7 @@ $( document ).ready( function () {
 
                 if ( buttons ) {
                     for (var key in buttons){
-                        $( '.modal-footer #' + key ).click( buttons[key] );
+                        $( '.' + buttons[key]['append_to'] + ' #' + key ).click( buttons[key]['function'] );
                     }
                 }
 
