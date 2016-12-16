@@ -63,7 +63,7 @@ $( document ).ready( function () {
             type: "POST",
             success: function ( resp ) {
                 tmpform = resp;
-                tmpform += "<div class='modal-footer'>";
+                tmpform += "<div id='modal_footer' class='modal-footer'>";
 
                 tmpform += "<button type='button' class='btn btn-default close_modal'>Close</button>";
 
@@ -78,7 +78,7 @@ $( document ).ready( function () {
 
                 if ( buttons ) {
                     for (var key in buttons){
-                        ("<button id='"+key+"' type='button' class='btn btn-default'>"+key+"</button>").append_to( $( '.' + buttons[key]['append_to'] ) );
+                        $("<button id='"+key+"' type='button' class='btn btn-default'>"+key+"</button>").append_to( $( '#' + buttons[key]['append_to'] ) );
 
                         $( '.' + buttons[key]['append_to'] + ' #' + key ).click( buttons[key]['function'] );
                     }
