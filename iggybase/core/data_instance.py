@@ -196,10 +196,11 @@ class DataInstance:
                 pass
 
     def initialize_values(self, table_name, instance):
-        if instance['parent_id'] is None:
+        if self.tables[table_name]['parent'] is None:
             self.fields[table_name].set_defaults()
         else:
-            self.fields[table_name].set_defaults({self.tables[table_name]['parent']: instance['parent_id']})
+            self.fields[table_name].set_defaults({self.tables[table_name]['parent']: instance['parent_id'],
+                                                  'link_display_name': self.tables[table_name]['link_display_name']})
 
         if 'new' in instance['instance'].name:
             for field, meta_data in self.fields[table_name].fields.items():
