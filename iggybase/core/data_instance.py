@@ -196,7 +196,7 @@ class DataInstance:
                 pass
 
     def initialize_values(self, table_name, instance):
-        if self.tables[table_name]['parent'] is None:
+        if instance['parent_id'] is None:
             self.fields[table_name].set_defaults()
         else:
             self.fields[table_name].set_defaults({self.tables[table_name]['parent']: instance['parent_id']})
