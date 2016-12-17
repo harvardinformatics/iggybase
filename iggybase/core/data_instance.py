@@ -271,7 +271,8 @@ class DataInstance:
 
         if self.fields[table_name].fields[table_name + "|" + field_name].is_foreign_key:
             field_value = self.set_foreign_key_field_id(table_name, field_name, field_value)
-            logging.info(table_name + "|" + field_name + ' field_value: ' + str(field_value))
+            logging.info(table_name + "|" + field_name + ' field_value: ' + str(field_value) + "  " +
+                         str(getattr(self.instances[table_name][instance_name]['instance'], field_name) == field_value))
 
         if (table_name != 'history' and field_name not in exclude_list and
                 ((getattr(self.instances[table_name][instance_name]['instance'], field_name) is None and
