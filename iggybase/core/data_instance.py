@@ -271,13 +271,14 @@ class DataInstance:
 
         if self.fields[table_name].fields[table_name + "|" + field_name].is_foreign_key:
             field_value = self.set_foreign_key_field_id(table_name, field_name, field_value)
+            logging.info(table_name + "|" + field_name + ' field_value: ' + str(field_value))
 
-        if table_name != 'history' and field_name not in exclude_list and \
+        if (table_name != 'history' and field_name not in exclude_list and
                 ((getattr(self.instances[table_name][instance_name]['instance'], field_name) is None and
-                  field_value is not None) or
-                 field_value != getattr(self.instances[table_name][instance_name]['instance'], field_name)) and \
+                          field_value is not None) or
+                         field_value != getattr(self.instances[table_name][instance_name]['instance'], field_name)) and
                 not (field_name == 'name' and field_value is None and
-                     'new' in self.instances[table_name][instance_name]['instance'].name):
+                     'new' in self.instances[table_name][instance_name]['instance'].name)):
             self.instances[table_name][instance_name]['save'] = True
             new_key = self.add_new_instance('history', 'new')
 
