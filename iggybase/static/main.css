@@ -102,6 +102,10 @@
 textarea.data-control {
     height: 68px! important;
 }
+textarea.table-control {
+    margin-top: 5px!important;
+    margin-bottom: -27px!important;
+}
 input[type=checkbox].table-control {
     margin-top: -8px!important;
     margin-left: 0px!important;
