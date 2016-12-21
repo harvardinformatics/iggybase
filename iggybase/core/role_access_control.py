@@ -58,7 +58,6 @@ class RoleAccessControl:
 
             if 'routes' in session and session['routes']:
                 self.routes = session['routes']
-                self.set_routes()
             else:
                 self.set_routes()
         else:
@@ -602,3 +601,9 @@ class RoleAccessControl:
 
         result = self.session.query(table_object, table_object_role).filter(*criteria).first()
         return result
+
+    def get_role_home(self):
+        table_object = util.get_table('role')
+        criteria = [(table_object.id == self.role.id)]
+        result = self.session.query(table_object).filter(*criteria).first()
+        return getattr(result, 'default_home')

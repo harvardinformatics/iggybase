@@ -49,7 +49,7 @@ def configure_extensions( app, db ):
     # can't preceed the user data setup.
     # from iggybase.admin.events import StartEvents
     # StartEvents(app).configure(db_session)
-    
+
     # add button function to jinja
     app.add_template_global(util.html_button, name='html_button')
 
@@ -120,17 +120,17 @@ def configure_hook( app ):
         path = request.path.split('/')
 
         # TODO: consider caching this for the session
-        ignore_facility = ['static', 'logout', 'home', 'favicon.ico', 'welcome', 'registration_success']
+        ignore_facility = ['static', 'logout', 'favicon.ico', 'welcome', 'registration_success']
         if (current_user.is_authenticated and path and path[1] not in ignore_facility):
             import iggybase.core.role_access_control as rac
-
+            role_access = rac.RoleAccessControl()
+            g.rac = role_access
+            if path[1] == 'home':
+                return
             # set module in g
             if len(path) > 2:
                 g.module = path[2]
 
-            role_access = rac.RoleAccessControl()
-            g.rac = role_access
-            role_access.set_routes()
             access = role_access.has_facility_access(path[1])
             if not access:
                 if path[1] in role_access.facilities:

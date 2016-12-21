@@ -38,7 +38,13 @@ def home():
     if g.user.home_page:
         home_page = g.user.home_page
     else:
-        # TODO: we need to dynamically come up with facility
-        home_page = url_for('core.detail', facility_name = 'murray', table_name =
+        if not g.rac:
+            abort( 403 )
+        else:
+            default = g.rac.get_role_home()
+            if default:
+                home_page = default
+            else:
+                home_page = url_for('core.detail', facility_name = g.rac.facility.name, table_name =
         'user', row_name = g.user.name)
     return redirect( home_page )

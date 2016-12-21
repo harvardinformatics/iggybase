@@ -155,6 +155,7 @@ class Role(Base, RoleMixin):
     table_type = 'admin'
     facility_id = Column(Integer, ForeignKey('facility.id'))
     level_id = Column(Integer, ForeignKey('level.id'))
+    default_home = Column(String(100))
 
     role_facility = relationship("Facility", foreign_keys=[facility_id])
     role_level = relationship("Level", foreign_keys=[level_id])
