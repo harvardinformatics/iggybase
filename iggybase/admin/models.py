@@ -443,14 +443,13 @@ class TableQuery(Base):
 class TableQueryRender(Base):
     table_type = 'admin'
     table_query_id = Column(Integer, ForeignKey('table_query.id'))
-    table_object_id = Column(Integer, ForeignKey('table_object.id'))
+    dynamic_field = Column(String(100))
     route_role_id = Column(Integer, ForeignKey(
         'route_role.id'))
 
     table_query_render_route_role = relationship("RouteRole",
                                                      foreign_keys=[route_role_id])
     table_query_render_table_query = relationship("TableQuery", foreign_keys=[table_query_id])
-    table_query_render_table_object = relationship("TableObject", foreign_keys=[table_object_id])
 
     def __repr__(self):
         return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \

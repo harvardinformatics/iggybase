@@ -81,7 +81,7 @@ class RoleAccessControl:
         ]
         if table_name:
             filters.append(
-                (models.TableObject.name == table_name)
+                (models.TableQueryRender.dynamic_field == table_name)
             )
 
         table_queries = (
@@ -92,11 +92,6 @@ class RoleAccessControl:
                 join(models.RouteRole).
                 join(models.Route).
                 join(models.TableQuery).
-                join(models.TableQueryTableObject).
-                join(
-                models.TableObject,
-                models.TableQueryRender.table_object_id == models.TableObject.id
-            ).
                 filter(*filters).order_by(models.TableQuery.order).all()
         )
         return table_queries
