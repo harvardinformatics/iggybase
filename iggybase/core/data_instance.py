@@ -276,9 +276,9 @@ class DataInstance:
                 ((getattr(self.instances[table_name][instance_name]['instance'], field_name) is None and
                           field_value is not None) or
                          field_value != getattr(self.instances[table_name][instance_name]['instance'], field_name)) and
-                (not (field_name == 'name' and field_value is None and
+                ((not (field_name == 'name' and field_value is None and
                      'new' in self.instances[table_name][instance_name]['instance'].name) and
-                 self.tables[table_name]['level'] == 0)):
+                 self.tables[table_name]['level'] == 0) or (field_name != 'name'))):
             self.instances[table_name][instance_name]['save'] = True
             new_key = self.add_new_instance('history', 'new')
 
