@@ -215,9 +215,6 @@ class FormGenerator(PageTemplate):
 
         form_class = new_class('SingleForm', (Form,), {}, lambda ns: ns.update(self.classattr))
 
-        logging.info(self.classattr)
-        logging.info(self.classattr)
-
         self.form_class = form_class(None)
 
     def get_table(self, data_instance):

@@ -205,7 +205,13 @@ class DataInstance:
         if 'new' in instance['instance'].name:
             for field, meta_data in self.fields[table_name].fields.items():
                 if meta_data.default is not None and meta_data.default != '':
-                    setattr(instance['instance'], meta_data.Field.display_name, meta_data.default)
+                    if meta_data.Field.data_type_id == 3:
+                        if meta_data.default.lower == 'true' or meta_data.default == '1':
+                            setattr(instance['instance'], meta_data.Field.display_name, True)
+                        else:
+                            setattr(instance['instance'], meta_data.Field.display_name, False)
+                    else:
+                        setattr(instance['instance'], meta_data.Field.display_name, meta_data.default)
                 elif meta_data.Field.display_name == 'organization_id':
                     org_id = self.set_organization_id()
                     setattr(instance['instance'], 'organization_id', org_id)
@@ -271,6 +277,9 @@ class DataInstance:
 
         if self.fields[table_name].fields[table_name + "|" + field_name].is_foreign_key:
             field_value = self.set_foreign_key_field_id(table_name, field_name, field_value)
+        elif (self.fields[table_name].fields[table_name + "|" + field_name].DataType.name).lower() == 'boolean' and \
+                        field_value == True or field_value == 'True':
+                field_value = 1;
 
         if (table_name != 'history' and field_name not in exclude_list and
                 ((getattr(self.instances[table_name][instance_name]['instance'], field_name) is None and
@@ -281,6 +290,10 @@ class DataInstance:
                  self.tables[table_name]['level'] == 0) or (field_name != 'name'))):
             self.instances[table_name][instance_name]['save'] = True
             new_key = self.add_new_instance('history', 'new')
+            # logging.info('field_name: ' + field_name + "   field_value: " + str(field_value) + " type: " +
+            #              str(type(field_value)) + "   getattr: " +
+            #              str(getattr(self.instances[table_name][instance_name]['instance'], field_name)) + " type: " +
+            #              str(type(str(getattr(self.instances[table_name][instance_name]['instance'], field_name)))))
 
             self.set_values({'table_object_id': self.tables[table_name]['table_meta_data'].id,
                              'field_id': self.fields[table_name].fields[table_name + "|" + field_name].Field.id,
