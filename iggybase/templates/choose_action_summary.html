@@ -1,0 +1,11 @@
+{% extends "summary_base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block content_title %}
+    <h1>{{page_form_name.replace('_',' ')|title}} {{ table_name.replace( '_', ' ' )|title }}s</h1>
+{%- endblock content_title %}
+
+{% block bottombuttonbar -%}
+    {{ macros.render_select(choose_action, 'choose_action_options')}}
+    {{ super() }}
+{% endblock bottombuttonbar %}
