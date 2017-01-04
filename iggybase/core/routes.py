@@ -398,7 +398,7 @@ def build_summary(table_name, page_form, context={}):
     if not tq.fc.fields:
         abort(404)
 
-    pt = PageTemplate(MODULE_NAME, page_form, context['page_context'])
+    pt = PageTemplate(MODULE_NAME, page_form, getattr(context, 'page_context', None))
     return pt.page_template_context(table_name=table_name, table_query=tq, **context)
 
 

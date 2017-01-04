@@ -140,7 +140,6 @@ def configure_hook( app ):
 
             g.facility = path[1]
             route_access = role_access.route_access(request.path)
-
             if not route_access:
                 abort(404)
 

@@ -635,8 +635,8 @@ class Module(Base):
     blueprint = Column(Boolean)
 
     def __repr__(self):
-        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
-               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id)
 
 
 class ModuleFacility(Base):

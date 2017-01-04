@@ -392,15 +392,19 @@ class OrganizationAccessControl:
         else:
             return None
 
-    def get_row(self, table_name, params):
+    def get_row(self, table_name, params, first = True, org_filter = False):
         table_object = util.get_table(table_name)
 
         criteria = []
 
         for key, value in params.items():
             criteria.append(getattr(table_object, key) == value)
-
-        result = self.session.query(table_object).filter(*criteria).first()
+        if org_filter:
+            criteria.append(getattr(table_object, 'organization_id') == self.current_org_id)
+        if first:
+            result = self.session.query(table_object).filter(*criteria).first()
+        else:
+            result = self.session.query(table_object).filter(*criteria).all()
 
         return result
 
@@ -450,10 +454,13 @@ class OrganizationAccessControl:
         updated = []
         for item in items:
             row_updates = []
-            for col, val in updates.items():
+            tbls_updated = []
+            for update in updates:
                 try:
-                    setattr(item, col, val)
-                    row_updates.append(col)
+                    tbl = getattr(item, update['table'])
+                    setattr(tbl, update['field'], update['val'])
+                    row_updates.append(update['table'] + '|' + update['field'])
+                    tables_updated.append(tbl.__table_name__)
                 except AttributeError:
                     print('failed to update')
             # commit if we were able to make all updates for the row
@@ -461,7 +468,8 @@ class OrganizationAccessControl:
                 self.session.commit()
                 updated.append(item.id)
                 # change table version in cache
-                current_app.cache.increment_version([item.__tablename__])
+                for tbl in tbls_updated:
+                    current_app.cache.increment_version([tbl])
             else:
                 self.session.rollback()
                 print('rollback')
