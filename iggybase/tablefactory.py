@@ -109,10 +109,6 @@ class TableFactory:
             else:
                 dtinst = dtcname()
 
-        if attributes.select_list_id is not None:
-            foreign_table_name = 'select_list_item'
-            foreign_column_name = 'name'
-
         arg = {}
 
         if attributes.primary_key == 1:

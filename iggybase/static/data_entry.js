@@ -46,9 +46,6 @@ $( document ).ready( function () {
         } );
 
         $( document ).off( "change", ".field_select_list" );
-        $( document ).on( "change", ".field_select_list", function() {
-            $.fn.updateTableField( $( this ) )
-        } );
 
         $( document ).off( "blur", ".charge-method-code" );
         $( document ).on( "blur", ".charge-method-code", function() {
@@ -371,38 +368,6 @@ $( document ).ready( function () {
             $( "#" + ele.attr( 'id' ) ).attr( 'value', 'n' );
             $( "#" + bool_id ).attr( 'value', 'n' );
             $( "#" + bool_id ).removeAttr( 'disabled' );
-        }
-    }
-
-    $.fn.updateTableField = function ( ele ) {
-        // editing field data - prevents someone from selecting select list and foreign key info
-        // only for editing table_object field
-        var id = ele.attr( 'id' );
-        var matches = id.match( /data_entry_(\S+)_(\d+)/);
-        var row_id = matches[ 2 ];
-        input_type = ele.is( 'input' );
-
-        if ( ( input_type && ele.attr( 'value' ) == '' ) ||
-                    ( !input_type && $( '#' + id + ' option:selected' ).text( ) == '' ) ) {
-            $( '#data_entry_foreign_key_table_object_id_' + row_id ).attr( 'readonly', false );
-            $( '#data_entry_foreign_key_field_id_' + row_id ).attr( 'readonly', false );
-            $( '#data_entry_foreign_key_display_' + row_id ).attr( 'readonly', false );
-            $( '#data_entry_foreign_key_table_object_id_' + row_id ).attr( 'value', '' );
-            $( '#data_entry_foreign_key_field_id_' + row_id ).attr( 'value', '' );
-            $( '#data_entry_foreign_key_display_' + row_id ).attr( 'value', '' );
-            $( "#span_foreign_key_table_object_id_"+row_id ).css( "pointer-events", "auto" );
-            $( "#span_foreign_key_field_id_"+row_id ).css( "pointer-events", "auto" );
-            $( "#span_foreign_key_display_"+row_id ).css( "pointer-events", "auto" );
-        } else {
-            $( '#data_entry_foreign_key_table_object_id_' + row_id ).attr( 'readonly', true );
-            $( '#data_entry_foreign_key_field_id_' + row_id ).attr( 'readonly', true );
-            $( '#data_entry_foreign_key_display_' + row_id ).attr( 'readonly', true );
-            $( '#data_entry_foreign_key_table_object_id_' + row_id ).attr( 'value', '' );
-            $( '#data_entry_foreign_key_field_id_' + row_id ).attr( 'value', '' );
-            $( '#data_entry_foreign_key_display_' + row_id ).attr( 'value', '' );
-            $( "#span_foreign_key_table_object_id_"+row_id ).css( "pointer-events", "none" );
-            $( "#span_foreign_key_field_id_"+row_id ).css( "pointer-events", "none" );
-            $( "#span_foreign_key_display_"+row_id ).css( "pointer-events", "none" );
         }
     }
 
