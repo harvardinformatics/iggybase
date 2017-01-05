@@ -188,9 +188,7 @@ class OrganizationAccessControl:
             return table_object()
 
     def get_select_list(self, select_list_id, active=1):
-        select_list_items = self.session.query(models.SelectListItem).\
-            filter_by(select_list_id=select_list_id). \
-            filter_by(active=active).all()
+        select_list_items = self.get_select_list_items_from_id(select_list_id)
 
         results = [(-99, '')]
 
@@ -198,6 +196,35 @@ class OrganizationAccessControl:
             results.append((row.id, row.display_name))
 
         return results
+
+    def get_select_list_items_from_id(self, select_list_id, criteria = [], active=1):
+        select_list_items = (self.session.query(models.SelectListItem)
+            .filter_by(select_list_id=select_list_id)
+            .filter_by(active=active)
+            .filter(*criteria).all())
+        return select_list_items
+
+    def get_select_list_item(self, table, field, item, active=1):
+        # TODO: using display_name here means we need to use display_name in
+        # the table query or make adjustments here
+        filters = [
+                (models.TableObject.name == table),
+                (models.Field.display_name == field),
+                (models.Field.active == active),
+                (models.TableObject.active == active)
+                ]
+        field_row = (self.session.query(models.Field)
+                .join(models.TableObject, models.TableObject.id ==
+                    models.Field.table_object_id)
+                .filter(*filters).first())
+        select_list_id = field_row.select_list_id
+        criteria = [(models.SelectListItem.display_name == item)]
+        select_list_items = self.get_select_list_items_from_id(select_list_id,
+                criteria)
+        item = None
+        if select_list_items:
+            item = select_list_items[0]
+        return item
 
     def get_foreign_key_data(self, fk_table_data, fk_field_data, params=None):
         # logging.info(fk_table_data)
@@ -226,7 +253,7 @@ class OrganizationAccessControl:
 
     def get_table_query_data(self, field_dict, criteria={}, active = 1):
         results = []
-        tables = set([])
+        tables = []
         joins = []
         table_models = {}
         outer_joins = []
@@ -257,17 +284,20 @@ class OrganizationAccessControl:
                     table_models[field.TableObject.name] = fk_table_model
                 # create alias to the fk table
                 # solves the case of more than one join to same table
-                alias_name = field.Field.display_name + '_' + field.FK_TableObject.name + '_' + field.FK_Field.display_name
-                aliases[alias_name] = aliased(table_model, name = alias_name)
-                outer_joins.append((
-                    aliases[alias_name],
-                    getattr(fk_table_model, field.Field.display_name) == aliases[alias_name].id
-                ))
+                alias_name = field.TableObject.name + '_' + field.Field.display_name + '_' + field.FK_TableObject.name + '_' + field.FK_Field.display_name
+                # possible to have two of the same field with calculations
+                if alias_name not in aliases:
+                    aliases[alias_name] = aliased(table_model, name = alias_name)
+                    outer_joins.append((
+                        aliases[alias_name],
+                        getattr(fk_table_model, field.Field.display_name) == aliases[alias_name].id
+                    ))
                 col = getattr(aliases[alias_name],
                     field.FK_Field.display_name)
 
             else:  # non-fk field
-                tables.add(table_model)
+                if table_model not in tables:
+                    tables.append(table_model)
                 col = getattr(table_model, field.Field.display_name)
                 if field.type == 'file': # give name as well
                     col = getattr(table_model, 'name') + '/' + col
@@ -313,9 +343,6 @@ class OrganizationAccessControl:
             # add a row id that is the id of the first table named
             id_table_name = table_model.__table__.name.lower()
             id_table_col = getattr(table_model, 'id')
-            if id_table_name == first_table_named:
-                col = id_table_col
-                columns.append(col.label('DT_RowId'))
             id_cols.append(id_table_name + '-' + cast(id_table_col, String))
             wheres.append(getattr(table_model, 'organization_id').in_(self.org_ids))
             wheres.append(getattr(table_model, 'active') == active)
@@ -326,7 +353,9 @@ class OrganizationAccessControl:
                 first = False
             else:
                 id_col = id_col.concat('|' + c)
+        # TODO: clean this up, dont need label?
         columns.append(id_col.label('DT_row_label'))
+        columns.append(id_col.label('DT_RowId'))
         start = time.time()
         results = (
             self.session.query(*columns).
@@ -463,7 +492,7 @@ class OrganizationAccessControl:
                     tables_updated.append(tbl.__table_name__)
                 except AttributeError:
                     print('failed to update')
-            # commit if we were able to make all updates for the row
+            # commit if we were able to all updates for the row
             if len(updates) == len(row_updates):
                 self.session.commit()
                 updated.append(item.id)
@@ -473,7 +502,6 @@ class OrganizationAccessControl:
             else:
                 self.session.rollback()
                 print('rollback')
-
         return updated
 
     def update_rows(self, table, updates, ids):

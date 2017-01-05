@@ -109,14 +109,35 @@ def update_table_rows(facility_name, table_name):
     # TODO: protect this by checking the rows ageninst org_ids
     updates = request.json['updates']
     message_fields = request.json['message_fields']
+    criteria = {}
+    tables = {}
     ids = request.json['ids']
-
-    tqc = TableQueryCollection(table_name,
-                               {(table_name, 'id'): ids})
+    # ids is not all table ids, WARNING that
+    # criteria will match all ids, not combinations of ids
+    # however this seems just as reasonable as choosing an id per table
+    # which must be done carefully in tq and could still be wrong
+    # also we already use this for the row label
+    print(ids)
+    tbl_ids = {}
+    for id_row in ids:
+        pairs = id_row.split('|')
+        print(pairs)
+        for pair_row in pairs:
+            pair = pair_row.split('-')
+            tup = (pair[0], 'id')
+            if tup not in tables:
+                criteria[tup] = []
+            criteria[tup].append(pair[1])
+            if tup not in tbl_ids:
+                tbl_ids[tup] = {}
+            if pair[1] not in tbl_ids[tup]:
+                tbl_ids[tup][pair[1]] = []
+            tbl_ids[tup][pair[1]].append(id_row)
+    tqc = TableQueryCollection(table_name, criteria)
     tqc.get_results()
     tqc.format_results(True)
     tq = tqc.get_first()
-    updated = tq.update_and_get_message(table_name, updates, ids, message_fields)
+    updated = tq.update_and_get_message(table_name, updates, criteria, message_fields, tbl_ids)
     return json.dumps({'updated': updated})
 
 @core.route('/new_workflow/<workflow_name>/ajax', methods=['GET', 'POST'])

@@ -1,7 +1,8 @@
 from flask import abort
 from flask.ext.security import login_required
+from iggybase import g_helper
 from iggybase.web_files.decorators import templated
-
+import json
 import iggybase.core.table_query_collection as tqc
 from iggybase import core
 from iggybase.web_files.page_template import PageTemplate
@@ -18,7 +19,7 @@ def default():
 @murray.route( '/update_ordered/<table_name>/ajax' )
 @login_required
 def update_ordered_ajax(facility_name, table_name):
-    return core.routes.build_summary_ajax(table_name, 'update', {('oligo', 'status'):'ordered'})
+    return core.routes.build_summary_ajax(table_name, {('oligo', 'status'):'ordered'})
 
 
 @murray.route( '/update_ordered/<table_name>/' )
@@ -30,11 +31,13 @@ def update_ordered(facility_name, table_name):
             {('oligo', 'status'):'ordered'})
     tq = table_queries.get_first()
     hidden_fields = {}
-    hidden_fields['column_defaults'] = '{"status":1, "received":"now"}'
+    oac = g_helper.get_org_access_control()
+    oligo_status_received = oac.get_select_list_item('oligo', 'status', 'Received')
+    hidden_fields['column_defaults'] = json.dumps({"oligo":{"status":oligo_status_received.id, "received":"now"}})
     # TODO if we can sort out foreign keys for the update then
     # we don't need to pass in button text
     hidden_fields['button_text'] = 'Receive Selected Oligos'
-    hidden_fields['message_fields'] = '["oligo|oligo_name"]'
+    hidden_fields['message_fields'] = json.dumps(["oligo|oligo_name"])
     # if nothing to display then page not found
     if not tq.fc.fields:
         abort(403)
@@ -59,9 +62,11 @@ def update_requested(facility_name, table_name):
             {('oligo', 'status'):'requested'})
     tq = table_queries.get_first()
     hidden_fields = {}
-    hidden_fields['column_defaults'] = '{"status":2, "ordered":"now"}'
+    oac = g_helper.get_org_access_control()
+    oligo_status_ordered = oac.get_select_list_item('oligo', 'status', 'Ordered')
+    hidden_fields['column_defaults'] = json.dumps({"oligo":{"status":oligo_status_ordered.id, "ordered":"now"}})
     hidden_fields['button_text'] = 'Order Selected Oligos'
-    hidden_fields['message_fields'] = '["oligo|oligo_name", "oligo|sequence"]'
+    hidden_fields['message_fields'] = json.dumps(["oligo|oligo_name", "oligo|sequence"])
     # if nothing to display then page not found
     if not tq.fc.fields:
         abort(403)
@@ -73,7 +78,7 @@ def update_requested(facility_name, table_name):
 @murray.route( '/cancel/<table_name>/ajax' )
 @login_required
 def cancel_ajax(facility_name, table_name):
-    return core.routes.build_summary_ajax(table_name, 'update', {('oligo', 'status'):['ordered', 'requested']})
+    return core.routes.build_summary_ajax(table_name, {('oligo', 'status'):['ordered', 'requested']})
 
 
 @murray.route( '/cancel/<table_name>/' )
@@ -85,11 +90,13 @@ def cancel(facility_name, table_name):
             {('oligo', 'status'):['ordered', 'requested']})
     tq = table_queries.get_first()
     hidden_fields = {}
-    hidden_fields['column_defaults'] = '{"status":3}'
+    oac = g_helper.get_org_access_control()
+    oligo_status_canceled = oac.get_select_list_item('oligo', 'status', 'Canceled')
+    hidden_fields['column_defaults'] = json.dumps({"oligo":{"status":oligo_status_canceled.id}})
     # TODO if we can sort out foreign keys for the update then
     # we don't need to pass in button text
     hidden_fields['button_text'] = 'Cancel Selected Oligos'
-    hidden_fields['message_fields'] = '["oligo|oligo_name"]'
+    hidden_fields['message_fields'] = json.dumps(["oligo|oligo_name"])
     # if nothing to display then page not found
     if not tq.fc.fields:
         abort(403)

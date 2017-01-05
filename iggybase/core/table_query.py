@@ -52,7 +52,6 @@ class TableQuery:
                 }
             else:
                 criteria[criteria_key] = row.TableQueryCriteria.value
-
         criteria.update(orig_criteria)
         return criteria
 
@@ -160,23 +159,27 @@ class TableQuery:
     def get_row_list(self): # for summary_ajax
         return list(self.table_dict.values())
 
-    def update_and_get_message(self, table_name, updates, ids, message_fields):
-        #updated = self.oac.update_rows(self.display_name, updates, ids)
-        updated = self.oac.update_obj_rows(self.results, updates)
-        updated_info = []
-        for i in updated:
-            # for each row grab any message_fields, to inform the user about the
-            # update
-            row_fields = []
-            for field in message_fields:
-                val = self.table_dict[table_name + '-' + str(i)][field]
-                if val:
-                    row_fields.append(str(val))
-            if row_fields:
-                updated_info.append(', '.join(row_fields))
-            else:
-                updated_info.append('no ' + ', '.join(message_fields) + ' for id = ' + str(i))
-        return updated_info
+    def update_and_get_message(self, table_name, updates, ids, message_fields,
+            tbl_ids):
+        updated_info = set([])
+        for tbl, col_updates in updates.items():
+            updated = self.oac.update_rows(tbl, col_updates, ids[(tbl, 'id')])
+            for i in updated:
+                row_ids = tbl_ids[(tbl, 'id')]
+                row_ids = row_ids[str(i)]
+                for row_id in row_ids:
+                    # for each row grab any message_fields, to inform the user about the
+                    # update
+                    row_fields = []
+                    for field in message_fields:
+                        val = self.table_dict[row_id][field]
+                        if val:
+                            row_fields.append(str(val))
+                    if row_fields:
+                        updated_info.add(', '.join(row_fields))
+                    else:
+                        updated_info.add('no ' + ', '.join(message_fields) + ' for id = ' + i)
+        return list(updated_info)
 
     def get_display_name(self, name):
         # get field obj display name from table_name|field_name

@@ -16,15 +16,30 @@ def default():
 @smallmolecule.route( '/qc/ajax' )
 @login_required
 def qc_ajax(facility_name):
-    return core.routes.build_summary_ajax('qc', {('sample_smms', 'status_id'):'pending'})
+    return core.routes.build_summary_ajax('qc', {('test_smms', 'status_id'):'pending'})
 
 
 @smallmolecule.route( '/qc/' )
 @login_required
 @templated()
 def qc(facility_name):
-    choose_action = OrderedDict({'Pass':"[{'table':'test', 'field':'status_id', 'value':25}]", 'Fail':"{'status_id':25}"})
     oac = g_helper.get_org_access_control()
-    analysis_arr = oac.get_row('analysis', {}, False, True)
-    context = {'choose_action': choose_action}
+    test_status_pass = oac.get_select_list_item('test_smms', 'status_id', 'PASSED')
+    sample_status_pass = oac.get_select_list_item('sample_smms', 'status_id', 'PASSED')
+    # on pass update status and date_finished
+    choose_action = OrderedDict({
+        'Pass':'{"test_smms":{"status_id":' + str(test_status_pass.id)
+                + '},"sample_smms":{"status_id":' + str(sample_status_pass.id)
+                + ',"date_finished":"now"}}'})
+    # on fail set test status to fail and sample status to in progress
+    # must add fail second to maintain order in dict
+    test_status_fail = oac.get_select_list_item('test_smms', 'status_id', 'FAILED')
+    sample_status_pending = oac.get_select_list_item('sample_smms', 'status_id', 'PENDING')
+    choose_action['Fail'] = ('{"test_smms":{"status_id":' + str(test_status_fail.id)
+            + '},"sample_smms":{"status_id":' + str(sample_status_pending.id)
+            + '}}')
+    # TODO: would be better to get any field not just visible ones, cant get
+    # test name
+    hidden_fields = {'message_fields':'["sample_smms|name"]'}
+    context = {'choose_action': choose_action, 'hidden_fields': hidden_fields}
     return core.routes.build_summary('qc', 'choose_action_summary', context)
