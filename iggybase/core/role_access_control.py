@@ -1,5 +1,6 @@
 from collections import OrderedDict as OrderedDict
 from flask import g, request, session, current_app
+import json
 from iggybase.database import db_session
 from iggybase.admin import models
 from iggybase.admin import constants as admin_consts
@@ -62,6 +63,7 @@ class RoleAccessControl:
                 self.routes = session['routes']
             else:
                 self.set_routes()
+                logging.info('routes set for user: ' + self.user.name + ' routes: ' + json.dumps(self.routes))
         else:
             self.user = None
             self.role = None
