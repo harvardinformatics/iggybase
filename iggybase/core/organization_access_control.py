@@ -217,7 +217,7 @@ class OrganizationAccessControl:
                 .join(models.TableObject, models.TableObject.id ==
                     models.Field.table_object_id)
                 .filter(*filters).first())
-        select_list_id = field_row.select_list_id
+        select_list_id = getattr(field_row, 'select_list_id', None)
         criteria = [(models.SelectListItem.display_name == item)]
         select_list_items = self.get_select_list_items_from_id(select_list_id,
                 criteria)
