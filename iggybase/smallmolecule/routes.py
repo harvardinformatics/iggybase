@@ -1,6 +1,5 @@
 from flask.ext.security import login_required
 from iggybase.web_files.decorators import templated
-from iggybase import g_helper
 from iggybase import core
 from iggybase.web_files.page_template import PageTemplate
 from collections import OrderedDict
