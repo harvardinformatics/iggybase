@@ -30,8 +30,7 @@ def update_ordered(facility_name, table_name):
             {('oligo', 'status'):'ordered'})
     tq = table_queries.get_first()
     hidden_fields = {}
-    oac = g_helper.get_org_access_control()
-    oligo_status_received = oac.get_select_list_item('oligo', 'status', 'Received')
+    oligo_status_received = table_queries.oac.get_select_list_item('oligo', 'status', 'Received')
     hidden_fields['column_defaults'] = json.dumps({"oligo":{"status":oligo_status_received.id, "received":"now"}})
     # TODO if we can sort out foreign keys for the update then
     # we don't need to pass in button text
@@ -61,8 +60,7 @@ def update_requested(facility_name, table_name):
             {('oligo', 'status'):'requested'})
     tq = table_queries.get_first()
     hidden_fields = {}
-    oac = g_helper.get_org_access_control()
-    oligo_status_ordered = oac.get_select_list_item('oligo', 'status', 'Ordered')
+    oligo_status_ordered = table_queries.oac.get_select_list_item('oligo', 'status', 'Ordered')
     hidden_fields['column_defaults'] = json.dumps({"oligo":{"status":oligo_status_ordered.id, "ordered":"now"}})
     hidden_fields['button_text'] = 'Order Selected Oligos'
     hidden_fields['message_fields'] = json.dumps(["oligo|oligo_name", "oligo|sequence"])
@@ -89,8 +87,7 @@ def cancel(facility_name, table_name):
             {('oligo', 'status'):['ordered', 'requested']})
     tq = table_queries.get_first()
     hidden_fields = {}
-    oac = g_helper.get_org_access_control()
-    oligo_status_canceled = oac.get_select_list_item('oligo', 'status', 'Canceled')
+    oligo_status_canceled = table_queries.get_select_list_item('oligo', 'status', 'Canceled')
     hidden_fields['column_defaults'] = json.dumps({"oligo":{"status":oligo_status_canceled.id}})
     # TODO if we can sort out foreign keys for the update then
     # we don't need to pass in button text
