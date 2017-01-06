@@ -1,4 +1,4 @@
-import os
+import os, logging, sys
 from collections import OrderedDict
 from flask import Flask, g, send_from_directory, abort, url_for, request
 from wtforms import StringField, SelectField
@@ -30,7 +30,11 @@ def create_app():
     configure_hook( iggybase )
 
     add_base_routes( iggybase, conf, security, user_datastore )
-
+    print(os.path.dirname( os.path.realpath( __file__ ) ))
+    print(os.path.join( os.path.dirname( os.path.realpath( __file__ ))))
+    sys.path.insert( 0, os.path.dirname( os.path.realpath( __file__ ) ) )
+    sys.path.insert( 0, os.path.join( os.path.dirname( os.path.realpath( __file__ ) ), 'iggybase.log' ) )
+    logging.basicConfig( filename=os.path.join( os.path.dirname( os.path.realpath( __file__ ) ), 'iggybase.log' ),level=logging.DEBUG )
     return iggybase
 
 
