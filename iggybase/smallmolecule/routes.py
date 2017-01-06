@@ -28,15 +28,16 @@ def qc(facility_name):
     sample_status_pass = oac.get_select_list_item('sample_smms', 'status_id', 'PASSED')
     # on pass update status and date_finished
     choose_action = OrderedDict({
-        'Pass':'{"test_smms":{"status_id":' + str(test_status_pass.id)
-                + '},"sample_smms":{"status_id":' + str(sample_status_pass.id)
+        'Pass':'{"test_smms":{"status_id":' + str(getattr(test_status_pass,
+            'id', None))
+                + '},"sample_smms":{"status_id":' + str(getattr(sample_status_pass,'id', None))
                 + ',"date_finished":"now"}}'})
     # on fail set test status to fail and sample status to in progress
     # must add fail second to maintain order in dict
     test_status_fail = oac.get_select_list_item('test_smms', 'status_id', 'FAILED')
     sample_status_pending = oac.get_select_list_item('sample_smms', 'status_id', 'PENDING')
-    choose_action['Fail'] = ('{"test_smms":{"status_id":' + str(test_status_fail.id)
-            + '},"sample_smms":{"status_id":' + str(sample_status_pending.id)
+    choose_action['Fail'] = ('{"test_smms":{"status_id":' + str(getattr(test_status_fail, 'id', None))
+            + '},"sample_smms":{"status_id":' + str(getattr(sample_status_pending, 'id', None))
             + '}}')
     # TODO: would be better to get any field not just visible ones, cant get
     # test name

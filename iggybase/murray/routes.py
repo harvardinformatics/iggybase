@@ -4,6 +4,7 @@ from iggybase.web_files.decorators import templated
 import json
 import iggybase.core.table_query_collection as tqc
 from iggybase import core
+from iggybase import g_helper
 from iggybase.web_files.page_template import PageTemplate
 from . import murray
 
@@ -30,8 +31,9 @@ def update_ordered(facility_name, table_name):
             {('oligo', 'status'):'ordered'})
     tq = table_queries.get_first()
     hidden_fields = {}
-    oligo_status_received = table_queries.oac.get_select_list_item('oligo', 'status', 'Received')
-    hidden_fields['column_defaults'] = json.dumps({"oligo":{"status":oligo_status_received.id, "received":"now"}})
+    oac = g_helper.get_org_access_control()
+    oligo_status_received = oac.get_select_list_item('oligo', 'status', 'Received')
+    hidden_fields['column_defaults'] = json.dumps({"oligo":{"status":getattr(oligo_status_received, 'id', None), "received":"now"}})
     # TODO if we can sort out foreign keys for the update then
     # we don't need to pass in button text
     hidden_fields['button_text'] = 'Receive Selected Oligos'
@@ -60,8 +62,9 @@ def update_requested(facility_name, table_name):
             {('oligo', 'status'):'requested'})
     tq = table_queries.get_first()
     hidden_fields = {}
-    oligo_status_ordered = table_queries.oac.get_select_list_item('oligo', 'status', 'Ordered')
-    hidden_fields['column_defaults'] = json.dumps({"oligo":{"status":oligo_status_ordered.id, "ordered":"now"}})
+    oac = g_helper.get_org_access_control()
+    oligo_status_ordered = oac.get_select_list_item('oligo', 'status', 'Ordered')
+    hidden_fields['column_defaults'] = json.dumps({"oligo":{"status":getattr(oligo_status_ordered, 'id', None), "ordered":"now"}})
     hidden_fields['button_text'] = 'Order Selected Oligos'
     hidden_fields['message_fields'] = json.dumps(["oligo|oligo_name", "oligo|sequence"])
     # if nothing to display then page not found
@@ -87,8 +90,9 @@ def cancel(facility_name, table_name):
             {('oligo', 'status'):['ordered', 'requested']})
     tq = table_queries.get_first()
     hidden_fields = {}
-    oligo_status_canceled = table_queries.get_select_list_item('oligo', 'status', 'Canceled')
-    hidden_fields['column_defaults'] = json.dumps({"oligo":{"status":oligo_status_canceled.id}})
+    oac = g_helper.get_org_access_control()
+    oligo_status_canceled = oac.get_select_list_item('oligo', 'status', 'Canceled')
+    hidden_fields['column_defaults'] = json.dumps({"oligo":{"status":getattr(oligo_status_canceled, 'id', None)}})
     # TODO if we can sort out foreign keys for the update then
     # we don't need to pass in button text
     hidden_fields['button_text'] = 'Cancel Selected Oligos'
