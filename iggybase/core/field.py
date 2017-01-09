@@ -5,11 +5,16 @@ import datetime
 import logging
 
 class Field:
-    def __init__ (self, field, table_object, field_role, data_type, order, table_query_field = None, calculation = None):
+    def __init__ (self, field, table_object, child, field_role, data_type, order, table_query_field = None, calculation = None):
         self.Field = field
         self.TableObject = table_object
         self.FieldRole = field_role
         self.DataType = data_type
+
+        # if parent table then set TableObject to child, sql alchemhy will
+        # handle join
+        if child:
+            self.TableObject = child
 
         # FK data will be set when set_fk_field is called
         self.FK_Field = None
@@ -41,7 +46,6 @@ class Field:
         self.rac = g_helper.get_role_access_control()
         self.calculation_fields = self._get_calculation_fields(calculation)
         self.type = self._get_type()
-        self.extends_table = self.TableObject.extends_table_object_id
         self.is_foreign_key = (self.Field.foreign_key_table_object_id is not None)
         self.is_dynamic_field = (self.Field.dynamic_field_definition_field_id is not None)
         self.is_title_field = (self.TableObject.id == self.Field.table_object_id and self.Field.display_name == 'name')

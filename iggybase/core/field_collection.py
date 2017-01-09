@@ -39,6 +39,7 @@ class FieldCollection:
             calculation = getattr(row, 'TableQueryCalculation', None)
             field = Field(row.Field,
                     row.TableObject,
+                    getattr(row, 'child', None),
                     row.FieldRole,
                     row.DataType,
                     order,

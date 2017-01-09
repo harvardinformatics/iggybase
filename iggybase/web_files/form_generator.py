@@ -226,7 +226,7 @@ class FormGenerator(PageTemplate):
         for context in self.page_context:
             if context not in ['base-context', 'workflow','modal_form']:
                 table_context.append(context)
-            
+
         for table_name, table_data in data_instance.tables.items():
             if table_name == 'history':
                 continue

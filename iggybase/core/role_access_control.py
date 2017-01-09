@@ -5,7 +5,8 @@ from iggybase.database import db_session
 from iggybase.admin import models
 from iggybase.admin import constants as admin_consts
 from iggybase import utilities as util
-from sqlalchemy import or_
+from sqlalchemy import or_, and_
+from sqlalchemy.orm import aliased
 import logging
 from sqlalchemy.dialects import mysql
 
@@ -129,15 +130,21 @@ class RoleAccessControl:
         return res
 
     def table_query_fields(self, table_query_id, table_names=None, table_id=None, criteria = {}, role_filter = True, active=1):
+
         filters = [
             (models.Field.active == active),
             (models.FieldRole.active == active),
             (models.TableObject.active == active),
             (models.Field.data_type_id == models.DataType.id)
         ]
-        if role_filter: # filters not needed for name of fk_field
+
+        # filters not needed for name of fk_field
+        # That means we get many rows for fk_field that are all the same and
+        # just use the first one
+        if role_filter:
             filters.append((models.TableObjectRole.role_id == self.role.id))
             filters.append((models.FieldRole.role_id == self.role.id))
+
         selects = [
             models.Field,
             models.TableObject,
@@ -147,6 +154,8 @@ class RoleAccessControl:
         ]
         joins = [
             models.FieldRole,
+            (models.TableObject,
+            models.TableObject.id == models.Field.table_object_id),
             models.TableObjectRole,
             models.DataType
         ]
@@ -170,10 +179,17 @@ class RoleAccessControl:
                 models.TableQueryField.order,
                 models.Field.order
             ]
-        elif table_names:
-            filters.append((models.TableObject.name.in_(table_names)))
-        elif table_id:
-            filters.append((models.TableObject.id == table_id))
+        else:
+            # aliased TableObject for extends tables
+            child = aliased(models.TableObject, name='child')
+            if table_names:
+                filters.append((models.TableObject.name.in_(table_names)))
+                extends_join = (child.name.in_(table_names))
+            elif table_id:
+                filters.append((models.TableObject.id == table_id))
+                extends_join = (child.id == table_id)
+            outerjoins.append((child, and_(child.extends_table_object_id == models.TableObject.id, extends_join)))
+            selects.append(child)
 
         # add any field_name filter
         if criteria:
@@ -184,10 +200,6 @@ class RoleAccessControl:
 
         res = (
             self.session.query(*selects).
-                join(
-                models.TableObject,
-                models.TableObject.id == models.Field.table_object_id
-                ).
                 join(*joins).
                 outerjoin(*outerjoins).
                 filter(*filters).order_by(*orders)
