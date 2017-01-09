@@ -128,7 +128,7 @@ class RoleAccessControl:
         )
         return res
 
-    def table_query_fields(self, table_query_id, table_name=None, table_id=None, criteria = {}, role_filter = True, active=1):
+    def table_query_fields(self, table_query_id, table_names=None, table_id=None, criteria = {}, role_filter = True, active=1):
         filters = [
             (models.Field.active == active),
             (models.FieldRole.active == active),
@@ -170,8 +170,8 @@ class RoleAccessControl:
                 models.TableQueryField.order,
                 models.Field.order
             ]
-        elif table_name:
-            filters.append((models.TableObject.name == table_name))
+        elif table_names:
+            filters.append((models.TableObject.name.in_(table_names)))
         elif table_id:
             filters.append((models.TableObject.id == table_id))
 
