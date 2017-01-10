@@ -1,6 +1,7 @@
 var search_click = false;
 
 $( document ).ready( function () {
+    $('.datepicker').datepicker({format: 'yyyy-mm-dd'});
     /* add a hack to get mac firefox scrollbars to show, no way in pure css */
     //constantly update the scroll position:
     sc=setInterval($.fn.scrollDown,200);

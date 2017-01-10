@@ -110,11 +110,11 @@ class IggybaseDateField(DateField):
             self.title = None
 
         if 'iggybase_class' in kwargs:
-            self.iggybase_class = 'datepicker-field ' + kwargs['iggybase_class']
+            self.iggybase_class = 'datepicker ' + kwargs['iggybase_class']
             temp_class = kwargs['iggybase_class']
             del kwargs['iggybase_class']
         else:
-            self.iggybase_class = 'datepicker-field'
+            self.iggybase_class = 'datepicker'
 
         if 'readonly' in kwargs:
             # remove datepicker for readonly
@@ -257,7 +257,7 @@ class IggybaseIntegerField(IntegerField):
     def __call__(self, *args, **kwargs):
         if self.title is not None:
             kwargs['title'] = self.title
-            
+
         if self.iggybase_class is not None:
             kwargs['class'] = self.iggybase_class
 

@@ -362,7 +362,7 @@ class DataInstance:
                 commit_msg[self.instance_id] = {'id': self.instance_id, 'name': self.instance_name,
                                                 'table': self.table_name, 'old_name': self.instance_name}
 
-        return commit_status, commit_msg 
+        return commit_status, commit_msg
 
     def rollback(self):
         self.organization_access_control.rollback()

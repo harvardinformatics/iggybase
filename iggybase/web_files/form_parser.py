@@ -1,5 +1,6 @@
 import re
 import os
+import datetime
 from werkzeug.utils import secure_filename
 from iggybase.core.data_instance import DataInstance
 from iggybase import utilities as util
@@ -13,7 +14,7 @@ class FormParser():
         self.table_names = []
         self.instance = None
         self.files = {}
-        
+
     def parse(self, form_data = None):
         fields = {}
         web_request = False
@@ -35,6 +36,8 @@ class FormParser():
 
             field_id = field_pattern.match(key)
             if field_id is not None:
+                # TODO: The different types of information being stored in this
+                # multilevel array could be made parts of an object
                 if field_id.group(3) not in fields.keys():
                     fields[field_id.group(3)] = {'long_text': {}, 'form_data': {}, 'data_entry': {}, 'record_data': {},
                                                  'id_data_entry': {}, 'files_data_entry': {}}
@@ -65,7 +68,6 @@ class FormParser():
 
         for row_id in sorted(fields.keys()):
             row_data = fields[row_id]
-
             table_name_field = row_data['record_data']['table']
             if table_name_field not in self.table_names:
                 self.table_names.append(table_name_field)
@@ -101,8 +103,6 @@ class FormParser():
 
             row_data['data_entry']['organization_id'] = row_org_id
 
-            exclude_list = ['id', 'last_modified', 'date_created', 'organization_id']
-
             for table_field, meta_data in self.instance.fields[table_name_field].fields.items():
                 # only update fields that were on the form
                 if meta_data.Field.display_name not in row_data['data_entry'].keys():
@@ -111,19 +111,10 @@ class FormParser():
                 field_data = meta_data.Field
                 field = field_data.display_name
 
-                if 'text' == meta_data.DataType.name.lower and row_data['data_entry'][field] != '':
-                    if row_data['long_text'][field] == '':
-                        lt = DataInstance('long_text', 'new')
-                    else:
-                        lt = DataInstance('long_text')
-                        lt.get_data(None, int(row_data['long_text'][field]))
-
-                    lt.set_value('organization_id', row_org_id)
-                    lt.set_value('long_text', row_data['data_entry'][field])
-                    msg = lt.save()
-
-                    row_data['data_entry'][field] = next(iter(msg))
-                elif field_data.foreign_key_table_object_id is not None or field_data.select_list_id is not None:
+                # handle empty and FK
+                if row_data['data_entry'][field] == '':
+                    row_data['data_entry'][field] = None
+                elif field_data.foreign_key_table_object_id is not None:
                     try:
                         if row_data['data_entry'][field] is None or row_data['data_entry'][field] == '' \
                                 or int(row_data['data_entry'][field]) == -99:
@@ -135,7 +126,37 @@ class FormParser():
                             row_data['data_entry'][field] = int(row_data['id_data_entry'][field])
                         except  (ValueError, KeyError) as e:
                             row_data['data_entry'][field] = None
-                elif meta_data.DataType.name.lower() == 'file':
+                # handle datatypes
+                elif meta_data.type == 'integer':
+                    row_data['data_entry'][field] = int(row_data['data_entry'][field])
+                elif meta_data.type == 'boolean':
+                    if row_data['data_entry'][field] == 'y' or row_data['data_entry'][field] == 'True' or \
+                                    row_data['data_entry'][field] == '1':
+                        row_data['data_entry'][field] = True
+                    else:
+                        row_data['data_entry'][field] = False
+                elif meta_data.type == 'datetime':
+                    #TOOD: make sure this doesn't wipe out seconds
+                    date_parts = list(map(int, row_data['data_entry'][field].split('-')))
+                    if len(date_parts) == 3:
+                        row_data['data_entry'][field] = datetime.date(year=date_parts[0], month=date_parts[1],
+                                day=date_parts[2])
+                    else:
+                        row_data['data_entry'][field] = None
+                elif meta_data.type == 'float':
+                    row_data['data_entry'][field] = float(row_data['data_entry'][field])
+                elif meta_data.type == 'text' and row_data['data_entry'][field] != None:
+                    if row_data['long_text'][field] == '':
+                        lt = DataInstance('long_text', 'new')
+                    else:
+                        lt = DataInstance('long_text')
+                        lt.get_data(None, int(row_data['long_text'][field]))
+
+                    lt.set_value('organization_id', row_org_id)
+                    lt.set_value('long_text', row_data['data_entry'][field])
+                    msg = lt.save()
+                    row_data['data_entry'][field] = next(iter(msg))
+                elif meta_data.type == 'file':
                     old_files = []
                     self.files[(instance_name, table_name_field)] = []
 
@@ -152,19 +173,6 @@ class FormParser():
                     if len(old_files) > 0:
                         filenames = "|".join(old_files)
                         row_data['data_entry'][field] = filenames
-                elif field not in exclude_list:
-                    if row_data['data_entry'][field] == '':
-                        row_data['data_entry'][field] = None
-                    elif field_data.data_type_id == 1:
-                        row_data['data_entry'][field] = int(row_data['data_entry'][field])
-                    elif field_data.data_type_id == 8:
-                        row_data['data_entry'][field] = float(row_data['data_entry'][field])
-                    elif field_data.data_type_id == 3:
-                        if row_data['data_entry'][field] == 'y' or row_data['data_entry'][field] == 'True' or \
-                                        row_data['data_entry'][field] == '1':
-                            row_data['data_entry'][field] = True
-                        else:
-                            row_data['data_entry'][field] = False
 
             self.instance.set_values(row_data['data_entry'], table_name_field, instance_name)
 

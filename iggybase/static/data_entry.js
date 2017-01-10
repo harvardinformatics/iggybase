@@ -68,12 +68,6 @@ $( document ).ready( function () {
             return $.fn.dataEntryEventManager( e, $( this ) );
         } );
 
-        $( ".datepicker-field" ).datepicker(
-            {
-                format: 'yyyy-mm-dd',
-                autoclose: true
-            }
-        );
     }
 
     $.fn.addSequenceLabel = function ( ele ) {
@@ -88,7 +82,7 @@ $( document ).ready( function () {
         var price_item = ele.val();
         var row_sibs = ele.parent().parent().siblings();
         var hidden_fields = $("#hidden_fields");
-        
+
         var table_name = hidden_fields.find('input[name=table]').val();
         var facility = hidden_fields.find('input[name=facility]').val();
         // TODO: use org id to get price_type

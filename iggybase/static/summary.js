@@ -15,7 +15,6 @@ $(document).ready(function(){
         lengthMenu:[[10,25,50,100,-1],[10,25,50,100,'All']],
         columns: columns
     });
-    $('.datepicker').datepicker();
 
     // add event listeners for date range filter
     $('#min_date, #max_date, #date_field_select').change(function() {table.draw();});

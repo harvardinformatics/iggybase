@@ -50,9 +50,6 @@
 .search-button {
   display: inline-block ! important ;
 }
-.datepicker-field {
-    max-width:100px!important;
-}
 .right {
     float: right ! important;
 }
