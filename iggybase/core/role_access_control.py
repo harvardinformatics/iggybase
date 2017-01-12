@@ -130,7 +130,6 @@ class RoleAccessControl:
         return res
 
     def table_query_fields(self, table_query_id, table_names=None, table_id=None, criteria = {}, role_filter = True, active=1):
-        print(table_names)
         filters = [
             (models.Field.active == active),
             (models.FieldRole.active == active),

@@ -7,3 +7,6 @@ th, td {
     max-width: 250px;
     word-wrap: break-word;
 }
+.table_wrapper {
+    display: inline-block;
+}
