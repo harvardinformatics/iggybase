@@ -35,7 +35,7 @@ def qc(facility_name):
     # on fail set test status to fail and sample status to in progress
     # must add fail second to maintain order in dict
     test_status_fail = oac.get_select_list_item('test_smms', 'status_id', 'FAILED')
-    sample_status_pending = oac.get_select_list_item('sample_smms', 'status_id', 'PENDING')
+    sample_status_pending = oac.get_select_list_item('sample_smms', 'status_id', 'IN PROGRESS')
     choose_action['Fail'] = ('{"test_smms":{"status_id":' + str(getattr(test_status_fail, 'id', None))
             + '},"sample_smms":{"status_id":' + str(getattr(sample_status_pending, 'id', None))
             + '}}')
