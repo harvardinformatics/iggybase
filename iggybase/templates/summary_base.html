@@ -11,11 +11,9 @@
 
 {% block page_content %}
     {% if table_query %}
-    <div class="table_wrapper">
         <div class={{ table_name ~ "_table" }}>
             {{ macros.render_table_headers(table_query) }}
         </div>
-    </div>
     {% endif %}
 {%- endblock page_content %}
 {% block scripts %}

@@ -5,6 +5,7 @@ $(document).ready(function(){
     });
     var table = $('.summary_table').DataTable({
         deferRender:true,
+        autoWidth:false,
         scrollX:true,
         ajax:{
             url:'ajax',
