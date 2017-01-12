@@ -130,7 +130,7 @@ class RoleAccessControl:
         return res
 
     def table_query_fields(self, table_query_id, table_names=None, table_id=None, criteria = {}, role_filter = True, active=1):
-
+        print(table_names)
         filters = [
             (models.Field.active == active),
             (models.FieldRole.active == active),
@@ -167,6 +167,8 @@ class RoleAccessControl:
         ]
         outerjoins = []
 
+        # aliased TableObject for extends tables
+        child = aliased(models.TableObject, name='child')
         # add filter for the identifier
         if table_query_id:
             filters.append((models.TableQueryField.table_query_id == table_query_id))
@@ -175,13 +177,13 @@ class RoleAccessControl:
             selects.append(models.TableQueryCalculation)
             joins.append(models.TableQueryField)
             outerjoins.append(models.TableQueryCalculation)
+            extends_join = (child.name.in_(['sample_smms']))
+            outerjoins.append((child, and_(child.extends_table_object_id == models.TableObject.id, extends_join)))
             orders = [
                 models.TableQueryField.order,
                 models.Field.order
             ]
         else:
-            # aliased TableObject for extends tables
-            child = aliased(models.TableObject, name='child')
             if table_names:
                 filters.append((models.TableObject.name.in_(table_names)))
                 extends_join = (child.name.in_(table_names))
@@ -189,7 +191,7 @@ class RoleAccessControl:
                 filters.append((models.TableObject.id == table_id))
                 extends_join = (child.id == table_id)
             outerjoins.append((child, and_(child.extends_table_object_id == models.TableObject.id, extends_join)))
-            selects.append(child)
+        selects.append(child)
 
         # add any field_name filter
         if criteria:
@@ -197,7 +199,6 @@ class RoleAccessControl:
                 crit_field = getattr(models.Field, key, None)
                 if crit_field:
                     filters.append((crit_field == val))
-
         res = (
             self.session.query(*selects).
                 join(*joins).
