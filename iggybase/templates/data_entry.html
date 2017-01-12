@@ -26,7 +26,7 @@
             {% endif %}
         </div>
     {%- endblock content_title %}
-    
+
     {% block topbuttonbar -%}
         {{ super() }}
     {% endblock topbuttonbar -%}
@@ -112,7 +112,7 @@
                 {% elif not bootstrap_is_hidden_field( field ) -%}
                     {% if (table_level == 0 and form_type == "single") or "modal_form" in page_context -%}
                         {% set field_vars = field.id.split("_") %}
-                        {{ macros.render_field( field, field_vars[field_vars|length - 1], table_name, row_name, col_style, label_style ) }}
+                        {{ macros.render_field_data_entry( field, field_vars[field_vars|length - 1], table_name, row_name, col_style, label_style ) }}
                     {% else -%}
                         <div class="{{ col_style }}">
                             {{ macros.table_field( field ) }}
