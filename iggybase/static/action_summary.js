@@ -11,6 +11,7 @@ $(document).ready(function(){
     }
     var table = $('.summary_table').DataTable({
         deferRender:true,
+        order:[],
         autoWidth:false,
         scrollX:true,
         ajax:{

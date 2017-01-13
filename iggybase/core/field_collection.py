@@ -20,6 +20,7 @@ class FieldCollection:
 
         # get all the fields
         self.fields = self._populate_fields()
+        self.order_by = self.get_order_by()
 
     def _get_fields(self):
         field_res = self.rac.table_query_fields(
@@ -50,6 +51,18 @@ class FieldCollection:
             if field.type == 'datetime':
                 self.date_fields[field.display_name] = order
         return field_dict
+
+    def get_order_by(self):
+        order_by = {}
+        for name, field in self.fields.items():
+            if field.order_by != None:
+                order_by[name] = {
+                    'order': abs(field.order_by),
+                    'desc': (True if field.order_by < 0 else False)
+                }
+        order_by_sorted = OrderedDict(sorted(order_by.items(), key=lambda x:
+            x[1]['order']))
+        return order_by_sorted
 
     def extends_table_name(self, table_name):
         # if extends table then add parent to self.table_names

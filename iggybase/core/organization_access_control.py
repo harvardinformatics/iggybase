@@ -1,5 +1,5 @@
 from flask import g, current_app
-from sqlalchemy import DateTime, func, cast, String
+from sqlalchemy import DateTime, func, cast, String, desc
 from sqlalchemy.exc import IntegrityError, DataError, SQLAlchemyError, NoForeignKeysError, IdentifierError, \
     NoReferenceError
 from iggybase.database import db_session
@@ -251,7 +251,7 @@ class OrganizationAccessControl:
 
         return results
 
-    def get_table_query_data(self, field_dict, criteria={}, active = 1):
+    def get_table_query_data(self, fc, criteria={}, active = 1):
         results = []
         tables = []
         joins = []
@@ -262,8 +262,9 @@ class OrganizationAccessControl:
         aliases = {}
         wheres = []
         group_by = []
+        order_by = None
         first_table_named = None  # set to first table name, dont add to joins
-        for field in field_dict.values():
+        for field in fc.fields.values():
             # Get the table to display, fk table for fks
             if field.is_foreign_key:
                 table_name = field.FK_TableObject.name
@@ -315,6 +316,12 @@ class OrganizationAccessControl:
             if field.group_func:
                 col = getattr(func, field.group_func)(col.op('SEPARATOR')(', '))
             columns.append(col.label(field.name))
+            # set order by to first column asc if not set
+            if not order_by:
+                if fc.order_by:
+                    order_by = fc.order_by
+                elif field.visible:
+                        order_by = {key:{'desc':False}}
 
             criteria_key = (field.TableObject.name, field.Field.display_name)
             # don't include criteria for self foreign keys
@@ -353,6 +360,13 @@ class OrganizationAccessControl:
                 first = False
             else:
                 id_col = id_col.concat('|' + c)
+        # format order_by
+        order_by_list = []
+        for key, val in order_by.items():
+            if val['desc']:
+                order_by_list.append(desc(key))
+            else:
+                order_by_list.append(key)
         # TODO: clean this up, dont need label?
         columns.append(id_col.label('DT_row_label'))
         columns.append(id_col.label('DT_RowId'))
@@ -361,7 +375,7 @@ class OrganizationAccessControl:
             self.session.query(*columns).
                 join(*joins).
                 outerjoin(*outer_joins).
-                filter(*wheres).group_by(*group_by).all()
+                filter(*wheres).group_by(*group_by).order_by(*order_by_list).all()
         )
         print('query: ' + str(time.time() - start))
         return results

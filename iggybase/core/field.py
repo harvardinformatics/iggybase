@@ -39,9 +39,11 @@ class Field:
         # if table query set any group_bys
         self.group_by = None
         self.group_func = None
+        self.order_by = None
         if self.TableQueryField:
             self.group_by = self.TableQueryField.group_by
             self.group_func = self.TableQueryField.group_func
+            self.order_by = self.TableQueryField.order_by
         self.display_name = self.get_field_display_name() # name from role or tq
         self.rac = g_helper.get_role_access_control()
         self.calculation_fields = self._get_calculation_fields(calculation)
