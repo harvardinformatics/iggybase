@@ -264,7 +264,7 @@ class OrganizationAccessControl:
         group_by = []
         order_by = None
         first_table_named = None  # set to first table name, dont add to joins
-        for field in fc.fields.values():
+        for key, field in fc.fields.items():
             # Get the table to display, fk table for fks
             if field.is_foreign_key:
                 table_name = field.FK_TableObject.name
