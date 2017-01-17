@@ -2,7 +2,7 @@ from flask import g
 
 def get_calculation(func, cols):
     try:
-        mod_class = __import__('iggybase.' + g.module + '.calculation',
+        mod_class = __import__('iggybase.' + g.facility + '.calculation',
                 fromlist=[func])
         function = getattr(mod_class, func)
         calculation = function(cols)

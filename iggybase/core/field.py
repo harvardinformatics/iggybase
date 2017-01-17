@@ -1,7 +1,7 @@
 from iggybase import g_helper
 from flask import g
 from .calculation import get_calculation
-import datetime
+import datetime, re
 import logging
 
 class Field:
@@ -106,6 +106,12 @@ class Field:
             display_name = self.Field.display_name
         else:
             return 'WHOA! Something is not right here. There is no display name for field ' + self.Field.name + "."
+        id_suffix = '_id'
+        if display_name.endswith(id_suffix):
+            display_name = re.sub(id_suffix, '', display_name)
+        calc_display_name = get_calculation((display_name + '_display_name'), [])
+        if calc_display_name:
+            display_name = calc_display_name
         return display_name.replace('_', ' ').title()
 
     def get_field_order(self):
