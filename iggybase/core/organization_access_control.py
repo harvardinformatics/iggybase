@@ -1,5 +1,5 @@
 from flask import g, current_app
-from sqlalchemy import DateTime, func, cast, String, desc
+from sqlalchemy import DateTime, func, cast, String, desc, or_
 from sqlalchemy.exc import IntegrityError, DataError, SQLAlchemyError, NoForeignKeysError, IdentifierError, \
     NoReferenceError
 from iggybase.database import db_session
@@ -262,7 +262,7 @@ class OrganizationAccessControl:
         aliases = {}
         wheres = []
         group_by = []
-        order_by = None
+        order_by = {}
         first_table_named = None  # set to first table name, dont add to joins
         for key, field in fc.fields.items():
             # Get the table to display, fk table for fks
@@ -321,7 +321,7 @@ class OrganizationAccessControl:
                 if fc.order_by:
                     order_by = fc.order_by
                 elif field.visible:
-                        order_by = {key:{'desc':False}}
+                    order_by = {key:{'desc':False}}
 
             criteria_key = (field.TableObject.name, field.Field.display_name)
             # don't include criteria for self foreign keys
@@ -351,7 +351,14 @@ class OrganizationAccessControl:
             id_table_name = table_model.__table__.name.lower()
             id_table_col = getattr(table_model, 'id')
             id_cols.append(id_table_name + '-' + cast(id_table_col, String))
-            wheres.append(getattr(table_model, 'organization_id').in_(self.org_ids))
+            # user row has one org_id but user_orgs are many
+            if id_table_name == 'user':
+                wheres.append(or_(
+                    getattr(table_model, 'organization_id').in_(self.org_ids),
+                    getattr(table_model, 'id') == g.user.id
+                    ))
+            else:
+                wheres.append(getattr(table_model, 'organization_id').in_(self.org_ids))
             wheres.append(getattr(table_model, 'active') == active)
         first = True
         for c in id_cols:

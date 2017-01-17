@@ -204,6 +204,12 @@ pre {
 .logout {
     margin: 5%;
 }
+#logout li {
+    display:inline;
+}
+#logout li:not(:last-child) {
+    border-right:solid 1px #FFF;
+}
 .container-fluid {
     clear: both;
 }
