@@ -5,7 +5,7 @@ from iggybase.database import db_session
 from iggybase.admin import models
 from iggybase.admin import constants as admin_consts
 from iggybase import utilities as util
-from sqlalchemy import or_, and_
+from sqlalchemy import or_, and_, distinct
 from sqlalchemy.orm import aliased
 import logging
 from sqlalchemy.dialects import mysql
@@ -176,7 +176,14 @@ class RoleAccessControl:
             selects.append(models.TableQueryCalculation)
             joins.append(models.TableQueryField)
             outerjoins.append(models.TableQueryCalculation)
-            extends_join = (child.name.in_(['sample_smms']))
+            # must find table_names as filter for child query
+            # else we would have multiple rows due to multiple children
+            tbl_names = (self.session.query(distinct(models.TableObject.name))
+                    .join((models.Field, models.TableObject.id ==
+                        models.Field.table_object_id), models.TableQueryField)
+                    .filter(models.TableQueryField.table_query_id == table_query_id).all())
+            tbls = [r[0] for r in tbl_names]
+            extends_join = (child.name.in_(tbls))
             outerjoins.append((child, and_(child.extends_table_object_id == models.TableObject.id, extends_join)))
             orders = [
                 models.TableQueryField.order,
