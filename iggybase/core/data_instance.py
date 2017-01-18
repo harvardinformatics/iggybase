@@ -323,7 +323,6 @@ class DataInstance:
         inst_names = {}
         save_instances = []
         background_save_instances = []
-
         for table_name, instances in self.instances.items():
             if table_name == 'history':
                 continue

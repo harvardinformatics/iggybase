@@ -136,13 +136,15 @@ class FormParser():
                     else:
                         row_data['data_entry'][field] = False
                 elif meta_data.type == 'datetime':
-                    #TOOD: make sure this doesn't wipe out seconds
-                    date_parts = list(map(int, row_data['data_entry'][field].split('-')))
-                    if len(date_parts) == 3:
-                        row_data['data_entry'][field] = datetime.date(year=date_parts[0], month=date_parts[1],
-                                day=date_parts[2])
-                    else:
-                        row_data['data_entry'][field] = None
+                    date = None
+                    try:
+                        date = datetime.strptime(row_data['data_entry'][field],
+                        '%Y-%d-%m %T')
+                        print(date)
+                    except:
+                        logging.info('Failed to parse date:' +
+                        row_data['data_entry'][field])
+                    row_data['data_entry'][field] = date
                 elif meta_data.type == 'float':
                     row_data['data_entry'][field] = float(row_data['data_entry'][field])
                 elif meta_data.type == 'text' and row_data['data_entry'][field] != None:
