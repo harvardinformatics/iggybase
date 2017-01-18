@@ -379,23 +379,17 @@ class OrganizationAccessControl:
         columns.append(id_col.label('DT_row_label'))
         columns.append(id_col.label('DT_RowId'))
         start = time.time()
-        stmt = (
-            self.session.query(*columns).
-                join(*joins).
-                outerjoin(*outer_joins).
-<<<<<<< Updated upstream
-                filter(*wheres).group_by(*group_by).order_by(*order_by_list).all()
-=======
-                filter(*wheres).group_by(*group_by)
->>>>>>> Stashed changes
-        )
+        stmt = self.session.query(*columns). \
+                join(*joins). \
+                outerjoin(*outer_joins). \
+                filter(*wheres).group_by(*group_by).order_by(*order_by_list)
 
         query = stmt.statement.compile(dialect=mysql.dialect())
         logging.info('query')
         logging.info(str(query))
         logging.info(str(query.params))
 
-        results = stmt.all()
+        results = (stmt.all())
 
         print('query: ' + str(time.time() - start))
         return results
