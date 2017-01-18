@@ -173,6 +173,7 @@ class Facility(Base):
     banner_title = Column(String(255))
     banner_subtitle = Column(String(255))
     css = Column(String(255))
+    table_suffix = Column(String(255))
 
     def __repr__(self):
         return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \

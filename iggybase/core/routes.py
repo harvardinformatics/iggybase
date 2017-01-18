@@ -117,11 +117,9 @@ def update_table_rows(facility_name, table_name):
     # however this seems just as reasonable as choosing an id per table
     # which must be done carefully in tq and could still be wrong
     # also we already use this for the row label
-    print(ids)
     tbl_ids = {}
     for id_row in ids:
         pairs = id_row.split('|')
-        print(pairs)
         for pair_row in pairs:
             pair = pair_row.split('-')
             tup = (pair[0], 'id')

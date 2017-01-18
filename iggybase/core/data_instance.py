@@ -126,7 +126,6 @@ class DataInstance:
                                   'table_meta_data': self.role_access_control.has_access('TableObject',
                                                                                           {'name': 'history'})}
         self.initialize_fields('history')
-
         if depth > 0 and self.tables[self.table_name]['table_meta_data']:
             # if self.tables[self.table_name]['table_meta_data'].note_enabled == 1:
             #     self.tables['history'] = {'level': 1,
@@ -139,6 +138,11 @@ class DataInstance:
             #                                                                                       {'name': 'note'})}
             #     self.initialize_fields('note')
 
+            #TODO: consider adding child tables to Field
+            # then we just get FeildCollection for first table and then use that metadata to get next table
+            # FieldCollection, have get_link_tables function on a
+            # field_collection.  This would save duplicate role checking,
+            # dupilcate extension checking
             data = self.role_access_control.get_link_tables(self.tables[self.table_name]['table_meta_data'], depth)
 
             for index, link_data in enumerate(data):
@@ -146,7 +150,11 @@ class DataInstance:
                 #              'link_data': row.TableObjectChildren, 'link_type': 'child'}
                 table_name = link_data['table_meta_data'].name
                 self.initialize_fields(table_name)
-                link_display_name = self.fields[table_name].fields_by_id[(link_data['link_data'].child_table_object_id,
+                # TODO: if roles are not correct then the key may not exist in
+                # fields, consider possible fixes, for now better to error then
+                # not display what was asked because it is clearer what the
+                # issue is otherwise you may not realize there is an issue
+                link_display_name = self.fields[table_name].fields_by_id[(link_data['table_meta_data'].id,
                                                                           link_data['link_data'].child_link_field_id)] \
                     .Field.display_name
 

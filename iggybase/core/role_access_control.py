@@ -167,7 +167,7 @@ class RoleAccessControl:
         outerjoins = []
 
         # aliased TableObject for extends tables
-        child = aliased(models.TableObject, name='child')
+        extension = aliased(models.TableObject, name='extension')
         # add filter for the identifier
         if table_query_id:
             filters.append((models.TableQueryField.table_query_id == table_query_id))
@@ -176,15 +176,15 @@ class RoleAccessControl:
             selects.append(models.TableQueryCalculation)
             joins.append(models.TableQueryField)
             outerjoins.append(models.TableQueryCalculation)
-            # must find table_names as filter for child query
-            # else we would have multiple rows due to multiple children
+            # must find table_names as filter for extension query
+            # else we would have multiple rows due to multiple extensions
             tbl_names = (self.session.query(distinct(models.TableObject.name))
                     .join((models.Field, models.TableObject.id ==
                         models.Field.table_object_id), models.TableQueryField)
                     .filter(models.TableQueryField.table_query_id == table_query_id).all())
             tbls = [r[0] for r in tbl_names]
-            extends_join = (child.name.in_(tbls))
-            outerjoins.append((child, and_(child.extends_table_object_id == models.TableObject.id, extends_join)))
+            extends_join = (extension.name.in_(tbls))
+            outerjoins.append((extension, and_(extension.extends_table_object_id == models.TableObject.id, extends_join)))
             orders = [
                 models.TableQueryField.order,
                 models.Field.order
@@ -192,12 +192,12 @@ class RoleAccessControl:
         else:
             if table_names:
                 filters.append((models.TableObject.name.in_(table_names)))
-                extends_join = (child.name.in_(table_names))
+                extends_join = (extension.name.in_(table_names))
             elif table_id:
                 filters.append((models.TableObject.id == table_id))
-                extends_join = (child.id == table_id)
-            outerjoins.append((child, and_(child.extends_table_object_id == models.TableObject.id, extends_join)))
-        selects.append(child)
+                extends_join = (extension.id == table_id)
+            outerjoins.append((extension, and_(extension.extends_table_object_id == models.TableObject.id, extends_join)))
+        selects.append(extension)
 
         # add any field_name filter
         if criteria:
@@ -478,10 +478,12 @@ class RoleAccessControl:
         # logging.info('get_link_tables (models.TableObjectChildren.__table__.columns: ')
         # logging.info(models.TableObjectChildren.__table__.columns)
 
-        res = self.session.query(models.TableObjectChildren, models.TableObject, models.TableObjectRole). \
+        extension = aliased(models.TableObject, name='extension')
+        res = self.session.query(models.TableObjectChildren, models.TableObject, models.TableObjectRole, extension). \
             join(models.TableObject, models.TableObjectChildren.child_table_object_id == models.TableObject.id). \
             join(models.TableObjectRole,
                  models.TableObjectChildren.child_table_object_id == models.TableObjectRole.table_object_id). \
+            outerjoin(extension, and_(extension.extends_table_object_id == models.TableObject.id, (extension.name == (models.TableObject.name + '_' + self.facility.table_suffix)))). \
             filter(models.TableObjectChildren.table_object_id==table_object.id). \
             filter(models.TableObjectChildren.active==active). \
             filter(models.TableObjectRole.role_id==self.role.id). \
@@ -490,20 +492,18 @@ class RoleAccessControl:
 
         # logging.info('get_link_tables res: ' + table_object_name)
         # logging.info(res)
-
         if len(res) > 0:
             for row in res:
-                table_data = self.has_access('TableObject', {'id': row.TableObjectChildren.child_table_object_id})
-                if table_data:
-                    link_tables.append({'parent': table_object.name, 'level': level, 'table_meta_data': table_data,
-                                        'link_data': row.TableObjectChildren, 'link_type': 'child'})
+                # use extension if exists or TableObject as the child table
+                link_tables.append({'parent': table_object.name, 'level': level, 'table_meta_data': (row.extension or row.TableObject),
+                                    'link_data': row.TableObjectChildren, 'link_type': 'child'})
 
-                    # logging.info('get_link_tables row.TableObjectChildren ' + table_object_name)
-                    # logging.info(row.TableObjectChildren)
+                # logging.info('get_link_tables row.TableObjectChildren ' + table_object_name)
+                # logging.info(row.TableObjectChildren)
 
-                    if level < levels:
-                        # logging.info('level: ' + str(level))
-                        link_tables = link_tables + self.get_link_tables(row.TableObject,levels, level + 1, True)
+                if level < levels:
+                    # logging.info('level: ' + str(level))
+                    link_tables = link_tables + self.get_link_tables(row.TableObject,levels, level + 1, True)
 
 
         if not child_only:

@@ -5,16 +5,16 @@ import datetime, re
 import logging
 
 class Field:
-    def __init__ (self, field, table_object, child, field_role, data_type, order, table_query_field = None, calculation = None):
+    def __init__ (self, field, table_object, extension, field_role, data_type, order, table_query_field = None, calculation = None):
         self.Field = field
         self.TableObject = table_object
         self.FieldRole = field_role
         self.DataType = data_type
 
-        # if parent table then set TableObject to child, sql alchemhy will
+        # if parent table then set TableObject to extension, sql alchemhy will
         # handle join
-        if child:
-            self.TableObject = child
+        if extension:
+            self.TableObject = extension
 
         # FK data will be set when set_fk_field is called
         self.FK_Field = None
