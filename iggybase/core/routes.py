@@ -80,7 +80,6 @@ def detail(facility_name, table_name, row_name, page_context):
     hidden_fields = {'table': table_name, 'row_name': row_name}
 
     pt = PageTemplate(MODULE_NAME, 'detail', page_context)
-
     return pt.page_template_context(
         table_name=table_name,
         row_name=row_name,

@@ -1,7 +1,7 @@
 {% extends "summary_base.html" %}
 {% import "bootstrap/wtf.html" as wtf %}
 {% block content_title %}
-    <h1>{{ table_query.display_name.replace( '_', ' ' )|title }} {{page_header}}</h1>
+    <h1>{{ table_query.display_name|title }} {{page_header}}</h1>
 {%- endblock content_title %}
 {% block page_content %}
     <div>
