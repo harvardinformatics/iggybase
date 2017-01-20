@@ -253,6 +253,7 @@ class OrganizationAccessControl:
         return results
 
     def get_table_query_data(self, fc, criteria={}, active = 1):
+        logging.info(str('get_table_query_data'))
         results = []
         tables = []
         joins = []
@@ -384,10 +385,10 @@ class OrganizationAccessControl:
                 outerjoin(*outer_joins). \
                 filter(*wheres).group_by(*group_by).order_by(*order_by_list)
 
-        query = stmt.statement.compile(dialect=mysql.dialect())
-        logging.info('query')
-        logging.info(str(query))
-        logging.info(str(query.params))
+        # query = stmt.statement.compile(dialect=mysql.dialect())
+        # logging.info('query')
+        # logging.info(str(query))
+        # logging.info(str(query.params))
 
         results = (stmt.all())
 

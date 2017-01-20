@@ -29,12 +29,14 @@ def create_app():
     configure_error_handlers( iggybase )
     configure_hook( iggybase )
 
-    add_base_routes( iggybase, conf, security, user_datastore )
-    print(os.path.dirname( os.path.realpath( __file__ ) ))
-    print(os.path.join( os.path.dirname( os.path.realpath( __file__ ))))
-    sys.path.insert( 0, os.path.dirname( os.path.realpath( __file__ ) ) )
-    sys.path.insert( 0, os.path.join( os.path.dirname( os.path.realpath( __file__ ) ), 'iggybase.log' ) )
-    logging.basicConfig( filename=os.path.join( os.path.dirname( os.path.realpath( __file__ ) ), 'iggybase.log' ),level=logging.DEBUG )
+    add_base_routes(iggybase, conf, security, user_datastore)
+
+    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), 'iggybase.log'))
+
+    logging.basicConfig(filename=os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))),
+                                                              'iggybase.log'), level=logging.DEBUG)
+
     return iggybase
 
 
