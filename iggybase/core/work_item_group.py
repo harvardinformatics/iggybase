@@ -267,23 +267,30 @@ class WorkItemGroup:
                 else: # insert new
                     success = self.oac.set_work_items(self.WorkItemGroup.id, tbl_items, parent)
         # TODO: handle failure
+        self.get_work_item_group()
         return success
 
-    def insert_row(self, tables, fields = {}):
+    def insert_row(self, tables):
         for table in tables:
             fc = FieldCollection(None, table)
             fc.set_fk_fields()
-            fc.set_defaults()
+            defaults = self.get_defaults()
+            fc.set_defaults(defaults)
             for field in fc.fields.values():
-                if not field.Field.display_name in fields and field.default:
-                    fields[field.Field.display_name] = field.default
-
-            row = self.oac.insert_row(table, fields)
+                if not field.Field.display_name in defaults and field.default:
+                    defaults[field.Field.display_name] = field.default
+            row = self.oac.insert_row(table, defaults)
             if table in self.saved_rows:
                 self.saved_rows[table].append({'table': table, 'name': row.name, 'id': row.id})
             else:
                 self.saved_rows[table] = [{'table': table, 'name': row.name,
                     'id':row.id}]
+
+    def get_defaults(self):
+        defaults = {}
+        for table, rows in self.work_items.items():
+            defaults[table] = rows[0].WorkItem.row_id
+        return defaults
 
     def check_item_field_value(self, item, field, name):
         if item in self.saved_rows:
