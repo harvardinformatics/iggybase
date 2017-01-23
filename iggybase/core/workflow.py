@@ -6,6 +6,7 @@ import logging
 class Workflow:
     def __init__ (self, name):
         self.name = name
+        self.display_name = name.replace('_', ' ')
         self.rac = g_helper.get_role_access_control()
         self.Workflow = self.rac.workflow(self.name)
         self.id = self.Workflow.id
