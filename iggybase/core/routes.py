@@ -144,13 +144,6 @@ def new_workflow(facility_name, workflow_name):
     return json.dumps({'work_item_group': wig.name,
         'params':wig.workflow.steps[1].Step.params})
 
-@core.route('/new_order/<workflow_name>/', methods=['GET', 'POST'])
-@login_required
-def new_order(facility_name, workflow_name):
-    wig = WorkItemGroup('new', workflow_name, 1)
-    return work_item_group(facility_name, workflow_name, 1, wig.name)
-
-
 # TODO: maybe we should move this to the api module
 @core.route('/get_row/<table_name>/ajax', methods=['GET', 'POST'])
 @login_required
@@ -207,7 +200,6 @@ def change_role(facility_name):
 @templated()
 def data_entry(facility_name, table_name, row_name, page_context):
     module_name = MODULE_NAME
-
     if row_name == 'new':
         depth = request.args.get('depth', 0, int)
     else:
@@ -382,6 +374,8 @@ def workflow_complete(facility_name, workflow_name, work_item_group):
 @login_required
 def work_item_group(facility_name, workflow_name, step, work_item_group):
     wig = WorkItemGroup(work_item_group, workflow_name, int(step))
+    if work_item_group == 'new':
+        return redirect(wig.workflow.get_step_url(1, wig.name))
     if 'next_step' in request.form:
         wig.set_saved(json.loads(request.form['saved_rows']))
         next_step_url = wig.update_step()

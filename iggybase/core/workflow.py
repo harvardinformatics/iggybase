@@ -30,7 +30,7 @@ class Workflow:
     def get_step_url(self, step_num, work_item_group_name = None):
         step = self.steps[step_num]
         return self.get_url('work_item_group', self.name, step_num, work_item_group_name)
-    
+
     def get_url(self, table, workflow, step = None, work_item_group = None):
         endpoint = g.module + '.' + table
         values = {
@@ -39,7 +39,10 @@ class Workflow:
                 }
         if step:
             values['step'] = step
-            values['params'] = self.steps[step].Step.params
+            if self.steps[step].Step.params:
+                param_arr = self.steps[step].Step.params.split('=')
+                if len(param_arr) == 2:
+                    values[param_arr[0]] = param_arr[1]
         if work_item_group:
             values['work_item_group'] = work_item_group
         return url_for(endpoint, **values)

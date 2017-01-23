@@ -41,11 +41,6 @@ class WorkItemGroup:
         else:
             self.show_step_num = self.step_num
 
-        # set the url for current step
-        self.endpoint = self.step.Module.name + '.' + self.step.Route.url_path
-        self.dynamic_params = self.set_dynamic_params()
-        self.url = self.workflow.get_step_url(self.show_step_num, self.name)
-
         # default set on init, actions can change this
         self.next_step = self.show_step_num + 1
 
@@ -58,6 +53,10 @@ class WorkItemGroup:
         if self.show_step_num == self.step_num:
             self.do_step_actions(timing.BEFORE)
 
+        # set the url and dynamic params for current step
+        self.endpoint = self.step.Module.name + '.' + self.step.Route.url_path
+        self.dynamic_params = self.set_dynamic_params()
+        self.url = self.workflow.get_step_url(self.show_step_num, self.name)
 
     def get_work_item_group(self):
         if self.name != 'new':
@@ -146,7 +145,7 @@ class WorkItemGroup:
                     fields[field.Field.display_name] = field.default
             row = self.oac.insert_row(table, fields)
             self.name = row.name
-            self.get_work_item_group()
+            self.WorkItemGroup = row
         if time != timing.BEFORE or (time == timing.BEFORE and not self.WorkItemGroup.before_action_complete):
             actions = self.oac.get_step_actions(self.step.Step.id, time)
             for action in actions:
