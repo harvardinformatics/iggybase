@@ -26,6 +26,7 @@ class FormGenerator(PageTemplate):
 
     def page_template_context(self):
         self.context['form'] = self.form_class
+        self.context['fg'] = self
         return super(FormGenerator, self).page_template_context(**self.context)
 
     def add_page_context(self, context = {}):
@@ -194,6 +195,10 @@ class FormGenerator(PageTemplate):
 
         self.form_class = form_class(None)
 
+    # TODO: rather than have functions for different types of forms can we keep similar attrs
+    # in an object and have any functions work with that object to present
+    # different views, or maybe all we need is the template to present the
+    # different views
     def data_entry_form(self, row_name='new', data_instance = None, depth = 2):
         self.form_class = None
         self.classattr = {}
@@ -264,10 +269,15 @@ class FormGenerator(PageTemplate):
                 buttons = self.role_access_control.page_form_buttons(self.page_form_ids, temp_page_context,
                                                                      table_data['table_meta_data'].id)
 
+            # TODO: fg is using the instance here, an example of the classes
+            # tightly coupled.  Maybe instead we could have fg keep all the
+            # table level info and use data_instance only for row values,
+            # another alternative place for table level info is table query
+            # we would just need to have the ability to get all tables by depth
             context = {'table_name': table_data['table_meta_data'].name,
                        'table_id': str(table_data['table_meta_data'].id),
                        'table_level': str(table_data['level']),
-                       'table_title': table_data['table_meta_data'].name.replace("_", " ").title()}
+                       'table_title': table_data['table_display_name'].title()}
 
             buttons['top'], buttons['bottom'] = self.button_generator(buttons, context)
 

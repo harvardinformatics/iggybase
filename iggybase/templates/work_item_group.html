@@ -14,9 +14,9 @@
             <p>{{ wig.workflow.Workflow.notes }}</p>
         {% endif %}
         <h2>Step
-        {{wig.show_step}}
+        {{wig.show_step_num}}
         {% if table_name is defined %}
-             {{ table_name.replace( '_',' ' )|title }} {{ page_header.replace( '_',' ' )|title }}</h2>
+             {{ fg.instance.tables[table_name]['table_display_name'].replace( '_',' ' )|title }} {{ page_header.replace( '_',' ' )|title }}</h2>
         {% else %}
             {{ page_header.replace( '_',' ' )|title }}</h1>
         {% endif %}

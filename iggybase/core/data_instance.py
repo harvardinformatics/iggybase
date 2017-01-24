@@ -2,6 +2,7 @@ from flask import abort, g
 from iggybase import utilities as util
 from iggybase.core.field_collection import FieldCollection
 from iggybase import g_helper
+from .calculation import get_calculation
 from collections import OrderedDict
 import datetime
 import logging
@@ -107,6 +108,8 @@ class DataInstance:
         return instance
 
     def get_tables(self, depth = 2):
+        calc_display_name = get_calculation((self.table_name + '_display_name'), [])
+        table_display_name =  (calc_display_name or self.table_name).replace('_', ' ')
         self.tables[self.table_name] = {'level': 0,
                                         'link_display_name': None,
                                         'parent': None,
@@ -114,7 +117,8 @@ class DataInstance:
                                         'link_type': None,
                                         'table_object': util.get_table(self.table_name),
                                         'table_meta_data': (self.role_access_control.has_access
-                                                            ('TableObject', {'name': self.table_name}))}
+                                                            ('TableObject', {'name': self.table_name})),
+                                        'table_display_name': table_display_name}
         self.initialize_fields(self.table_name)
 
         self.tables['history'] = {'level': 0,
@@ -157,14 +161,16 @@ class DataInstance:
                 link_display_name = self.fields[table_name].fields_by_id[(link_data['table_meta_data'].id,
                                                                           link_data['link_data'].child_link_field_id)] \
                     .Field.display_name
-
+                calc_display_name = get_calculation((table_name + '_display_name'), [])
+                table_display_name = (calc_display_name or table_name)
                 self.tables[table_name] = {'level': link_data['level'],
                                            'parent': link_data['parent'],
                                            'link_data': link_data['link_data'],
                                            'table_object': util.get_table(table_name),
                                            'table_meta_data': link_data['table_meta_data'],
                                            'link_display_name': link_display_name,
-                                           'link_type': link_data['link_type']}
+                                           'link_type': link_data['link_type'],
+                                           'table_display_name': table_display_name}
 
     def initialize_fields(self, table_name):
         self.instances[table_name] = OrderedDict()
