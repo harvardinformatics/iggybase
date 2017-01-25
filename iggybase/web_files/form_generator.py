@@ -83,9 +83,6 @@ class FormGenerator(PageTemplate):
 
                 return IggybaseStringField(display_name, **kwargs)
             else:
-                if value is not None:
-                    kwargs['default'] = value
-
                 kwargs['coerce'] = int
                 kwargs['choices'] = choices
 

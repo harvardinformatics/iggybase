@@ -12,3 +12,6 @@ def line_item_display_name(cols):
 
 def order_charge_method_display_name(cols):
     return 'submission charge(s)'
+
+def price_item_display_name(cols):
+    return 'analysis type'
