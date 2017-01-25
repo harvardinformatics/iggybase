@@ -36,7 +36,9 @@
     {% endblock hidden_fields -%}
 
     {% block page_msg -%}
-        {{ super() }}
+        <div class="red">
+            {{ super() }}
+        </div>
     {% endblock page_msg -%}
 
     {% if form is defined %}

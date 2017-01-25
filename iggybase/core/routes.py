@@ -5,7 +5,7 @@ import time
 import urllib
 from importlib import import_module
 
-from flask import request, jsonify, abort, g, render_template, current_app, redirect, send_from_directory, session
+from flask import request, jsonify, abort, g, render_template, current_app, redirect, send_from_directory, session, flash
 from flask.ext import excel
 from flask.ext.security import login_required
 
@@ -230,6 +230,7 @@ def data_entry(facility_name, table_name, row_name, page_context):
                 fg.add_page_context({'page_msg': save_msg})
                 fp.undo()
         else:
+            flash('Please fix validation errors below and save again.')
             fp.undo()
 
     return fg.page_template_context()
