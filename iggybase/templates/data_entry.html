@@ -36,9 +36,13 @@
     {% endblock hidden_fields -%}
 
     {% block page_msg -%}
-        <div class="red">
+        {% if fg.form_class.errors %}
+            <div class="red">
+        {% endif %}
             {{ super() }}
-        </div>
+        {% if fg.form_class.errors %}
+            </div>
+        {% endif %}
     {% endblock page_msg -%}
 
     {% if form is defined %}
