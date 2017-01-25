@@ -551,10 +551,10 @@ class RoleAccessControl:
             filter(models.TableObject.name + '_' + self.facility.table_suffix == extension.name). \
             order_by(models.TableObjectChildren.order, models.TableObject.name)
 
-        query = ext.statement.compile(dialect=mysql.dialect())
-        logging.info('query')
-        logging.info(str(query))
-        logging.info(str(query.params))
+        # query = ext.statement.compile(dialect=mysql.dialect())
+        # logging.info('query')
+        # logging.info(str(query))
+        # logging.info(str(query.params))
 
         return ext.all()
 
