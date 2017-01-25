@@ -239,7 +239,6 @@ pre {
 }
 .label-th {
     float:left;
-    white-space: pre-wrap;
 }
 .multi-row-data {
     overflow-x:scroll;
