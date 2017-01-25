@@ -1,4 +1,4 @@
-from flask import request, g, session
+from flask import request, g, session, url_for
 import json
 from collections import OrderedDict
 from iggybase import utilities as util
@@ -28,6 +28,8 @@ class WorkItemGroup:
         self.WorkItemGroup = None
         self.work_items = {}
         self.parent_work_item = None
+        self.parent_table = None
+        self.review_items_link = None
         self.get_work_item_group()
 
         # which step is the wig currently on
@@ -70,6 +72,7 @@ class WorkItemGroup:
                         name = self.oac.get_attr_from_id(item.WorkItem.table_object_id,
                                 item.WorkItem.row_id, 'name')
                         self.parent_work_item = name
+                        self.parent_table = item.TableObject.name
                     if item.TableObject.name in self.work_items:
                         self.work_items[item.TableObject.name].append(item)
                     else:
@@ -248,6 +251,17 @@ class WorkItemGroup:
         self.do_step_actions() # after step actions
         if self.WorkItemGroup.status != status.COMPLETE:
             self.oac.update_rows('work_item_group', {'status': status.COMPLETE}, [self.WorkItemGroup.id])
+
+    def set_review_items_link(self):
+        if self.parent_work_item and self.parent_table:
+            url = url_for('core.data_entry', facility_name = g.rac.facility.name,
+                table_name = self.parent_table, row_name =
+                self.parent_work_item)
+        else:
+            url = url_for('core.data_entry', facility_name = g.rac.facility.name,
+                table_name = 'work_item_group', row_name =
+                self.WorkItemGroup.name)
+        self.review_items_link = url
 
     '''
     below are workflow action functions

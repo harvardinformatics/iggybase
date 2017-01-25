@@ -17,7 +17,8 @@
     <div>
 
         <p>The {{wig.workflow.name}} workflow is complete for:
-        {{wig.name}}!</p>
+        <a href="{{wig.review_items_link}}" _target="blank">{{wig.parent_work_item or wig.name}}</a>!<br>
+        Click above to review or make edits.</p>
         {% if wig.unnecessary_steps() %}
             <p>Some steps were not required and have been removed from the
             navigation: {{wig.unnecessary_steps()|join(',

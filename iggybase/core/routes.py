@@ -222,7 +222,10 @@ def data_entry(facility_name, table_name, row_name, page_context):
             save_status, save_msg = fp.save()
 
             if save_status is True:
-                return saved_data(facility_name, module_name, table_name, save_msg, page_context)
+                # TODO: here context is set in saved_data whereas for the form it is
+                # set in fg.page_template_context - we should find a way to pass
+                # the same base context for both post and get here
+                return saved_data(facility_name, module_name, table_name, save_msg, page_context, fg)
             else:
                 fg.add_page_context({'page_msg': save_msg})
                 fp.undo()
@@ -365,6 +368,7 @@ def workflow_summary_ajax(facility_name, workflow_name, page_form='summary',
 @templated()
 def workflow_complete(facility_name, workflow_name, work_item_group):
     wig = WorkItemGroup(work_item_group, workflow_name)
+    wig.set_review_items_link()
     pt = PageTemplate(MODULE_NAME, 'workflow_complete')
 
     return pt.page_template_context(wig=wig)
@@ -457,7 +461,8 @@ def build_summary_ajax(table_name, criteria = {}):
     return ret
 
 
-def saved_data(facility_name, module_name, table_name, row_names, page_context):
+def saved_data(facility_name, module_name, table_name, row_names,
+        page_context, fg):
     msg = 'Saved: '
     error = False
     saved_rows = {}
@@ -488,4 +493,4 @@ def saved_data(facility_name, module_name, table_name, row_names, page_context):
         return pt.page_template_context(table_name=table_name, page_msg=msg)
     else:
         pt = PageTemplate(MODULE_NAME, 'save_message', page_context)
-        return pt.page_template_context(table_name=table_name, page_msg=msg, saved_rows=json.dumps(saved_rows))
+        return pt.page_template_context(table_name=table_name, page_msg=msg, saved_rows=json.dumps(saved_rows), fg=fg)
