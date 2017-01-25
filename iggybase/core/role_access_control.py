@@ -475,36 +475,24 @@ class RoleAccessControl:
     def get_link_tables(self, table_object, levels=2, level=1, child_only=False, active=1):
         link_tables = []
 
-        # logging.info('get_link_tables (models.TableObjectChildren.__table__.columns: ')
-        # logging.info(models.TableObjectChildren.__table__.columns)
+        if table_object.extends_table_object_id:
+            res = self.get_extension_children(table_object.id, active)
+        else:
+            res = self.get_children(table_object.id, active)
 
-        extension = aliased(models.TableObject, name='extension')
-        res = self.session.query(models.TableObjectChildren, models.TableObject, models.TableObjectRole, extension). \
-            join(models.TableObject, models.TableObjectChildren.child_table_object_id == models.TableObject.id). \
-            join(models.TableObjectRole,
-                 models.TableObjectChildren.child_table_object_id == models.TableObjectRole.table_object_id). \
-            outerjoin(extension, and_(extension.extends_table_object_id == models.TableObject.id, (extension.name == (models.TableObject.name + '_' + self.facility.table_suffix)))). \
-            filter(models.TableObjectChildren.table_object_id==table_object.id). \
-            filter(models.TableObjectChildren.active==active). \
-            filter(models.TableObjectRole.role_id==self.role.id). \
-            filter(models.TableObjectRole.active==active). \
-            order_by(models.TableObjectChildren.order, models.TableObject.name).all()
-
-        # logging.info('get_link_tables res: ' + table_object_name)
-        # logging.info(res)
         if len(res) > 0:
             for row in res:
-                # use extension if exists or TableObject as the child table
-                link_tables.append({'parent': table_object.name, 'level': level, 'table_meta_data': (row.extension or row.TableObject),
-                                    'link_data': row.TableObjectChildren, 'link_type': 'child'})
+                table_meta_data = row.extension or row.TableObject
 
-                # logging.info('get_link_tables row.TableObjectChildren ' + table_object_name)
-                # logging.info(row.TableObjectChildren)
+                link_tables.append({'parent': table_object.name,
+                                    'level': level,
+                                    'table_meta_data': table_meta_data,
+                                    'extended_table': row.extension == table_meta_data,
+                                    'link_data': row.TableObjectChildren,
+                                    'link_type': 'child'})
 
                 if level < levels:
-                    # logging.info('level: ' + str(level))
-                    link_tables = link_tables + self.get_link_tables(row.TableObject,levels, level + 1, True)
-
+                    link_tables = link_tables + self.get_link_tables(table_meta_data,levels, level + 1, True)
 
         if not child_only:
             res = self.session.query(models.TableObjectMany). \
@@ -521,10 +509,54 @@ class RoleAccessControl:
                         table_data = self.has_access('TableObject', {'id': row.first_table_object_id})
 
                     if table_data:
-                        link_tables.append({'parent': table_object.name, 'level': level, 'table_meta_data': table_data,
-                                            'link_data': row.TableObjectMany, 'link_type': 'many'})
+                        link_tables.append({'parent': table_object.name,
+                                            'level': level,
+                                            'table_meta_data': table_data,
+                                            'extended_table': None,
+                                            'link_data': row.TableObjectMany,
+                                            'link_type': 'many'})
 
         return link_tables
+
+    def get_children(self, table_object_id, active = 1):
+        extension = aliased(models.TableObject, name='extension')
+        return self.session.query(models.TableObjectChildren, models.TableObject, models.TableObjectRole,
+                                 extension). \
+            join(models.TableObject, models.TableObjectChildren.child_table_object_id == models.TableObject.id). \
+            join(models.TableObjectRole,
+                 models.TableObjectChildren.child_table_object_id == models.TableObjectRole.table_object_id). \
+            outerjoin(extension, and_(extension.extends_table_object_id == models.TableObject.id,
+                                      extension.name == models.TableObject.name + '_' + self.facility.table_suffix)). \
+            filter(models.TableObjectChildren.table_object_id==table_object_id). \
+            filter(models.TableObjectChildren.active==active). \
+            filter(models.TableObjectRole.role_id==self.role.id). \
+            filter(models.TableObjectRole.active==active). \
+            order_by(models.TableObjectChildren.order, models.TableObject.name).all()
+
+    def get_extension_children(self, table_object_id, active = 1):
+        extension = aliased(models.TableObject, name='extension')
+        extended_table = aliased(models.TableObject, name='extended_table')
+        ext = self.session.query(models.TableObjectChildren, models.TableObject, models.TableObjectRole,
+                                 extension). \
+            join(extended_table,
+                 extended_table.extends_table_object_id == models.TableObjectChildren.table_object_id). \
+            join(models.TableObject,  models.TableObjectChildren.child_table_object_id == models.TableObject.id). \
+            join(models.TableObjectRole, models.TableObject.id == models.TableObjectRole.table_object_id). \
+            outerjoin(extension, and_(extension.extends_table_object_id == models.TableObject.id,
+                                      extension.name == models.TableObject.name + '_' + self.facility.table_suffix)). \
+            filter(extended_table.id==table_object_id). \
+            filter(models.TableObjectChildren.active==active). \
+            filter(models.TableObjectRole.role_id==self.role.id). \
+            filter(models.TableObjectRole.active==active). \
+            filter(models.TableObject.name + '_' + self.facility.table_suffix == extension.name). \
+            order_by(models.TableObjectChildren.order, models.TableObject.name)
+
+        query = ext.statement.compile(dialect=mysql.dialect())
+        logging.info('query')
+        logging.info(str(query))
+        logging.info(str(query.params))
+
+        return ext.all()
 
     def check_facility_module(self, facility, module, table_name, active=1):
         rec = (self.session.query(models.TableObject).

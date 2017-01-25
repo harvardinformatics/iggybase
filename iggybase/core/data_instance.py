@@ -182,6 +182,8 @@ class DataInstance:
 
     def get_linked_instances(self):
         for table_name, table_data in self.tables.items():
+            logging.info(str(table_data['level']))
+            logging.info(str(table_data['table_object'].name))
             if table_data['level'] == 0:
                 continue
             elif table_data['level'] == 1:
