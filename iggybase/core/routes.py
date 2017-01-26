@@ -434,7 +434,6 @@ def build_summary_ajax(table_name, criteria = {}):
     if (not criteria and 'no_cache' not in filters):
         print('checking cache')
         ret = current_app.cache.get(key)
-    ret = None
     if not ret:
         print('cache miss')
         tqc = TableQueryCollection(table_name, criteria)

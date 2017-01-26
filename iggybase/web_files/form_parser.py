@@ -4,7 +4,7 @@ import datetime
 from werkzeug.utils import secure_filename
 from iggybase.core.data_instance import DataInstance
 from iggybase import utilities as util
-from flask import request, g, current_app
+from flask import request, current_app, session
 import logging
 
 
@@ -97,7 +97,7 @@ class FormParser():
                 if self.instance.get_value('organization_id', table_name_field, instance_name) is not None:
                     row_org_id = self.instance.get_value('organization_id')
                 elif self.instance.organization_access_control.current_org_id is not None:
-                    row_org_id = g.current_org_id
+                    row_org_id = session['org_id']['current_org_id']
                 else:
                     row_org_id = 1
 

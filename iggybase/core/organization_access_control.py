@@ -1,4 +1,4 @@
-from flask import g, current_app
+from flask import g, current_app, session
 from sqlalchemy import DateTime, func, cast, String, desc, or_
 from sqlalchemy.exc import IntegrityError, DataError, SQLAlchemyError, NoForeignKeysError, IdentifierError, \
     NoReferenceError
@@ -36,17 +36,24 @@ class OrganizationAccessControl:
                     if level is not None:
                         facility_orgs[user_org.user_organization_id] = level
 
-            self.current_org_id = None
-            min_level = None
-            for user_org, level in facility_orgs.items():
-                # levels are ordered from high to low, hightest has order = 1
-                if min_level is None or (level < min_level and user_org != self.user.organization_id):
-                    # TODO: do we really want min level.id or do we want the lowest
-                    # level.order
-                    min_level = level
-                    self.current_org_id = user_org
-                self.get_child_organization(user_org)
-            g.current_org_id = self.current_org_id
+            filters = util.get_filters()
+            if 'set_orgs' not in filters and 'org_id' in session and session['org_id']:
+                self.current_org_id = session['org_id']['current_org_id']
+                self.org_ids = session['org_id']['org_ids']
+                print('in session')
+            else:
+                print('not in session')
+                self.current_org_id = None
+                min_level = None
+                for user_org, level in facility_orgs.items():
+                    # levels are ordered from high to low, hightest has order = 1
+                    if min_level is None or (level < min_level and user_org != self.user.organization_id):
+                        # TODO: do we really want min level.id or do we want the lowest
+                        # level.order
+                        min_level = level
+                        self.current_org_id = user_org
+                    self.get_child_organization(user_org)
+                session['org_id'] = {'current_org_id': self.current_org_id, 'org_ids': self.org_ids}
         else:
             self.user = None
 

@@ -1,5 +1,5 @@
 from iggybase import g_helper
-from flask import g
+from flask import g, session
 from .calculation import get_calculation
 import datetime, re
 import logging
@@ -84,7 +84,7 @@ class Field:
             elif self.Field.default == 'user':
                 default = g.user.id
             elif self.Field.default == 'org':
-                default = g.current_org_id
+                default = session['org_id']['current_org_id']
             # TODO: all trues should be stored at 1 but right now child and
             # grandchild tables only work with True, we should fix this once we
             # have a data_instance class
