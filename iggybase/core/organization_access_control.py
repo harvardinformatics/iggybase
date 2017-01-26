@@ -14,13 +14,14 @@ import time
 # Controls access to the data db data based on organization
 # all data db access should run through this class
 class OrganizationAccessControl:
-    def __init__(self):
+    def __init__(self, user=None):
         self.current_org_id = None
         self.session = self.get_session()
         self.org_ids = self.get_default_org_ids()
 
-        if g.user is not None and not g.user.is_anonymous:
-            self.user =  self.session.query(models.User).filter_by(id=g.user.id).first()
+        if (user is not None or (g.user is not None and not g.user.is_anonymous)):
+            user_id = user or g.user_id
+            self.user =  self.session.query(models.User).filter_by(id=user_id).first()
 
             # must distinguish user level orgs from group level org ids
             query = self.session.query(models.Organization.parent_id.distinct().label('parent_id'))
@@ -765,3 +766,6 @@ class OrganizationAccessControl:
                     models.Address.id)
             .filter((models.Organization.id == org_id)).first())
         return res
+
+    def spoof_user(self, user_id):
+

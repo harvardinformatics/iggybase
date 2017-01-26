@@ -13,11 +13,12 @@ from sqlalchemy.dialects import mysql
 # Controls access to system based on oole (USER) and Facility
 # Uses the permissions stored in the admin db
 class RoleAccessControl:
-    def __init__(self):
+    def __init__(self, user = None):
         self.session = db_session()
         # set user and role
-        if g.user is not None and not g.user.is_anonymous:
-            self.user = self.session.query(models.User).filter_by(id=g.user.id).first()
+        if (user is not None or (g.user is not None and not g.user.is_anonymous)):
+            user_id = user.id or g.user.id
+            self.user = self.session.query(models.User).filter_by(id=user_id).first()
 
             if self.user.current_user_role_id is None:
                 role_data = (self.session.query(models.Role, models.UserRole)
@@ -52,7 +53,8 @@ class RoleAccessControl:
             self.level_id = None
             for fac in facility_res:
                 if fac.Facility.name not in self.facilities:
-                    self.facilities[fac.Facility.name] = fac.Role.id
+                    self.facilities[fac.Facility.name] = {'top_role':fac.Role.id, 'roles': []}
+                self.facilities[fac.Facility.name]['roles'].append(fac.Role.id)
                 if fac.Role.id == self.role.id:
                     self.facility = fac.Facility
                     self.level_id = fac.Role.level_id
@@ -282,11 +284,29 @@ class RoleAccessControl:
 
         # add facility role change options to navbar
         navbar['Role'] = self.make_role_menu()
+        navbar['User'] = self.make_user_menu()
 
         sidebar_root = self.session.query(models.Menu). \
             filter_by(name=admin_consts.MENU_SIDEBAR_ROOT).first()
         sidebar = self.get_menu_items(sidebar_root.id, active)
         return navbar, sidebar
+
+    def make_user_menu(self):
+        role_menu_subs = OrderedDict({'Colby_Stoddard': {'title':'Colby_Stoddard', 'class':'change_user','data':{'user_id':1309}}})
+        '''if self.user is not None:
+            for user_role in self.user.user_roles:
+                if user_role.role_id != self.role.id and user_role.active == 1 and user_role.role.active == 1:
+                    facility = self.session.query(models.Facility).filter_by(id=user_role.role.facility_id).first()
+                    role_menu_subs[user_role.role.name] = {'title': user_role.role.name,
+                                                 'class': 'change_role',
+                                                 'data': {'role_id': user_role.role.id, 'facility': facility.name}}
+        '''
+        if role_menu_subs:
+            subs = {'title': 'Change User',
+                    'subs': role_menu_subs}
+        else:
+            subs = {}
+        return subs
 
     def make_role_menu(self):
         role_menu_subs = OrderedDict({})
@@ -471,6 +491,24 @@ class RoleAccessControl:
             self.__init__()
             self.set_routes()
             return facility.name
+        else:
+            return False
+
+    def change_user(self, user_id):
+        """updates the user
+        """
+        # check that the logged in user has permission for that role
+        if self.user is None:
+            return False
+
+        user = self.session.query(models.UserRole, models.User). \
+            join(models.User). \
+            filter(models.UserRole.role_id.in_(self.facilities[self.facility.name]['roles'])). \
+            filter(models.User.id == user_id).first()
+        if user:
+            #self.__init__(user.User)
+            #self.set_routes()
+            return user
         else:
             return False
 

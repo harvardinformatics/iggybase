@@ -193,6 +193,17 @@ def change_role(facility_name):
     success = rac.change_role(role_id)
     return json.dumps({'success': success})
 
+@core.route('/change_user', methods=['POST'])
+@login_required
+def change_user(facility_name):
+    user_id = request.json['user_id']
+    rac = g_helper.get_role_access_control()
+    user = rac.change_user(user_id)
+    success = False
+    if user:
+        #oac = g_helper.get_role_access_control()
+        success = oac.change_user(user)
+    return json.dumps({'success': success})
 
 @core.route('/data_entry/<table_name>/<row_name>', defaults={'page_context': None}, methods=['GET', 'POST'])
 @core.route('/data_entry/<table_name>/<row_name>/<page_context>', methods=['GET', 'POST'])

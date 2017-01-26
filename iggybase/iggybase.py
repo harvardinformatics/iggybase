@@ -121,6 +121,7 @@ def configure_hook( app ):
     @app.before_request
     def before_request():
         g.user = current_user
+        print(test)
         g.facility = ""
 
         path = request.path.split('/')
@@ -140,7 +141,7 @@ def configure_hook( app ):
             access = role_access.has_facility_access(path[1])
             if not access:
                 if path[1] in role_access.facilities:
-                    role_access.change_role(role_access.facilities[path[1]])
+                    role_access.change_role(role_access.facilities[path[1]]['top_role'])
                 else:
                     abort(404)
 

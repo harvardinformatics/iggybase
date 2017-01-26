@@ -53,6 +53,38 @@ $( document ).ready( function () {
         //will not work without this
         return false;
     });
+    $('.change_user').click(function(){
+        var currenturl = $.fn.parseURL(document.URL);
+        var paths = currenturl.pathname.split("/");
+        var newpath = $URL_ROOT + $(this).data('facility') + "/";
+
+        $.ajax({
+            url:$URL_ROOT + paths[1] + '/core/change_role',
+            data: JSON.stringify({
+                'role_id': $(this).data('role_id')
+            }),
+            contentType: 'application/json;charset=UTF-8',
+            type: 'POST',
+            success: function(response) {
+                response = JSON.parse(response);
+                if(response.success) {
+                    alert('role changed');
+
+                    //pathname starts with / facility in index 1
+                    for (var i=2;i<paths.length;i++)
+                        if (paths[i] != '')
+                            newpath += paths[i]+"/";
+
+                    window.location.href = newpath.slice(0, -1)+currenturl.search;
+                } else {
+                    alert('role not changed, user may not have permission for that role, contact an administrator');
+                }
+            }
+        });
+
+        //will not work without this
+        return false;
+    });
 } );
 
 ( function( $ ) {
