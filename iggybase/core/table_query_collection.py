@@ -1,3 +1,4 @@
+from flask import abort
 from iggybase import utilities as util
 from iggybase import g_helper
 from .table_query import TableQuery
@@ -33,10 +34,13 @@ class TableQueryCollection:
                 queries.append(query)
         elif self.table_name: # use table_name, show all fields, one table_query
             table_object_row = self.rac.get_role_row('table_object', {'name': self.table_name})
-            if table_object_row.TableObjectRole.display_name:
-                display_name = table_object_row.TableObjectRole.display_name
+            if table_object_row:
+                if table_object_row.TableObjectRole.display_name:
+                    display_name = table_object_row.TableObjectRole.display_name
+                else:
+                    display_name = table_object_row.TableObject.display_name
             else:
-                display_name = table_object_row.TableObject.display_name
+                abort(403)
 
             query = TableQuery(
                     None,

@@ -606,28 +606,6 @@ class WorkItem(Base):
         return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
                (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
 
-class StepTiming(Base):
-    table_type = 'admin'
-    timing = Column(String(255))
-
-    def __repr__(self):
-        return "<%s(name=%s, description=%s, id=%d, organization_id=%d)>" % \
-               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id)
-
-class StepAction(Base):
-    table_type = 'admin'
-    step_id = Column(Integer, ForeignKey('step.id'))
-    function = Column(String(255))
-    params = Column(String(255))
-    timing = Column(Integer, ForeignKey('step_timing.id'))
-
-    step_action_step = relationship("Step", foreign_keys=[step_id])
-    step_action_timing = relationship("StepTiming", foreign_keys=[timing])
-
-    def __repr__(self):
-        return "<%s(name=%s, description=%s, id=%d, organization_id=%d)>" % \
-               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id)
-
 class Module(Base):
     table_type = 'admin'
     url_prefix = Column(String(50))
@@ -730,101 +708,46 @@ class UserOrganizationPosition(Base):
     user_organization_position_position = relationship('Position', foreign_keys=[position_id])
 
 
-
-class Event(Base):
-    """The only thing that this table does is to map actions to database and other
-    types of events.
-    """
-    table_type = 'admin'
-
-
-class EventType(Base):
-    table_type = 'admin'
-
-
-class DatabaseEvent(Base):
-    """Database events.
-    table_object - the table object for the model.
-    field - the model's field.
-    field_value - a value that verifies the event (or null).
-    actions - the actions to be taken when the event occurs.
-    """
-    table_type = 'admin'
-    event_id = Column(Integer, ForeignKey('event.id'))
-    event_type_id = Column(Integer, ForeignKey('select_list_item.id'))
-    table_object_id = Column(Integer, ForeignKey('table_object.id'))
-    field_id = Column(Integer, ForeignKey('field.id'))
-    field_value = Column(String(255))  # eg. 'Turnbaugh' | 'Purchase_Order'
-
-    table_object = relationship("TableObject")
-    field = relationship("Field")
-    event_type = relationship("SelectListItem")
-
-    def __repr__(self):
-        return "<DatabaseEvent(id=%s, table_object.name=%s, field.display_name=%s" % \
-            (self.id,
-             self.table_object.name,
-             repr(getattr(self, 'field.display_name', None)))
-
-
 class Action(Base):
     """Actions taken for a specific event. Events can have multiple actions
     This is a base class.
     """
     table_type = 'admin'
-    event_id = Column(Integer, ForeignKey('event.id'))
-    event_type_id = Column(Integer, ForeignKey('select_list_item.id'))
-    verify_callback_func = Column(String(100), default=None)
-    execute_callback_func = Column(String(100), default=None)
-    callback_func_module = Column(String(255), default=None)
-
-    organization = relationship('Organization')
-    action_type = relationship('SelectListItem')
-    event_type = relationship('SelectListItem')
-
-
-    def __repr__(self):
-        return "<Action(name=%s, id=%s, description=%s, organization=%s," % \
-            (self.name, self.id, self.description, self.organization.name)
-
-
-class EmailAction(Base):
-    table_type = 'admin'
-    action_id = Column(Integer, ForeignKey('action.id'))
-    text = Column(String(1024))
-    subject = Column(String(100))
-    email_recipients = Column(String(1024)) # csv email@addresses
-    email_cc = Column(String(1024)) # csv email@addresses
-    email_bcc = Column(String(1024))
-
-    action = relationship("Action")
-
-    def __repr__(self):
-        return "<EmailAction(name=%s, id=%s>" % \
-            (self.name, self.id)
-
-
-class ActionValue(Base):
-    """Values used for creating context for text rendering.
-    For example, ... {{ name }} ... would have a context of
-    {'name': valueof(table_object.field where pk = pk_value)}.
-    """
-    table_type = 'admin'
-    action_id = Column(Integer, ForeignKey('action.id'))
+    step_id = Column(Integer, ForeignKey('step.id'))
     table_object_id = Column(Integer, ForeignKey('table_object.id'))
-    field_id = Column(Integer, ForeignKey('field.id'))
-    # If the field has no pk value than a query for this value will use
-    # the action object's primary key value.
-    pk_value = Column(Integer, default=0)
+    type = Column(String(50), default=None)
 
-    table_object = relationship("TableObject")
-    field = relationship("Field")
-    action = relationship("Action", backref='action_values')
+    action_step = relationship('Step', foreign_keys=[step_id])
+    action_table_object = relationship('TableObject', foreign_keys=[table_object_id])
 
 
-    def __repr__(self):
-        return "<ActionValue(name=%s, id=%d, action_id=%d, table_object_id=%d, field_id=%d)>" % \
-               (self.name, self.id, self.action_id, self.table_object_id, self.field_id)
+class ActionFunctionCall(Action):
+    table_type = 'admin'
+    id = Column(Integer, ForeignKey('action.id'), primary_key=True)
+    namespace = Column(String(255), default=None)
+    function = Column(String(255), default=None)
+    params = Column(String(255), default=None)
+    timing = Column(Integer, ForeignKey('select_list_item.id'))
+
+    action_function_call_timing = relationship("SelectListItem", foreign_keys=[timing])
+    action_function_call_action = relationship("Action", foreign_keys=[id])
+
+    __mapper_args__ = {'polymorphic_identity': 'action_function_call'}
+
+
+class ActionEmail(Action):
+    table_type = 'admin'
+    id = Column(Integer, ForeignKey('action.id'), primary_key=True)
+    text = Column(Integer, ForeignKey('long_text.id'), default=None)
+    subject = Column(String(255), default=None)
+    recipients = Column(Integer, default=None)
+    cc = Column(Integer, default=None)
+    bcc = Column(Integer, default=None)
+    attachment = Column(String(255), default=None)
+
+    action_email_action = relationship("Action", foreign_keys=[id])
+
+    __mapper_args__ = {'polymorphic_identity': 'action_email'}
 
 
 @lm.user_loader
