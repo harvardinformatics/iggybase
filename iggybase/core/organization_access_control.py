@@ -387,7 +387,7 @@ class OrganizationAccessControl:
         columns.append(id_col.label('DT_row_label'))
         columns.append(id_col.label('DT_RowId'))
         start = time.time()
-<<<<<<< Updated upstream
+
         stmt = self.session.query(*columns). \
                 join(*joins). \
                 outerjoin(*outer_joins). \
@@ -399,21 +399,6 @@ class OrganizationAccessControl:
         # logging.info(str(query.params))
 
         results = (stmt.all())
-=======
-        stmt = (
-            self.session.query(*columns).
-                join(*joins).
-                outerjoin(*outer_joins).
-                filter(*wheres).group_by(*group_by)
-        )
-
-        query = stmt.statement.compile(dialect=mysql.dialect())
-        logging.info('query')
-        logging.info(str(query))
-        logging.info(str(query.params))
-
-        results = stmt.all()
->>>>>>> Stashed changes
 
         print('query: ' + str(time.time() - start))
         return results
