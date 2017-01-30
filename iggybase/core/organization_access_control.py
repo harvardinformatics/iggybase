@@ -635,11 +635,11 @@ class OrganizationAccessControl:
         return success
 
     def get_step_actions(self, step_id, timing):
-        return (self.session.query(models.StepAction)
+        return (self.session.query(models.ActionFunctionCall, models.SelectListItem)
                 .filter(
-                    models.StepAction.step_id==step_id,
-                    models.StepAction.timing == timing
-                ).order_by(models.StepAction.order).all())
+                    models.ActionFunctionCall.step_id==step_id,
+                    models.SelectListItem.display_name == timing
+                ).order_by(models.ActionFunctionCall.order).all())
 
     def get_attr_from_id(self, table_object_id, row_id, attr):
         table_object = self.session.query(models.TableObject).filter_by(id=table_object_id).first()

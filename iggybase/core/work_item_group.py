@@ -13,8 +13,8 @@ class status:
     FINAL = 4
 
 class timing:
-    BEFORE = 1
-    AFTER = 2
+    BEFORE = 'Before'
+    AFTER = 'After'
 
 # Retreives work_item_group info and processes steps and actions
 class WorkItemGroup:
