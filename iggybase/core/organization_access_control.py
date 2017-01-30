@@ -636,6 +636,7 @@ class OrganizationAccessControl:
 
     def get_step_actions(self, step_id, timing):
         return (self.session.query(models.ActionFunctionCall, models.SelectListItem)
+                .join(models.SelectListItem,  models.SelectListItem.id == models.ActionFunctionCall.timing)
                 .filter(
                     models.ActionFunctionCall.step_id==step_id,
                     models.SelectListItem.display_name == timing
