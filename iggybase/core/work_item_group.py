@@ -153,10 +153,10 @@ class WorkItemGroup:
             actions = self.oac.get_step_actions(self.step.Step.id, time)
             for action in actions:
                 if hasattr(self, action.function):
-                    func = getattr(self, action.function)
+                    func = getattr(self, action.ActionFunctionCall.function)
                     params = {}
                     if action.params:
-                        params = json.loads(action.params)
+                        params = json.loads(action.ActionFunctionCall.params)
                     func(**params)
             if time == timing.BEFORE:
                 self.oac.update_rows('work_item_group', {'before_action_complete': 1}, [self.WorkItemGroup.id])

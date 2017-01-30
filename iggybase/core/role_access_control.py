@@ -456,7 +456,7 @@ class RoleAccessControl:
         if self.user is None:
             return False
 
-        session.pop('org_id')
+        session.pop('org_id', None)
 
         user_role = self.session.query(models.UserRole, models.Role). \
             join(models.Role). \
