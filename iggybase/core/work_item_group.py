@@ -155,7 +155,7 @@ class WorkItemGroup:
                 if hasattr(self, action.ActionFunctionCall.function):
                     func = getattr(self, action.ActionFunctionCall.function)
                     params = {}
-                    if action.params:
+                    if action.ActionFunctionCall.params:
                         params = json.loads(action.ActionFunctionCall.params)
                     func(**params)
             if time == timing.BEFORE:
