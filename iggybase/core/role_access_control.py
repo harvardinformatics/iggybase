@@ -475,9 +475,6 @@ class RoleAccessControl:
         # check that the logged in user has permission for that role
         if self.user is None:
             return False
-
-        session.pop('org_id', None)
-
         user_role = self.session.query(models.UserRole, models.Role). \
             join(models.Role). \
             filter(models.UserRole.role_id == role_id). \
@@ -490,6 +487,9 @@ class RoleAccessControl:
             # renew the facility and routes
             self.__init__()
             self.set_routes()
+            # remove orgs from session because current_org_id is facility and
+            # level dependent
+            session.pop('org_id')
             return facility.name
         else:
             return False
