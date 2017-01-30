@@ -152,7 +152,7 @@ class WorkItemGroup:
         if time != timing.BEFORE or (time == timing.BEFORE and not self.WorkItemGroup.before_action_complete):
             actions = self.oac.get_step_actions(self.step.Step.id, time)
             for action in actions:
-                if hasattr(self, action.function):
+                if hasattr(self, action.ActionFunctionCall.function):
                     func = getattr(self, action.ActionFunctionCall.function)
                     params = {}
                     if action.params:
