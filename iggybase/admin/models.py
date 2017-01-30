@@ -640,8 +640,8 @@ class UserRole(Base):
     role = relationship("Role", foreign_keys=[role_id])
 
     def __repr__(self):
-        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
-               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id)
 
 
 class User(Base, UserMixin):
@@ -696,8 +696,8 @@ class UserOrganization(Base):
     user_organization_user = relationship('User', foreign_keys=[user_id])
 
     def __repr__(self):
-        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
-               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id)
 
 class UserOrganizationPosition(Base):
     table_type = 'admin'

@@ -201,8 +201,9 @@ def change_user(facility_name):
     user = rac.change_user(user_id)
     success = False
     if user:
-        #oac = g_helper.get_role_access_control()
-        success = oac.change_user(user)
+        oac = g_helper.get_org_access_control()
+        session.pop('org_id', None)
+        success = oac.set_user(user.User.id)
     return json.dumps({'success': success})
 
 @core.route('/data_entry/<table_name>/<row_name>', defaults={'page_context': None}, methods=['GET', 'POST'])

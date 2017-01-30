@@ -14,49 +14,52 @@ import time
 # Controls access to the data db data based on organization
 # all data db access should run through this class
 class OrganizationAccessControl:
-    def __init__(self, user=None):
+    def __init__(self):
         self.current_org_id = None
         self.session = self.get_session()
         self.org_ids = self.get_default_org_ids()
 
-        if (user is not None or (g.user is not None and not g.user.is_anonymous)):
-            user_id = user or g.user_id
-            self.user =  self.session.query(models.User).filter_by(id=user_id).first()
-
-            # must distinguish user level orgs from group level org ids
-            query = self.session.query(models.Organization.parent_id.distinct().label('parent_id'))
-            self.parent_orgs = [row.parent_id for row in query.all()]
-            facility_root_org_id = g.root_org_id
-
-            user_orgs = self.session.query(models.UserOrganization).filter_by(active=1, user_id=self.user.id).all()
-
-            facility_orgs = {}
-            for user_org in user_orgs:
-                if user_org.user_organization_id is not None:
-                    level = self.get_facility_orgs(user_org.user_organization_id, facility_root_org_id, 0)
-                    if level is not None:
-                        facility_orgs[user_org.user_organization_id] = level
-
-            filters = util.get_filters()
-            if 'set_orgs' not in filters and 'org_id' in session and session['org_id']:
-                self.current_org_id = session['org_id']['current_org_id']
-                self.org_ids = session['org_id']['org_ids']
-                print('in session')
-            else:
-                print('not in session')
-                self.current_org_id = None
-                min_level = None
-                for user_org, level in facility_orgs.items():
-                    # levels are ordered from high to low, hightest has order = 1
-                    if min_level is None or (level < min_level and user_org != self.user.organization_id):
-                        # TODO: do we really want min level.id or do we want the lowest
-                        # level.order
-                        min_level = level
-                        self.current_org_id = user_org
-                    self.get_child_organization(user_org)
-                session['org_id'] = {'current_org_id': self.current_org_id, 'org_ids': self.org_ids}
+        if (g.user is not None and not g.user.is_anonymous):
+            self.set_user(g.user.id)
         else:
             self.user = None
+
+    def set_user(self, user_id):
+        self.user =  self.session.query(models.User).filter_by(id=user_id).first()
+        # must distinguish user level orgs from group level org ids
+        query = self.session.query(models.Organization.parent_id.distinct().label('parent_id'))
+        self.parent_orgs = [row.parent_id for row in query.all()]
+        facility_root_org_id = g.root_org_id
+
+        user_orgs = self.session.query(models.UserOrganization).filter_by(active=1, user_id=self.user.id).all()
+
+        facility_orgs = {}
+        for user_org in user_orgs:
+            if user_org.user_organization_id is not None:
+                level = self.get_facility_orgs(user_org.user_organization_id, facility_root_org_id, 0)
+                if level is not None:
+                    facility_orgs[user_org.user_organization_id] = level
+
+        filters = util.get_filters()
+        if 'set_orgs' not in filters and 'org_id' in session and session['org_id']:
+            self.current_org_id = session['org_id']['current_org_id']
+            self.org_ids = session['org_id']['org_ids']
+            print('in session')
+        else:
+            print('not in session')
+            self.current_org_id = None
+            self.org_ids = []
+            min_level = None
+            for user_org, level in facility_orgs.items():
+                # levels are ordered from high to low, hightest has order = 1
+                if min_level is None or (level < min_level and user_org != self.user.organization_id):
+                    # TODO: do we really want min level.id or do we want the lowest
+                    # level.order
+                    min_level = level
+                    self.current_org_id = user_org
+                self.get_child_organization(user_org)
+            session['org_id'] = {'current_org_id': self.current_org_id, 'org_ids': self.org_ids}
+        return (self.org_ids != [])
 
     def __del__ (self):
         self.session.rollback()
@@ -766,6 +769,4 @@ class OrganizationAccessControl:
                     models.Address.id)
             .filter((models.Organization.id == org_id)).first())
         return res
-
-    def spoof_user(self, user_id):
 

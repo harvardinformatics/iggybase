@@ -13,12 +13,11 @@ from sqlalchemy.dialects import mysql
 # Controls access to system based on oole (USER) and Facility
 # Uses the permissions stored in the admin db
 class RoleAccessControl:
-    def __init__(self, user = None):
+    def __init__(self):
         self.session = db_session()
         # set user and role
-        if (user is not None or (g.user is not None and not g.user.is_anonymous)):
-            user_id = user.id or g.user.id
-            self.user = self.session.query(models.User).filter_by(id=user_id).first()
+        if (g.user is not None and not g.user.is_anonymous):
+            self.user = self.session.query(models.User).filter_by(id=g.user.id).first()
 
             if self.user.current_user_role_id is None:
                 role_data = (self.session.query(models.Role, models.UserRole)
@@ -284,7 +283,8 @@ class RoleAccessControl:
 
         # add facility role change options to navbar
         navbar['Role'] = self.make_role_menu()
-        navbar['User'] = self.make_user_menu()
+        if 'core.change_user' in self.routes:
+            navbar['User'] = self.make_user_menu()
 
         sidebar_root = self.session.query(models.Menu). \
             filter_by(name=admin_consts.MENU_SIDEBAR_ROOT).first()
@@ -292,18 +292,20 @@ class RoleAccessControl:
         return navbar, sidebar
 
     def make_user_menu(self):
-        role_menu_subs = OrderedDict({'Colby_Stoddard': {'title':'Colby_Stoddard', 'class':'change_user','data':{'user_id':1309}}})
-        '''if self.user is not None:
-            for user_role in self.user.user_roles:
-                if user_role.role_id != self.role.id and user_role.active == 1 and user_role.role.active == 1:
-                    facility = self.session.query(models.Facility).filter_by(id=user_role.role.facility_id).first()
-                    role_menu_subs[user_role.role.name] = {'title': user_role.role.name,
-                                                 'class': 'change_role',
-                                                 'data': {'role_id': user_role.role.id, 'facility': facility.name}}
-        '''
-        if role_menu_subs:
+        user_menu_subs = OrderedDict()
+        roles = self.facilities[self.facility.name]['roles']
+        if roles is not None:
+            users = (self.session.query(models.User)
+                    .join(models.UserRole, models.User.id ==
+                        models.UserRole.user_id)
+            .filter(models.UserRole.role_id.in_(roles), models.User.active == 1, models.UserRole.active == 1).all())
+            for user in users:
+                user_menu_subs[user.name] = {'title': user.name,
+                                                'class': 'change_user',
+                                                'data': {'user_id': user.id}}
+        if user_menu_subs:
             subs = {'title': 'Change User',
-                    'subs': role_menu_subs}
+                    'subs': user_menu_subs}
         else:
             subs = {}
         return subs
@@ -484,12 +486,13 @@ class RoleAccessControl:
             self.user.current_user_role_id = user_role.UserRole.id
             self.role = (self.session.query(models.Role).filter(models.Role.id == role_id).first())
             self.session.commit()
+            # remove orgs from session because current_org_id is facility
+            if self.facility.name != facility.name:
+                session.pop('org_id')
             # renew the facility and routes
             self.__init__()
             self.set_routes()
-            # remove orgs from session because current_org_id is facility and
-            # level dependent
-            session.pop('org_id')
+
             return facility.name
         else:
             return False
@@ -497,20 +500,15 @@ class RoleAccessControl:
     def change_user(self, user_id):
         """updates the user
         """
-        # check that the logged in user has permission for that role
+        # check that the logged in user a role in common with the user
         if self.user is None:
             return False
 
         user = self.session.query(models.UserRole, models.User). \
-            join(models.User). \
+            join(models.User, models.UserRole.user_id == models.User.id). \
             filter(models.UserRole.role_id.in_(self.facilities[self.facility.name]['roles'])). \
             filter(models.User.id == user_id).first()
-        if user:
-            #self.__init__(user.User)
-            #self.set_routes()
-            return user
-        else:
-            return False
+        return user
 
     def get_link_tables(self, table_object, levels=2, level=1, child_only=False, active=1):
         link_tables = []
