@@ -66,6 +66,7 @@ class OrganizationAccessControl:
         return session
 
     def commit(self):
+
         try:
             self.session.commit()
             return True

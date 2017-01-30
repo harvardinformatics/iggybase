@@ -713,32 +713,41 @@ class Action(Base):
     This is a base class.
     """
     table_type = 'admin'
-    step_id = Column(Integer, ForeignKey('step.id'))
-    table_object_id = Column(Integer, ForeignKey('table_object.id'))
-    type = Column(String(50), default=None)
-
-    action_step = relationship('Step', foreign_keys=[step_id])
-    action_table_object = relationship('TableObject', foreign_keys=[table_object_id])
-
-
-class ActionFunctionCall(Action):
-    table_type = 'admin'
-    id = Column(Integer, ForeignKey('action.id'), primary_key=True)
     namespace = Column(String(255), default=None)
     function = Column(String(255), default=None)
     params = Column(String(255), default=None)
-    timing = Column(Integer, ForeignKey('select_list_item.id'))
+    type = Column(String(50), default=None)
 
-    action_function_call_timing = relationship("SelectListItem", foreign_keys=[timing])
-    action_function_call_action = relationship("Action", foreign_keys=[id])
 
-    __mapper_args__ = {'polymorphic_identity': 'action_function_call'}
+class ActionStep(Base):
+    table_type = 'admin'
+    action_id = Column(Integer, ForeignKey('action.id'), default=None)
+    step_id = Column(Integer, ForeignKey('step.id'), default=None)
+    timing = Column(Integer, ForeignKey('select_list_item.id'), default=None)
+
+    action_step_timing = relationship("SelectListItem", foreign_keys=[timing])
+    action_step_step = relationship('Step', foreign_keys=[step_id])
+    action_step_action = relationship("Action", foreign_keys=[action_id])
+
+
+class ActionTableObject(Base):
+    table_type = 'admin'
+    action_id = Column(Integer, ForeignKey('action.id'), default=None)
+    table_object_id = Column(Integer, ForeignKey('table_object.id'), default=None)
+    event_id = Column(Integer, ForeignKey('select_list_item.id'), default=None)
+    field_id = Column(Integer, ForeignKey('field.id'), default=None)
+    field_value = Column(String(255), default=None)
+
+    action_function_call_timing = relationship("SelectListItem", foreign_keys=[event_id])
+    action_table_object_table_object = relationship('TableObject', foreign_keys=[table_object_id])
+    action_table_object_action = relationship("Action", foreign_keys=[action_id])
+    action_table_object_field = relationship('Field', foreign_keys=[field_id])
 
 
 class ActionEmail(Action):
     table_type = 'admin'
     id = Column(Integer, ForeignKey('action.id'), primary_key=True)
-    text = Column(Integer, ForeignKey('long_text.id'), default=None)
+    text = Column(Integer, default=None)
     subject = Column(String(255), default=None)
     recipients = Column(Integer, default=None)
     cc = Column(Integer, default=None)
