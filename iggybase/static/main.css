@@ -244,6 +244,7 @@ pre {
     overflow-x:scroll;
     overflow-y:scroll;
     white-space:nowrap;
+    min-height: 110px;
 }
 
 /* fix to make scroll bar visibile in chrome with mac */

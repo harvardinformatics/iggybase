@@ -2,6 +2,7 @@ var search_open = false;
 var search_input = '';
 
 $( document ).ready( function () {
+    $('input').tooltip({placement:'bottom'});
     var cm = [ {'Fill Down': { onclick:function( menuItem, menu ) { $.fn.childDataFill( $( this ) ); } } } ];
 
     $.fn.addInputEvents()
