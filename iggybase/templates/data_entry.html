@@ -69,8 +69,13 @@
                         {% set label_style = 'col-md-2' -%}
                     {% else -%}
                         <div class="div_level_{{ table_level }}">
-                        {% set col_style = 'col-md-2' -%}
-                        {% set label_style = 'col-md-2' -%}
+                        {%- if "wide" in field.iggybase_class %}
+                            {% set col_style = 'col-md-4' -%}
+                            {% set label_style = 'col-md-4' -%}
+                        {% else -%}
+                            {% set col_style = 'col-md-2' -%}
+                            {% set label_style = 'col-md-2' -%}
+                        {% endif -%}
                         <h3>{{ table_title }}</h3>
                     {% endif -%}
                 {% elif "start_table_" in field.id -%}
