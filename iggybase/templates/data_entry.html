@@ -69,13 +69,8 @@
                         {% set label_style = 'col-md-2' -%}
                     {% else -%}
                         <div class="div_level_{{ table_level }}">
-                        {%- if "wide" in field.iggybase_class %}
-                            {% set col_style = 'col-md-4' -%}
-                            {% set label_style = 'col-md-4' -%}
-                        {% else -%}
-                            {% set col_style = 'col-md-2' -%}
-                            {% set label_style = 'col-md-2' -%}
-                        {% endif -%}
+                        {% set col_style = 'col-md-2' -%}
+                        {% set label_style = 'col-md-2' -%}
                         <h3>{{ table_title }}</h3>
                     {% endif -%}
                 {% elif "start_table_" in field.id -%}
@@ -90,12 +85,18 @@
                         {% set firstrow = 1 %}
                         {% set found = 0 %}
                         {% for field_header_name, field_header in form_fields.items() if firstrow == 1 %}
+                            {%- if 'wide' in field_header.iggybase_class %}
+                                {% set tmp_label_style = 'col-md-4' -%}
+                            {% else -%}
+                                {% set tmp_label_style = label_style -%}
+                            {% endif -%}
+
                             {% if 'end_row_' in field_header.id and found == 1 %}
                                 {% set firstrow = 0 %}
                             {% endif %}
 
                             {% if found == 1 %}
-                                {{ macros.form_field_th( field_header, label_style ) }}
+                                {{ macros.form_field_th( field_header, tmp_label_style ) }}
                             {% endif %}
 
                             {% if field_name == field_header_name %}
@@ -125,8 +126,13 @@
                         {% set field_vars = field.id.split("_") %}
                         {{ macros.render_field_data_entry( field, field_vars[field_vars|length - 1], table_name, row_name, col_style, label_style ) }}
                     {% else -%}
-                        <div class="{{ col_style }}">
-                            {{ macros.table_field( field ) }}
+                        {%- if 'wide' in field.iggybase_class %}
+                            {% set tmp_col_style = 'col-md-4' -%}
+                        {% else -%}
+                            {% set tmp_col_style = col_style -%}
+                        {% endif -%}
+                        <div class="{{ tmp_col_style }}">
+                            {{ macros.table_field( field, tmp_col_style ) }}
                             {% if field.type == "IggybaseFileField" and field.data is string %}
                                 {% set files = field.data.split('|') -%}
                                 {% for file in files -%}
