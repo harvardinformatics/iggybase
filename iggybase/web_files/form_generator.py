@@ -112,8 +112,6 @@ class FormGenerator(PageTemplate):
                     drop_down_limit = 25
 
                 if len(choices) > drop_down_limit:
-                    kwargs['iggybase_class'] = control_type
-
                     if value is None:
                         self.classattr['id_' + control_id] = HiddenField('id_' + control_id)
                     else:
