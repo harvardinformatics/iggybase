@@ -11,7 +11,7 @@ def line_item_display_name(cols):
     return 'analysis'
 
 def order_charge_method_display_name(cols):
-    return 'submission charge(s)'
+    return 'expense code/ po'
 
 def price_item_display_name(cols):
     return 'analysis type'
