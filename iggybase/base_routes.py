@@ -33,6 +33,7 @@ def page_not_found():
 def home():
     """redirects to user home page
     """
+    #TODO: remove all this we are no longer using it
     if not g.user:
         abort( 403 )
     if g.user.home_page:

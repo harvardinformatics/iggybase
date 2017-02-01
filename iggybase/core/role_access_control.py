@@ -271,43 +271,32 @@ class RoleAccessControl:
             )
             return False
 
-    def page_form_menus(self, active=True):
+    def get_menu(self, name, active=True):
         """Setup NavBar and Side bar menus for templating context.
         Starts with the root navbar and sidebar records.
         Menus are recursive.
         """
-        # TODO: do we need to query for this or can we just use constant
-        navbar_root = self.session.query(models.Menu). \
-            filter_by(name=admin_consts.MENU_NAVBAR_ROOT).first()
-        navbar = self.get_menu_items(navbar_root.id, active)
-
-        # add facility role change options to navbar
-        navbar['Role'] = self.make_role_menu()
-        if 'core.change_user' in self.routes:
-            navbar['User'] = self.make_user_menu()
-
-        sidebar_root = self.session.query(models.Menu). \
-            filter_by(name=admin_consts.MENU_SIDEBAR_ROOT).first()
-        sidebar = self.get_menu_items(sidebar_root.id, active)
-        return navbar, sidebar
+        menu_root = self.session.query(models.Menu). \
+            filter_by(name=name).first()
+        return menu_root
 
     def make_user_menu(self):
-        user_menu_subs = OrderedDict()
-        roles = self.facilities[self.facility.name]['roles']
-        if roles is not None:
-            users = (self.session.query(models.User)
-                    .join(models.UserRole, models.User.id ==
-                        models.UserRole.user_id)
-            .filter(models.UserRole.role_id.in_(roles), models.User.active == 1, models.UserRole.active == 1).all())
-            for user in users:
-                user_menu_subs[user.name] = {'title': user.name,
-                                                'class': 'change_user',
-                                                'data': {'user_id': user.id}}
-        if user_menu_subs:
-            subs = {'title': 'Change User',
-                    'subs': user_menu_subs}
-        else:
-            subs = {}
+        subs = {}
+        if 'core.change_user' in self.routes:
+            user_menu_subs = OrderedDict()
+            roles = self.facilities[self.facility.name]['roles']
+            if roles is not None:
+                users = (self.session.query(models.User)
+                        .join(models.UserRole, models.User.id ==
+                            models.UserRole.user_id)
+                .filter(models.UserRole.role_id.in_(roles), models.User.active == 1, models.UserRole.active == 1).all())
+                for user in users:
+                    user_menu_subs[user.name] = {'title': user.name,
+                                                    'class': 'change_user',
+                                                    'data': {'user_id': user.id}}
+            if user_menu_subs:
+                subs = {'title': 'Change User',
+                        'subs': user_menu_subs}
         return subs
 
     def make_role_menu(self):
@@ -432,7 +421,6 @@ class RoleAccessControl:
         return rec
 
     def get_menu_items(self, parent_id, active=1):
-        menu = OrderedDict()
         items = (self.session.query(models.Menu, models.Route, models.MenuRole, models.Module)
                  .join(models.MenuRole, models.MenuRole.menu_id==models.Menu.id)
                  .outerjoin(models.Route, models.Menu.route_id==models.Route.id)
@@ -445,31 +433,7 @@ class RoleAccessControl:
             ).order_by(models.MenuRole.order, models.MenuRole.display_name,
                        models.Menu.order, models.Menu.display_name).all())
 
-        for item in items:
-            url = ''
-            if item.Route and item.Route.url_path and item.Route.url_path != '':
-                if self.facility.name != '':
-                    url = self.facility.name + '/' + item.Module.name + '/' + item.Route.url_path
-                else:
-                    url = item.Module.name + '/' + item.Route.url_path
-                if url and item.Menu.dynamic_suffix:
-                    url += '/' + item.Menu.dynamic_suffix
-
-                if url and item.Menu.url_params:
-                    url += item.Menu.url_params
-
-                if url:
-                    url = request.url_root + url
-                else:
-                    url = '#'
-
-            menu[item.Menu.name] = {
-                    'url': url,
-                    'title': item.Menu.display_name,
-                    'class': None,
-                    'subs': self.get_menu_items(item.Menu.id, active)
-            }
-        return menu
+        return items
 
     def change_role(self, role_id):
         """updates the user.current_role

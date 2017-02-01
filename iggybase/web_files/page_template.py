@@ -1,5 +1,7 @@
 from flask import render_template, abort, request, g, Markup
 from iggybase import g_helper
+from iggybase.admin import constants as admin_consts
+from collections import OrderedDict as OrderedDict
 import logging
 import re
 
@@ -36,6 +38,8 @@ class PageTemplate():
 
         context['page_context'] = " ".join(self.page_context)
 
+        # TODO: if change_user feature is used this will not reflect that change
+        context['user'] = g.user.name
         context['module_name'] = self.module_name
         context['template'] = self.page_form.page_template
         context['page_header'] = self.page_form.page_header
@@ -72,10 +76,56 @@ class PageTemplate():
             context['submit_action_url'] = request.url_root + submit_action_url
 
         ## Menus
-        navbar, sidebar = self.role_access_control.page_form_menus()
+        # add home to navbar
+        home = g.user.home_page or self.role_access_control.get_role_home()
+        navbar = OrderedDict({'home': {
+                'title': 'home',
+                'url': self.add_context(home, context)
+                }
+        })
+        navbar_root = self.role_access_control.get_menu(admin_consts.MENU_NAVBAR_ROOT)
+        navbar.update(self.populate_menu(navbar_root.id, context))
+        # add facility role change options to navbar
+        navbar['Role'] = self.role_access_control.make_role_menu()
+        change_user = self.role_access_control.make_user_menu()
+        if change_user:
+            navbar['User'] = change_user
+        sidebar_root = self.role_access_control.get_menu(admin_consts.MENU_SIDEBAR_ROOT)
+        sidebar = self.populate_menu(sidebar_root.id, context)
         context.update({'navbar': navbar, 'sidebar': sidebar})
 
         return context
+
+    def populate_menu(self, parent_id, context, active=1):
+        menu = OrderedDict()
+        items = self.role_access_control.get_menu_items(parent_id, active)
+        for item in items:
+            url = ''
+            if item.Route and item.Route.url_path and item.Route.url_path != '':
+                if g.facility != '':
+                    url = g.facility + '/' + item.Module.name + '/' + item.Route.url_path
+                else:
+                    url = item.Module.name + '/' + item.Route.url_path
+                if url and item.Menu.dynamic_suffix:
+                    url += '/' + item.Menu.dynamic_suffix
+
+                if url and item.Menu.url_params:
+                    url += item.Menu.url_params
+
+                if url:
+                    url = request.url_root + url
+                else:
+                    url = '#'
+                # add context to url, exp replace <user> with g.user.name
+                url = self.add_context(url, context)
+
+            menu[item.Menu.name] = {
+                    'url': url,
+                    'title': item.Menu.display_name,
+                    'class': None,
+                    'subs': self.populate_menu(item.Menu.id, context, active)
+            }
+        return menu
 
     def page_scripts(self, scripts):
         scpts = []

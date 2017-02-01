@@ -443,7 +443,11 @@ def build_summary_ajax(table_name, criteria = {}):
         oac.current_org_id,
         table_name
     )
-    if (not criteria and 'no_cache' not in filters):
+    # criteria can be attached to the summary from DB
+    # or filters can be added to the get params
+    # both should clear the cache
+    # TODO: add filters and criteria to cache
+    if (not criteria and not filters):
         print('checking cache')
         ret = current_app.cache.get(key)
     if not ret:
@@ -464,7 +468,7 @@ def build_summary_ajax(table_name, criteria = {}):
         current = time.time()
         print(str(current - start))
         ret = jsonify({'data': json_rows})
-        if not criteria:
+        if not criteria and not filters:
             print('caching')
             current_app.cache.set(key, ret, (24 * 60 * 60), [table_name])
     else:

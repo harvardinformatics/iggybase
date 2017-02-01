@@ -53,7 +53,6 @@
 {% macro render_nav_menu(items, first_level = False) -%}
     {% if first_level%}
         <ul class="nav navbar-nav nav-tabs">
-            <li><a href="{{ url_for('home') }}">Home</a></li>
     {% else %}
         <ul class="dropdown-menu">
     {% endif %}
@@ -62,7 +61,7 @@
             {% if 'subs' in info and info['subs'] %}
             <li class="dropdown">
                 <a id="{{ item }}" class="dropdown-toggle" data-toggle="dropdown"
-                href= "{{ info['url'] }}" class="small">{{ info['title'] }}
+                href= "{{ info['url'] }}" class="small">{{ info['title']|title }}
                 <span class="caret"></span></a>
                 {{ render_nav_menu(info['subs'])}}
             {% else %}
@@ -81,7 +80,7 @@
                         data-{{data_key}}={{data_val}}
                     {% endfor %}
                 {% endif %}
-                >{{ info['title'] }}</a>
+                >{{ info['title']|title }}</a>
             {% endif %}
             </li>
         {% endfor %}
