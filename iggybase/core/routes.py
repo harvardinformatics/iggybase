@@ -259,7 +259,7 @@ def modal_add(facility_name, table_name, page_context):
         page_context = "modal_form"
 
     fg = FormGenerator('modal_add', 'single', table_name, page_context, module_name)
-    fg.data_entry_form('new')
+    fg.data_entry_form('new', None, 0)
 
     return fg.page_template_context()
 
