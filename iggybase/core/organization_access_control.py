@@ -258,7 +258,6 @@ class OrganizationAccessControl:
                 rows = self.session.query(getattr(fk_table_object, 'id'),
                                           getattr(fk_table_object,
                                                   fk_field_data['foreign_key'])).filter(*filters).order_by('order').all()
-
             for row in rows:
                 results.append((row.id, row.name))
 
@@ -432,6 +431,8 @@ class OrganizationAccessControl:
         # only return organizations the user belongs to
         if table_name == 'Organization':
             filters.append((getattr(table, 'id')).in_(self.org_ids))
+        else:
+            filters.append((getattr(table, 'organization_id')).in_(self.org_ids))
 
         return table.query.filter(*filters).order_by(getattr(table, 'name'))
 

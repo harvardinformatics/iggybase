@@ -451,7 +451,7 @@ class RoleAccessControl:
             self.role = (self.session.query(models.Role).filter(models.Role.id == role_id).first())
             self.session.commit()
             # remove orgs from session because current_org_id is facility
-            if self.facility.name != facility.name:
+            if self.facility.name != facility.name and 'org_id' in session:
                 session.pop('org_id')
             # renew the facility and routes
             self.__init__()
