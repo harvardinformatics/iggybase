@@ -7,6 +7,7 @@ from iggybase.database import db_session
 import datetime
 import re
 import logging
+import urllib
 
 FACILITY = 0
 MODULE = 1
@@ -64,20 +65,22 @@ def get_field_attr(field, table_query_field, attr):
 
 
 def get_filters():
-    req = dict(request.args)
+    req = request.args
     filters = {}
-    if 'search' in req:
-        search = dict(request.args)['search'][0].replace('?', '')
-        if search:
-            search = search.split('&')
+    for key, val in req.items():
+        # datatables ajax calls will post to search
+        if key == 'search':
+            search = val.replace('?', '').split('&')
             for param in search:
                 pair = param.split('=')
                 if len(pair) > 1:
-                    val = pair[1]
+                    f_val = urllib.parse.unquote(pair[1]).split(',')
                 else:
-                    val = True
-                filters[pair[0]] = val
-    filters.update(req)
+                    f_val = True
+                f_key = pair[0]
+                filters[f_key] = f_val
+        else:
+            filters[key] = urllib.parse.unquote(val)
     return filters
 
 
