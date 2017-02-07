@@ -278,6 +278,7 @@ class OrganizationAccessControl:
         order_by = {}
         first_table_named = None  # set to first table name, dont add to joins
         for key, field in fc.fields.items():
+            join_type = None # set to outer or inner
             # Get the table to display, fk table for fks
             if field.is_foreign_key:
                 table_name = field.FK_TableObject.name
@@ -306,6 +307,7 @@ class OrganizationAccessControl:
                         aliases[alias_name],
                         getattr(fk_table_model, field.Field.display_name) == aliases[alias_name].id
                     ))
+                    join_type = 'outer'
                 col = getattr(aliases[alias_name],
                     field.FK_Field.display_name)
 
@@ -320,9 +322,11 @@ class OrganizationAccessControl:
                 if (not first_table_named
                     or (first_table_named == field.TableObject.name)):
                     first_table_named = field.TableObject.name
+                    join_type = 'inner'
                 else:
                     if table_model not in joins:
                         joins.append(table_model)
+                    join_type = 'inner'
 
             if field.group_by == 1:
                 group_by.append(col)
@@ -354,7 +358,12 @@ class OrganizationAccessControl:
                         if criteria[criteria_key]['compare'] == 'greater than':
                             wheres.append(col > criteria[criteria_key]['value'])
                         elif criteria[criteria_key]['compare'] == '!=':
-                            wheres.append(col != criteria[criteria_key]['value'])
+                            compare_crit = (col != criteria[criteria_key]['value'])
+                            # if outer join (fk or not first_table) then must include nulls
+                            if join_type == 'outer':
+                                wheres.append(or_(col == None, compare_crit))
+                            else:
+                                wheres.append(compare_crit)
                 else:
                     wheres.append(col == criteria[criteria_key])
         id_cols = []
