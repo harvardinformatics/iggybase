@@ -7,6 +7,7 @@ from collections import OrderedDict
 import datetime
 import logging
 
+
 class DataInstance:
     def __init__(self, table_name, instance_name = None, depth = 2):
         self.role_access_control = g_helper.get_role_access_control()
@@ -16,7 +17,6 @@ class DataInstance:
         self.tables = OrderedDict()
         self.fields = {}
         self.instances = {}
-        self.instance_names = {}
         self.get_tables(depth)
 
         self.instance_counter = 0
@@ -26,6 +26,8 @@ class DataInstance:
 
         self.instance_id = None
         self.instance_name = None
+        self.new = False
+
         if instance_name is not None:
             self.get_data(instance_name)
 
@@ -92,10 +94,14 @@ class DataInstance:
 
         if instance.name is None or instance.name == '' or instance_name == 'new':
             instance.name = 'new_' + str(len(self.instances[table_name]))
+            instance.new_instance = True
+
+        instance.old_name = instance.name
 
         if self.instance_name is None:
             self.instance_name = instance.name
             self.instance_id = instance.id
+            self.new = instance.new_instance
 
     def get_instance(self, table_name, instance_name, instance_id):
         if instance_id is None:
@@ -218,7 +224,7 @@ class DataInstance:
             self.fields[table_name].set_defaults({self.tables[table_name]['parent']: instance['parent_id'],
                                                   'link_display_name': self.tables[table_name]['link_display_name']})
 
-        if 'new' in instance['instance'].name:
+        if instance['instance'].new_instance:
             for field, meta_data in self.fields[table_name].fields.items():
                 if meta_data.default is not None and meta_data.default != '':
                     if meta_data.Field.data_type_id == 3:
@@ -297,19 +303,21 @@ class DataInstance:
                         field_value == True or field_value == 'True':
                 field_value = 1;
 
+        instance_value = getattr(self.instances[table_name][instance_name]['instance'], field_name)
+
         if (table_name != 'history' and field_name not in exclude_list and
-                ((getattr(self.instances[table_name][instance_name]['instance'], field_name) is None and
-                          field_value is not None) or
-                         field_value != getattr(self.instances[table_name][instance_name]['instance'], field_name)) and
+                ((instance_value is None and field_value is not None) or
+                 (instance_value is not None and field_value is None) or field_value != instance_value) and
                 ((not (field_name == 'name' and field_value is None and
-                     'new' in self.instances[table_name][instance_name]['instance'].name) and
-                 self.tables[table_name]['level'] == 0) or (field_name != 'name'))):
+                  self.instances[table_name][instance_name]['instance'].new_instance) and
+                  self.tables[table_name]['level'] == 0) or (field_name != 'name'))):
             self.instances[table_name][instance_name]['save'] = True
             new_key = self.add_new_instance('history', 'new')
-            # logging.info('field_name: ' + field_name + "   field_value: " + str(field_value) + " type: " +
-            #              str(type(field_value)) + "   getattr: " +
-            #              str(getattr(self.instances[table_name][instance_name]['instance'], field_name)) + " type: " +
-            #              str(type(str(getattr(self.instances[table_name][instance_name]['instance'], field_name)))))
+
+            logging.info('field_name: ' + field_name + "   field_value: " + str(field_value) + " type: " +
+                         str(type(field_value)) + "   getattr: " +
+                         str(instance_value) + " type: " +
+                         str(type(instance_value)))
 
             self.set_values({'table_object_id': self.tables[table_name]['table_meta_data'].id,
                              'field_id': self.fields[table_name].fields[table_name + "|" + field_name].Field.id,
@@ -327,7 +335,6 @@ class DataInstance:
             setattr(self.instances[table_name][instance_name]['instance'], field_name, field_value)
 
     def commit(self):
-        self.instance_names = {}
         inst_names = {}
         save_instances = []
         background_save_instances = []
@@ -335,18 +342,16 @@ class DataInstance:
             if table_name == 'history':
                 continue
 
-            saved_new = False
+                saved_new_name = False
             for instance_name, instance in instances.items():
                 if not instance['save']:
                     continue
 
-                if 'new' in instance_name and (instance['instance'].name is None or 'new' in instance['instance'].name):
+                if instance['instance'].new_instance == True and (instance['instance'].name is None or
+                                                                  'new' in instance['instance'].name):
                     instance['instance'].name = self.set_instance_name(table_name)
-                    saved_new = True
+                    saved_new_name = True
 
-                # logging.error("instance['instance'].name: " + instance['instance'].name)
-                # logging.error("instance_name: " + instance_name)
-                self.instance_names[(instance_name, table_name)] = instance['instance'].name
                 inst_names[instance_name] = instance['instance'].name
 
                 if instance['instance'].date_created is None:
@@ -356,7 +361,7 @@ class DataInstance:
 
                 save_instances.append(instance['instance'])
 
-            if saved_new:
+            if saved_new_name:
                 background_save_instances.append(self.tables[table_name]['table_meta_data'])
 
         for history_name, instance in self.instances['history'].items():
@@ -373,7 +378,7 @@ class DataInstance:
                                                                                         background_save_instances)
 
         if commit_status:
-            if self.instance_id not in commit_msg:
+            if self.instance_id not in commit_msg and self.new == False:
                 commit_msg[self.instance_id] = {'id': self.instance_id, 'name': self.instance_name,
                                                 'table': self.table_name, 'old_name': self.instance_name}
 

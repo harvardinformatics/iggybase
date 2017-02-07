@@ -1,7 +1,6 @@
 from sqlalchemy import create_engine
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, UniqueConstraint, DateTime
-from sqlalchemy.orm import relationship
-from sqlalchemy.orm import scoped_session, sessionmaker
+from sqlalchemy.orm import scoped_session, sessionmaker, relationship, reconstructor
 from sqlalchemy.ext.declarative import declarative_base, declared_attr
 from config import Config
 from threading import Lock
@@ -28,6 +27,15 @@ class IggybaseBase(object):
 
     def values(self):
         return dict(self)
+
+    def __init__(self):
+        self.old_name = ''
+        self.new_instance = False
+
+    @reconstructor
+    def init_on_load(self):
+        self.old_name = ''
+        self.new_instance = False
 
     __table_args__ = {'mysql_engine': 'InnoDB'}
 
