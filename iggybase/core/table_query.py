@@ -81,7 +81,6 @@ class TableQuery:
                 calc_fields.append(field.name)
             if not field.visible:
                 invisible_fields.append(field.name)
-
         # create dictionary for each row
         for i, row in enumerate(self.results):
             row_dict = OrderedDict()
@@ -126,7 +125,7 @@ class TableQuery:
                             file_split = file.split('/')
                             if len(file_split) > 1:
                                 row_name = file_split[0]
-                                file = file_split[1]
+                                file = ('/').join(file_split[1:])
                         link = self.fc.fields[name].get_file_link(url_root, row_name, file)
                         file_links.append('<a href="' + link + '" target="_blank">' + file + '</a>')
                     col = '|'.join(file_links)
