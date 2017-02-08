@@ -87,9 +87,12 @@ class PageTemplate():
         navbar.update(self.populate_menu(navbar_root.id, context))
         # add facility role change options to navbar
         navbar['Role'] = self.role_access_control.make_role_menu()
-        change_user = self.role_access_control.make_user_menu()
+        # TODO: remove change user as it is, reconsider once we
+        # remove user org_ids
+        '''change_user = self.role_access_control.make_user_menu()
         if change_user:
             navbar['User'] = change_user
+        '''
         sidebar_root = self.role_access_control.get_menu(admin_consts.MENU_SIDEBAR_ROOT)
         sidebar = self.populate_menu(sidebar_root.id, context)
         context.update({'navbar': navbar, 'sidebar': sidebar})
