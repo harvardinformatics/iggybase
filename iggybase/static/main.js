@@ -36,8 +36,6 @@ $( document ).ready( function () {
             success: function(response) {
                 response = JSON.parse(response);
                 if(response.success) {
-                    alert('role changed');
-
                     //pathname starts with / facility in index 1
                     for (var i=2;i<paths.length;i++)
                         if (paths[i] != '')
