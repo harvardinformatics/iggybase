@@ -329,8 +329,7 @@ class OrganizationAccessControl:
                         outer_joins.append(table_model)
                         join_type = 'outer'
                     elif table_model not in joins:
-                        joins.append(table_model,
-                                table_model.organization_id.in_(self.org_ids))
+                        joins.append(table_model)
                         if table_model not in tables:
                             tables.append(table_model)
                         join_type = 'inner'
