@@ -312,8 +312,6 @@ class OrganizationAccessControl:
                     field.FK_Field.display_name)
 
             else:  # non-fk field
-                if table_model not in tables:
-                    tables.append(table_model)
                 col = getattr(table_model, field.Field.display_name)
                 if field.type == 'file': # give name as well
                     col = getattr(table_model, 'name') + '/' + col
@@ -322,16 +320,24 @@ class OrganizationAccessControl:
                 if (not first_table_named
                     or (first_table_named == field.TableObject.name)):
                     first_table_named = field.TableObject.name
+                    if table_model not in tables:
+                        tables.append(table_model)
                     join_type = 'inner'
                 else:
-                    if table_model not in joins:
-                        joins.append(table_model)
-                    join_type = 'inner'
+                    if field.group_func:
+                        outer_joins.append(table_model)
+                        join_type = 'outer'
+                    elif table_model not in joins:
+                        joins.append(table_model,
+                                table_model.organization_id.in_(self.org_ids))
+                        if table_model not in tables:
+                            tables.append(table_model)
+                        join_type = 'inner'
 
             if field.group_by == 1:
                 group_by.append(col)
             if field.group_func:
-                col = getattr(func, field.group_func)(col.op('SEPARATOR')(', '))
+                col = func.ifnull((getattr(func, field.group_func)(col.op('SEPARATOR')(', '))), '')
             columns.append(col.label(field.name))
             # set order by to first column asc if not set
             if not order_by:
@@ -345,29 +351,38 @@ class OrganizationAccessControl:
             if criteria_key in criteria and not (field.is_foreign_key and
                 field.FK_TableObject.name == first_table_named):
                 if type(criteria[criteria_key]) is list:
-                    wheres.append(col.in_(criteria[criteria_key]))
+                    crit_where = [(col.in_(criteria[criteria_key]))]
+                    include_nulls = False
                 elif type(criteria[criteria_key]) is dict:
                     if ('from' in criteria[criteria_key]
                         and 'to' in criteria[criteria_key]
                     ):
-                        wheres.extend([col >= criteria[criteria_key]['from'],
-                            col <= criteria[criteria_key]['to']])
+                        crit_where = [(col >= criteria[criteria_key]['from']),
+                            (col <= criteria[criteria_key]['to'])]
+                        include_nulls = False
                     if( 'compare' in criteria[criteria_key]
                         and 'value' in criteria[criteria_key]
                     ):
                         if criteria[criteria_key]['compare'] == 'greater than':
-                            wheres.append(col > criteria[criteria_key]['value'])
+                            crit_where = [(col > criteria[criteria_key]['value'])]
+                            include_nulls = False
                         elif criteria[criteria_key]['compare'] == '!=':
-                            compare_crit = (col != criteria[criteria_key]['value'])
-                            # if outer join (fk or not first_table) then must include nulls
-                            if join_type == 'outer':
-                                wheres.append(or_(col == None, compare_crit))
-                            else:
-                                wheres.append(compare_crit)
+                            crit_where = [col != criteria[criteria_key]['value']]
+                            include_nulls = True
                 else:
-                    wheres.append(col == criteria[criteria_key])
+                    crit_where = [col == criteria[criteria_key]]
+                    include_nulls = False
+                # if outer join criteria then must include nulls
+                # TODO: possible to add criteria to table join - first try at
+                # this failed since we are using natural joins
+                if include_nulls and join_type == 'outer':
+                    for i, c in enumerate(crit_where):
+                        crit_where[i] = (or_(col == None, c))
+                # add any criteria to the where
+                wheres.extend(crit_where)
         id_cols = []
-        # add organization id checks on all tables, does not include fk tables
+        # add organization id checks on all tables, does not include fk tables,
+        # or outer join tables
         for table_model in tables:
             # add a row id that is the id of the first table named
             id_table_name = table_model.__table__.name.lower()
@@ -378,7 +393,7 @@ class OrganizationAccessControl:
                 wheres.append(or_(
                     getattr(table_model, 'organization_id').in_(self.org_ids),
                     getattr(table_model, 'id') == g.user.id
-                    ))
+                ))
             else:
                 wheres.append(getattr(table_model, 'organization_id').in_(self.org_ids))
             wheres.append(getattr(table_model, 'active') == active)
