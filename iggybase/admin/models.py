@@ -477,6 +477,7 @@ class TableQueryField(Base):
     group_func = Column(String(50))
     group_by = Column(Boolean)
     order_by = Column(Integer)
+    no_link = Column(Boolean)
 
     table_query_field_field = relationship("Field", foreign_keys=[field_id])
     table_query_field_table_query = relationship("TableQuery", foreign_keys=[table_query_id])

@@ -40,10 +40,12 @@ class Field:
         self.group_by = None
         self.group_func = None
         self.order_by = None
+        self.no_link = None
         if self.TableQueryField:
             self.group_by = self.TableQueryField.group_by
             self.group_func = self.TableQueryField.group_func
             self.order_by = self.TableQueryField.order_by
+            self.no_link = self.TableQueryField.no_link
         self.display_name = self.get_field_display_name() # name from role or tq
         self.rac = g_helper.get_role_access_control()
         self.calculation_fields = self._get_calculation_fields(calculation)
@@ -184,7 +186,7 @@ class Field:
         return col
 
     def link_visible(self):
-        return (not self.is_calculation() and
+        return (not self.is_calculation() and not self.no_link and
                 (
                     (self.Field.display_name == 'name' and not self.is_foreign_key) or
                     self.is_title_field or
