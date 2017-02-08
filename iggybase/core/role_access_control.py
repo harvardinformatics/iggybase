@@ -430,9 +430,8 @@ class RoleAccessControl:
                 models.MenuRole.active == active,
                 models.Menu.parent_id == parent_id,
                 models.Menu.active == active
-            ).order_by(models.MenuRole.order, models.MenuRole.display_name,
-                       models.Menu.order, models.Menu.display_name).all())
-
+            ).order_by(models.MenuRole.order,
+                       models.Menu.order, models.MenuRole.display_name, models.Menu.display_name).all())
         return items
 
     def change_role(self, role_id):
@@ -522,7 +521,7 @@ class RoleAccessControl:
 
     def get_children(self, table_object_id, active = 1):
         extension = aliased(models.TableObject, name='extension')
-        return self.session.query(models.TableObjectChildren, models.TableObject, models.TableObjectRole,
+        res = self.session.query(models.TableObjectChildren, models.TableObject, models.TableObjectRole,
                                  extension). \
             join(models.TableObject, models.TableObjectChildren.child_table_object_id == models.TableObject.id). \
             join(models.TableObjectRole,
@@ -534,6 +533,7 @@ class RoleAccessControl:
             filter(models.TableObjectRole.role_id==self.role.id). \
             filter(models.TableObjectRole.active==active). \
             order_by(models.TableObjectChildren.order, models.TableObject.name).all()
+        return res
 
     def get_extension_children(self, table_object_id, active = 1):
         extension = aliased(models.TableObject, name='extension')
