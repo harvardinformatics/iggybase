@@ -92,9 +92,6 @@ class TableQuery:
                     dt_row_id = col
                     if not add_row_id:
                         continue
-                elif name == 'DT_row_label':
-                    dt_row_label = col
-                    continue
                 elif name in invisible_fields:
                     continue
                 elif name in calc_fields:
@@ -140,7 +137,7 @@ class TableQuery:
             if row_dict:
                 # store values as a dict of dict so we can access any of the
                 # data by row_id and field display_name
-                self.table_dict[dt_row_label] = row_dict
+                self.table_dict[dt_row_id] = row_dict
 
     def get_list_of_list(self): # for download
         table_list = []

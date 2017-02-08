@@ -264,7 +264,8 @@ class OrganizationAccessControl:
         return results
 
     def get_table_query_data(self, fc, criteria={}, active = 1):
-        logging.info(str('get_table_query_data'))
+        # TODO: consider factoring out part of this or something to make this
+        # easier to digest
         results = []
         tables = []
         joins = []
@@ -411,8 +412,6 @@ class OrganizationAccessControl:
                 order_by_list.append(desc(key))
             else:
                 order_by_list.append(key)
-        # TODO: clean this up, dont need label?
-        columns.append(id_col.label('DT_row_label'))
         columns.append(id_col.label('DT_RowId'))
         start = time.time()
 
