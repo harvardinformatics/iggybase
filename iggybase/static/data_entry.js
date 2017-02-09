@@ -376,7 +376,6 @@ $( document ).ready( function () {
 
     $.fn.removeRow = function ( ele ) {
         var row_id = $( ele ).attr( 'data_row_id' );
-        alert(row_id);
 
         $("input[id$='_" + row_id + "']").remove( );
         $( ele ).closest( '.row' ).remove( );
