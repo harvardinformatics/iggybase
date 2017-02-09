@@ -1,6 +1,3 @@
-body {
-    overflow-x:hidden;
-}
 .left-indent-div {
     padding-left: 100px!important
 }
@@ -234,20 +231,34 @@ pre {
     border-top-right-radius: 10px;
     margin-right: 2px;
     margin-left: 2px;
+    padding-left: 15px;
     float:none;
 }
 .label-row {
     float:none;
     display:inline-block;
 }
+.multi-row-data > .row {
+    margin-right: 2px;
+    margin-left: 2px;
+    float:none;
+}
 .label-th {
     float:left;
 }
+.spacer-15 {
+    width:15px;
+    display:inline-block;
+}
+.remove-row {
+    float:none;
+    display:inline-block;
+    margin-top:8px;
+}
 .multi-row-data {
-    overflow-x:auto;
-    overflow-y:auto;
+    overflow-x:scroll;
+    overflow-y:scroll;
     white-space:nowrap;
-    min-height: 110px;
 }
 
 /* fix to make scroll bar visibile in chrome with mac */
@@ -261,21 +272,10 @@ pre {
     height: 11px;
 }
 ::-webkit-scrollbar-thumb {
-    border-radius: 10px;
+    border-radius: 4px;
+    border: 2px white solid;
     background-color: rgba(0, 0, 0, .5);
     -webkit-box-shadow: 0 0 1px rgba(255, 255, 255, .5);
-}
-/* Track */
-::-webkit-scrollbar-track {
-    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
-    -webkit-border-radius: 10px;
-    border-radius: 10px;
-}
-
-.multi-row-data > .row {
-    margin-right: 2px;
-    margin-left: 2px;
-    float:none;
 }
 .multi-row-data > .row [class*="col-md"] {
     float:none;

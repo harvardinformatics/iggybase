@@ -28,6 +28,11 @@ $( document ).ready( function () {
             $.fn.addChildTableRow( $( this ) );
         }
     );
+    $( ".remove-row" ).click(
+        function( ) {
+            $.fn.removeRow( $( this ) );
+        }
+    );
     $( ".multi-row-data" ).on( 'scroll',
         function( ) {
             $.fn.updateScrollBar( $( this ) )
@@ -267,6 +272,14 @@ $( document ).ready( function () {
         var values = new Array();
         var inputs = new Array();
 
+        if ( new_row.has( 'new-row' ).length < 1 )
+            new_row.addClass( 'new-row' );
+
+        if ( new_row.has( '.remove-row' ).length < 1 )
+            new_row.prepend('<span data_row_id="' + row_id + '" class="glyphicon glyphicon-minus remove-row"></span>');
+
+        new_row.find( '.spacer-15' ).remove();
+
         new_row.find( "input, select" ).each(
             function() {
                 if ( $( this ).css( 'display' ) == 'none' ) {
@@ -309,6 +322,8 @@ $( document ).ready( function () {
                 }
             }
         ).end( ).appendTo( "#" + target );
+
+        $( new_row ).on( 'click', '.remove-row', function ( ) { $.fn.removeRow( $( this ) ); } );
 
         $('input[id$="_' + old_id + '"]' ).each(
             function() {
@@ -357,6 +372,14 @@ $( document ).ready( function () {
         );
 
         $.fn.addInputEvents()
+    }
+
+    $.fn.removeRow = function ( ele ) {
+        var row_id = $( ele ).attr( 'data_row_id' );
+        alert(row_id);
+
+        $("input[id$='_" + row_id + "']").remove( );
+        $( ele ).closest( '.row' ).remove( );
     }
 
     $.fn.changeCheckBox = function ( ele ) {

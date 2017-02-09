@@ -330,7 +330,7 @@ class FormGenerator(PageTemplate):
 
             value = getattr(instance['instance'], field.Field.display_name)
 
-            if field.Field.display_name == 'name' and value is not None and 'new' in value:
+            if field.Field.display_name == 'name' and value is not None and 'empty_row' in value:
                 value = None
 
             control_id = 'data_entry_' + field.Field.display_name + "_" + str(row_counter)

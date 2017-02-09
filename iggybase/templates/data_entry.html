@@ -117,6 +117,11 @@
                 {% elif 'start_row_' in field.id-%}
                     {% set field_vars = field.id.split("_") %}
                     <div class="row" row_id="{{ field_vars[field_vars|length - 1] }}" table_object_name="{{ table_name }}">
+                    {%- if "new" in row_name %}
+                        <span data_row_id="{{ field_vars[field_vars|length - 1] }}" class="glyphicon glyphicon-minus remove-row"></span>
+                    {% else -%}
+                        <span class="spacer-15"></span>
+                    {%- endif %}
                 {% elif 'end_row_' in field.id-%}
                     </div>
                 {% elif "record_data_row_name_" in field.id -%}

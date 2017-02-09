@@ -17,6 +17,8 @@ class DataInstance:
         self.tables = OrderedDict()
         self.fields = {}
         self.instances = {}
+        self.instance_names = {}
+        self.template_instance = {}
         self.get_tables(depth)
 
         self.instance_counter = 0
@@ -92,9 +94,14 @@ class DataInstance:
     def set_name(self, table_name, instance, instance_name = 'new'):
         self.instance_counter += 1
 
-        if instance.name is None or instance.name == '' or instance_name == 'new':
+        if instance_name == 'empty_row':
+            instance.new_instance = True
+            instance.name = instance_name
+        elif instance.name is None or instance.name == '' or instance_name == 'new':
             instance.name = 'new_' + str(len(self.instances[table_name]))
             instance.new_instance = True
+        else:
+            instance.new_instance = False
 
         instance.old_name = instance.name
 
@@ -102,6 +109,13 @@ class DataInstance:
             self.instance_name = instance.name
             self.instance_id = instance.id
             self.new = instance.new_instance
+
+    def get_template_instance(self, table_name, parent_id = None):
+        instance = self.organization_access_control.get_instance_data(self.tables[table_name]['table_object'],
+                                                                      {'name': 'new'})
+        instance.new_instance = True
+        self.initialize_values(table_name, {'instance': instance, 'parent_id': parent_id})
+        self.template_instance[table_name] = instance
 
     def get_instance(self, table_name, instance_name, instance_id):
         if instance_id is None:
@@ -134,7 +148,7 @@ class DataInstance:
                                   'link_type': None,
                                   'table_object': util.get_table('history'),
                                   'table_meta_data': self.role_access_control.has_access('TableObject',
-                                                                                          {'name': 'history'})}
+                                                                                            {'name': 'history'})}
         self.initialize_fields('history')
         if depth > 0 and self.tables[self.table_name]['table_meta_data']:
             # if self.tables[self.table_name]['table_meta_data'].note_enabled == 1:
@@ -160,6 +174,7 @@ class DataInstance:
                 #              'link_data': row.TableObjectChildren, 'link_type': 'child'}
                 table_name = link_data['table_meta_data'].name
                 self.initialize_fields(table_name)
+
                 # TODO: if roles are not correct then the key may not exist in
                 # fields, consider possible fixes, for now better to error then
                 # not display what was asked because it is clearer what the
@@ -191,9 +206,14 @@ class DataInstance:
             logging.info(str(table_data['level']))
             logging.info(str(table_data['table_object'].name))
             if table_data['level'] == 0:
+                self.get_template_instance(table_name)
                 continue
             elif table_data['level'] == 1:
                 ids = [self.instance_id]
+                self.get_template_instance(table_name,
+                                           self.instances[self.table_name][self.instance_name]['instance'].id)
+            else:
+                self.get_template_instance(table_name)
 
             if table_data['link_type'] == "child":
                 child_rows = self.organization_access_control. \
@@ -207,10 +227,10 @@ class DataInstance:
                         self.get_data(None, row['instance'].id, table_name, row['instance'], row['parent_id'])
                         ids.append(row['instance'].id)
                 elif table_data['level'] == 1:
-                    self.get_data('new', None, table_name, None,
+                    self.get_data('empty_row', None, table_name, None,
                                   self.instances[self.table_name][self.instance_name]['instance'].id)
                 else:
-                    self.get_data('new', None, table_name)
+                    self.get_data('empty_row', None, table_name)
 
             elif table_data['link_type'] == "many":
                 pass
@@ -342,16 +362,18 @@ class DataInstance:
             if table_name == 'history':
                 continue
 
-                saved_new_name = False
+            saved_new_name = False
             for instance_name, instance in instances.items():
                 if not instance['save']:
                     continue
 
                 if instance['instance'].new_instance == True and (instance['instance'].name is None or
-                                                                  'new' in instance['instance'].name):
+                                                                  'new' in instance['instance'].name or
+                                                                  instance['instance'].name == 'empty_row'):
                     instance['instance'].name = self.set_instance_name(table_name)
                     saved_new_name = True
 
+                self.instance_names[(instance_name, table_name)] = instance['instance'].name
                 inst_names[instance_name] = instance['instance'].name
 
                 if instance['instance'].date_created is None:

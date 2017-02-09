@@ -180,7 +180,8 @@ class OrganizationAccessControl:
 
         filters = [getattr(table_object, 'organization_id').in_(self.org_ids)]
 
-        if 'name' in criteria and (criteria['name'] == 'new' or criteria['name'] == ['new']):
+        if 'name' in criteria and (criteria['name'] == 'new' or criteria['name'] == ['new'] or
+                                   criteria['name'] == 'empty_row' or criteria['name'] == ['empty_row']):
             return table_object()
 
         for field, value in criteria.items():
