@@ -304,3 +304,15 @@ pre {
     margin-left: 200px;
     width: calc(100% - 200px);
 }
+#search_body {
+    padding: 5px;
+}
+#modal_search_results td, th {
+    padding: 5px;
+}
+#modal_search_results th {
+    font-weight: bold;
+}
+#modal_search_results input {
+    white-space: normal;
+}

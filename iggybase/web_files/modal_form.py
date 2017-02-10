@@ -71,6 +71,7 @@ class ModalForm():
 
         search_results = oac.get_search_results(search_table, search_params)
 
+        # TODO: move html to a template and use render template
         modal_html = '<table class="table-sm table-striped"><tr>'
 
         for field in fields:
@@ -91,7 +92,7 @@ class ModalForm():
                                        'val_id="' + str(row.id) + '" value="' + format(res) + '"></input></td>')
                     else:
                         if res is not None:
-                            modal_html += '<td><label>' + format(res) + '</label></td>'
+                            modal_html += '<td>' + format(res) + '</td>'
                         else:
                             modal_html += '<td></td>'
 
