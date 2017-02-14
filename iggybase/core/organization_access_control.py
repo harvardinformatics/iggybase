@@ -43,12 +43,12 @@ class OrganizationAccessControl:
         filters = util.get_filters()
         if 'set_orgs' not in filters and 'org_id' in session and session['org_id']:
             self.current_org_id = session['org_id']['current_org_id']
-            self.org_ids = session['org_id']['org_ids']
+            self.org_ids.extend(session['org_id']['org_ids'])
             print('in session')
         else:
             print('not in session')
             self.current_org_id = None
-            self.org_ids = []
+            self.org_ids = self.get_default_org_ids()
             min_level = None
             for user_org, level in facility_orgs.items():
                 # levels are ordered from high to low, hightest has order = 1
@@ -261,7 +261,6 @@ class OrganizationAccessControl:
                                                   fk_field_data['foreign_key'])).filter(*filters).order_by('order').all()
             for row in rows:
                 results.append((row.id, row.name))
-
         return results
 
     def get_table_query_data(self, fc, criteria={}, active = 1):
