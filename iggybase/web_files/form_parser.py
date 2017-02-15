@@ -116,15 +116,15 @@ class FormParser():
                     row_data['data_entry'][field] = None
                 elif field_data.foreign_key_table_object_id is not None:
                     try:
-                        if row_data['data_entry'][field] is None or row_data['data_entry'][field] == '' \
-                                or int(row_data['data_entry'][field]) == -99:
-                            row_data['data_entry'][field] = None
-                        else:
-                            row_data['data_entry'][field] = int(row_data['data_entry'][field])
+                        row_data['data_entry'][field] = int(row_data['id_data_entry'][field])
                     except (ValueError, KeyError) as e:
                         try:
-                            row_data['data_entry'][field] = int(row_data['id_data_entry'][field])
-                        except  (ValueError, KeyError) as e:
+                            if row_data['data_entry'][field] is None or row_data['data_entry'][field] == '' \
+                                    or int(row_data['data_entry'][field]) == -99:
+                                row_data['data_entry'][field] = None
+                            else:
+                                row_data['data_entry'][field] = int(row_data['data_entry'][field])
+                        except (ValueError, KeyError) as e:
                             row_data['data_entry'][field] = None
                 # handle datatypes
                 elif meta_data.type == 'integer':
