@@ -12,8 +12,8 @@ class Institution(Base):
     table_type = 'admin'
 
     def __repr__(self):
-        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
-               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id)
 
 
 class Department(Base):
@@ -23,16 +23,16 @@ class Department(Base):
     department_institution = relationship("Institution", foreign_keys=[institution_id])
 
     def __repr__(self):
-        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
-               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id)
 
 
 class OrganizationType(Base):
     table_type = 'admin'
 
     def __repr__(self):
-        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
-               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id)
 
 class Address(Base):
     table_type = 'admin'
@@ -89,8 +89,8 @@ class TableObject(Base):
         return new_name
 
     def __repr__(self):
-        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
-               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id)
 
 
 class Field(Base):
@@ -119,8 +119,8 @@ class Field(Base):
     field_dynamic_field_definition_field = relationship("Field", foreign_keys=[dynamic_field_definition_field_id])
 
     def __repr__(self):
-        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
-               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id)
 
 
 class DataType(Base):
@@ -128,8 +128,8 @@ class DataType(Base):
     db_data_type = Column(String(50))
 
     def __repr__(self):
-        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
-               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id)
 
 
 class Level(Base):
@@ -137,7 +137,7 @@ class Level(Base):
     table_type = 'admin'
 
     def __repr__(self):
-        return "<%s(class=%s, name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
+        return "<%s(class=%s, name=%s, description=%s, id=%d, organization_id=%d)>" % \
                (self.__class__, self.name, self.description, self.id, self.organization_id,
                 getattr(self, 'order', None))
 
@@ -159,8 +159,8 @@ class Role(Base, RoleMixin):
     role_unq = UniqueConstraint('facility_id', 'level_id')
 
     def __repr__(self):
-        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
-               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id)
 
 
 class Facility(Base):
@@ -173,8 +173,8 @@ class Facility(Base):
     table_suffix = Column(String(255))
 
     def __repr__(self):
-        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
-               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id)
 
 
 class MenuRole(Base):
@@ -190,8 +190,8 @@ class MenuRole(Base):
     menu_role_menu = relationship("Menu", foreign_keys=[menu_id])
 
     def __repr__(self):
-        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
-               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id)
 
 
 class Route(Base):
@@ -203,8 +203,8 @@ class Route(Base):
     route_module = relationship("Module", foreign_keys=[module_id])
 
     def __repr__(self):
-        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
-               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id)
 
 
 class Menu(Base):
@@ -222,8 +222,8 @@ class Menu(Base):
     menu_new_route = relationship("Route", foreign_keys=[route_id])
 
     def __repr__(self):
-        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
-               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id)
 
 
 class RouteRole(Base):
@@ -237,24 +237,24 @@ class RouteRole(Base):
     route_role_route = relationship("Route", foreign_keys=[route_id])
 
     def __repr__(self):
-        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
-               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id)
 
 
 class MenuType(Base):
     table_type = 'admin'
 
     def __repr__(self):
-        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
-               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id)
 
 
 class SelectList(Base):
     table_type = 'admin'
 
     def __repr__(self):
-        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
-               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id)
 
 
 class SelectListItem(Base):
@@ -265,8 +265,8 @@ class SelectListItem(Base):
     select_list_item_select_list = relationship("SelectList", foreign_keys=[select_list_id])
 
     def __repr__(self):
-        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
-               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id)
 
 
 class PageForm(Base):
@@ -279,8 +279,8 @@ class PageForm(Base):
     parent = relation('PageForm', remote_side="PageForm.id", foreign_keys=[parent_id])
 
     def __repr__(self):
-        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
-               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id)
 
 
 class PageFormJavascript(Base):
@@ -291,16 +291,16 @@ class PageFormJavascript(Base):
     page_javascript_page = relationship("PageForm", foreign_keys=[page_form_id])
 
     def __repr__(self):
-        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
-               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id)
 
 
 class PageFormContext(Base):
     table_type = 'admin'
 
     def __repr__(self):
-        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
-               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id)
 
 
 class PageFormButton(Base):
@@ -314,8 +314,8 @@ class PageFormButton(Base):
     display_name = Column(String(100))
 
     def __repr__(self):
-        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
-               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id)
 
 
 class PageFormButtonRole(Base):
@@ -328,8 +328,8 @@ class PageFormButtonRole(Base):
     page_form_button_role_page_form = relationship("PageFormButton", foreign_keys=[page_form_button_id])
 
     def __repr__(self):
-        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
-               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id)
 
 
 class PageFormButtonContext(Base):
@@ -347,8 +347,8 @@ class PageFormButtonContext(Base):
     page_form_button_context_table_object = relationship("TableObject", foreign_keys=[table_object_id])
 
     def __repr__(self):
-        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
-               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id)
 
 
 class TableObjectRole(Base):
@@ -362,8 +362,8 @@ class TableObjectRole(Base):
     table_object_role_unq = UniqueConstraint('role_id', 'table_object_id')
 
     def __repr__(self):
-        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
-               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id)
 
 
 class TableObjectMany(Base):
@@ -377,8 +377,8 @@ class TableObjectMany(Base):
     table_object_many_link_table_object = relationship("TableObject", foreign_keys=[second_table_object_id])
 
     def __repr__(self):
-        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
-               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id)
 
 
 class TableObjectChildren(Base):
@@ -425,8 +425,8 @@ class Permission(Base):
     table_type = 'admin'
 
     def __repr__(self):
-        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
-               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id)
 
 
 
@@ -436,8 +436,8 @@ class TableQuery(Base):
     display_name = Column(String(100))
 
     def __repr__(self):
-        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
-               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id)
 
 class TableQueryRender(Base):
     table_type = 'admin'
@@ -451,8 +451,8 @@ class TableQueryRender(Base):
     table_query_render_table_query = relationship("TableQuery", foreign_keys=[table_query_id])
 
     def __repr__(self):
-        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
-               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id)
 
 
 class TableQueryTableObject(Base):
@@ -464,8 +464,8 @@ class TableQueryTableObject(Base):
     table_query_type_table_query = relationship("TableQuery", foreign_keys=[table_query_id])
 
     def __repr__(self):
-        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
-               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id)
 
 
 class TableQueryField(Base):
@@ -483,8 +483,8 @@ class TableQueryField(Base):
     table_query_field_table_query = relationship("TableQuery", foreign_keys=[table_query_id])
 
     def __repr__(self):
-        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
-               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id)
 
 
 class TableQueryCriteria(Base):
@@ -498,8 +498,8 @@ class TableQueryCriteria(Base):
     table_query_criteria_field = relationship("Field", foreign_keys=[field_id])
 
     def __repr__(self):
-        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
-               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id)
 
 
 class TableQueryCalculation(Base):
@@ -510,8 +510,8 @@ class TableQueryCalculation(Base):
     table_query_calculation_table_query_field = relationship("TableQueryField", foreign_keys=[table_query_field_id])
 
     def __repr__(self):
-        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
-               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id)
 
 
 class TableQueryCalculationField(Base):
@@ -526,8 +526,8 @@ class TableQueryCalculationField(Base):
                                                                    foreign_keys=[table_query_field_id])
 
     def __repr__(self):
-        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
-               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id)
 
 
 class Workflow(Base):
@@ -536,8 +536,8 @@ class Workflow(Base):
     notes = Column(String(255))
 
     def __repr__(self):
-        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
-               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id)
 
 class WorkflowRole(Base):
     table_type = 'admin'
@@ -549,8 +549,8 @@ class WorkflowRole(Base):
     workflow_role_workflow = relationship("Workflow", foreign_keys=[workflow_id])
 
     def __repr__(self):
-        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
-               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id)
 
 class Step(Base):
     table_type = 'admin'
@@ -568,8 +568,8 @@ class Step(Base):
     step_dynamic_field = relationship("Field", foreign_keys=[dynamic_field])
 
     def __repr__(self):
-        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
-               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id)
 
 class WorkItemGroup(Base):
     table_type = 'admin'
@@ -604,8 +604,8 @@ class WorkItem(Base):
     work_item_work_item = relation('WorkItem', remote_side="WorkItem.id", foreign_keys=[parent_id])
 
     def __repr__(self):
-        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
-               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id)
 
 class Module(Base):
     table_type = 'admin'
@@ -626,8 +626,8 @@ class ModuleFacility(Base):
     module_facility_module = relationship("Module", foreign_keys=[module_id])
 
     def __repr__(self):
-        return "<%s(name=%s, description=%s, id=%d, organization_id=%d, order=%d)>" % \
-               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id, self.order)
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id)
 
 
 class UserRole(Base):
