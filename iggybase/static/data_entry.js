@@ -1,5 +1,6 @@
 var search_open = false;
 var search_input = '';
+var charge_method_percent = false;
 
 $( document ).ready( function () {
     $('.data-control').tooltip({placement:'bottom'});
@@ -63,6 +64,11 @@ $( document ).ready( function () {
         $( document ).off( "blur", ".charge-method-code" );
         $( document ).on( "blur", ".charge-method-code", function() {
             $.fn.checkCodeFormat( $( this ) );
+        } );
+
+        $( document ).off( "change", ".charge-method-percent" );
+        $( document ).on( "change", ".charge-method-percent", function() {
+            $.fn.checkPercentChange( $( this ) );
         } );
 
         $( document ).off( "blur", ".charge-method-percent" );

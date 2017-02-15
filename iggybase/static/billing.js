@@ -1,15 +1,23 @@
 ( function( $ ) {
+    $.fn.checkPercentChange = function( event, ele ) {
+        charge_method_percent = true;
+    }
+
     $.fn.checkCodePercent = function( event, ele ) {
-        var total = 0;
+        if ( charge_method_percent ) {
+            charge_method_percent = false;
 
-        $( ".charge-method-percent" ).each(
-            function( ) {
-                total += parseInt( $( this ).val( ) );
-            }
-        );
+            var total = 0;
 
-        if ( total != 100 )
-            alert('Please correct the percentages for the charge methods.\n\nCurrent Total: ' + String( total ) );
+            $( ".charge-method-percent" ).each(
+                function( ) {
+                    total += parseInt( $( this ).val( ) );
+                }
+            );
+
+            if ( total != 100 )
+                alert('Please correct the percentages for the charge methods.\n\nCurrent Total: ' + String( total ) );
+        }
     }
 
     $.fn.checkCodeFormat = function( ele ) {
