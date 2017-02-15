@@ -2,7 +2,8 @@ var search_open = false;
 var search_input = '';
 
 $( document ).ready( function () {
-    $('input').tooltip({placement:'bottom'});
+    $('.data-control').tooltip({placement:'bottom'});
+    $('.table-control').tooltip({placement:'bottom'});
     // scroll to errors to ensure they are not hidden on scrollable x
     var errors = document.getElementsByClassName('has-error');
     for (var i = 0; i < errors.length; i++) {
