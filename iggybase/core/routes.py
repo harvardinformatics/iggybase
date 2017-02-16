@@ -447,6 +447,7 @@ def build_summary_ajax(table_name, criteria = {}):
     # or filters can be added to the get params
     # both should clear the cache
     # TODO: add filters and criteria to cache
+    print(filters)
     if (not criteria and not filters):
         print('checking cache')
         ret = current_app.cache.get(key)

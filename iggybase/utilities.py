@@ -70,16 +70,17 @@ def get_filters():
     for key, val in req.items():
         # datatables ajax calls will post to search
         if key == 'search':
-            search = val.replace('?', '').split('&')
-            for param in search:
-                pair = param.split('=')
-                if len(pair) > 1:
-                    f_val = urllib.parse.unquote(pair[1]).split(',')
-                else:
-                    f_val = True
-                f_key = pair[0]
-                filters[f_key] = f_val
-        else:
+            if val:
+                search = val.replace('?', '').split('&')
+                for param in search:
+                    pair = param.split('=')
+                    if len(pair) > 1:
+                        f_val = urllib.parse.unquote(pair[1]).split(',')
+                    else:
+                        f_val = True
+                    f_key = pair[0]
+                    filters[f_key] = f_val
+        elif key not in ['_']: # datatables passed date with key _
             filters[key] = urllib.parse.unquote(val)
     return filters
 
