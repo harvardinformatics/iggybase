@@ -2,10 +2,6 @@
 {% import "bootstrap/wtf.html" as wtf %}
 {% import 'macros.html' as macros %}
 {% block title %}{{ page_title }}{% endblock %}
-{% block styles %}
-    {{ super() }}
-    <link href="{{ url_for('static', filename='work_item_group.css') }}" rel="stylesheet">
-{%- endblock styles %}
 
 {% block content -%}
     {% block content_title -%}
