@@ -29,7 +29,7 @@ class OrganizationAccessControl:
         # must distinguish user level orgs from group level org ids
         query = self.session.query(models.Organization.parent_id.distinct().label('parent_id'))
         self.parent_orgs = [row.parent_id for row in query.all()]
-        facility_root_org_id = g.root_org_id
+        facility_root_org_id = session['root_org_id']
 
         user_orgs = self.session.query(models.UserOrganization).filter_by(active=1, user_id=self.user.id).all()
 
