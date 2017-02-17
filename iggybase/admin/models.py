@@ -79,9 +79,9 @@ class TableObject(Base):
     table_object_extends_table_object = relationship("TableObject", foreign_keys=[extends_table_object_id])
 
     def get_new_name(self):
-        if self.new_name_prefix is not None and self.new_name_prefix != "" and self.new_name_id is not None and \
-                self.id_length is not None:
-            new_name = self.new_name_prefix + str(self.new_name_id).zfill(self.id_length)
+        if self.new_name_prefix is not None and self.new_name_prefix != "" and self.new_name_id is not None:
+            length = self.id_length or 6
+            new_name = self.new_name_prefix + str(self.new_name_id).zfill(length)
             self.new_name_id += 1
         else:
             new_name = self.name + str(random.randint(1000000000, 9999999999))
@@ -138,8 +138,7 @@ class Level(Base):
 
     def __repr__(self):
         return "<%s(class=%s, name=%s, description=%s, id=%d, organization_id=%d)>" % \
-               (self.__class__, self.name, self.description, self.id, self.organization_id,
-                getattr(self, 'order', None))
+               (self.__class__, self.name, self.description, self.id, self.organization_id)
 
 
 class Role(Base, RoleMixin):
