@@ -14,10 +14,10 @@ class InstanceCollection:
 
         self.table_name = table_name
 
-        self.tables = TableCollection(table_name, depth)
+        self.tables = TableCollection([table_name], depth)
 
         self.instances = {}
-        for table_name, display_name in self.tables.table_names.items():
+        for table_name in self.tables.table_names:
             self.instances[table_name] = OrderedDict()
 
         self.instance_names = {}
@@ -77,9 +77,9 @@ class InstanceCollection:
 
         self.set_name(table_name, instance, instance_name)
 
-        if self.tables.level[table_name] == 1 and 'new' in instance.name and \
-                        self.tables.link_display_name[table_name] is not None:
-            setattr(instance, self.tables.link_display_name[table_name], self.instance_id)
+        if self.tables[table_name].level == 1 and 'new' in instance.name and \
+                        self.tables[table_name].link_display_name is not None:
+            setattr(instance, self.tables[table_name].link_display_name, self.instance_id)
 
         instance = {'instance': instance, 'parent_id': None, 'save': False}
 
@@ -110,22 +110,22 @@ class InstanceCollection:
 
     def get_instance(self, table_name, instance_name, instance_id):
         if instance_id is None:
-            instance = self.organization_access_control.get_instance_data(self.tables.table_object[table_name],
+            instance = self.organization_access_control.get_instance_data(self.tables[table_name].table_instance,
                                                                           {'name': instance_name})
         else:
-            instance = self.organization_access_control.get_instance_data(self.tables.table_object[table_name],
+            instance = self.organization_access_control.get_instance_data(self.tables[table_name].table_instance,
                                                                           {'id': instance_id})
 
         return instance
 
     def get_linked_instances(self):
-        for table_name, table_data in self.tables.table_object.items():
-            if self.tables.level[table_name] == 1:
+        for table_name, table_data in self.tables.items():
+            if table_data.level == 1:
                 ids = [self.instance_id]
 
-            if self.tables.link_type[table_name] == "child":
+            if table_data.link_type == "child":
                 child_rows = self.organization_access_control. \
-                    get_descendant_data(table_name, self.tables.link_data[table_name].child_link_field_id, ids)
+                    get_descendant_data(table_name, table_data.link_data.child_link_field_id, ids)
 
                 ids = []
 
@@ -134,26 +134,27 @@ class InstanceCollection:
                     for row in child_rows:
                         self.get_data(None, row['instance'].id, table_name, row['instance'], row['parent_id'])
                         ids.append(row['instance'].id)
-                elif self.tables.level[table_name] == 1:
+                elif table_data.level == 1:
                     self.get_data('empty_row', None, table_name, None,
                                   self.instances[self.table_name][self.instance_name]['instance'].id)
                 else:
                     self.get_data('empty_row', None, table_name)
 
-            elif self.tables.link_type[table_name] == "many":
+            elif table_data.link_type == "many":
                 pass
-            elif self.tables.link_type[table_name] == "table_id":
+            elif table_data.link_type == "table_id":
                 pass
 
     def initialize_values(self, table_name, instance):
-        if self.tables.parent[table_name] is None:
-            self.tables.fields[table_name].set_defaults()
+        if self.tables[table_name].parent is None:
+            self.tables[table_name].fields.set_defaults()
         else:
-            self.tables.fields[table_name].set_defaults({self.tables.parent[table_name]: instance['parent_id'],
-                                                         'link_display_name': self.tables.link_display_name[table_name]})
+            self.tables[table_name].fields.set_defaults({self.tables[table_name].parent: instance['parent_id'],
+                                                         'link_display_name': self.tables[table_name].\
+                                                        parent_link_field_display_name})
 
         if instance['instance'].new_instance:
-            for field, meta_data in self.tables.fields[table_name].fields.items():
+            for field, meta_data in self.tables[table_name].fields.items():
                 if meta_data.default is not None and meta_data.default != '':
                     if meta_data.Field.data_type_id == 3:
                         if meta_data.default.lower == 'true' or meta_data.default == '1':
@@ -172,15 +173,15 @@ class InstanceCollection:
         if isinstance( value, int ):
             return value
 
-        fk_field_display = self.tables.fields[table_name].fields[table_name + "|" + field].FK_Field
+        fk_field_display = self.tables[table_name].fields[table_name + "|" + field].FK_Field
 
-        fk_table_data = self.tables.fields[table_name].fields[table_name + "|" + field].FK_TableObject
+        fk_table_data = self.tables[table_name].fields[table_name + "|" + field].FK_TableObject
 
         fk_table_object = util.get_table(fk_table_data.name)
         if fk_table_data.name == 'field':
             res = self.organization_access_control.session.query(fk_table_object). \
                 filter(getattr(fk_table_object, fk_field_display.display_name) == value). \
-                filter(fk_table_object.table_object_id == self.tables.table_meta_data[table_name].id)
+                filter(fk_table_object.table_object_id == self.tables[table_name].table_object.id)
 
             fk_id = res.first()
         else:
@@ -225,9 +226,9 @@ class InstanceCollection:
 
         exclude_list = ['id', 'last_modified', 'date_created']
 
-        if self.tables.fields[table_name].fields[table_name + "|" + field_name].is_foreign_key:
+        if self.tables[table_name].fields[table_name + "|" + field_name].is_foreign_key:
             field_value = self.set_foreign_key_field_id(table_name, field_name, field_value)
-        elif (self.tables.fields[table_name].fields[table_name + "|" + field_name].DataType.name).lower() == 'boolean' and \
+        elif self.tables[table_name].fields[table_name + "|" + field_name].DataType.name.lower() == 'boolean' and \
                         field_value == True or field_value == 'True':
                 field_value = 1;
 
@@ -238,7 +239,7 @@ class InstanceCollection:
                  (instance_value is not None and field_value is None) or field_value != instance_value) and
                 ((not (field_name == 'name' and field_value is None and
                   self.instances[table_name][instance_name]['instance'].new_instance) and
-                  self.tables.level[table_name] == 0) or (field_name != 'name'))):
+                  self.tables[table_name].level == 0) or (field_name != 'name'))):
             self.instances[table_name][instance_name]['save'] = True
             new_key = self.add_new_instance('history', 'new')
 
@@ -247,8 +248,8 @@ class InstanceCollection:
                          str(instance_value) + " type: " +
                          str(type(instance_value)))
 
-            self.set_values({'table_object_id': self.tables.table_meta_data[table_name].id,
-                             'field_id': self.tables.fields[table_name].fields[table_name + "|" + field_name].Field.id,
+            self.set_values({'table_object_id': self.tables[table_name].table_object.id,
+                             'field_id': self.tables[table_name].fields[table_name + "|" + field_name].Field.id,
                              'organization_id':  getattr(self.instances[table_name][instance_name]['instance'],
                                                          'organization_id'),
                              'instance_name': instance_name,
@@ -292,7 +293,7 @@ class InstanceCollection:
                 save_instances.append(instance['instance'])
 
             if saved_new_name:
-                background_save_instances.append(self.tables.table_meta_data[table_name])
+                background_save_instances.append(self.tables[table_name].table_meta_data)
 
         for history_name, instance in self.instances['history'].items():
             if instance['instance'].instance_name in inst_names.keys():
@@ -331,7 +332,7 @@ class InstanceCollection:
         if table_name is None:
             table_name = self.table_name
 
-        instance_name = self.tables.table_meta_data[table_name].get_new_name()
+        instance_name = self.tables[table_name].table_object.get_new_name()
 
         return instance_name
 

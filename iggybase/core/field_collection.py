@@ -22,6 +22,21 @@ class FieldCollection:
         self.fields = self._populate_fields()
         self.order_by = self.get_order_by()
 
+    def __iter__(self):
+        return iter(self.fields)
+
+    def __getitem__(self, field_name):
+        return self.fields[field_name]
+
+    def keys(self):
+        return self.fields.keys()
+
+    def items(self):
+        return self.fields.items()
+
+    def values(self):
+        return self.fields.values()
+
     def _get_fields(self):
         field_res = self.rac.table_query_fields(
             self.table_query_id,

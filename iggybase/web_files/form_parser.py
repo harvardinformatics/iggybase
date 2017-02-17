@@ -103,7 +103,7 @@ class FormParser():
 
             row_data['data_entry']['organization_id'] = row_org_id
 
-            for table_field, meta_data in self.instance.tables.fields[table_name_field].fields.items():
+            for table_field, meta_data in self.instance.tables[table_name_field].fields.items():
                 # only update fields that were on the form
                 if meta_data.Field.display_name not in row_data['data_entry'].keys():
                     continue

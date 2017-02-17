@@ -18,7 +18,6 @@ class FormGenerator(PageTemplate):
         self.table_name = table_name
         self.form_type = form_type
         self.classattr = {}
-        self.table_meta_data = None
         self.dropdowns = {}
         self.form_class = None
         self.context = {'table_name': self.table_name, 'form_type': self.form_type}
@@ -230,23 +229,22 @@ class FormGenerator(PageTemplate):
             if context not in ['base-context', 'workflow','modal_form']:
                 table_context.append(context)
 
-        for table_name, table_meta_data in instances.tables.table_meta_data.items():
-            if table_name == 'history':
+        for table_name, table_data in instances.tables.items():
+            if table_name == 'history' or table_name == 'long_text':
                 continue
 
-            table_id = table_meta_data.id
-            table_level = instances.tables.level[table_name]
+            table_id = table_data.table_object.id
+            table_level = table_data.level
 
-            if instances.tables.link_data[table_name] is not None:
+            if table_data.link_data is not None:
                 link_field = self.role_access_control.has_access('Field',
-                                                                 {'id': instances.tables.link_data[table_name].
-                                                                  child_link_field_id})
+                                                                 {'id': table_data.link_data.child_link_field_id})
 
                 self.classattr['linkcolumn_' + str(table_id)] = HiddenField('linkcolumn_' + str(table_id),
                                                                             default=link_field.Field.display_name)
 
             self.classattr['table_level_' + str(table_id)] = HiddenField('table_level_' + str(table_id),
-                                                                         default=instances.tables.level[table_name])
+                                                                         default=table_level)
 
             if level < table_level:
                 level = table_level
@@ -272,22 +270,21 @@ class FormGenerator(PageTemplate):
             # table level info and use data_instance only for row values,
             # another alternative place for table level info is table query
             # we would just need to have the ability to get all tables by depth
-            context = {'table_name': table_meta_data.name,
+            context = {'table_name': table_name,
                        'table_id': str(table_id),
                        'table_level': str(table_level),
-                       'table_title': instances.tables.table_names[table_name].replace('_', ' ').title()}
+                       'table_title': table_data.table_display_name.replace('_', ' ').title()}
 
             buttons['top'], buttons['bottom'] = self.button_generator(buttons, context)
 
             if buttons['top']:
                 self.classattr[table_name + '_buttons_top'] =  HiddenField('buttons_top', default=util.html_buttons(buttons['top']))
 
-            self.classattr['start_table_' + str(table_id)] = \
-                HiddenField('start_table_' + str(table_id),
-                            default=table_meta_data.name)
+            self.classattr['start_table_' + str(table_id)] = HiddenField('start_table_' + str(table_id),
+                                                                         default=table_name)
 
             for instance_name, instance in instances.instances[table_name].items():
-                self.classattr.update(self.row_fields(row_counter, instance_name, table_meta_data))
+                self.classattr.update(self.row_fields(row_counter, instance_name, table_data.table_object))
                 self.get_row(instances, table_name, instance, control_type, row_counter)
 
                 row_counter += 1
@@ -296,16 +293,13 @@ class FormGenerator(PageTemplate):
                 self.classattr[table_name + '_buttons_bottom'] =  HiddenField('buttons_bottom',
                                                                               default=util.html_buttons(buttons['bottom']))
 
-            self.classattr['end_table_' + str(table_id)] = \
-                HiddenField('end_table_' + str(table_id),
-                            default=table_meta_data.name)
+            self.classattr['end_table_' + str(table_id)] = HiddenField('end_table_' + str(table_id),default=table_name)
 
-        self.classattr['form_data_max_level_0'] = \
-            HiddenField('form_data_max_level_0', default=level)
+        self.classattr['form_data_max_level_0'] = HiddenField('form_data_max_level_0', default=level)
 
-    def row_fields(self, row_count, row_name, table_meta_data):
-        table_id_field = HiddenField('record_data_table_id_'+str(row_count), default=table_meta_data.id)
-        table_name_field = HiddenField('record_data_table_'+str(row_count), default=table_meta_data.name)
+    def row_fields(self, row_count, row_name, table_object):
+        table_id_field = HiddenField('record_data_table_id_'+str(row_count), default=table_object.id)
+        table_name_field = HiddenField('record_data_table_'+str(row_count), default=table_object.name)
         row_field = HiddenField('record_data_row_name_'+str(row_count), default=row_name)
         if row_name == 'new':
             row_new = HiddenField('record_data_row_new_'+str(row_count), default=1)
@@ -318,14 +312,13 @@ class FormGenerator(PageTemplate):
                 'record_data_table_id_'+str(row_count): table_id_field}
 
     def get_row(self, instances, table_name, instance, control_type, row_counter):
-        self.classattr['start_row_'+str(row_counter)]=\
-            HiddenField('start_row_'+str(row_counter))
+        self.classattr['start_row_'+str(row_counter)] = HiddenField('start_row_'+str(row_counter))
 
-        for field_name, field in instances.tables.fields[table_name].fields.items():
+        for field_name, field in instances.tables[table_name].fields.items():
             # field_start = time.time()
             if field.is_dynamic_field:
                 field_definition_id = getattr(instance['instance'],
-                                              instances.tables.fields[table_name].fields.
+                                              instances.tables[table_name].fields.
                                               fields_by_id[field.Field.table_object_id,
                                                            field.Field.dynamic_field_definition_field_id].display_name)
                 field.set_dynamic_field(field_definition_id)
@@ -343,5 +336,4 @@ class FormGenerator(PageTemplate):
                                                           getattr(instance['instance'], 'name'),
                                                           control_id, control_type, control_str, value)
 
-        self.classattr['end_row_'+str(row_counter)]=\
-            HiddenField('end_row_'+str(row_counter))
+        self.classattr['end_row_'+str(row_counter)] = HiddenField('end_row_'+str(row_counter))
