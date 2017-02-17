@@ -206,7 +206,7 @@ class MetadataScript (IggyScript):
         #insert_metadata('price_type', 'PT', [1, 63], 39)
         #self.insert_metadata('line_item', 'LI', [125, 126, 127], 41)
         #self.insert_metadata('order', 'ORD', [125, 126, 127], 20)
-        self.insert_metadata('long_text', 'N', [125, 126, 127], 5)
+        #self.insert_metadata('long_text', 'N', [125, 126, 127], 5)
         #self.insert_metadata('lane', 'LN', [1, 63], 42)
         #self.insert_metadata('illumina_run', 'IR', [1, 63], 42)
         #self.insert_metadata('line_item_assoc', 'LA', [1, 63], 43)
@@ -217,6 +217,7 @@ class MetadataScript (IggyScript):
         #self.insert_metadata('service_type', 'ST', [1, 63], 1)
         #self.insert_metadata('user_organization_position', 'UP', [1, 63], 48)
         #self.insert_metadata('user', 'U', [125], 3)
+        self.insert_metadata('work_item_group', 'U', [125, 126, 127], 3)
 
 script = MetadataScript()
 script.run()

@@ -4,7 +4,7 @@ db = {
     'user':Config.DB_USER,
     'password':Config.DB_PASSWORD,
     'host': Config.DB_HOST,
-    'database': Config.DB_NAME
+    'database': Config.DATA_DB_NAME
 
 }
 
