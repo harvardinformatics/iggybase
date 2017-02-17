@@ -1,30 +1,28 @@
 from flask import abort, g
+from iggybase.core.table_collection import TableCollection
 from iggybase import utilities as util
-from iggybase.core.field_collection import FieldCollection
 from iggybase import g_helper
-from .calculation import get_calculation
 from collections import OrderedDict
 import datetime
 import logging
 
 
-class DataInstance:
+class InstanceCollection:
     def __init__(self, table_name, instance_name = None, depth = 2):
         self.role_access_control = g_helper.get_role_access_control()
         self.organization_access_control = g_helper.get_org_access_control()
 
         self.table_name = table_name
-        self.tables = OrderedDict()
-        self.fields = {}
+
+        self.tables = TableCollection(table_name, depth)
+
         self.instances = {}
+        for table_name, display_name in self.tables.table_names.items():
+            self.instances[table_name] = OrderedDict()
+
         self.instance_names = {}
-        self.template_instance = {}
-        self.get_tables(depth)
 
         self.instance_counter = 0
-
-        if self.tables[table_name]['table_meta_data'] is None:
-            abort(403)
 
         self.instance_id = None
         self.instance_name = None
@@ -79,9 +77,9 @@ class DataInstance:
 
         self.set_name(table_name, instance, instance_name)
 
-        if self.tables[table_name]['level'] == 1 and 'new' in instance.name and \
-                        self.tables[table_name]['link_display_name'] is not None:
-            setattr(instance, self.tables[table_name]['link_display_name'], self.instance_id)
+        if self.tables.level[table_name] == 1 and 'new' in instance.name and \
+                        self.tables.link_display_name[table_name] is not None:
+            setattr(instance, self.tables.link_display_name[table_name], self.instance_id)
 
         instance = {'instance': instance, 'parent_id': None, 'save': False}
 
@@ -110,114 +108,24 @@ class DataInstance:
             self.instance_id = instance.id
             self.new = instance.new_instance
 
-    def get_template_instance(self, table_name, parent_id = None):
-        instance = self.organization_access_control.get_instance_data(self.tables[table_name]['table_object'],
-                                                                      {'name': 'new'})
-        instance.new_instance = True
-        self.initialize_values(table_name, {'instance': instance, 'parent_id': parent_id})
-        self.template_instance[table_name] = instance
-
     def get_instance(self, table_name, instance_name, instance_id):
         if instance_id is None:
-            instance = self.organization_access_control.get_instance_data(self.tables[table_name]['table_object'],
+            instance = self.organization_access_control.get_instance_data(self.tables.table_object[table_name],
                                                                           {'name': instance_name})
         else:
-            instance = self.organization_access_control.get_instance_data(self.tables[table_name]['table_object'],
+            instance = self.organization_access_control.get_instance_data(self.tables.table_object[table_name],
                                                                           {'id': instance_id})
 
         return instance
 
-    def get_tables(self, depth = 2):
-        calc_display_name = get_calculation((self.table_name + '_display_name'), [])
-        table_display_name =  (calc_display_name or self.table_name).replace('_', ' ')
-        self.tables[self.table_name] = {'level': 0,
-                                        'link_display_name': None,
-                                        'parent': None,
-                                        'link_data': None,
-                                        'link_type': None,
-                                        'table_object': util.get_table(self.table_name),
-                                        'table_meta_data': (self.role_access_control.has_access
-                                                            ('TableObject', {'name': self.table_name})),
-                                        'table_display_name': table_display_name}
-        self.initialize_fields(self.table_name)
-
-        self.tables['history'] = {'level': 0,
-                                  'parent': None,
-                                  'link_display_name': None,
-                                  'link_data': None,
-                                  'link_type': None,
-                                  'table_object': util.get_table('history'),
-                                  'table_meta_data': self.role_access_control.has_access('TableObject',
-                                                                                            {'name': 'history'})}
-        self.initialize_fields('history')
-        if depth > 0 and self.tables[self.table_name]['table_meta_data']:
-            # if self.tables[self.table_name]['table_meta_data'].note_enabled == 1:
-            #     self.tables['history'] = {'level': 1,
-            #                               'parent': self.table_name,
-            #                               'link_display_name': 'entry_id',
-            #                               'link_data': None,
-            #                               'link_type': 'table_id',
-            #                               'table_object': util.get_table('note'),
-            #                               'table_meta_data': self.role_access_control.has_access('TableObject',
-            #                                                                                       {'name': 'note'})}
-            #     self.initialize_fields('note')
-
-            #TODO: consider adding child tables to Field
-            # then we just get FeildCollection for first table and then use that metadata to get next table
-            # FieldCollection, have get_link_tables function on a
-            # field_collection.  This would save duplicate role checking,
-            # dupilcate extension checking
-            data = self.role_access_control.get_link_tables(self.tables[self.table_name]['table_meta_data'], depth)
-
-            for index, link_data in enumerate(data):
-                # link_data - {'parent': table_object_name, 'level': level, 'table_meta_data': table_meta_data,
-                #              'link_data': row.TableObjectChildren, 'link_type': 'child'}
-                table_name = link_data['table_meta_data'].name
-                self.initialize_fields(table_name)
-
-                # TODO: if roles are not correct then the key may not exist in
-                # fields, consider possible fixes, for now better to error then
-                # not display what was asked because it is clearer what the
-                # issue is otherwise you may not realize there is an issue
-                link_display_name = self.fields[table_name].fields_by_id[(link_data['table_meta_data'].id,
-                                                                          link_data['link_data'].child_link_field_id)] \
-                    .Field.display_name
-                calc_display_name = get_calculation((table_name + '_display_name'), [])
-                table_display_name = (calc_display_name or table_name)
-                self.tables[table_name] = {'level': link_data['level'],
-                                           'parent': link_data['parent'],
-                                           'link_data': link_data['link_data'],
-                                           'table_object': util.get_table(table_name),
-                                           'table_meta_data': link_data['table_meta_data'],
-                                           'link_display_name': link_display_name,
-                                           'link_type': link_data['link_type'],
-                                           'table_display_name': table_display_name}
-
-    def initialize_fields(self, table_name):
-        self.instances[table_name] = OrderedDict()
-        if table_name == 'history':
-            self.fields[table_name] = FieldCollection(None, table_name, {}, False)
-        else:
-            self.fields[table_name] = FieldCollection(None, table_name)
-        self.fields[table_name].set_fk_fields()
-
     def get_linked_instances(self):
-        for table_name, table_data in self.tables.items():
-            logging.info(str(table_data['level']))
-            logging.info(str(table_data['table_object'].name))
-            if table_data['level'] == 0:
-                self.get_template_instance(table_name)
-                continue
-            elif table_data['level'] == 1:
+        for table_name, table_data in self.tables.table_object.items():
+            if self.tables.level[table_name] == 1:
                 ids = [self.instance_id]
-                self.get_template_instance(table_name,
-                                           self.instances[self.table_name][self.instance_name]['instance'].id)
-            else:
-                self.get_template_instance(table_name)
 
-            if table_data['link_type'] == "child":
+            if self.tables.link_type[table_name] == "child":
                 child_rows = self.organization_access_control. \
-                    get_descendant_data(table_name, table_data['link_data'].child_link_field_id, ids)
+                    get_descendant_data(table_name, self.tables.link_data[table_name].child_link_field_id, ids)
 
                 ids = []
 
@@ -226,26 +134,26 @@ class DataInstance:
                     for row in child_rows:
                         self.get_data(None, row['instance'].id, table_name, row['instance'], row['parent_id'])
                         ids.append(row['instance'].id)
-                elif table_data['level'] == 1:
+                elif self.tables.level[table_name] == 1:
                     self.get_data('empty_row', None, table_name, None,
                                   self.instances[self.table_name][self.instance_name]['instance'].id)
                 else:
                     self.get_data('empty_row', None, table_name)
 
-            elif table_data['link_type'] == "many":
+            elif self.tables.link_type[table_name] == "many":
                 pass
-            elif table_data['link_type'] == "table_id":
+            elif self.tables.link_type[table_name] == "table_id":
                 pass
 
     def initialize_values(self, table_name, instance):
-        if self.tables[table_name]['parent'] is None:
-            self.fields[table_name].set_defaults()
+        if self.tables.parent[table_name] is None:
+            self.tables.fields[table_name].set_defaults()
         else:
-            self.fields[table_name].set_defaults({self.tables[table_name]['parent']: instance['parent_id'],
-                                                  'link_display_name': self.tables[table_name]['link_display_name']})
+            self.tables.fields[table_name].set_defaults({self.tables.parent[table_name]: instance['parent_id'],
+                                                         'link_display_name': self.tables.link_display_name[table_name]})
 
         if instance['instance'].new_instance:
-            for field, meta_data in self.fields[table_name].fields.items():
+            for field, meta_data in self.tables.fields[table_name].fields.items():
                 if meta_data.default is not None and meta_data.default != '':
                     if meta_data.Field.data_type_id == 3:
                         if meta_data.default.lower == 'true' or meta_data.default == '1':
@@ -264,15 +172,15 @@ class DataInstance:
         if isinstance( value, int ):
             return value
 
-        fk_field_display = self.fields[table_name].fields[table_name + "|" + field].FK_Field
+        fk_field_display = self.tables.fields[table_name].fields[table_name + "|" + field].FK_Field
 
-        fk_table_data = self.fields[table_name].fields[table_name + "|" + field].FK_TableObject
+        fk_table_data = self.tables.fields[table_name].fields[table_name + "|" + field].FK_TableObject
 
         fk_table_object = util.get_table(fk_table_data.name)
         if fk_table_data.name == 'field':
             res = self.organization_access_control.session.query(fk_table_object). \
                 filter(getattr(fk_table_object, fk_field_display.display_name) == value). \
-                filter(fk_table_object.table_object_id == self.tables[table_name]['table_meta_data'].id)
+                filter(fk_table_object.table_object_id == self.tables.table_meta_data[table_name].id)
 
             fk_id = res.first()
         else:
@@ -317,9 +225,9 @@ class DataInstance:
 
         exclude_list = ['id', 'last_modified', 'date_created']
 
-        if self.fields[table_name].fields[table_name + "|" + field_name].is_foreign_key:
+        if self.tables.fields[table_name].fields[table_name + "|" + field_name].is_foreign_key:
             field_value = self.set_foreign_key_field_id(table_name, field_name, field_value)
-        elif (self.fields[table_name].fields[table_name + "|" + field_name].DataType.name).lower() == 'boolean' and \
+        elif (self.tables.fields[table_name].fields[table_name + "|" + field_name].DataType.name).lower() == 'boolean' and \
                         field_value == True or field_value == 'True':
                 field_value = 1;
 
@@ -330,7 +238,7 @@ class DataInstance:
                  (instance_value is not None and field_value is None) or field_value != instance_value) and
                 ((not (field_name == 'name' and field_value is None and
                   self.instances[table_name][instance_name]['instance'].new_instance) and
-                  self.tables[table_name]['level'] == 0) or (field_name != 'name'))):
+                  self.tables.level[table_name] == 0) or (field_name != 'name'))):
             self.instances[table_name][instance_name]['save'] = True
             new_key = self.add_new_instance('history', 'new')
 
@@ -339,8 +247,8 @@ class DataInstance:
                          str(instance_value) + " type: " +
                          str(type(instance_value)))
 
-            self.set_values({'table_object_id': self.tables[table_name]['table_meta_data'].id,
-                             'field_id': self.fields[table_name].fields[table_name + "|" + field_name].Field.id,
+            self.set_values({'table_object_id': self.tables.table_meta_data[table_name].id,
+                             'field_id': self.tables.fields[table_name].fields[table_name + "|" + field_name].Field.id,
                              'organization_id':  getattr(self.instances[table_name][instance_name]['instance'],
                                                          'organization_id'),
                              'instance_name': instance_name,
@@ -384,7 +292,7 @@ class DataInstance:
                 save_instances.append(instance['instance'])
 
             if saved_new_name:
-                background_save_instances.append(self.tables[table_name]['table_meta_data'])
+                background_save_instances.append(self.tables.table_meta_data[table_name])
 
         for history_name, instance in self.instances['history'].items():
             if instance['instance'].instance_name in inst_names.keys():
@@ -423,7 +331,7 @@ class DataInstance:
         if table_name is None:
             table_name = self.table_name
 
-        instance_name = self.tables[table_name]['table_meta_data'].get_new_name()
+        instance_name = self.tables.table_meta_data[table_name].get_new_name()
 
         return instance_name
 

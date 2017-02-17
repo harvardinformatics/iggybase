@@ -5,16 +5,8 @@ from iggybase import utilities as util
 from iggybase import g_helper
 from .workflow import Workflow
 from .field_collection import FieldCollection
+from iggybase.core.constants import status, timing
 import logging
-
-class status:
-    IN_PROGRESS = 2
-    COMPLETE = 3
-    FINAL = 4
-
-class timing:
-    BEFORE = 'Before'
-    AFTER = 'After'
 
 # Retreives work_item_group info and processes steps and actions
 class WorkItemGroup:
@@ -185,7 +177,7 @@ class WorkItemGroup:
     def get_dynamic_param_from_items(self):
         params = []
         if self.step.Field:
-            field_table = self.oac.get_table_by_id(self.step.Field.table_object_id)
+            field_table = self.oac.get_table_object({'id':self.step.Field.table_object_id})
             if field_table.name in self.work_items:
                 items = self.work_items[field_table.name]
                 for item in items:

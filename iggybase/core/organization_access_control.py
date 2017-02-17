@@ -516,12 +516,14 @@ class OrganizationAccessControl:
             result = self.session.query(table_object).filter(*where).first()
         return result
 
-    def get_table_by_id(self, table_id):
+    def get_table_object(self, criteria={}):
         table_object = util.get_table('table_object')
 
-        criteria = [getattr(table_object, 'id') == table_id]
+        filters = []
+        for key, value in criteria.items():
+            filters.append(getattr(table_object, key) == value)
 
-        result = self.session.query(table_object).filter(*criteria).first()
+        result = self.session.query(table_object).filter(*filters).first()
 
         return result
 

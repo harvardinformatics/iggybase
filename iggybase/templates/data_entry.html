@@ -18,7 +18,7 @@
     {% block content_title -%}
         <div class="content_title">
             {% if table_name is defined %}
-                <h1>{{ fg.instance.tables[table_name]['table_display_name'].replace( '_',' ' )|title }} {{ page_header.replace( '_',' ' )|title }}</h1>
+                <h1>{{ fg.instance.tables.table_names[fg.instance.table_name].replace( '_',' ' )|title }} {{ page_header.replace( '_',' ' )|title }}</h1>
                 <br/>
                 <div style="color:red;float:left;margin-right:5px;">*</div><div style="color:black;float:left;margin-right:5px;">= required field <input readonly class="lookupfieldex"/> = lookup field</div>
             {% else %}
@@ -55,7 +55,7 @@
                     {% set table_level = field.data|int -%}
                 {% elif "table_name_" in field.id -%}
                     {% set table_name = field.data -%}
-                    {% set table_title = fg.instance.tables[field.data]['table_display_name']|title -%}
+                    {% set table_title = fg.instance.tables.table_names[field.data].replace( '_',' ' )|title -%}
                     {% set html_id = field.id.split("_") -%}
                     {% set table_id = html_id[2] -%}
 

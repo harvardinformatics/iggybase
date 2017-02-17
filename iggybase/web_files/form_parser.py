@@ -2,7 +2,7 @@ import re
 import os
 import datetime
 from werkzeug.utils import secure_filename
-from iggybase.core.data_instance import DataInstance
+from iggybase.core.instance_collection import InstanceCollection
 from iggybase import utilities as util
 from flask import request, current_app, session
 import logging
@@ -64,7 +64,7 @@ class FormParser():
         #         for key3, value3 in value2.items():
         #            logging.info(str(key1) + ' ' + str(key2) + ' ' + str(key3) + ': ' + str(value3))
 
-        self.instance = DataInstance(self.table_name, None, int(fields['0']['form_data']['max_level']))
+        self.instance = InstanceCollection(self.table_name, None, int(fields['0']['form_data']['max_level']))
 
         for row_id in sorted(fields.keys()):
             row_data = fields[row_id]
@@ -103,7 +103,7 @@ class FormParser():
 
             row_data['data_entry']['organization_id'] = row_org_id
 
-            for table_field, meta_data in self.instance.fields[table_name_field].fields.items():
+            for table_field, meta_data in self.instance.tables.fields[table_name_field].fields.items():
                 # only update fields that were on the form
                 if meta_data.Field.display_name not in row_data['data_entry'].keys():
                     continue
@@ -114,6 +114,17 @@ class FormParser():
                 # handle empty and FK
                 if row_data['data_entry'][field] == '':
                     row_data['data_entry'][field] = None
+                elif meta_data.type == 'text' and row_data['data_entry'][field] is not None:
+                    if row_data['long_text'][field] == '':
+                        lt = InstanceCollection('long_text', 'new')
+                    else:
+                        lt = InstanceCollection('long_text')
+                        lt.get_data(None, int(row_data['long_text'][field]))
+
+                    lt.set_value('organization_id', row_org_id)
+                    lt.set_value('long_text', row_data['data_entry'][field])
+                    msg = lt.commit()
+                    row_data['data_entry'][field] = next(iter(msg))
                 elif field_data.foreign_key_table_object_id is not None:
                     try:
                         row_data['data_entry'][field] = int(row_data['id_data_entry'][field])
@@ -147,17 +158,6 @@ class FormParser():
                     row_data['data_entry'][field] = date
                 elif meta_data.type == 'float':
                     row_data['data_entry'][field] = float(row_data['data_entry'][field])
-                elif meta_data.type == 'text' and row_data['data_entry'][field] != None:
-                    if row_data['long_text'][field] == '':
-                        lt = DataInstance('long_text', 'new')
-                    else:
-                        lt = DataInstance('long_text')
-                        lt.get_data(None, int(row_data['long_text'][field]))
-
-                    lt.set_value('organization_id', row_org_id)
-                    lt.set_value('long_text', row_data['data_entry'][field])
-                    msg = lt.save()
-                    row_data['data_entry'][field] = next(iter(msg))
                 elif meta_data.type == 'file':
                     old_files = []
                     self.files[(instance_name, table_name_field)] = []
