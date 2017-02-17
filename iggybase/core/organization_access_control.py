@@ -630,11 +630,7 @@ class OrganizationAccessControl:
                 # if we didn't find an old one then insert a new row
                 new_name = work_item_table_object.get_new_name()
                 if parent:
-                    parent_table_object = self.session.query(models.TableObject).filter_by(name=parent['table']).first()
-                    parent_table_object_id = (
-                            parent_table_object.extends_table_object_id or
-                            parent_table_object.id
-                    )
+                    parent_table_object_id = self.session.query(models.TableObject.id).filter_by(name=parent['table']).first()[0]
                     filters = [
                             (models.WorkItem.work_item_group_id == work_item_group_id),
                             (models.WorkItem.table_object_id ==
@@ -642,7 +638,7 @@ class OrganizationAccessControl:
                             (models.WorkItem.row_id == parent['id'])
 
                     ]
-                    parent__work_item_id = self.session.query(models.WorkItem.id).filter(*filters).first()[0]
+                    parent_work_item_id = self.session.query(models.WorkItem.id).filter(*filters).first()[0]
                 new_row = table_model(name = new_name, active = 1,
                         organization_id = self.current_org_id, work_item_group_id = work_item_group_id,
                         table_object_id = table_object_id, row_id = item['id'],
