@@ -610,46 +610,44 @@ class OrganizationAccessControl:
         work_item_table_object = self.session.query(models.TableObject).filter_by(name='work_item').first()
         table_object_id = None
         success = False
-        parent_id = None
+        parent_work_item_id = None
         try:
             for item in save_items:
-                table_object_id = self.session.query(models.TableObject.id).filter_by(name=item['table']).first()[0]
+                table_object = self.session.query(models.TableObject).filter_by(name=item['table']).first()
+                # if table extends then set to the base table
+                table_object_id = (
+                        table_object.extends_table_object_id or table_object.id
+                )
                 old_item_exists = None
                 if work_items:
                     # see if item already saved
                     for old_item in work_items:
                         if old_item.WorkItem.table_object_id == table_object_id and old_item.WorkItem.row_id == item['id']:
                             old_item_exists = old_item
-                            break
-                            continue # don't need to add this one it is already there
+                            break # break loop because we found it
+                            continue # skip to next saved_item
 
-                    # see if a null row exists, and update row_id
-                    for i, old_item in enumerate(work_items):
-                        if old_item.WorkItem.table_object_id == table_object_id and old_item.WorkItem.row_id == None:
-                            old_item_exists = old_item
-                            work_items.pop(i)
-                            break
+                # if we didn't find an old one then insert a new row
+                new_name = work_item_table_object.get_new_name()
+                if parent:
+                    parent_table_object = self.session.query(models.TableObject).filter_by(name=parent['table']).first()
+                    parent_table_object_id = (
+                            parent_table_object.extends_table_object_id or
+                            parent_table_object.id
+                    )
+                    filters = [
+                            (models.WorkItem.work_item_group_id == work_item_group_id),
+                            (models.WorkItem.table_object_id ==
+                                parent_table_object_id),
+                            (models.WorkItem.row_id == parent['id'])
 
-                if old_item_exists:
-                    old_item_row = self.session.query(models.WorkItem).filter_by(id=old_item_exists.WorkItem.id).first()
-                    setattr(old_item_row, 'row_id', item['id'])
-                else: # insert new row
-                    new_name = work_item_table_object.get_new_name()
-                    if parent:
-                        parent_table_object_id = self.session.query(models.TableObject.id).filter_by(name=parent['table']).first()[0]
-                        filters = [
-                                (models.WorkItem.work_item_group_id == work_item_group_id),
-                                (models.WorkItem.table_object_id ==
-                                    parent_table_object_id),
-                                (models.WorkItem.row_id == parent['id'])
-
-                        ]
-                        parent_id = self.session.query(models.WorkItem.id).filter(*filters).first()[0]
-                    new_row = table_model(name = new_name, active = 1,
-                            organization_id = self.current_org_id, work_item_group_id = work_item_group_id,
-                            table_object_id = table_object_id, row_id = item['id'],
-                            parent_id = parent_id)
-                    self.session.add(new_row)
+                    ]
+                    parent__work_item_id = self.session.query(models.WorkItem.id).filter(*filters).first()[0]
+                new_row = table_model(name = new_name, active = 1,
+                        organization_id = self.current_org_id, work_item_group_id = work_item_group_id,
+                        table_object_id = table_object_id, row_id = item['id'],
+                        parent_id = parent_work_item_id)
+                self.session.add(new_row)
         except:
             self.session.rollback()
             print('rollback')
@@ -727,11 +725,16 @@ class OrganizationAccessControl:
         new_row = None
         table_model = util.get_table(table)
         table_table_object = self.session.query(models.TableObject).filter_by(name=table).first()
+        # if table is extended get base table to provide new_name
+        if table_table_object.extends_table_object_id:
+            table_table_object = (self.session.query(models.TableObject)
+                    .filter_by(id=table_table_object.extends_table_object_id).first())
+
         # ensure one inserts under ones current_org_id
         fields['organization_id'] = self.current_org_id
         try:
-            new_name = table_table_object.get_new_name()
-            new_row = table_model(name = new_name, **fields)
+            fields['name'] = table_table_object.get_new_name()
+            new_row = table_model(**fields)
             self.session.add(new_row)
         except:
             self.session.rollback()

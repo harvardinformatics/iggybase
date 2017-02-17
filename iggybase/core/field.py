@@ -75,8 +75,10 @@ class Field:
 
     def set_default(self, fk_defaults):
         default = None
+        if self.Field.display_name in fk_defaults:
+            default = fk_defaults[self.Field.display_name]
         # set fk_default if there is one
-        if (self.is_foreign_key and self.FK_TableObject is not None and self.FK_TableObject.name in fk_defaults):
+        elif (self.is_foreign_key and self.FK_TableObject is not None and self.FK_TableObject.name in fk_defaults):
             default = fk_defaults[self.FK_TableObject.name]
         else: # set default from field
             if self.Field.default == 'now':

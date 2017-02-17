@@ -129,16 +129,10 @@ class WorkItemGroup:
         # if new then insert work_item_group
         if self.step_num == 1 and self.name == 'new' and not self.is_complete():
             table = 'work_item_group'
-            # TODO: this should be in a generic locaion, maybe the data_instance
             fields = {'workflow_id': self.workflow.id,
                 'status': status.IN_PROGRESS, 'step_id': self.step.Step.id, 'before_action_complete': 0}
-            fc = FieldCollection(None, table)
-            fc.set_fk_fields()
-            fc.set_defaults()
-            for field in fc.fields.values():
-                if not field.Field.display_name in fields and field.default:
-                    fields[field.Field.display_name] = field.default
-            row = self.oac.insert_row(table, fields)
+            values = self.get_insert_values(table, fields)
+            row = self.oac.insert_row(table, values)
             self.name = row.name
             self.WorkItemGroup = row
         if time != timing.BEFORE or (time == timing.BEFORE and not self.WorkItemGroup.before_action_complete):
@@ -267,24 +261,18 @@ class WorkItemGroup:
                 if parent and parent in self.saved_rows:
                     # assume there will only be one parent
                     parent = self.saved_rows[parent][0]
-                if tbl in self.work_items: # already saved, update
-                    success = self.oac.set_work_items(self.WorkItemGroup.id, tbl_items, parent, self.work_items[tbl])
-                else: # insert new
-                    success = self.oac.set_work_items(self.WorkItemGroup.id, tbl_items, parent)
+                # insert any new items, keep in mind we could have resaved an
+                # existing row or added a row to an already existing table
+                # set_work_items will handle that logic
+                success = self.oac.set_work_items(self.WorkItemGroup.id, tbl_items, parent, getattr(self.work_items, tbl, None))
         # TODO: handle failure
         self.get_work_item_group()
         return success
 
     def insert_row(self, tables):
         for table in tables:
-            fc = FieldCollection(None, table)
-            fc.set_fk_fields()
-            defaults = self.get_defaults()
-            fc.set_defaults(defaults)
-            for field in fc.fields.values():
-                if not field.Field.display_name in defaults and field.default:
-                    defaults[field.Field.display_name] = field.default
-            row = self.oac.insert_row(table, defaults)
+            values = self.get_insert_values(table)
+            row = self.oac.insert_row(table, values)
             if table in self.saved_rows:
                 self.saved_rows[table].append({'table': table, 'name': row.name, 'id': row.id})
             else:
@@ -292,10 +280,24 @@ class WorkItemGroup:
                     'id':row.id}]
 
     def get_defaults(self):
+        # gets defaults from work_items
         defaults = {}
         for table, rows in self.work_items.items():
             defaults[table] = rows[0].WorkItem.row_id
         return defaults
+
+    def get_insert_values(self, table, fields = {}):
+        # gets defaults from field collection
+        fc = FieldCollection(None, table)
+        fc.set_fk_fields()
+        defaults = self.get_defaults()
+        fields.update(defaults)
+        fc.set_defaults(fields)
+        values = {}
+        for field in fc.fields.values():
+            if field.default:
+                values[field.Field.display_name] = field.default
+        return values
 
     def check_item_field_value(self, item, field, name):
         if item in self.saved_rows:
@@ -316,13 +318,4 @@ class WorkItemGroup:
                 if skip_step: # if there are no samples
                     self.next_step = self.step_num
                     self.oac.update_rows('work_item_group', {'status': status.COMPLETE}, [self.WorkItemGroup.id])
-                else:
-                    none_list = []
-                    for res in sam_items:
-                        if res.quantity:
-                            for i in range(0, res.quantity):
-                                new_sample = {'table': 'sample', 'id': None }
-                                none_list.append(new_sample)
-                            parent_item = {'table': item, 'id': res.id}
-                            success = self.oac.set_work_items(self.WorkItemGroup.id, none_list, parent_item)
 
