@@ -16,6 +16,7 @@ class FormParser():
         self.files = {}
 
     def parse(self, form_data = None):
+        logging.info('parser called')
         fields = {}
         web_request = False
         if not form_data:
@@ -64,7 +65,7 @@ class FormParser():
         #         for key3, value3 in value2.items():
         #            logging.info(str(key1) + ' ' + str(key2) + ' ' + str(key3) + ': ' + str(value3))
 
-        self.instance = InstanceCollection(self.table_name, None, int(fields['0']['form_data']['max_level']))
+        self.instance = InstanceCollection(int(fields['0']['form_data']['max_level']), {self.table_name: []} )
 
         for row_id in sorted(fields.keys()):
             row_data = fields[row_id]
@@ -80,11 +81,15 @@ class FormParser():
                     fields[row_id]['data_entry']['name'] = instance_name
             else:
                 # on a multiform all instances are not fetched with get_data
-                if row_data['record_data']['row_name'] not in self.instance.instances[table_name_field]:
+                if row_data['record_data']['row_name'] not in self.instance.instances:
                     instance_name = self.instance.add_new_instance(table_name_field,
                                                                    row_data['record_data']['row_name'])
                 else:
                     instance_name = row_data['record_data']['row_name']
+
+            # logging.info("row_data['record_data']['new']: " + str(row_data['record_data']['new']) +
+            #              "   instance_name: " + instance_name +
+            #              "   row_data['record_data']['row_name']: " + str(row_data['record_data']['row_name']))
 
             if ('organization_id' in row_data['data_entry'].keys() and
                     row_data['data_entry']['organization_id']):
@@ -94,8 +99,8 @@ class FormParser():
                     row_org_id = self.instance.set_foreign_key_field_id(table_name_field, 'organization_id', row_org_id)
 
             if row_org_id is None:
-                if self.instance.get_value('organization_id', table_name_field, instance_name) is not None:
-                    row_org_id = self.instance.get_value('organization_id')
+                if self.instance[instance_name] and self.instance[instance_name].organization_id:
+                    row_org_id = self.instance[instance_name].organization_id
                 elif self.instance.organization_access_control.current_org_id is not None:
                     row_org_id = session['org_id']['current_org_id']
                 else:
@@ -115,16 +120,21 @@ class FormParser():
                 if row_data['data_entry'][field] == '':
                     row_data['data_entry'][field] = None
                 elif meta_data.type == 'text' and row_data['data_entry'][field] is not None:
-                    if row_data['long_text'][field] == '':
-                        lt = InstanceCollection('long_text', 'new')
-                    else:
-                        lt = InstanceCollection('long_text')
-                        lt.get_data(None, int(row_data['long_text'][field]))
+                    logging.info('long text: ' + str(row_data['data_entry'][field]))
 
-                    lt.set_value('organization_id', row_org_id)
-                    lt.set_value('long_text', row_data['data_entry'][field])
-                    msg = lt.commit()
-                    row_data['data_entry'][field] = next(iter(msg))
+                    if row_data['long_text'][field] == '':
+                        lt_name = 'new'
+                    else:
+                        lt_name = row_data['long_text'][field]
+
+                    lt = InstanceCollection(0, {'long_text': lt_name})
+                    lt_name = list(lt.keys())[0]
+
+                    lt.set_value(lt_name, 'organization_id', row_org_id)
+                    lt.set_value(lt_name, 'long_text', row_data['data_entry'][field])
+                    commit_status, msg = lt.commit()
+                    logging.info(msg)
+                    row_data['data_entry'][field] = list(msg.keys())[0]
                 elif field_data.foreign_key_table_object_id is not None:
                     try:
                         row_data['data_entry'][field] = int(row_data['id_data_entry'][field])
@@ -149,12 +159,13 @@ class FormParser():
                 elif meta_data.type == 'datetime':
                     date = None
                     try:
-                        date = datetime.strptime(row_data['data_entry'][field],
-                        '%Y-%d-%m %T')
-                        print(date)
+                        date = datetime.strptime(row_data['data_entry'][field],'%Y-%d-%m %T')
                     except:
-                        logging.info('Failed to parse date:' +
-                        row_data['data_entry'][field])
+                        try:
+                            date = datetime.strptime(row_data['data_entry'][field],'%Y-%d-%m')
+                        except:
+                            pass
+                            # logging.info('Failed to parse date:' + row_data['data_entry'][field])
                     row_data['data_entry'][field] = date
                 elif meta_data.type == 'float':
                     row_data['data_entry'][field] = float(row_data['data_entry'][field])
@@ -176,7 +187,7 @@ class FormParser():
                         filenames = "|".join(old_files)
                         row_data['data_entry'][field] = filenames
 
-            self.instance.set_values(row_data['data_entry'], table_name_field, instance_name)
+            self.instance.set_values(instance_name, row_data['data_entry'])
 
     def save(self):
         commit_status, commit_msg = self.instance.commit()

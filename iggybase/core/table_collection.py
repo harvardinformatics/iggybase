@@ -3,7 +3,6 @@ from iggybase.core.table_data import TableData
 from collections import OrderedDict
 from iggybase import g_helper
 from flask import abort
-from iggybase import utilities as util
 import logging
 
 
@@ -31,18 +30,6 @@ class TableCollection():
 
     def values(self):
         return self.tables.values()
-
-    def get_display_name(self, table_name):
-        if table_name == 'history' or table_name == 'long_text':
-            return table_name
-        elif self.tables[table_name].table_object_role.display_name is not None:
-            display_name = self.tables[table_name].table_object_role.display_name
-        elif self.tables[table_name].table_object.display_name is not None:
-            display_name = self.tables[table_name].table_object.display_name
-        else:
-            display_name = table_name
-
-        return display_name
 
     def get_tables(self, table_names, depth):
         history = self.organization_access_control.get_table_object({'name': 'history'})
@@ -81,15 +68,10 @@ class TableCollection():
             abort(403)
         self.table_names.append(table_object.name)
 
-        self.tables[table_object.name] = TableData()
+        self.tables[table_object.name] = TableData(table_object, table_object_role)
 
-        self.tables[table_object.name].table_name = table_object.name
-        self.tables[table_object.name].table_instance = util.get_table(table_object.name)
-        self.tables[table_object.name].table_object = table_object
-        self.tables[table_object.name].table_object_role = table_object_role
         self.tables[table_object.name].extends = table_extends
         self.tables[table_object.name].extends_role = table_extends_role
-        self.tables[table_object.name].table_display_name = self.get_display_name(table_object.name)
         self.tables[table_object.name].level = level
         self.tables[table_object.name].parent = parent
         self.tables[table_object.name].link_data = link_data

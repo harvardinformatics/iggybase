@@ -28,15 +28,6 @@ class IggybaseBase(object):
     def values(self):
         return dict(self)
 
-    def __init__(self):
-        self.old_name = ''
-        self.new_instance = False
-
-    @reconstructor
-    def init_on_load(self):
-        self.old_name = ''
-        self.new_instance = False
-
     __table_args__ = {'mysql_engine': 'InnoDB'}
 
     id = Column(Integer, primary_key=True)

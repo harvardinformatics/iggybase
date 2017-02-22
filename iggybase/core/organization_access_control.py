@@ -73,20 +73,16 @@ class OrganizationAccessControl:
 
         try:
             self.session.commit()
-            return True
+            return True, None
         except (IntegrityError, DataError, SQLAlchemyError, NoForeignKeysError, IdentifierError, NoReferenceError) as e:
             self.session.rollback()
             logging.error("Commit Error: " + format(e))
-            return "Commit Error: " + format(e)
+            return False, "Commit Error: " + format(e)
 
     def flush(self, instances):
         try:
             self.session.flush()
-            flush_msg = {}
-            for instance in instances:
-                flush_msg[instance.id] = {'id': instance.id, 'name': instance.name, 'table': instance.__tablename__}
-
-            return True, flush_msg
+            return True, None
         except (IntegrityError, DataError, SQLAlchemyError, NoForeignKeysError, IdentifierError, NoReferenceError) as e:
             self.session.rollback()
             logging.error("Flush Error: " + format(e))
@@ -173,33 +169,30 @@ class OrganizationAccessControl:
                               'organization_id','display_name')).
                 filter_by(id=field_definition_id).first())
 
-    def get_instance_data(self, table_object, criteria):
-        # logging.info('get_instance_data')
-        # logging.info(criteria)
-        # logging.info(self.org_ids)
+    def get_query_count(self, query):
+        count_q = query.statement.with_only_columns([func.count()]).order_by(None)
+        count = self.session.execute(count_q).scalar()
+        return count
 
+    def get_instance_data(self, table_object, criteria):
         filters = [getattr(table_object, 'organization_id').in_(self.org_ids)]
 
-        if 'name' in criteria and (criteria['name'] == 'new' or criteria['name'] == ['new'] or
-                                   criteria['name'] == 'empty_row' or criteria['name'] == ['empty_row']):
-            return table_object()
+        if 'name' in criteria and (criteria['name'] == ['new'] or criteria['name'] == ['empty_row']):
+            instance = table_object()
+            instance.name = criteria['name'][0]
+            return [instance]
 
         for field, value in criteria.items():
-            if type(value) is list:
-                filters.append(getattr(table_object, field).in_(value))
-            else:
-                filters.append(getattr(table_object, field) == value)
+            filters.append(getattr(table_object, field).in_(value))
 
-        res = self.session.query(table_object).filter(*filters).first()
+        qry = self.session.query(table_object).filter(*filters)
+        qry_count = self.get_query_count(qry)
 
-        # logging.info(table_object)
-        # logging.info(filters)
-        # logging.info('res')
-        # logging.info(res)
-        if res:
-            return res
+        if qry_count == 0:
+            return [table_object()]
         else:
-            return table_object()
+            res = qry.all()
+            return res
 
     def get_select_list(self, select_list_id, active=1):
         select_list_items = self.get_select_list_items_from_id(select_list_id)
@@ -458,27 +451,31 @@ class OrganizationAccessControl:
 
         return table.query.filter(*filters).order_by(getattr(table, 'name'))
 
-    def get_long_text(self, lt_id):
-        table = util.get_table("long_text")
+    def get_long_text(self, lt_id, table=None):
+        if table is None:
+            table = util.get_table("long_text")
 
         return table.query.filter_by(id=lt_id).first()
 
-    def save_data_instance(self, instances, background_instances = []):
+    def save_data_instance(self, instances, background_instances=[]):
         self.session.add_all((instances + background_instances))
 
-        flush_status, flush_msg = self.flush(instances)
+        flush_status, flush_err = self.flush()
 
         if flush_status:
-            commit_msg = self.commit()
-            if commit_msg is True:
-                # actions = self.get_table_object_actions()
-                return True, flush_msg
+            inst_data = {}
+            for instance in instances:
+                inst_data[instance.id] = {'id': instance.id, 'name': instance.name, 'table': instance.__tablename__}
+
+                commit_status, commit_err = self.commit()
+            if commit_status is True:
+                return True, inst_data
             else:
                 self.rollback()
-                return False, commit_msg
+                return False, commit_err
         else:
             self.rollback()
-            return flush_status, flush_msg
+            return flush_status, flush_err
 
     def get_row_id(self, table_name, params):
         result = self.get_row(table_name, params)
