@@ -79,7 +79,7 @@ class OrganizationAccessControl:
             logging.error("Commit Error: " + format(e))
             return False, "Commit Error: " + format(e)
 
-    def flush(self, instances):
+    def flush(self):
         try:
             self.session.flush()
             return True, None
@@ -87,8 +87,6 @@ class OrganizationAccessControl:
             self.session.rollback()
             logging.error("Flush Error: " + format(e))
             return False, "Flush Error: " + format(e)
-
-
 
     def fields(self, table_object_id, filter=None, active=1):
         filters = [
@@ -467,7 +465,7 @@ class OrganizationAccessControl:
             for instance in instances:
                 inst_data[instance.id] = {'id': instance.id, 'name': instance.name, 'table': instance.__tablename__}
 
-                commit_status, commit_err = self.commit()
+            commit_status, commit_err = self.commit()
             if commit_status is True:
                 return True, inst_data
             else:

@@ -14,6 +14,8 @@ class FormParser():
         self.table_names = []
         self.instance = None
         self.files = {}
+        self.commit_status = True
+        self.commit_msg = None
 
     def parse(self, form_data = None):
         logging.info('parser called')
@@ -120,21 +122,20 @@ class FormParser():
                 if row_data['data_entry'][field] == '':
                     row_data['data_entry'][field] = None
                 elif meta_data.type == 'text' and row_data['data_entry'][field] is not None:
-                    logging.info('long text: ' + str(row_data['data_entry'][field]))
-
                     if row_data['long_text'][field] == '':
                         lt_name = 'new'
                     else:
                         lt_name = row_data['long_text'][field]
 
-                    lt = InstanceCollection(0, {'long_text': lt_name})
-                    lt_name = list(lt.keys())[0]
+                    lt_name = self.instance.add_new_instance('long_text', lt_name)
 
-                    lt.set_value(lt_name, 'organization_id', row_org_id)
-                    lt.set_value(lt_name, 'long_text', row_data['data_entry'][field])
-                    commit_status, msg = lt.commit()
-                    logging.info(msg)
-                    row_data['data_entry'][field] = list(msg.keys())[0]
+                    self.instance.set_value(lt_name, 'organization_id', row_org_id)
+                    self.instance.set_value(lt_name, 'long_text', row_data['data_entry'][field])
+                    self.commit_status, self.commit_msg = self.instance.commit_instance(lt_name)
+                    if self.commit_status:
+                        row_data['data_entry'][field] = list(self.commit_msg.keys())[0]
+                    else:
+                        return
                 elif field_data.foreign_key_table_object_id is not None:
                     try:
                         row_data['data_entry'][field] = int(row_data['id_data_entry'][field])
@@ -190,25 +191,26 @@ class FormParser():
             self.instance.set_values(instance_name, row_data['data_entry'])
 
     def save(self):
-        commit_status, commit_msg = self.instance.commit()
+        if self.commit_status:
+            self.commit_status, self.commit_msg = self.instance.commit()
 
-        if commit_status is True:
-            for key in set(self.files) & set(self.instance.instance_names):
-                for file_data in self.files[key]:
-                    directory = (os.path.join(current_app.config['UPLOAD_FOLDER'], key[1],
-                                              self.instance.instance_names[key])).strip()
+            if self.commit_status is True:
+                for key in set(self.files) & set(self.instance.instance_names):
+                    for file_data in self.files[key]:
+                        directory = (os.path.join(current_app.config['UPLOAD_FOLDER'], key[1],
+                                                  self.instance.instance_names[key])).strip()
 
-                    if not os.path.exists(directory):
-                        os.makedirs(directory)
+                        if not os.path.exists(directory):
+                            os.makedirs(directory)
 
-                    if os.path.exists(os.path.join(directory, file_data['filename'])):
-                        os.remove(os.path.join(directory, file_data['filename']))
+                        if os.path.exists(os.path.join(directory, file_data['filename'])):
+                            os.remove(os.path.join(directory, file_data['filename']))
 
-                    file_data['file'].save(os.path.join(directory, file_data['filename']))
+                        file_data['file'].save(os.path.join(directory, file_data['filename']))
 
-            current_app.cache.increment_version(list(self.table_names))
+                current_app.cache.increment_version(list(self.table_names))
 
-        return commit_status, commit_msg
+        return self.commit_status, self.commit_msg
 
     def undo(self):
         self.instance.rollback()

@@ -21,6 +21,7 @@ class InstanceCollection:
             self.table_instances[table_name] = {}
 
         self.instance_names = []
+        self.background_save_instances = {}
 
         for table_name, instance_names in instance_data.items():
             if instance_names:
@@ -215,14 +216,15 @@ class InstanceCollection:
     def commit(self):
         inst_names = {}
         save_instances = []
-        background_save_instances = []
+
         for instance_name, instance_data in self.instances.items():
             if instance_data.table_name == 'history' or not instance_data.save:
                 continue
 
             if instance_data.new_instance:
                 instance_data.set_new_name(self.tables[instance_data.table_name].table_object)
-                background_save_instances[instance_data.table_name] = self.tables[instance_data.table_name].table_object
+                self.background_save_instances[instance_data.table_name] = \
+                    self.tables[instance_data.table_name].table_object
 
             inst_names[instance_data.old_name] = instance_data.instance_name
 
@@ -240,17 +242,52 @@ class InstanceCollection:
             instance_data.instance.date_created = datetime.datetime.utcnow()
             instance_data.instance.last_modified = datetime.datetime.utcnow()
 
-            background_save_instances.append(instance_data.instance)
+            self.background_save_instances[history_name] = instance_data.instance
 
-        commit_status, commit_msg = self.oac.save_data_instance(save_instances, background_save_instances)
+        self.background_save_instances['history'] = self.tables['history'].table_object
+
+        commit_status, commit_msg = self.oac.save_data_instance(save_instances,
+                                                                list(self.background_save_instances.values()))
 
         if commit_status:
             base_instance = next(iter(self.items()))[1]
+            logging.info('base_instance: ' + str(base_instance.instance.id))
             if base_instance.instance.id not in commit_msg.keys() and base_instance.new_instance == False:
                 commit_msg[base_instance.instance.id] = {'id': base_instance.instance.id,
                                                          'name': base_instance.instance_name,
                                                          'table': base_instance.table_name,
                                                          'old_name': base_instance.old_name}
+
+        return commit_status, commit_msg
+
+    def commit_instance(self, instance_name):
+        instance_data = self.instances[instance_name]
+
+        if instance_data.new_instance:
+            instance_data.set_new_name(self.tables[instance_data.table_name].table_object)
+            self.background_save_instances[instance_data.table_name] = \
+                self.tables[instance_data.table_name].table_object
+
+        if instance_data.instance.date_created is None:
+            instance_data.instance.date_created = datetime.datetime.utcnow()
+
+        instance_data.instance.last_modified = datetime.datetime.utcnow()
+        save_instances = [instance_data.instance]
+
+        for history_name, history_data in self.table_instances['history'].items():
+            if history_data.instance.instance_name == instance_data.old_name:
+                history_data.instance.instance_name = instance_data.instance_name
+
+            history_data.set_new_name(self.tables['history'].table_object)
+            history_data.instance.date_created = datetime.datetime.utcnow()
+            history_data.instance.last_modified = datetime.datetime.utcnow()
+
+            self.background_save_instances[history_name] = history_data.instance
+
+        commit_status, commit_msg = self.oac.save_data_instance(save_instances)
+
+        if commit_status:
+            instance_data.save = False
 
         return commit_status, commit_msg
 
