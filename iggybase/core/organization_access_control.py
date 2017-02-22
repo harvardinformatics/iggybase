@@ -7,6 +7,7 @@ from iggybase.admin import models
 from iggybase import utilities as util
 from sqlalchemy.orm import aliased, defer
 from sqlalchemy.dialects import mysql
+import iggybase.billing.functions as bill
 import json
 import logging
 import time
@@ -345,21 +346,7 @@ class OrganizationAccessControl:
                     crit_where = [(col.in_(criteria[criteria_key]))]
                     include_nulls = False
                 elif type(criteria[criteria_key]) is dict:
-                    if ('from' in criteria[criteria_key]
-                        and 'to' in criteria[criteria_key]
-                    ):
-                        crit_where = [(col >= criteria[criteria_key]['from']),
-                            (col <= criteria[criteria_key]['to'])]
-                        include_nulls = False
-                    if( 'compare' in criteria[criteria_key]
-                        and 'value' in criteria[criteria_key]
-                    ):
-                        if criteria[criteria_key]['compare'] == 'greater than':
-                            crit_where = [(col > criteria[criteria_key]['value'])]
-                            include_nulls = False
-                        elif criteria[criteria_key]['compare'] == '!=':
-                            crit_where = [col != criteria[criteria_key]['value']]
-                            include_nulls = True
+                    include_nulls, crit_where = criteria_dict(col, criteria[criteria_key])
                 else:
                     crit_where = [col == criteria[criteria_key]]
                     include_nulls = False
@@ -396,12 +383,7 @@ class OrganizationAccessControl:
             else:
                 id_col = id_col.concat('|' + c)
         # format order_by
-        order_by_list = []
-        for key, val in order_by.items():
-            if val['desc']:
-                order_by_list.append(desc(key))
-            else:
-                order_by_list.append(key)
+        order_by_list = self.format_order_by(order_by)
         columns.append(id_col.label('DT_RowId'))
         start = time.time()
 
@@ -419,6 +401,35 @@ class OrganizationAccessControl:
 
         print('query: ' + str(time.time() - start))
         return results
+
+    def criteria_dict(self, col, criteria):
+        wheres = []
+        include_nulls = False
+        if ('from' in criteria and 'to' in criteria):
+            wheres = [(col >= criteria['from']),
+                      (col <= criteria['to'])]
+        if( 'compare' in criteria and 'value' in criteria):
+            if criteria['compare'] == 'greater than':
+                wheres = [(col > criteria['value'])]
+            elif criteria['compare'] == 'greater than equal':
+                wheres = [(col >= criteria['value'])]
+            elif criteria['compare'] == 'less than':
+                wheres = [(col < criteria['value'])]
+            elif criteria['compare'] == 'less than equal':
+                wheres = [(col <= criteria['value'])]
+            elif criteria['compare'] == '!=':
+                wheres = [col != criteria['value']]
+                include_nulls = True
+        return include_nulls, wheres
+
+    def format_order_by(self, order_by):
+        order_by_list = []
+        for key, val in order_by.items():
+            if val['desc']:
+                order_by_list.append(desc(key))
+            else:
+                order_by_list.append(key)
+        return order_by_list
 
     def foreign_key(self, table_object_id, display = None):
         filters = [(models.Field.table_object_id == table_object_id)]
@@ -456,6 +467,18 @@ class OrganizationAccessControl:
         return table.query.filter_by(id=lt_id).first()
 
     def save_data_instance(self, instances, background_instances=[]):
+        # actions = self.get_table_object_actions()
+        # TODO: remove this and replace with actions
+        # actions may want to be done after the commit which will require change
+        # to insert_row, we can do that as needed
+        for instance in instances:
+            if (instance.__tablename__ == 'test_smms' and
+                instance.status_id == 34):
+                params = '{["test_smms"], "parent":"line_item"}'
+                func = getattr(bill, 'insert_line_item', None)
+                if func:
+                    func(instance)
+
         self.session.add_all((instances + background_instances))
 
         flush_status, flush_err = self.flush()
@@ -481,6 +504,34 @@ class OrganizationAccessControl:
             return result.id
         else:
             return None
+
+    def get_row_multi_tbl(self, table_names, params, order_by = [], first_row = False, org_filter = False):
+        criteria = []
+        joins = []
+        selects = []
+        for tbl in table_names:
+            table_object = util.get_table(tbl)
+            if selects: # join tables after first
+                joins.append(table_object)
+            selects.append(table_object)
+            if tbl in params:
+                print(tbl)
+                for key, val in params[tbl].items():
+                    col = getattr(table_object, key)
+                    if isinstance(val, dict):
+                        print(val)
+                        include_nulls, crit_where = self.criteria_dict(col, val)
+                        criteria.extend(crit_where)
+                    else:
+                        print(val)
+                        criteria.append(col == val)
+            if org_filter:
+                criteria.append(getattr(table_object, 'organization_id') == self.current_org_id)
+        if first_row:
+            result = self.session.query(*selects).join(*joins).filter(*criteria).order_by(*order_by).first()
+        else:
+            result = self.session.query(*selects).join(*joins).filter(*criteria).order_by(*order_by).all()
+        return result
 
     def get_row(self, table_name, params, first = True, org_filter = False):
         table_object = util.get_table(table_name)
