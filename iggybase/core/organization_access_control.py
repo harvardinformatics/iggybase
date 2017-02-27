@@ -346,7 +346,7 @@ class OrganizationAccessControl:
                     crit_where = [(col.in_(criteria[criteria_key]))]
                     include_nulls = False
                 elif type(criteria[criteria_key]) is dict:
-                    include_nulls, crit_where = criteria_dict(col, criteria[criteria_key])
+                    include_nulls, crit_where = self.criteria_dict(col, criteria[criteria_key])
                 else:
                     crit_where = [col == criteria[criteria_key]]
                     include_nulls = False
