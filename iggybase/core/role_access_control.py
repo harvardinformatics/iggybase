@@ -97,7 +97,8 @@ class RoleAccessControl:
                 join(models.RouteRole).
                 join(models.Route).
                 join(models.TableQuery).
-                filter(*filters).order_by(models.TableQuery.order).all()
+                filter(*filters).order_by(models.TableQueryRender.order,
+                    models.TableQuery.order).all()
         )
         return table_queries
 

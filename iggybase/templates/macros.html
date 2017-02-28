@@ -159,14 +159,14 @@
                 {% endfor %}
             </tr></thead>
             <tbody>
-                {% for row in table_query.table_dict %}
+                {% for row in table_query.table_dict.values() %}
                     <tr>
                     {% if page_form_name == 'action_summary' %}
                         <td><input type="checkbox" class="action_checkbox"></td>
                     {% endif %}
                     {% for value in row.values() %}
                         <td>
-                            {{ value }}
+                            {{ value|safe }}
                         </td>
                     {% endfor %}
                     </tr>
