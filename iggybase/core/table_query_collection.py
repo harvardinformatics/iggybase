@@ -23,13 +23,24 @@ class TableQueryCollection:
             table_queries_info = self.rac.table_queries(route, self.table_name)
         queries = []
         if table_queries_info: # if table_query defined, use id
+            first_query = True
+            link_tbl_criteria = {}
             for query in table_queries_info: # page can have multiple
+                if first_query:
+                    first_query = False
+                    criteria = self.criteria
+                elif self.criteria:
+                    for c, val in self.criteria.items():
+                        # if there is criteria for row of first table
+                        # then add that as id criteria for link tables
+                        if c[0] == self.table_name and c[1] == 'name':
+                            criteria = {(query.TableQuery.display_name, (self.table_name + '_id')): val}
                 query = TableQuery(
                     query.TableQuery.id,
                     query.TableQuery.order,
                     query.TableQuery.display_name,
                     None,
-                    self.criteria
+                    criteria
                 )
                 queries.append(query)
         elif self.table_name: # use table_name, show all fields, one table_query

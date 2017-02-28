@@ -155,7 +155,7 @@
                     </th>
                 {% endif %}
                 {% for key in table_query.get_first().keys() %}
-                    <th>{{ key.replace('_', ' ')|title }}</th>
+                    <th>{{ table_query.get_display_name(key) }}</th>
                 {% endfor %}
             </tr></thead>
             <tbody>
