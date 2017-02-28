@@ -7,22 +7,25 @@
 {%- endblock styles %}
 {% block title %}{{ page_title }}{% endblock %}
 
-{% block content_title %}
-{% if table_queries.get_first() %}
-    <h1>{{table_queries.get_first().display_name|title}} {{ page_header }}</h1>
-{% else %}
-    <h1>what{{table_name.replace( '_', ' ' )|title}} {{ page_header }}</h1>
-{% endif %}
-{% endblock %}
-{% block hidden_fields %}
-    {{ super() }}
-{%- endblock hidden_fields %}
-
-{% block page_content %}
-    {% if table_queries.queries[0] %}
-        {{ macros.render_detail( table_queries.get_first() ) }}
+{% block content %}
+    {% block content_title %}
+    {% if table_queries.get_first() %}
+        <h1>{{table_queries.get_first().display_name|title}} {{ page_header }}</h1>
+    {% else %}
+        <h1>what{{table_name.replace( '_', ' ' )|title}} {{ page_header }}</h1>
     {% endif %}
-
+    {% endblock %}
+    {% block hidden_fields -%}
+    {{ super() }}
+    {%- endblock hidden_fields %}
+    {% block page_content %}
+        {% if table_queries.queries[0] %}
+            {{ macros.render_detail( table_queries.get_first() ) }}
+        {% endif %}
+    {% endblock %}
+    {% block bottombuttonbar -%}
+    {{ super() }}
+    {%- endblock bottombuttonbar %}
     {% if table_queries.queries[1] %}
         {% for table_query in table_queries.queries[1:]: %}
     <div class={{ table_query.display_name ~ "_table_div" }}>
@@ -31,8 +34,7 @@
     </div>
         {% endfor %}
     {% endif %}
-{% endblock %}
-
+{%- endblock content %}
 {% block scripts %}
     {{ super() }}
     <script type="text/javascript"
