@@ -145,10 +145,10 @@ class Invoice:
             if item.amount:
                 row['user'] = item.User.name
                 row['order'] = item.Order.name
-                row['delivery date'] = item.LineItem.date_created
+                row['delivery date'] = item.LineItem.date_created.date()
                 row['description'] = item.PriceItem.name
                 row['quantity'] = item.LineItem.quantity
-                row['service type'] = item.ServiceType.description
+                row['price per unit'] = item.LineItem.price_per_unit
                 row['amount'] =  item.display_amount
                 rows.append(row)
         return rows
@@ -186,10 +186,9 @@ class Invoice:
         else:
             mng_names = self.get_contacts_as_list('manager', 'name')
             mng_emails = self.get_contacts_as_list('manager', 'email')
-            info = OrderedDict({
-                    'Sent to': mng_names,
-                    'Email': mng_emails
-            })
+            info = OrderedDict()
+            info['Sent to'] =  mng_names
+            info['Email'] = mng_emails
         return info
 
     def populate_po_info(self):
