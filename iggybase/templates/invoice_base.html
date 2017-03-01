@@ -23,64 +23,57 @@
 
         <body{% block body_attribs %}{% endblock body_attribs %}>
         {% block body -%}
+        {% set first_invoice = True %}
         {% for invoice in invoices:%}
-            <div class="page_break"></div>
-            <div class="pdf_header">
-                <div class="banner" id="banner">
-                    <div class="banner-img-wrapper">
-                        <a> <img class="banner-img" src="{{ url_for('static', filename='images/harvard_wreath_150.png') }}"></a>
-                    </div>
+                {% if first_invoice %}
+                    {% set first_invoice = False %}
+                {% else %}
+                  <div class="page_break"></div>
+                {% endif %}
+                <div class="banner-img-wrapper">
+                    <a> <img class="banner-img" src="{{ url_for('static', filename='images/harvard_wreath_150.png') }}"></a>
+                </div>
+
+                <div class="address">
                     <div class="banner-title">
-                            <h1>{{invoice.facility_title}}</h1>
+                        <h1>{{invoice.facility_title}}</h1>
                     </div>
+                    <ul>
+                    {% for line in invoice.from_address %}
+                        <li>{{line}}</li>
+                    {% endfor %}
+                    </ul>
                 </div>
-                <div class="sub_headers">
-                    <div class="address">
-                        <ul>
-                        {% for line in invoice.from_address %}
-                            <li>{{line}}</li>
-                        {% endfor %}
-                        </ul>
-                    </div>
-                    <div class="invoice_info">
-                        <ul>
-                            <li>Invoice #: {{invoice.number}}</li>
-                            <li>Invoice Date: {{invoice.last_modified.date()}}</li>
-                            <li>Start Date: {{invoice.from_date}}</li>
-                            <li>End Date: {{invoice.to_date}}</li>
-                            <li>Group: {{invoice.org_name}}</li>
-                        </ul>
-                    </div>
+                <div class="invoice_info">
+                    <ul>
+                        <li>Invoice #: {{invoice.number}}</li>
+                        <li>Invoice Date: {{invoice.last_modified.date()}}</li>
+                        <li>Start Date: {{invoice.from_date}}</li>
+                        <li>End Date: {{invoice.to_date}}</li>
+                        <li>Group: {{invoice.org_name}}</li>
+                        {% if invoice.charge_method_type == 'po' %}
+                            {% if 'invoice address' in invoice.po_info %}
+                                <br>
+                                <li>Invoice Address:</li>
+                                {% for line in invoice.po_info['invoice address'] %}
+                                    <li>{{line}}</li>
+                                {% endfor %}
+                            {% endif %}
+                        {% endif %}
+                    </ul>
                 </div>
-            </div><br>
-            <div class="to_wrapper">
-                <div class="to_address">
-                    <div class="to_info">
+                <div class="to_info">
                         <ul>
                             {% for key, val in invoice.to_info.items() %}
                                 <li>{{key}}: {{val}}</li>
                             {% endfor %}
                         </ul>
                     </div>
-                    {% if invoice.charge_method_type == 'po' %}
-                        {% if 'invoice address' in invoice.po_info %}
-                            <div class="po_invoice_address">
-                                Invoice Address:<br><br>
-                                <ul>
-                                    {% for line in invoice.po_info['invoice address'] %}
-                                        <li>{{line}}</li>
-                                    {% endfor %}
-                                </ul>
-                            </div>
-                        {% endif %}
-                    {% endif %}
-                </div>
-            </div>
-            <div  class="content">
-                {{ macros.invoice_table('Purchases', invoice.purchase_table) }}
-                {{ macros.invoice_table('Expense Code Summary', invoice.charge_table) }}
-                {{ macros.invoice_table('User Summary', invoice.user_table) }}
-            </div>
+            <div class="invoice_tbls">
+            {{ macros.invoice_table('Purchases', invoice.purchase_table) }}
+            {{ macros.invoice_table('Expense Code Summary', invoice.charge_table) }}
+            {{ macros.invoice_table('User Summary', invoice.user_table) }}
+            <div>
 
             {% if invoice.charge_method_type == 'po' %}
                 {% if 'remit to' in invoice.po_info %}
