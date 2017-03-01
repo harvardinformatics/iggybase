@@ -43,6 +43,7 @@ class InvoiceCollection(LineItemCollection):
         self.item_dict = self.group_line_items(key_types, data_types)
         self.invoices = self.get_invoices(self.from_date, self.to_date, self.org_list)
         self.set_invoices() # creates invoice rows in DB
+        self.invoices.sort(key=lambda x: x.order) # sort by number
 
     def get_invoices(self, from_date, to_date, org_list = []):
         invoices = []
