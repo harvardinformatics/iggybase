@@ -180,8 +180,8 @@ class Invoice:
     def populate_to_info(self):
         if self.charge_method_type == 'po':
             info = OrderedDict()
-            info['PI'] = self.get_contacts_as_list('pi', 'name'),
-            info['Institution'] = getattr(self.items[0].Institution, 'name', ''),
+            info['PI'] = self.get_contacts_as_list('pi', 'name')
+            info['Institution'] = getattr(self.items[0].Institution, 'name', '')
             info['PO Number'] = self.items[0].ChargeMethod.code
         else:
             mng_names = self.get_contacts_as_list('manager', 'name')
