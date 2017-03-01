@@ -1,8 +1,8 @@
-from iggybase import g_helper
-from iggybase import utilities as util
+#from iggybase import g_helper
+#from iggybase import utilities as util
 
 def insert_line_item(test):
-    oac = g_helper.get_org_access_control()
+    '''oac = g_helper.get_org_access_control()
     sample_no = test.number_of_samples
     hours = test.billable_hours
     analysis_id = test.analysis_id
@@ -35,11 +35,12 @@ def insert_line_item(test):
             'price_per_unit': price.PriceList.price_per_unit
         }
         per_hour.update(cols)
-        line_item = oac.insert_row('line_item', per_hour)
+        line_item = oac.insert_row('line_item', per_hour)'''
+    line_item = None
     return line_item
 
 def find_price(analysis_id, quantity, unit_type):
-    oac = g_helper.get_org_access_control()
+    '''oac = g_helper.get_org_access_control()
     analysis_to = oac.get_row('table_object', {'name': 'analysis'})
     unit = oac.get_row('unit', {'name': unit_type})
     org_row = oac.get_row('organization', {'id': oac.current_org_id})
@@ -61,5 +62,6 @@ def find_price(analysis_id, quantity, unit_type):
     order_by = oac.format_order_by({'minimum_quantity':{'desc':True}})
     first_row = True
     price = oac.get_row_multi_tbl(['price_item', 'price_item_assoc',
-    'price_list'], criteria, order_by, first_row)
+    'price_list'], criteria, order_by, first_row)'''
+    price = None
     return price
