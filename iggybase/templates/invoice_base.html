@@ -84,6 +84,7 @@
 
             {% if invoice.charge_method_type == 'po' %}
                 {% if 'remit to' in invoice.po_info %}
+                <div class="page_break"></div>
                 <br>
                 <div class="remit_to">
                     {% if invoice.po_info['remit to'][0] %}

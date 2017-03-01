@@ -38,7 +38,7 @@ class Invoice:
         self.total = self.set_total()
 
         # below are for the template
-        self.facility_title = 'Harvard University Sequencing Facility'
+        self.facility_title = 'Harvard University ' + g.rac.facility.banner_title
         self.from_address = [
                 'FAS Division of Science',
                 'Northwest Lab Room B227.30',
@@ -51,7 +51,8 @@ class Invoice:
                 'helium': 'HU'
         }
         self.pdf_prefix = (
-                self.service_prefix.upper()
+                g.rac.facility.table_suffix.upper()
+                + self.service_prefix.upper()
                 + 'IG' # iggybase prefix
                 + self.get_organization_type_prefix()
                 + '-' + str(self.from_date.year)[2:4] +  '{:02d}'.format(self.from_date.month)
@@ -178,11 +179,10 @@ class Invoice:
 
     def populate_to_info(self):
         if self.charge_method_type == 'po':
-            info = OrderedDict({
-                    'PI': self.get_contacts_as_list('pi', 'name'),
-                    'Institution': getattr(self.items[0].Institution, 'name', ''),
-                    'PO Number': self.items[0].ChargeMethod.code
-            })
+            info = OrderedDict()
+            info['PI'] = self.get_contacts_as_list('pi', 'name'),
+            info['Institution'] = getattr(self.items[0].Institution, 'name', ''),
+            info['PO Number'] = self.items[0].ChargeMethod.code
         else:
             mng_names = self.get_contacts_as_list('manager', 'name')
             mng_emails = self.get_contacts_as_list('manager', 'email')
@@ -205,7 +205,9 @@ class Invoice:
                         'Harvard University',
                         'Accounts Receivable',
                         'PO Box 4999',
-                        'Boston, MA 02212-4999'
+                        'Boston, MA 02212-4999',
+                        'ar_customers@harvard.edu',
+                        '617-495-3787'
                     ],
                     [
                         'Please inlude Invoice number on remittance',

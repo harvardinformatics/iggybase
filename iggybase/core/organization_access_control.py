@@ -598,12 +598,11 @@ class OrganizationAccessControl:
         for item in items:
             row_updates = []
             tbls_updated = []
-            for update in updates:
+            for field, val in updates.items():
                 try:
-                    tbl = getattr(item, update['table'])
-                    setattr(tbl, update['field'], update['val'])
-                    row_updates.append(update['table'] + '|' + update['field'])
-                    tables_updated.append(tbl.__table_name__)
+                    setattr(item, field, val)
+                    row_updates.append(item.__tablename__ + '|' + field)
+                    tbls_updated.append(item.__tablename__)
                 except AttributeError:
                     print('failed to update')
             # commit if we were able to all updates for the row
