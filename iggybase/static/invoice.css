@@ -93,6 +93,9 @@ h3 {
 table {
     page-break-inside: avoid;
 }
+.purchases {
+    page-break-inside: auto;
+}
 .page_break {
     page-break-before: always;
 }

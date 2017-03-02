@@ -70,9 +70,9 @@
                         </ul>
                     </div>
             <div class="invoice_tbls">
-            {{ macros.invoice_table('Purchases', invoice.purchase_table) }}
-            {{ macros.invoice_table('Expense Code Summary', invoice.charge_table) }}
-            {{ macros.invoice_table('User Summary', invoice.user_table) }}
+            {{ macros.invoice_table('purchases', invoice.purchase_table, 'purchases') }}
+            {{ macros.invoice_table('expense code summary', invoice.charge_table) }}
+            {{ macros.invoice_table('user summary', invoice.user_table) }}
             <div>
 
             {% if invoice.charge_method_type == 'po' %}
