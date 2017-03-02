@@ -147,7 +147,7 @@ class Invoice:
     def populate_purchase(self):
         rows = []
         # sort items by delivery date
-        lst = sorted(list(self.items.values()), key=lambda x: x.LineItem.date_created)
+        lst = sorted(list(self.items.values()), key=lambda x: (x.Order.name, x.LineItem.date_created))
         for item in lst:
             row = OrderedDict()
             if item.amount:
@@ -156,7 +156,6 @@ class Invoice:
                 row['delivery date'] = item.LineItem.date_created.date()
                 row['description'] = item.PriceItem.name
                 row['quantity'] = item.LineItem.quantity
-                row['price per unit'] = item.LineItem.price_per_unit
                 row['amount'] =  item.display_amount
                 rows.append(row)
         return rows
@@ -227,20 +226,29 @@ class Invoice:
         return info
 
     def populate_charges(self):
-        rows = []
-        lst = sorted(list(self.orders.values()), key=lambda x: x['amount'], reverse = True)
-        for order in lst:
+        rows = {}
+        for order in self.orders.values():
             if order['amount']:
                 for data in order['charges']:
-                    row = OrderedDict()
-                    row['order'] = data['charge'].Order.name
-                    row['expense code'] = data['charge'].ChargeMethod.code
-                    row['percent charged'] = int(data['charge'].OrderChargeMethod.percent or 0)
-                    row['amount charged'] = "${:.2f}".format(data['amount'])
-                    row['amount credited'] = "${:.2f}".format(0)
-                    row['total charged'] = "${:.2f}".format(data['amount'])
-                    rows.append(row)
-        return rows
+                    code = data['charge'].ChargeMethod.code
+                    if code in rows:
+                        row['amount charged'] += data['amount']
+                        # current core does not have credits
+                        row['amount credited'] += 0.0
+                    else:
+                        row = OrderedDict()
+                        row['expense code'] = data['charge'].ChargeMethod.code
+                        row['amount charged'] = data['amount']
+                        row['amount credited'] = 0.0
+                        rows[code] = row
+        # format the total
+        for r in rows.values():
+            r['total charged'] = "${:.2f}".format((r['amount charged'] - r['amount credited']))
+            r['amount charged'] = "${:.2f}".format(r['amount charged'])
+            r['amount credited'] = "${:.2f}".format(r['amount credited'])
+        # sort by expense code
+        lst = sorted(list(rows.values()), key = lambda x: x['expense code'])
+        return lst
 
     def get_charge_method(self):
         charges = {}
