@@ -91,7 +91,7 @@ h3 {
     clear:both;
 }
 table {
-    page-break-inside: auto;
+    page-break-inside: avoid;
 }
 .page_break {
     page-break-before: always;
