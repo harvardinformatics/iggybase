@@ -32,7 +32,7 @@ class LineItemCollection:
                 self.invoiced)
 
     def group_line_items(self, key_types, data_types, criteria = None):
-        # group by (org_name, 'code') for codes or (org_name, charge_method) for pos
+        # group by (org_name, 'code') for codes or (org_name, charge_method) for po
         # set invoice_order
         item_dict = OrderedDict()
         for row in self.line_items:
@@ -45,7 +45,6 @@ class LineItemCollection:
                 # calculate key values for this row
                 keys = [getattr(self, x['func'])(x, row) for x in key_types]
                 item_dict = self.group_row(item_dict, 0, keys, data_types, row)
-
         return item_dict
 
     def group_row(self, item_dict, index, keys, data_types, row):
@@ -276,7 +275,7 @@ class LineItemCollection:
     ''' Group functions below '''
 
     def get_table_col(self, x, row):
-        val = ''
+        val = x.get('default', '')
         # can be a compound of multiple fields
         for table_object, field in x['fields'].items():
             val += str(getattr(getattr(row, table_object, None),

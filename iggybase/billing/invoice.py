@@ -18,9 +18,10 @@ class Invoice:
         self.service_prefix = service_prefix
         self.service_type_id = service_type_id
 
-        self.org_name = self.items[0].Organization.name
-        self.org_id = self.items[0].Organization.id
-        self.charge_method_type = self.items[0].ChargeMethodType.name
+        self.first_item = next(iter(self.items.values()))
+        self.org_name = self.first_item.Organization.name
+        self.org_id = self.first_item.Organization.id
+        self.charge_method_type = self.first_item.charge_type
 
         # set by set_invoice
         self.id = None
@@ -60,22 +61,25 @@ class Invoice:
         )
 
     def populate_items(self, items):
-        item_list = []
+        item_dict = {}
         for item in items:
-            item_list.append(Item(item))
-        return item_list
+            if item.LineItem.name in item_dict:
+                item_dict[item.LineItem.name].add_charge(item)
+            else:
+                item_dict[item.LineItem.name] = Item(item)
+        return item_dict
 
     # set total amount
     def set_total(self):
         total = 0
-        for item in self.items:
+        for item in self.items.values():
             total += item.amount
         return total
 
     # group items by order and by users
     def group_by(self, table_name, field_name):
         grouped = OrderedDict()
-        for item in self.items:
+        for item in self.items.values():
             table = getattr(item, table_name)
             field_val = getattr(table, field_name)
             if field_val in grouped:
@@ -91,7 +95,7 @@ class Invoice:
     def set_invoice(self):
         # find invoice id
         invoice_row = None
-        for item in self.items:
+        for item in self.items.values():
             invoice_row = item.Invoice
             if invoice_row:
                 break
@@ -100,7 +104,7 @@ class Invoice:
             cols = {
                 'invoice_organization_id': self.org_id,
                 'amount': int(self.total),
-                'order_id': self.items[0].Order.id,
+                'order_id': self.first_item.Order.id,
                 'invoice_month': self.from_date,
                 'order': self.order,
                 'service_type_id': self.service_type_id,
@@ -116,7 +120,7 @@ class Invoice:
         # update line_item with invoice_id
         if self.id:
             to_update = []
-            for item in self.items:
+            for item in self.items.values():
                 to_update.append(item.LineItem)
             if to_update:
                 updated = self.oac.update_obj_rows(
@@ -140,7 +144,7 @@ class Invoice:
 
     def populate_purchase(self):
         rows = []
-        for item in self.items:
+        for item in self.items.values():
             row = OrderedDict()
             if item.amount:
                 row['user'] = item.User.name
@@ -181,8 +185,8 @@ class Invoice:
         if self.charge_method_type == 'po':
             info = OrderedDict()
             info['PI'] = self.get_contacts_as_list('pi', 'name')
-            info['Institution'] = getattr(self.items[0].Institution, 'name', '')
-            info['PO Number'] = self.items[0].ChargeMethod.code
+            info['Institution'] = getattr(self.first_item.Institution, 'name', '')
+            info['PO Number'] = self.first_item.ChargeMethod.code
         else:
             mng_names = self.get_contacts_as_list('manager', 'name')
             mng_emails = self.get_contacts_as_list('manager', 'email')
@@ -192,8 +196,8 @@ class Invoice:
         return info
 
     def populate_po_info(self):
-        if self.items[0].ChargeMethod.billing_address:
-            address = self.items[0].ChargeMethod.billing_address.split(",")
+        if self.first_item.ChargeMethod.billing_address:
+            address = self.fist_item.ChargeMethod.billing_address.split(",")
         else:
             address = []
 
@@ -234,13 +238,12 @@ class Invoice:
         return rows
 
     def get_charge_method(self):
+        charges = {}
         for order_id, order in self.orders.items():
             self.orders[order_id]['charges'] = []
             amount_remaining = order['amount']
-            charges = {}
             for item in order['items']:
-                if item.OrderChargeMethod.name not in charges:
-                    charges[item.OrderChargeMethod.name] = item
+                charges.update(item.charges)
             for charge in charges.values():
                 if amount_remaining:
                     amount_charged = (order['amount'] *
@@ -316,7 +319,7 @@ class Invoice:
 
     def get_organization_type_prefix(self):
         prefix = ''
-        if self.items[0].OrganizationType.name == 'harvard':
+        if self.first_item.OrganizationType.name == 'harvard':
             prefix = 'ib'
         return prefix
 

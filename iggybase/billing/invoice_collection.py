@@ -17,7 +17,8 @@ class InvoiceCollection(LineItemCollection):
         key_types = [
                 {
                     'func':'get_table_col',
-                    'fields':{'ServiceType': 'invoice_prefix'}
+                    'fields':{'ServiceType': 'invoice_prefix'},
+                    'default': 'service'
                 },
                 {
                     'func':'org_charge_tuple'
