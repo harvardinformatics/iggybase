@@ -407,7 +407,7 @@ class OrganizationAccessControl:
         include_nulls = False
         if ('from' in criteria and 'to' in criteria):
             wheres = [(col >= criteria['from']),
-                      (col <= criteria['to'])]
+                      (col < criteria['to'])]
         if( 'compare' in criteria and 'value' in criteria):
             if criteria['compare'] == 'greater than':
                 wheres = [(col > criteria['value'])]
@@ -805,7 +805,7 @@ class OrganizationAccessControl:
         filters = [
             line_item.active == 1,
             line_item.date_created >= from_date,
-            line_item.date_created <= to_date,
+            line_item.date_created < to_date,
             line_item.price_per_unit > 0,
             order.active == 1
         ]

@@ -155,6 +155,7 @@ class Invoice:
                 row['order'] = item.Order.name
                 row['delivery date'] = item.LineItem.date_created.date()
                 row['description'] = item.PriceItem.name
+                row['price per unit'] = "${:.2f}".format(item.LineItem.price_per_unit)
                 row['quantity'] = item.LineItem.quantity
                 row['amount'] =  item.display_amount
                 rows.append(row)

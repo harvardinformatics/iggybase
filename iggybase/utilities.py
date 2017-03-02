@@ -152,7 +152,7 @@ def get_last_month():
 
 def start_and_end_month(year, month):
     from_date = datetime.date(year=year, month=month, day=1)
-    to_date = from_date + relativedelta(months=1) - relativedelta(days=1)
+    to_date = from_date + relativedelta(months=1)
     return from_date, to_date
 
 def clean_billing_code(code):
