@@ -38,6 +38,7 @@ class Invoice:
         self.get_charge_method()
         self.users = self.group_by('User', 'id')
         self.total = self.set_total()
+        self.display_total = "${:.2f}".format(self.total)
 
         # below are for the template
         self.facility_title = 'Harvard University ' + g.rac.facility.banner_title

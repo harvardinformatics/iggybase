@@ -71,6 +71,7 @@
                     </div>
             <div class="invoice_tbls">
             {{ macros.invoice_table('purchases', invoice.purchase_table, 'purchases') }}
+            <br><div class="total">Total Purchases: {{invoice.display_total}}</div>
             {{ macros.invoice_table('expense code summary', invoice.charge_table) }}
             {{ macros.invoice_table('user summary', invoice.user_table) }}
             <div>

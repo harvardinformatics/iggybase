@@ -102,3 +102,7 @@ table {
 .remit_right, .remit_left {
     border: 1px solid black;
 }
+.total {
+    font-weight: bold;
+    padding-left: 60%;
+}
