@@ -19,6 +19,7 @@ class Invoice:
         self.service_type_id = service_type_id
 
         self.first_item = next(iter(self.items.values()))
+        self.first_charge = next(iter(self.first_item.charges.values()))
         self.org_name = self.first_item.Organization.name
         self.org_id = self.first_item.Organization.id
         self.charge_method_type = self.first_item.charge_type
@@ -186,7 +187,7 @@ class Invoice:
             info = OrderedDict()
             info['PI'] = self.get_contacts_as_list('pi', 'name')
             info['Institution'] = getattr(self.first_item.Institution, 'name', '')
-            info['PO Number'] = self.first_item.ChargeMethod.code
+            info['PO Number'] = self.first_charge.ChargeMethod.code
         else:
             mng_names = self.get_contacts_as_list('manager', 'name')
             mng_emails = self.get_contacts_as_list('manager', 'email')
@@ -196,8 +197,8 @@ class Invoice:
         return info
 
     def populate_po_info(self):
-        if self.first_item.ChargeMethod.billing_address:
-            address = self.fist_item.ChargeMethod.billing_address.split(",")
+        if self.first_charge.ChargeMethod.billing_address:
+            address = self.first_charge.ChargeMethod.billing_address.split(",")
         else:
             address = []
 
