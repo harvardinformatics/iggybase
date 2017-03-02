@@ -146,7 +146,9 @@ class Invoice:
 
     def populate_purchase(self):
         rows = []
-        for item in self.items.values():
+        # sort items by delivery date
+        lst = sorted(list(self.items.values()), key=lambda x: x.LineItem.date_created)
+        for item in lst:
             row = OrderedDict()
             if item.amount:
                 row['user'] = item.User.name
@@ -226,7 +228,8 @@ class Invoice:
 
     def populate_charges(self):
         rows = []
-        for order in self.orders.values():
+        lst = sorted(list(self.orders.values()), key=lambda x: x['amount'], reverse = True)
+        for order in lst:
             if order['amount']:
                 for data in order['charges']:
                     row = OrderedDict()
@@ -259,7 +262,9 @@ class Invoice:
 
     def populate_users(self):
         rows = []
-        for user in self.users.values():
+        # sort by user name
+        lst = sorted(list(self.users.values()), key=lambda x: x['items'][0].User.name)
+        for user in lst:
             row = OrderedDict()
             if user['amount']:
                 name = user['items'][0].User.name
