@@ -3,6 +3,7 @@ from collections import OrderedDict
 from iggybase import utilities as util
 from iggybase import g_helper
 from .item import Item
+import datetime as dt
 from dateutil.relativedelta import relativedelta
 import re
 import os
@@ -29,7 +30,7 @@ class Invoice:
 
         # set by set_invoice
         self.id = None
-        self.last_modified = None
+        self.last_modified = dt.datetime.today().date()
         self.name = None
         self.Invoice = None
         self.number = None
@@ -98,15 +99,16 @@ class Invoice:
                 }
         return grouped
 
-    def set_invoice(self):
+    def set_invoice(self, single_group):
         # find invoice id
         invoice_row = None
         for item in self.items.values():
             invoice_row = item.Invoice
             if invoice_row:
                 break
-        # if new, insert invoice row
-        if not invoice_row:
+        # if new, insert invoice row, if not single group
+        # invoice number must be assigned in context of the whole month
+        if not invoice_row and not single_group:
             cols = {
                 'invoice_organization_id': self.org_id,
                 'amount': int(self.total),
@@ -118,24 +120,25 @@ class Invoice:
                 'invoice_number': self.order
             }
             invoice_row = self.oac.insert_row('invoice', cols)
-        self.id = invoice_row.id
-        self.name = invoice_row.name
-        self.last_modified = invoice_row.last_modified
-        self.Invoice = invoice_row
-        self.number = self.get_next_name()
-        # update line_item with invoice_id
-        if self.id:
-            to_update = []
-            for item in self.items.values():
-                to_update.append(item.LineItem)
-            if to_update:
-                updated = self.oac.update_obj_rows(
-                        to_update,
-                        {'invoice_id': self.id}
-                )
-                if not updated:
-                    logging.error('Invoice_id not updated to ' + str(invoice_id)
-                            + ' for line_items: ' + json.dumps(to_update))
+        if invoice_row:
+            self.id = invoice_row.id
+            self.name = invoice_row.name
+            self.last_modified = invoice_row.last_modified.date()
+            self.Invoice = invoice_row
+            self.number = self.get_next_name()
+            # update line_item with invoice_id
+            if self.id:
+                to_update = []
+                for item in self.items.values():
+                    to_update.append(item.LineItem)
+                if to_update:
+                    updated = self.oac.update_obj_rows(
+                            to_update,
+                            {'invoice_id': self.id}
+                    )
+                    if not updated:
+                        logging.error('Invoice_id not updated to ' + str(invoice_id)
+                                + ' for line_items: ' + json.dumps(to_update))
 
 
     def populate_template_data(self):

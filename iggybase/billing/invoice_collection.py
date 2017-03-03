@@ -111,8 +111,11 @@ class InvoiceCollection(LineItemCollection):
         return None
 
     def set_invoices(self):
+        single_group = False
+        if self.org_list:
+            single_group = True
         for invoice in self.invoices:
-            invoice.set_invoice()
+            invoice.set_invoice(single_group)
 
     def update_pdf_names(self):
         for invoice in self.invoices:
