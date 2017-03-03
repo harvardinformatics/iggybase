@@ -96,11 +96,6 @@ class TableFactory:
         elif attributes.data_type_id == 8 or attributes.data_type_id == 9:
             dtcname = getattr(sqlalchemy, 'Numeric')
             dtinst = dtcname(10, 2)
-        elif attributes.data_type_id == 7:
-            dtcname = getattr(sqlalchemy, 'Integer')
-            dtinst = dtcname()
-            foreign_table_name = 'long_text'
-            foreign_column_name = 'long_text'
         else:
             dtcname = getattr(sqlalchemy, datatype.name)
             if attributes.data_type_id == 2:
