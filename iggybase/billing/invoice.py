@@ -3,6 +3,7 @@ from collections import OrderedDict
 from iggybase import utilities as util
 from iggybase import g_helper
 from .item import Item
+from dateutil.relativedelta import relativedelta
 import re
 import os
 import glob
@@ -13,7 +14,9 @@ class Invoice:
             service_type_id):
         self.items = self.populate_items(items)
         self.from_date = from_date
-        self.to_date = to_date
+        # we will search where less than to_date, so we need to subtract a day
+        # to display last day in our range
+        self.to_date = to_date - relativedelta(days=1)
         self.order = order
         self.service_prefix = service_prefix
         self.service_type_id = service_type_id
