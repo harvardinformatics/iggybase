@@ -338,7 +338,7 @@ class Invoice:
 
     def get_organization_type_prefix(self):
         prefix = ''
-        if self.first_item.OrganizationType.name == 'harvard':
+        if getattr(self.first_item, 'OrganizationType', None) and self.first_item.OrganizationType.name == 'harvard':
             prefix = 'ib'
         return prefix
 

@@ -817,20 +817,22 @@ class OrganizationAccessControl:
             order_charge_method, charge_method, charge_method_type, models.User,
             models.Organization, models.OrganizationType, invoice, institution,
             models.Department)
-                .join((price_item, line_item.price_item_id == price_item.id),
+                # limit natural joins so that we get errors rather than omit
+                # billing something that has missing data
+                .join((order, line_item.order_id == order.id)
+                )
+                .outerjoin( (models.Organization, line_item.organization_id ==
+                        models.Organization.id),
+                    (models.OrganizationType, models.Organization.organization_type_id ==
+                        models.OrganizationType.id),
+                    (invoice, invoice.id == line_item.invoice_id),
+                    (price_item, line_item.price_item_id == price_item.id),
                     (service_type, price_item.service_type_id ==
                         service_type.id),
-                    (order, line_item.order_id == order.id),
                     (order_charge_method, order.id == order_charge_method.order_id),
                     (charge_method, order_charge_method.charge_method_id == charge_method.id),
                     (charge_method_type, charge_method.charge_method_type_id == charge_method_type.id),
                     (models.User, models.User.id == order.submitter_id),
-                    (models.Organization, line_item.organization_id ==
-                        models.Organization.id),
-                    (models.OrganizationType, models.Organization.organization_type_id ==
-                        models.OrganizationType.id)
-                )
-                .outerjoin((invoice, invoice.id == line_item.invoice_id),
                     (institution, institution.id == models.Organization.institution_id),
                     (models.Department, models.Department.id ==
                         models.Organization.department_id)
