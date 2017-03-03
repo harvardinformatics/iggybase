@@ -55,7 +55,8 @@ class Invoice:
         }
         self.pdf_prefix = (
                 g.rac.facility.table_suffix.upper()
-                + self.service_prefix.upper()
+                # service should not get displayed in invoice name
+                + (self.service_prefix.upper() if (self.service_prefix != 'service') else '')
                 + 'IG' # iggybase prefix
                 + self.get_organization_type_prefix()
                 + '-' + str(self.from_date.year)[2:4] +  '{:02d}'.format(self.from_date.month)
