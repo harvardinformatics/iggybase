@@ -3,10 +3,10 @@ from collections import OrderedDict
 from iggybase import utilities as util
 from iggybase import g_helper
 from .item import Item
+import re
 import os
 import glob
 import logging
-import time
 
 class Invoice:
     def __init__ (self, from_date, to_date, items, order, service_prefix,
@@ -231,33 +231,36 @@ class Invoice:
         for order in self.orders.values():
             if order['amount']:
                 for data in order['charges']:
-                    code = data['charge'].ChargeMethod.code
-                    if code in rows:
-                        row['amount charged'] += data['amount']
+                    clean_code = re.sub("[^0-9]", "", data['charge'].ChargeMethod.code)
+                    if clean_code in rows:
+                        rows[clean_code]['amount charged'] += data['amount']
                         # current core does not have credits
-                        row['amount credited'] += 0.0
+                        rows[clean_code]['amount credited'] += 0.0
                     else:
                         row = OrderedDict()
                         row['expense code'] = data['charge'].ChargeMethod.code
                         row['amount charged'] = data['amount']
                         row['amount credited'] = 0.0
-                        rows[code] = row
+                        rows[clean_code] = row
         # format the total
-        for r in rows.values():
-            r['total charged'] = "${:.2f}".format((r['amount charged'] - r['amount credited']))
-            r['amount charged'] = "${:.2f}".format(r['amount charged'])
-            r['amount credited'] = "${:.2f}".format(r['amount credited'])
+        for code, r in rows.items():
+            rows[code]['total charged'] = "${:.2f}".format((r['amount charged'] - r['amount credited']))
+            rows[code]['amount charged'] = "${:.2f}".format(r['amount charged'])
+            rows[code]['amount credited'] = "${:.2f}".format(r['amount credited'])
         # sort by expense code
         lst = sorted(list(rows.values()), key = lambda x: x['expense code'])
         return lst
 
     def get_charge_method(self):
-        charges = {}
         for order_id, order in self.orders.items():
+            charges = {}
             self.orders[order_id]['charges'] = []
             amount_remaining = order['amount']
             for item in order['items']:
-                charges.update(item.charges)
+                # each item has all charges for that orde
+                # do take them from the first item
+                charges = item.charges
+                break
             for charge in charges.values():
                 if amount_remaining:
                     amount_charged = (order['amount'] *

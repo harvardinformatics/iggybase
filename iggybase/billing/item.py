@@ -17,6 +17,6 @@ class Item:
         self.charge_type = item.ChargeMethodType.name
 
     def add_charge(self, item):
-        if item.ChargeMethod.name not in self.charges:
-            self.charges[item.ChargeMethod.name] = item
+        if item.ChargeMethod.code not in self.charges:
+            self.charges[item.ChargeMethod.code] = item
 
