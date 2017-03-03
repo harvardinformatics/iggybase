@@ -807,7 +807,8 @@ class OrganizationAccessControl:
             line_item.date_created >= from_date,
             line_item.date_created < to_date,
             line_item.price_per_unit > 0,
-            order.active == 1
+            order.active == 1,
+            order.billable == 1
         ]
         if invoiced:
             filters.append(invoice.id != None)
