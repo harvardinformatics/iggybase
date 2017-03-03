@@ -69,7 +69,7 @@
                             {% endfor %}
                         </ul>
                     </div>
-            <div class="invoice_tbls">
+                    <div class="invoice_tbls"><br>
             {{ macros.invoice_table('purchases', invoice.purchase_table, 'purchases') }}
             <br><div class="total">Total Purchases: {{invoice.display_total}}</div>
             {{ macros.invoice_table('expense code summary', invoice.charge_table) }}
