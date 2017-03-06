@@ -45,11 +45,11 @@ class InstanceCollection:
     def values(self):
         return self.instances.values()
 
-    def set_instances(self, instances=[]):
+    def set_instances(self, table_name, instances=[]):
         instances_names = []
         
         for row in instances:
-            instance = InstanceData(row, row.name, len(self.instance_names))
+            instance = InstanceData(row, row.name, self.tables[table_name].table_object, len(self.instance_names))
 
             self.initialize_values(instance)
 
@@ -68,7 +68,7 @@ class InstanceCollection:
         for key, values in instance_dict.items():
             instances = self.oac.get_instance_data(self.tables[table_name].table_instance, {key: values})
 
-            tmp_instances_names = self.set_instances(instances)
+            tmp_instances_names = self.set_instances(table_name, instances)
 
             instances_names += tmp_instances_names
             self.instance_names += tmp_instances_names
@@ -85,11 +85,11 @@ class InstanceCollection:
 
         return instance_names
 
-    def add_new_instance(self, table_name, instance_name='new', parent_link_field=None, parent_id=None):
-        instance_name = self.get_data(table_name, {'name': [instance_name]})
+    def add_new_instance(self, table_name, instance_name={'name': ['new']}, parent_link_field=None, parent_id=None):
+        instance_name = self.get_data(table_name, instance_name)
 
         if parent_link_field is not None:
-            setattr(self.instances[instance_name], parent_link_field, parent_id)
+            setattr(self.instances[instance_name[0]], parent_link_field, parent_id)
 
         return instance_name[0]
 
@@ -105,11 +105,11 @@ class InstanceCollection:
 
                 if child_rows:
                     for row in child_rows:
-                        instance_names = self.set_instances([row['instance']])
+                        instance_names = self.set_instances(table_name, [row['instance']])
                         self.instances[instance_names[0]].parent_id = row['parent_id']
                         ids.append(row['instance'].id)
                 else:
-                    instance_names = self.get_data(table_name, {'name': 'empty_row'})
+                    instance_names = self.get_data(table_name, {'name': ['empty_row']})
                     if table_data.level == 1:
                         self.instances[instance_names[0]].parent_id = root_id
             elif table_data.link_type == "many":
@@ -183,7 +183,7 @@ class InstanceCollection:
         instance = self.instances[instance_name].instance
         instance_value = getattr(instance, field_name)
 
-        if field.is_foreign_key and table_name != 'long_text':
+        if field.is_foreign_key:
             field_value = self.set_foreign_key_field_id(table_name, field_name, field_value)
         elif field.DataType.name.lower() == 'boolean' and field_value == True or field_value == 'True':
             field_value = 1
@@ -215,16 +215,16 @@ class InstanceCollection:
 
     def commit(self):
         inst_names = {}
-        save_instances = []
+        new_instances = []
+        update_instances = []
 
         for instance_name, instance_data in self.instances.items():
             if instance_data.table_name == 'history' or not instance_data.save:
                 continue
 
             if instance_data.new_instance:
-                instance_data.set_new_name(self.tables[instance_data.table_name].table_object)
-                self.background_save_instances[instance_data.table_name] = \
-                    self.tables[instance_data.table_name].table_object
+                instance_data.set_new_name()
+                self.background_save_instances[instance_data.table_name] = instance_data.instance_class
 
             inst_names[instance_data.old_name] = instance_data.instance_name
 
@@ -232,13 +232,16 @@ class InstanceCollection:
                 instance_data.instance.date_created = datetime.datetime.utcnow()
 
             instance_data.instance.last_modified = datetime.datetime.utcnow()
-            save_instances.append(instance_data.instance)
+            if instance_data.new_instance:
+                new_instances.append(instance_data.instance)
+            else:
+                update_instances.append(instance_data.instance)
 
         for history_name, instance_data in self.table_instances['history'].items():
             if instance_data.instance.instance_name in inst_names.keys():
                 instance_data.instance.instance_name = inst_names[instance_data.instance.instance_name]
 
-            instance_data.set_new_name(self.tables['history'].table_object)
+            instance_data.set_new_name()
             instance_data.instance.date_created = datetime.datetime.utcnow()
             instance_data.instance.last_modified = datetime.datetime.utcnow()
 
@@ -246,48 +249,16 @@ class InstanceCollection:
 
         self.background_save_instances['history'] = self.tables['history'].table_object
 
-        commit_status, commit_msg = self.oac.save_data_instance(save_instances,
+        commit_status, commit_msg = self.oac.save_data_instance(new_instances, update_instances,
                                                                 list(self.background_save_instances.values()))
 
         if commit_status:
             base_instance = next(iter(self.items()))[1]
-            logging.info('base_instance: ' + str(base_instance.instance.id))
             if base_instance.instance.id not in commit_msg.keys() and base_instance.new_instance == False:
                 commit_msg[base_instance.instance.id] = {'id': base_instance.instance.id,
                                                          'name': base_instance.instance_name,
                                                          'table': base_instance.table_name,
                                                          'old_name': base_instance.old_name}
-
-        return commit_status, commit_msg
-
-    def commit_instance(self, instance_name):
-        instance_data = self.instances[instance_name]
-
-        if instance_data.new_instance:
-            instance_data.set_new_name(self.tables[instance_data.table_name].table_object)
-            self.background_save_instances[instance_data.table_name] = \
-                self.tables[instance_data.table_name].table_object
-
-        if instance_data.instance.date_created is None:
-            instance_data.instance.date_created = datetime.datetime.utcnow()
-
-        instance_data.instance.last_modified = datetime.datetime.utcnow()
-        save_instances = [instance_data.instance]
-
-        for history_name, history_data in self.table_instances['history'].items():
-            if history_data.instance.instance_name == instance_data.old_name:
-                history_data.instance.instance_name = instance_data.instance_name
-
-            history_data.set_new_name(self.tables['history'].table_object)
-            history_data.instance.date_created = datetime.datetime.utcnow()
-            history_data.instance.last_modified = datetime.datetime.utcnow()
-
-            self.background_save_instances[history_name] = history_data.instance
-
-        commit_status, commit_msg = self.oac.save_data_instance(save_instances)
-
-        if commit_status:
-            instance_data.save = False
 
         return commit_status, commit_msg
 

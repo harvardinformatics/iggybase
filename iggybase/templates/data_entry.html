@@ -55,15 +55,13 @@
                     {% set table_level = field.data|int -%}
                 {% elif "table_name_" in field.id -%}
                     {% set table_name = field.data -%}
-                    {% set table_title = fg.instance.tables[field.data].table_display_name.replace( '_',' ' )|title -%}
-                    {% set html_id = field.id.split("_") -%}
-                    {% set table_id = html_id[2] -%}
+                    {% set table_title = fg.instance.tables[table_name].table_display_name.replace( '_',' ' )|title -%}
 
                     {%- if "modal_form" in page_context %}
                         <div class="div_level_0">
                         {% set col_style = 'col-md-2' -%}
                         {% set label_style = 'col-md-2' -%}
-                    {%- elif (table_level == 0 and form_type == "single") %}
+                    {%- elif (table_level == 0 and form_type == "SingleForm") %}
                         <div class="div_level_0">
                         {% set col_style = 'col-md-4' -%}
                         {% set label_style = 'col-md-2' -%}
@@ -76,7 +74,7 @@
                 {% elif "start_table_" in field.id -%}
                     {%- if "modal_form" in page_context %}
                         <div class="container">
-                    {%- elif (table_level == 0 and form_type == "single") %}
+                    {%- elif (table_level == 0 and form_type == "SingleForm") %}
                         <div id="{{ table_name }}" class="container">
                     {% else -%}
                         <div class="container multi-row-entry">
@@ -109,12 +107,13 @@
                 {% elif "_buttons_top" in field.id or "_buttons_bottom" in field.id -%}
                     {{ field.data|safe }}
                 {% elif "end_table_" in field.id -%}
-                    {%- if form_type == "single" and table_level > 0 %}
+                    {%- if form_type == "SingleForm" and table_level > 0 %}
                         </div></div></div><br>
                     {% else %}
                         </div><br>
                     {% endif -%}
                 {% elif 'start_row_' in field.id-%}
+                    {% set row_name = field.data %}
                     {% set field_vars = field.id.split("_") %}
                     <div class="row" row_id="{{ field_vars[field_vars|length - 1] }}" table_object_name="{{ table_name }}">
                     {%- if "new" in row_name %}
@@ -124,10 +123,8 @@
                     {%- endif %}
                 {% elif 'end_row_' in field.id-%}
                     </div>
-                {% elif "record_data_row_name_" in field.id -%}
-                    {% set row_name = field.data %}
                 {% elif not bootstrap_is_hidden_field( field ) -%}
-                    {% if (table_level == 0 and form_type == "single") or "modal_form" in page_context -%}
+                    {% if (table_level == 0 and form_type == "SingleForm") or "modal_form" in page_context -%}
                         {% set field_vars = field.id.split("_") %}
                         {{ macros.render_field_data_entry( field, field_vars[field_vars|length - 1], table_name, row_name, col_style, label_style ) }}
                     {% else -%}

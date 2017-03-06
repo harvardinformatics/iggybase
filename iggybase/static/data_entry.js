@@ -158,18 +158,17 @@ $( document ).ready( function () {
     $.fn.searchResults = function ( ele, modal_open, search_vals ) {
         search_input = ele.attr( 'id' );
 
-        var matches = search_input.match( /data_entry_(\S+)_(\d+)/);
-        var table_object = $( '#record_data_table_' + matches[2] ).val( );
+        var matches = search_input.match( /(\S+)-(\S+)-(\S+)-(\S+)/ );
 
         if ( !search_vals )
             var search_vals = {};
 
-        search_vals['table_name'] = table_object;
+        search_vals['table_name'] = matches[ 2 ];
         search_vals['input_id'] = search_input;
-        search_vals['display_name'] = matches[ 1 ];
+        search_vals['display_name'] = matches[ 3 ];
         search_vals['value'] = ele.val( );
         search_vals['by_field'] = ele.val( );
-        search_vals['field_key'] = table_object + "|" + matches[ 1 ];
+        search_vals['field_key'] =  matches[ 2 ] + "|" + matches[ 3 ];
         search_vals['modal_open'] = modal_open;
 
         var hidden_fields = $("#hidden_fields");
@@ -259,12 +258,12 @@ $( document ).ready( function () {
         var table_object_id = ele.attr( "table_object_id" );
         var link_column = $( "#linkcolumn_" + table_object_id ).val( );
         var new_row = $( "#" + target + " .row:last" ).clone( );
-        var old_id = new_row.attr( 'row_id' );
+        var old_id = '';
         var parent_name = '';
         var parent_id = '';
         var new_id = '';
         if ( table_level == 1 )
-            parent_name = $( '#record_data_row_name_0' ).val( );
+            parent_name = $( '#data_entry_name_0' ).val( );
             parent_id = $( '#data_entry_id_0' ).val( );
 
         //alert('table_level: ' + table_level);
@@ -293,16 +292,16 @@ $( document ).ready( function () {
                     $( this ).remove( );
                 } else {
                     var id = $(this).attr( 'id' );
-                    var matches = id.match( /(\S+)_(\d+)/ );
+                    var matches = id.match( /(\S+)-(\S+)-(\S+)-(\S+)/ );
 
                     if ( matches && matches.length > 1 ) {
                         var td = $( this ).closest( 'td' );
 
-                        var new_id = matches[ 1 ] + "_" + ( row_id );
+                        var new_id = matches[ 1 ] + "-" +  matches[ 2 ] + "-" +  matches[ 3 ] + "-new_" + ( row_id );
 
                         if ( $( this ).prop( 'type' ) == 'select-one' ) {
                             //alert('select matches[ 1 ]: ' + matches[ 1 ]);
-                            if ( 'data_entry_' + link_column == matches[ 1 ] ) {
+                            if ( link_column == matches[ 3 ] ) {
                                 //alert('looking for: ' + parent_name);
                                 $( this ).attr( 'id', new_id ).attr( 'name', new_id )
                                 $( this ).find( 'option' ).each(
@@ -317,7 +316,7 @@ $( document ).ready( function () {
                                 $( this ).prop( 'selectedIndex', 0 ).attr( 'id', new_id ).attr( 'name', new_id );
                             }
                         } else {
-                            if ( 'data_entry_' + link_column == matches[ 1 ] )
+                            if ( link_column == matches[ 3 ] )
                                 $( this ).val( parent_name ).attr( 'id', new_id ).attr( 'name', new_id );
                             else if ( $( this ).attr( 'class' ).includes( 'date-field' ) ) {
                                 var utc = new Date().toJSON().slice(0,10);
@@ -332,22 +331,14 @@ $( document ).ready( function () {
 
         $( new_row ).on( 'click', '.remove-row', function ( ) { $.fn.removeRow( $( this ) ); } );
 
-        $('input[id$="_' + old_id + '"]' ).each(
+        new_row.find('input[id$="-' + old_id + '"]' ).each(
             function() {
                 if ( $( this ).css( 'display' ) == 'none' ) {
-                    var matches = $( this ).attr( 'id' ).match( /(\S+)_(\d+)/);
-                    new_id = matches[ 1 ] + "_" + ( row_id );
+                    var matches = $( this ).attr( 'id' ).match( /(\S+)-(\S+)-(\S+)-(\S+)/ );
+                    new_id = matches[ 1 ] + "-" +  matches[ 2 ] + "-" +  matches[ 3 ] + "-new_" + ( row_id );
                     var value = '';
 
-                    if ( matches[ 1 ] == 'record_data_row_name' ) {
-                        value = 'new';
-                    } else if ( matches[ 1 ] == 'record_data_table_id' ) {
-                        value = table_object_id;
-                    } else if ( matches[ 1 ] == 'record_data_table' ) {
-                        value = target;
-                    } else if ( matches[ 1 ] == 'record_data_new' ) {
-                        value = 1;
-                    } else if ( matches[ 1 ] == 'id_data_entry_' + link_column ) {
+                    if ( matches[ 3 ] == link_column ) {
                         value = parent_id;
                     }
 
@@ -423,22 +414,21 @@ $( document ).ready( function () {
         var current_row = ae.closest( 'div.row' );
 
         var id = ae.attr( 'id' );
-        var matches = id.match( /(\S+)_(\d+)/);
-        var id_prefix = matches[ 1 ];
+        var matches = id.match( /(\S+)-(\S+)-(\S+)-(\S+)/ );
+        var id_prefix = matches[ 1 ] + "-" + matches[ 2 ] + "-" + matches[ 3 ];
 
         while ( current_row.next('div.row').length ){
             current_row = current_row.next('div.row');
-            current_row_number = current_row.attr( 'row_id' );
-
-            new_id = id_prefix + '_' + current_row_number
 
             if ( check ) {
-                $( "#" + new_id ).prop( "checked", value );
-                $( "input[name=bool_" + new_id + "]" ).prop( 'disabled', value );
-                $( "input[name=bool_" + new_id + "]" ).val( value ? 'y' : 'n' );
-            } else if ( $( "#" + new_id ).closest( "div.row" ).is( ":visible" ) ) {
-                $( "#" + new_id ).val( value );
-                $( "#" + new_id ).change( );
+                chk_box = current_row.find( "input[id^='" + id_prefix + "']" );
+                chk_box_id = chk_box.attr('id');
+                chk_box.prop( "checked", value );
+                $( "#bool_" + chk_box_id ).prop( 'disabled', value );
+                $( "#bool_" + chk_box_id ).val( value ? 'y' : 'n' );
+            } else {
+                current_row.find( "input[id^='" + id_prefix + "']" ).val( value );
+                current_row.find( "input[id^='" + id_prefix + "']" ).change( );
             }
         }
     }
@@ -447,5 +437,9 @@ $( document ).ready( function () {
         var table_name = data_div.attr( 'name' );
 
         $( '#' + table_name + '_header' ).scrollLeft( data_div.scrollLeft( ) )
+    }
+
+    $.fn.submitData = function () {
+
     }
 } ) ( jQuery );

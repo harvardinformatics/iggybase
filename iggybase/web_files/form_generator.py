@@ -32,9 +32,11 @@ class FormGenerator(PageTemplate):
         for k, v in context.items():
             self.context[k] = v
 
-    def input_field(self, field_data, display_name, row_name, control_id, control_type, control_str, value=None):
+    def input_field(self, field_data, display_name, table_name, row_name, control_id, control_type, control_str,
+                    value=None):
         kwargs = {}
         validators = []
+
         if value is not None:
             kwargs['default'] = value
 
@@ -42,6 +44,9 @@ class FormGenerator(PageTemplate):
         # e.g. an empty hidden required field
         if field_data.FieldRole.visible != constants.VISIBLE:
             return HiddenField(field_data.FieldRole.display_name, **kwargs)
+
+        kwargs['instance_name'] = row_name
+        kwargs['table_object'] = table_name
 
         if field_data.Field.description != "":
             kwargs['title'] = field_data.Field.description
@@ -87,62 +92,49 @@ class FormGenerator(PageTemplate):
 
                 return IggybaseSelectField(display_name, **kwargs)
         elif field_data.is_foreign_key:
-            if self.instance.tables['long_text'].table_object.id == field_data.FK_TableObject.id:
-                if value is not None:
-                    lt_row = self.organization_access_control. \
-                        get_long_text(value, self.instance.tables['long_text'].table_instance)
-                    kwargs['default'] = lt_row.long_text
-                    self.classattr['long_text_' + control_str] = HiddenField('long_text_' + control_str,
-                                                                             default=lt_row.name)
-                else:
-                    self.classattr['long_text_' + control_str] = HiddenField('long_text_' + control_str)
+            if field_data.name not in self.dropdowns:
+                self.dropdowns[field_data.name] = self.organization_access_control.\
+                    get_foreign_key_data(field_data.FK_TableObject, field_data.FK_Field)
 
+            choices = self.dropdowns[field_data.name]
 
-                return IggybaseTextAreaField(display_name, **kwargs)
+            if field_data.Field.drop_down_list_limit:
+                drop_down_limit = field_data.Field.drop_down_list_limit
             else:
-                if field_data.name not in self.dropdowns:
-                    self.dropdowns[field_data.name] = self.organization_access_control.\
-                        get_foreign_key_data(field_data.FK_TableObject, field_data.FK_Field)
+                drop_down_limit = 25
 
-                choices = self.dropdowns[field_data.name]
-
-                if field_data.Field.drop_down_list_limit:
-                    drop_down_limit = field_data.Field.drop_down_list_limit
+            if len(choices) > drop_down_limit:
+                if value is None:
+                    self.classattr['id_' + control_id] = HiddenField('id_' + control_id)
                 else:
-                    drop_down_limit = 25
-
-                if len(choices) > drop_down_limit:
-                    if value is None:
-                        self.classattr['id_' + control_id] = HiddenField('id_' + control_id)
-                    else:
-                        value = [item for item in choices if item[0] == value]
-
-                        if len(value) > 0:
-                            kwargs['default'] = value[0][1]
-
-                            self.classattr['id_' + control_id] = HiddenField('id_' + control_id, default=value[0][0])
-                        else:
-                            self.classattr['id_' + control_id] = HiddenField('id_' + control_id)
-
-                    return IggybaseLookUpField(display_name, **kwargs)
-                elif kwargs['readonly']:
                     value = [item for item in choices if item[0] == value]
 
-                    if value is None or len(value) > 0:
+                    if len(value) > 0:
                         kwargs['default'] = value[0][1]
 
-                    if value is not None:
-                        kwargs['default'] = value
+                        self.classattr['id_' + control_id] = HiddenField('id_' + control_id, default=value[0][0])
+                    else:
+                        self.classattr['id_' + control_id] = HiddenField('id_' + control_id)
 
-                    return IggybaseStringField(display_name, **kwargs)
-                else:
-                    kwargs['coerce'] = int
-                    kwargs['choices'] = choices
+                return IggybaseLookUpField(display_name, **kwargs)
+            elif kwargs['readonly']:
+                value = [item for item in choices if item[0] == value]
 
-                    if value is not None:
-                        kwargs['default'] = value
+                if value is None or len(value) > 0:
+                    kwargs['default'] = value[0][1]
 
-                    return IggybaseSelectField(display_name, **kwargs)
+                if value is not None:
+                    kwargs['default'] = value
+
+                return IggybaseStringField(display_name, **kwargs)
+            else:
+                kwargs['coerce'] = int
+                kwargs['choices'] = choices
+
+                if value is not None:
+                    kwargs['default'] = value
+
+                return IggybaseSelectField(display_name, **kwargs)
         elif field_data.Field.data_type_id == constants.INTEGER:
             return IggybaseIntegerField(display_name, **kwargs)
         elif field_data.Field.data_type_id == constants.FLOAT:
@@ -162,60 +154,23 @@ class FormGenerator(PageTemplate):
         else:
             return IggybaseStringField(display_name, **kwargs)
 
-    def empty_form(self):
-        self.form_class = new_class('EmptyForm', (Form,))
-
-    def multiple_data_entry_form(self, row_names=[], instances = None):
+    def data_entry_form(self, row_names=['new'], instances = None, depth = 2):
         self.form_class = None
         self.classattr = {}
 
         if instances is None:
-            instances = InstanceCollection(0, {self.table_name: row_names})
-            instances.get_multiple_data(row_names, self.table_name)
+            instances = InstanceCollection(depth, {self.table_name: row_names})
+
+            if not instances[row_names[0]].new_instance and self.form_type == 'SingleForm':
+                instances.get_linked_instances(instances[row_names[0]].instance.id)
 
         self.instance = instances
 
         self.get_table(instances)
 
-        self.classattr['form_data_table_0'] = HiddenField('form_data_table_0', default=self.table_name)
-        self.classattr['form_data_type_0'] =  HiddenField('form_data_type_0', default=self.form_type)
-
-        row_counter = 0
-        for row_name in row_names:
-            self.classattr['form_data_row_name_' + str(row_counter)] = \
-                HiddenField('form_data_row_name_' + str(row_counter), default=row_name)
-            row_counter += 1
-
-        self.classattr['row_counter'] = HiddenField('row_counter', default=instances.instance_counter)
-
-        form_class = new_class('MultipleForm', (Form,), {}, lambda ns: ns.update(self.classattr))
-
-        self.form_class = form_class(None)
-
-    # TODO: rather than have functions for different types of forms can we keep similar attrs
-    # in an object and have any functions work with that object to present
-    # different views, or maybe all we need is the template to present the
-    # different views
-    def data_entry_form(self, row_name='new', instances = None, depth = 2):
-        self.form_class = None
-        self.classattr = {}
-
-        if instances is None:
-            instances = InstanceCollection(depth, {self.table_name: [row_name]})
-
-            if not instances[row_name].new_instance:
-                instances.get_linked_instances(instances[row_name].instance.id)
-
-        self.instance = instances
-
-        self.get_table(instances)
-
-        self.classattr['form_data_type_0'] = HiddenField('form_data_type_0', default=self.form_type)
-        self.classattr['form_data_table_0'] = HiddenField('form_data_table_0', default=self.table_name)
-        self.classattr['form_data_row_name_0'] = HiddenField('form_data_row_name_0', default=row_name)
         self.classattr['row_counter'] = HiddenField('row_counter', default=len(instances.instances))
 
-        form_class = new_class('SingleForm', (Form,), {}, lambda ns: ns.update(self.classattr))
+        form_class = new_class(self.form_type, (Form,), {}, lambda ns: ns.update(self.classattr))
 
         self.form_class = form_class(None)
 
@@ -252,11 +207,11 @@ class FormGenerator(PageTemplate):
             self.classattr['table_name_' + str(table_id)] = HiddenField('table_name_' + str(table_id),
                                                                         default=table_name)
 
-            if table_level == 0 and self.form_type == 'single':
+            if table_level == 0 and self.form_type == 'SingleForm':
                 control_type = 'data-control'
                 temp_page_context = ['main-table'] + table_context
                 buttons = self.role_access_control.page_form_buttons(self.page_form_ids, temp_page_context, table_id)
-            elif self.form_type == 'single':
+            elif self.form_type == 'SingleForm':
                 control_type = 'table-control'
                 temp_page_context = ['child-table'] + table_context
                 buttons = self.role_access_control.page_form_buttons(self.page_form_ids, temp_page_context, table_id)
@@ -284,7 +239,6 @@ class FormGenerator(PageTemplate):
                                                                          default=table_name)
 
             for instance_name, instance in instances.table_instances[table_name].items():
-                self.classattr.update(self.row_fields(row_counter, instance_name, table_data.table_object))
                 self.get_row(instances, table_name, instance, control_type, row_counter)
 
                 row_counter += 1
@@ -295,24 +249,11 @@ class FormGenerator(PageTemplate):
 
             self.classattr['end_table_' + str(table_id)] = HiddenField('end_table_' + str(table_id),default=table_name)
 
-        self.classattr['form_data_max_level_0'] = HiddenField('form_data_max_level_0', default=level)
-
-    def row_fields(self, row_count, row_name, table_object):
-        table_id_field = HiddenField('record_data_table_id_'+str(row_count), default=table_object.id)
-        table_name_field = HiddenField('record_data_table_'+str(row_count), default=table_object.name)
-        row_field = HiddenField('record_data_row_name_'+str(row_count), default=row_name)
-        if row_name == 'new':
-            row_new = HiddenField('record_data_row_new_'+str(row_count), default=1)
-        else:
-            row_new = HiddenField('record_data_row_new_'+str(row_count), default=0)
-
-        return {'record_data_row_name_'+str(row_count): row_field,
-                'record_data_table_'+str(row_count): table_name_field,
-                'record_data_new_'+str(row_count): row_new,
-                'record_data_table_id_'+str(row_count): table_id_field}
+        self.classattr['max_level'] = HiddenField('max_level', default=level)
 
     def get_row(self, instances, table_name, instance, control_type, row_counter):
-        self.classattr['start_row_'+str(row_counter)] = HiddenField('start_row_'+str(row_counter))
+        self.classattr['start_row_'+str(row_counter)] = HiddenField('start_row_'+str(row_counter),
+                                                                    default=instance.instance.name)
 
         for field_name, field in instances.tables[table_name].fields.items():
             # field_start = time.time()
@@ -330,10 +271,14 @@ class FormGenerator(PageTemplate):
             if field.Field.display_name == 'name' and value is not None and 'empty_row' in value:
                 value = None
 
-            control_str = field.Field.display_name + "_" + str(row_counter)
-            control_id = 'data_entry_' + control_str
+            if instance.new_instance:
+                control_str = table_name + "-" + field.Field.display_name + "-" + instance.instance.name
+            else :
+                control_str = table_name + "-" + field.Field.display_name + "-" + str(instance.instance.id)
+
+            control_id = 'data_entry-' + control_str
             self.classattr[control_id] = self.input_field(field, field_display_name,
-                                                          getattr(instance.instance, 'name'),
+                                                          table_name, instance.instance.name,
                                                           control_id, control_type, control_str, value)
 
         self.classattr['end_row_'+str(row_counter)] = HiddenField('end_row_'+str(row_counter))

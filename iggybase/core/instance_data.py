@@ -1,17 +1,17 @@
-from iggybase import utilities as util
-
-
 class InstanceData():
-    def __init__(self, instance, instance_name, index=0, parent_id=None):
+    def __init__(self, instance, instance_name, table_object_record, index=0, parent_id=None):
         self.instance = instance
+        self.instance_class = instance.__class__
         self.parent_id = parent_id
         self.save = False
         self.table_name = instance.__tablename__
-        self.old_name = None
         self.instance_name = None
         self.new_instance = None
+        self.table_object_record = table_object_record
 
         self.set_name(instance_name, index)
+
+        self.old_name = self.instance.name
 
     def set_name(self, instance_name, index=0):
         if instance_name == 'empty_row':
@@ -23,13 +23,9 @@ class InstanceData():
         else:
             self.new_instance = False
 
-        self.old_name = self.instance.name
         self.instance_name = self.instance.name
 
-    def set_new_name(self, table_object=None):
-        if table_object is None:
-            table_object = util.get_table(self.table_name)
-
-        self.instance_name = table_object.get_new_name()
+    def set_new_name(self):
+        self.instance_name = self.table_object_record.get_new_name()
 
         return self.instance_name

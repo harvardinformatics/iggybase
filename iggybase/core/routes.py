@@ -216,13 +216,13 @@ def data_entry(facility_name, table_name, row_name, page_context):
         depth = request.args.get('depth', 0, int)
     else:
         depth = request.args.get('depth', 2, int)
-    fg = FormGenerator('data_entry', 'single', table_name, page_context, module_name)
-    fg.data_entry_form(row_name, None, depth)
+    fg = FormGenerator('data_entry', 'SingleForm', table_name, page_context, module_name)
+    fg.data_entry_form([row_name], None, depth)
     if request.method == 'POST' and fg.form_class.validate_csrf_data(request.form.get('csrf_token')):
         fp = FormParser(table_name)
         fp.parse()
 
-        fg.data_entry_form(row_name, fp.instance)
+        fg.data_entry_form([row_name], fp.instances)
         fg.form_class.validate_on_submit()
 
         # Token has been validated above, this removes the error since the form was regenerated with dynamically
@@ -284,14 +284,14 @@ def multiple_entry(facility_name, table_name, row_names, page_context):
     module_name = MODULE_NAME
     row_names = json.loads(row_names)
 
-    fg = FormGenerator('data_entry', 'multiple', table_name, page_context, module_name)
-    fg.multiple_data_entry_form(row_names)
+    fg = FormGenerator('data_entry', 'MultipleForm', table_name, page_context, module_name)
+    fg.data_entry_form(row_names)
 
     if request.method == 'POST' and fg.form_class.validate_csrf_data(request.form.get('csrf_token')):
         fp = FormParser(table_name)
         fp.parse()
 
-        fg.multiple_data_entry_form(row_names, fp.instance)
+        fg.data_entry_form(row_names, fp.instances)
         fg.form_class.validate_on_submit()
 
         # Token has been validated above, this removes the error since the form was regenerated with dynamically

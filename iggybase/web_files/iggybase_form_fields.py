@@ -17,11 +17,17 @@ class IggybaseLookUpField(StringField):
         else:
             self.iggybase_class = 'lookupfield form-control-lookup'
 
-        if kwargs['readonly']:
-            self.iggybase_class = temp_class
-
         self.readonly = kwargs['readonly']
         del kwargs['readonly']
+
+        if self.readonly:
+            self.iggybase_class = temp_class
+
+        self.table_object = kwargs['table_object']
+        del kwargs['table_object']
+
+        self.instance_name = kwargs['instance_name']
+        del kwargs['instance_name']
 
         super(IggybaseLookUpField, self).__init__(*args, **kwargs)
 
@@ -33,6 +39,9 @@ class IggybaseLookUpField(StringField):
             kwargs.setdefault('readonly', True)
         else:
             kwargs.setdefault('data-toggle', "modal")
+
+        kwargs['data-table-object'] = self.table_object
+        kwargs['data-instance-name'] = self.instance_name
 
         kwargs['class'] = self.iggybase_class
         return super(IggybaseLookUpField, self).__call__(*args, **kwargs)
@@ -55,6 +64,12 @@ class IggybaseSelectField(SelectField):
         self.readonly = kwargs['readonly']
         del kwargs['readonly']
 
+        self.table_object = kwargs['table_object']
+        del kwargs['table_object']
+
+        self.instance_name = kwargs['instance_name']
+        del kwargs['instance_name']
+
         super(IggybaseSelectField, self).__init__(*args, **kwargs)
 
     def __call__(self, *args, **kwargs):
@@ -66,6 +81,9 @@ class IggybaseSelectField(SelectField):
 
         if self.readonly:
             kwargs.setdefault('readonly', True)
+
+        kwargs['data-table-object'] = self.table_object
+        kwargs['data-instance-name'] = self.instance_name
 
         return super(IggybaseSelectField, self).__call__(*args, **kwargs)
 
@@ -87,6 +105,12 @@ class IggybaseBooleanField(BooleanField):
         self.readonly = kwargs['readonly']
         del kwargs['readonly']
 
+        self.table_object = kwargs['table_object']
+        del kwargs['table_object']
+
+        self.instance_name = kwargs['instance_name']
+        del kwargs['instance_name']
+
         super(IggybaseBooleanField, self).__init__(*args, **kwargs)
 
     def __call__(self, *args, **kwargs):
@@ -97,6 +121,9 @@ class IggybaseBooleanField(BooleanField):
 
         if self.readonly:
             kwargs.setdefault('readonly', True)
+
+        kwargs['data-table-object'] = self.table_object
+        kwargs['data-instance-name'] = self.instance_name
 
         return super(IggybaseBooleanField, self).__call__(*args, **kwargs)
 
@@ -116,14 +143,20 @@ class IggybaseDateField(DateField):
         else:
             self.iggybase_class = 'datepicker'
 
-        if 'readonly' in kwargs:
-            # remove datepicker for readonly
-            self.iggybase_class = temp_class
-
         self.iggybase_class += ' date-field'
 
         self.readonly = kwargs['readonly']
         del kwargs['readonly']
+
+        if self.readonly:
+            # remove datepicker for readonly
+            self.iggybase_class = temp_class
+
+        self.table_object = kwargs['table_object']
+        del kwargs['table_object']
+
+        self.instance_name = kwargs['instance_name']
+        del kwargs['instance_name']
 
         super(IggybaseDateField, self).__init__(*args, **kwargs)
 
@@ -135,6 +168,9 @@ class IggybaseDateField(DateField):
 
         if self.readonly:
             kwargs.setdefault('readonly', True)
+
+        kwargs['data-table-object'] = self.table_object
+        kwargs['data-instance-name'] = self.instance_name
 
         return super(IggybaseDateField, self).__call__(*args, **kwargs)
 
@@ -156,6 +192,12 @@ class IggybaseTextAreaField(TextAreaField):
         self.readonly = kwargs['readonly']
         del kwargs['readonly']
 
+        self.table_object = kwargs['table_object']
+        del kwargs['table_object']
+
+        self.instance_name = kwargs['instance_name']
+        del kwargs['instance_name']
+
         super(IggybaseTextAreaField, self).__init__(*args, **kwargs)
 
     def __call__(self, *args, **kwargs):
@@ -167,6 +209,9 @@ class IggybaseTextAreaField(TextAreaField):
 
         if self.readonly:
             kwargs.setdefault('readonly', True)
+
+        kwargs['data-table-object'] = self.table_object
+        kwargs['data-instance-name'] = self.instance_name
 
         return super(IggybaseTextAreaField, self).__call__(*args, **kwargs)
 
@@ -188,6 +233,12 @@ class IggybaseFloatField(FloatField):
         self.readonly = kwargs['readonly']
         del kwargs['readonly']
 
+        self.table_object = kwargs['table_object']
+        del kwargs['table_object']
+
+        self.instance_name = kwargs['instance_name']
+        del kwargs['instance_name']
+
         super(IggybaseFloatField, self).__init__(*args, **kwargs)
 
     def __call__(self, *args, **kwargs):
@@ -199,6 +250,9 @@ class IggybaseFloatField(FloatField):
 
         if self.readonly:
             kwargs.setdefault('readonly', True)
+
+        kwargs['data-table-object'] = self.table_object
+        kwargs['data-instance-name'] = self.instance_name
 
         return super(IggybaseFloatField, self).__call__(*args, **kwargs)
 
@@ -220,6 +274,12 @@ class IggybaseDecimalField(DecimalField):
         self.readonly = kwargs['readonly']
         del kwargs['readonly']
 
+        self.table_object = kwargs['table_object']
+        del kwargs['table_object']
+
+        self.instance_name = kwargs['instance_name']
+        del kwargs['instance_name']
+
         super(IggybaseDecimalField, self).__init__(*args, **kwargs)
 
     def __call__(self, *args, **kwargs):
@@ -231,6 +291,9 @@ class IggybaseDecimalField(DecimalField):
 
         if self.readonly:
             kwargs.setdefault('readonly', True)
+
+        kwargs['data-table-object'] = self.table_object
+        kwargs['data-instance-name'] = self.instance_name
 
         return super(IggybaseDecimalField, self).__call__(*args, **kwargs)
 
@@ -252,6 +315,12 @@ class IggybaseIntegerField(IntegerField):
         self.readonly = kwargs['readonly']
         del kwargs['readonly']
 
+        self.table_object = kwargs['table_object']
+        del kwargs['table_object']
+
+        self.instance_name = kwargs['instance_name']
+        del kwargs['instance_name']
+
         super(IggybaseIntegerField, self).__init__(*args, **kwargs)
 
     def __call__(self, *args, **kwargs):
@@ -263,6 +332,9 @@ class IggybaseIntegerField(IntegerField):
 
         if self.readonly:
             kwargs.setdefault('readonly', True)
+
+        kwargs['data-table-object'] = self.table_object
+        kwargs['data-instance-name'] = self.instance_name
 
         return super(IggybaseIntegerField, self).__call__(*args, **kwargs)
 
@@ -284,6 +356,12 @@ class IggybaseStringField(StringField):
         self.readonly = kwargs['readonly']
         del kwargs['readonly']
 
+        self.table_object = kwargs['table_object']
+        del kwargs['table_object']
+
+        self.instance_name = kwargs['instance_name']
+        del kwargs['instance_name']
+
         super(IggybaseStringField, self).__init__(*args, **kwargs)
 
     def __call__(self, *args, **kwargs):
@@ -295,6 +373,9 @@ class IggybaseStringField(StringField):
 
         if self.readonly:
             kwargs.setdefault('readonly', True)
+
+        kwargs['data-table-object'] = self.table_object
+        kwargs['data-instance-name'] = self.instance_name
 
         return super(IggybaseStringField, self).__call__(*args, **kwargs)
 
@@ -316,6 +397,12 @@ class IggybaseFileField(FileField):
         self.readonly = kwargs['readonly']
         del kwargs['readonly']
 
+        self.table_object = kwargs['table_object']
+        del kwargs['table_object']
+
+        self.instance_name = kwargs['instance_name']
+        del kwargs['instance_name']
+
         super(IggybaseFileField, self).__init__(*args, **kwargs)
 
     def __call__(self, *args, **kwargs):
@@ -329,6 +416,9 @@ class IggybaseFileField(FileField):
             kwargs.setdefault('readonly', True)
 
         kwargs.setdefault('multiple', True)
+
+        kwargs['data-table-object'] = self.table_object
+        kwargs['data-instance-name'] = self.instance_name
 
         return super(IggybaseFileField, self).__call__(*args, **kwargs)
 
@@ -350,6 +440,12 @@ class IggybasePasswordField(PasswordField):
         self.readonly = kwargs['readonly']
         del kwargs['readonly']
 
+        self.table_object = kwargs['table_object']
+        del kwargs['table_object']
+
+        self.instance_name = kwargs['instance_name']
+        del kwargs['instance_name']
+
         super(IggybasePasswordField, self).__init__(*args, **kwargs)
 
     def __call__(self, *args, **kwargs):
@@ -361,5 +457,8 @@ class IggybasePasswordField(PasswordField):
 
         if self.readonly:
             kwargs.setdefault('readonly', True)
+
+        kwargs['data-table-object'] = self.table_object
+        kwargs['data-instance-name'] = self.instance_name
 
         return super(IggybasePasswordField, self).__call__(*args, **kwargs)

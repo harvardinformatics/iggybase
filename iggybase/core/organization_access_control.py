@@ -7,7 +7,6 @@ from iggybase.admin import models
 from iggybase import utilities as util
 from sqlalchemy.orm import aliased, defer
 from sqlalchemy.dialects import mysql
-import iggybase.billing.functions as bill
 import json
 import logging
 import time
@@ -466,12 +465,12 @@ class OrganizationAccessControl:
 
         return table.query.filter_by(id=lt_id).first()
 
-    def save_data_instance(self, instances, background_instances=[]):
+    def save_data_instance(self, new_instances, update_instances, background_instances=[]):
         # actions = self.get_table_object_actions()
         # TODO: remove this and replace with actions
         # actions may want to be done after the commit which will require change
         # to insert_row, we can do that as needed
-        for instance in instances:
+        for instance in (new_instances + update_instances):
             if (instance.__tablename__ == 'test_smms' and
                 instance.status_id == 34):
                 params = '{["test_smms"], "parent":"line_item"}'
@@ -479,13 +478,13 @@ class OrganizationAccessControl:
                 if func:
                     func(instance)
 
-        self.session.add_all((instances + background_instances))
+        self.session.add_all((new_instances + update_instances + background_instances))
 
         flush_status, flush_err = self.flush()
 
         if flush_status:
             inst_data = {}
-            for instance in instances:
+            for instance in (new_instances + update_instances):
                 inst_data[instance.id] = {'id': instance.id, 'name': instance.name, 'table': instance.__tablename__}
 
             commit_status, commit_err = self.commit()

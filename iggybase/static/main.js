@@ -1,7 +1,7 @@
 var search_click = false;
 
 $( document ).ready( function () {
-    $('.datepicker').datepicker({format: 'yyyy-mm-dd'});
+    $('.datepicker').datepicker({format: 'yyyy-mm-dd', autoclose: true});
     /* add a hack to get mac firefox scrollbars to show, no way in pure css */
     //constantly update the scroll position:
     sc=setInterval($.fn.scrollDown,200);
@@ -145,8 +145,7 @@ $( document ).ready( function () {
         $.fn.addInputEvents()
     }
 
-    $.fn.modalAddSubmit = function ( ) {
-        var table_name = $("#record_data_table_0").val( );
+    $.fn.dataEntrySubmit = function ( ) {
         var form_data = new FormData();
         var hidden_fields = $("#hidden_fields");
         var facility = hidden_fields.find('input[name=facility]').val();
@@ -154,10 +153,9 @@ $( document ).ready( function () {
         $("#div-modal :input:not(:checkbox):not(:button)").each(
             function() {;
                 if ( typeof $( this ).attr( 'id' ) != 'undefined' ) {
+                    table_name = $( this ).attr( 'data-table-object' )
                     if ( typeof $( this ).val( ) != 'undefined' ) {
                         if ( $( this ).attr( 'type' ) == 'file' ) {
-                            form_data.append( $( this ).attr( 'id' ), $( this )[0].files[0] );
-                        } else if ( $( this ).attr( 'type' ) == 'checkbox' ) {
                             form_data.append( $( this ).attr( 'id' ), $( this )[0].files[0] );
                         } else {
                             form_data.append( $( this ).attr( 'id' ), $( this ).val( ) );

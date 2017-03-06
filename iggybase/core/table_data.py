@@ -25,7 +25,7 @@ class TableData():
         self.fields = None
 
     def set_display_name(self):
-        if self.table_name == 'history' or self.table_name == 'long_text':
+        if self.table_name == 'history':
             self.table_display_name = self.table_name
         elif self.table_object_role and self.table_object_role.display_name is not None:
             self.table_display_name = self.table_object_role.display_name

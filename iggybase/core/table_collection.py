@@ -35,9 +35,6 @@ class TableCollection():
         history = self.organization_access_control.get_table_object({'name': 'history'})
         self.initialize_table(history)
 
-        long_text = self.organization_access_control.get_table_object({'name': 'long_text'})
-        self.initialize_table(long_text)
-
         for table_name in table_names:
             access = self.role_access_control.has_access('TableObject',{'name': table_name})
             if access.TableObject.extends_table_object_id:
