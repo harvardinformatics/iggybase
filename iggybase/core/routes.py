@@ -469,7 +469,8 @@ def build_summary_ajax(table_name, criteria = {}):
         current = time.time()
         print(str(current - start))
         ret = jsonify({'data': json_rows})
-        if not criteria and not filters:
+        if (('clear_cache' in filters and len(filters) ==1) or
+        (not criteria and not filters)):
             print('caching')
             current_app.cache.set(key, ret, (24 * 60 * 60), [table_name])
     else:
