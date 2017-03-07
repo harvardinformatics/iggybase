@@ -15,12 +15,14 @@ class InstanceCollection:
 
         self.tables = TableCollection(instance_data.keys(), depth)
 
+        self.instance_counter = 1
         self.instances = OrderedDict()
         self.table_instances = OrderedDict()
+        self.instance_names = {}
         for table_name in self.tables.table_names:
             self.table_instances[table_name] = {}
+            self.instance_names[table_name] = {}
 
-        self.instance_names = []
         self.background_save_instances = {}
 
         for table_name, instance_names in instance_data.items():
@@ -49,7 +51,7 @@ class InstanceCollection:
         instances_names = []
         
         for row in instances:
-            instance = InstanceData(row, row.name, self.tables[table_name].table_object, len(self.instance_names))
+            instance = InstanceData(row, row.name, self.tables[table_name].table_object, self.instance_counter)
 
             self.initialize_values(instance)
 
@@ -58,7 +60,8 @@ class InstanceCollection:
 
             instances_names.append(instance.instance_name)
             
-            self.instance_names.append(instance.instance_name)
+            self.instance_names[table_name][instance.instance_name] = instance.instance_name
+            self.instance_counter += 1
             
         return instances_names
 
@@ -71,7 +74,6 @@ class InstanceCollection:
             tmp_instances_names = self.set_instances(table_name, instances)
 
             instances_names += tmp_instances_names
-            self.instance_names += tmp_instances_names
 
         return instances_names
 
@@ -193,12 +195,14 @@ class InstanceCollection:
         #              str(instance_value) + " type: " +
         #              str(type(instance_value)))
 
-        if (table_name != 'history' and field_name not in exclude_list and
+        if table_name == 'history' :
+            setattr(self.instances[instance_name].instance, field_name, field_value)
+        elif (field_name not in exclude_list and
                 ((instance_value is None and field_value is not None) or
-                 (instance_value is not None and field_value is None) or field_value != instance_value) and
+                 (instance_value is not None and field_value is None) or str(field_value) != str(instance_value)) and
                 ((not (field_name == 'name' and field_value is None and instance.new_instance) and
                   self.tables[table_name].level == 0) or (field_name != 'name'))):
-            instance.save = True
+            self.instances[instance_name].save = True
             new_key = self.add_new_instance('history')
 
             self.set_values(new_key,
@@ -210,46 +214,56 @@ class InstanceCollection:
                              'user_id': g.user.id,
                              'new_value': field_value})
 
-        if field_name not in exclude_list:
-            setattr(instance, field_name, field_value)
+            setattr(self.instances[instance_name].instance, field_name, field_value)
 
     def commit(self):
         inst_names = {}
         new_instances = []
         update_instances = []
 
-        for instance_name, instance_data in self.instances.items():
-            if instance_data.table_name == 'history' or not instance_data.save:
+        for instance_name in self.instances.keys():
+            if not self.instances[instance_name].save or self.instances[instance_name].table_name == 'history':
                 continue
 
-            if instance_data.new_instance:
-                instance_data.set_new_name()
-                self.background_save_instances[instance_data.table_name] = instance_data.instance_class
+            if self.instances[instance_name].instance.date_created is None:
+                self.instances[instance_name].instance.date_created = datetime.datetime.utcnow()
 
-            inst_names[instance_data.old_name] = instance_data.instance_name
+            self.instances[instance_name].instance.last_modified = datetime.datetime.utcnow()
 
-            if instance_data.instance.date_created is None:
-                instance_data.instance.date_created = datetime.datetime.utcnow()
+            if self.instances[instance_name].new_instance:
+                if self.instances[instance_name].instance.name is None or \
+                                self.instances[instance_name].instance.name == '' or \
+                                'new' in self.instances[instance_name].instance.name or \
+                                'empty_row' in self.instances[instance_name].instance.name:
+                    new_name = self.tables[self.instances[instance_name].table_name].table_object.get_new_name()
+                    self.instances[instance_name].set_name(new_name)
+                    self.background_save_instances[self.instances[instance_name].table_name] = \
+                        self.instances[instance_name].instance_class
+                else:
+                    self.instances[instance_name].set_name(self.instances[instance_name].name)
 
-            instance_data.instance.last_modified = datetime.datetime.utcnow()
-            if instance_data.new_instance:
-                new_instances.append(instance_data.instance)
+                new_instances.append(self.instances[instance_name].instance)
             else:
-                update_instances.append(instance_data.instance)
+                update_instances.append(self.instances[instance_name].instance)
 
-        for history_name, instance_data in self.table_instances['history'].items():
-            if instance_data.instance.instance_name in inst_names.keys():
-                instance_data.instance.instance_name = inst_names[instance_data.instance.instance_name]
+            self.instance_names[self.instances[instance_name].table_name][self.instances[instance_name].old_name] = \
+                self.instances[instance_name].instance_name
 
-            instance_data.set_new_name()
-            instance_data.instance.date_created = datetime.datetime.utcnow()
-            instance_data.instance.last_modified = datetime.datetime.utcnow()
+        for history_name in self.table_instances['history'].keys():
+            if self.instances[history_name].instance.instance_name in inst_names.keys():
+                self.instances[history_name].instance.instance_name = \
+                    inst_names[self.instances[history_name].instance.instance_name]
 
-            self.background_save_instances[history_name] = instance_data.instance
+            new_name = self.tables['history'].table_object.get_new_name()
+            self.instances[history_name].set_name(new_name)
+            self.instances[history_name].instance.date_created = datetime.datetime.utcnow()
+            self.instances[history_name].instance.last_modified = datetime.datetime.utcnow()
+
+            self.background_save_instances[history_name] = self.instances[history_name].instance
 
         self.background_save_instances['history'] = self.tables['history'].table_object
 
-        commit_status, commit_msg = self.oac.save_data_instance(new_instances, update_instances,
+        commit_status, commit_msg = self.oac.save_data_instance(update_instances, new_instances,
                                                                 list(self.background_save_instances.values()))
 
         if commit_status:

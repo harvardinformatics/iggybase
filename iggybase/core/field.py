@@ -156,14 +156,6 @@ class Field:
         else:
             self.is_foreign_key = False # maybe no role access
 
-    def set_dynamic_field(self, field_definition_id):
-        oac = g_helper.get_org_access_control()
-        dyn_data = oac.dynamic_field_data(self.Field.dynamic_field_definition_field_id, field_definition_id)
-
-        for field, value in dyn_data:
-            if hasattr(self.Field, field):
-                setattr(self.Field, field, value)
-
     def _get_type(self):
         return self.DataType.name.lower()
 

@@ -256,14 +256,6 @@ class FormGenerator(PageTemplate):
                                                                     default=instance.instance.name)
 
         for field_name, field in instances.tables[table_name].fields.items():
-            # field_start = time.time()
-            if field.is_dynamic_field:
-                field_definition_id = getattr(instance['instance'],
-                                              instances.tables[table_name].fields.
-                                              fields_by_id[field.Field.table_object_id,
-                                                           field.Field.dynamic_field_definition_field_id].display_name)
-                field.set_dynamic_field(field_definition_id)
-
             field_display_name = field.display_name.title()
 
             value = getattr(instance.instance, field.Field.display_name)

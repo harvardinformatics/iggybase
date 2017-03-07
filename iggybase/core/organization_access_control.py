@@ -157,16 +157,6 @@ class OrganizationAccessControl:
                 self.org_ids.append(child_org.id)
         return
 
-    def dynamic_field_data(self, dynamic_field_id, field_definition_id):
-        dynamic_field = self.session.query(models.Fields).filter_by(id=dynamic_field_id).all()
-
-        dynamic_table = util.get_table(dynamic_field.foreign_key_table_object_id, 'id')
-
-        return (self.session.query(dynamic_table).
-                options(defer('id','name','order','description','date_created','last_modified','active',
-                              'organization_id','display_name')).
-                filter_by(id=field_definition_id).first())
-
     def get_query_count(self, query):
         count_q = query.statement.with_only_columns([func.count()]).order_by(None)
         count = self.session.execute(count_q).scalar()
@@ -465,20 +455,19 @@ class OrganizationAccessControl:
 
         return table.query.filter_by(id=lt_id).first()
 
-    def save_data_instance(self, new_instances, update_instances, background_instances=[]):
+    def save_data_instance(self, update_instances, new_instances, background_instances=[]):
         # actions = self.get_table_object_actions()
         # TODO: remove this and replace with actions
         # actions may want to be done after the commit which will require change
         # to insert_row, we can do that as needed
-        for instance in (new_instances + update_instances):
-            if (instance.__tablename__ == 'test_smms' and
-                instance.status_id == 34):
-                params = '{["test_smms"], "parent":"line_item"}'
-                func = getattr(bill, 'insert_line_item', None)
-                if func:
-                    func(instance)
+        # for instance in (new_instances + update_instances):
+            # if (instance.__tablename__ == 'test_smms' and instance.status_id == 34):
+            #     params = '{["test_smms"], "parent":"line_item"}'
+                # func = getattr(bill, 'insert_line_item', None)
+                # if func:
+                #     func(instance)
 
-        self.session.add_all((new_instances + update_instances + background_instances))
+        self.session.add_all(new_instances + update_instances + background_instances)
 
         flush_status, flush_err = self.flush()
 

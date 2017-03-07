@@ -15,8 +15,6 @@ class FormParser():
         self.table_names = []
         self.instances = None
         self.files = {}
-        self.commit_status = True
-        self.commit_msg = None
 
     def parse(self, form_data = None):
         fields = {}
@@ -137,12 +135,11 @@ class FormParser():
                         else:
                             row_data['data_entry'][field] = False
                     elif meta_data.type == 'datetime':
-                        date = None
                         try:
                             date = parse(row_data['data_entry'][field])
+                            row_data['data_entry'][field] = date.strftime('%Y-%m-%d')
                         except:
                             logging.info('Failed to parse date:' + row_data['data_entry'][field])
-                        row_data['data_entry'][field] = date.timestamp()
                     elif meta_data.type == 'float':
                         row_data['data_entry'][field] = float(row_data['data_entry'][field])
                     elif meta_data.type == 'file':
@@ -154,7 +151,8 @@ class FormParser():
 
                         if request.files:
                             for filename, file in row_data['data_entry'][field].items():
-                                self.files[(instance_name, table_name_field)].append({'filename': filename, 'file': file})
+                                self.files[(instance_name, table_name_field)].append({'filename': filename,
+                                                                                      'file': file})
 
                                 if filename not in old_files:
                                     old_files.append(filename)
@@ -166,26 +164,28 @@ class FormParser():
                 self.instances.set_values(instance_name, row_data['data_entry'])
 
     def save(self):
-        if self.commit_status:
-            self.commit_status, self.commit_msg = self.instances.commit()
+        commit_status, commit_msg = self.instances.commit()
 
-            if self.commit_status is True:
-                for key in set(self.files) & set(self.instances.instance_names):
-                    for file_data in self.files[key]:
-                        directory = (os.path.join(current_app.config['UPLOAD_FOLDER'], key[1],
-                                                  self.instances.instance_names[key])).strip()
+        if commit_status is True:
+            for key in self.files:
+                if not self.instances.instance_names[key[1]][key[0]]:
+                    continue
 
-                        if not os.path.exists(directory):
-                            os.makedirs(directory)
+                for file_data in self.files[key]:
+                    directory = (os.path.join(current_app.config['UPLOAD_FOLDER'], key[1],
+                                              self.instances.instance_names[key[1]][key[0]])).strip()
 
-                        if os.path.exists(os.path.join(directory, file_data['filename'])):
-                            os.remove(os.path.join(directory, file_data['filename']))
+                    if not os.path.exists(directory):
+                        os.makedirs(directory)
 
-                        file_data['file'].save(os.path.join(directory, file_data['filename']))
+                    if os.path.exists(os.path.join(directory, file_data['filename'])):
+                        os.remove(os.path.join(directory, file_data['filename']))
 
-                current_app.cache.increment_version(list(self.table_names))
+                    file_data['file'].save(os.path.join(directory, file_data['filename']))
 
-        return self.commit_status, self.commit_msg
+            current_app.cache.increment_version(list(self.table_names))
+
+        return commit_status, commit_msg
 
     def undo(self):
         self.instances.rollback()
