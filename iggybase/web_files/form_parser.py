@@ -1,6 +1,7 @@
 import re
 import os
 import datetime
+from decimal import Decimal
 from dateutil.parser import parse
 from werkzeug.utils import secure_filename
 from iggybase.core.instance_collection import InstanceCollection
@@ -136,12 +137,17 @@ class FormParser():
                             row_data['data_entry'][field] = False
                     elif meta_data.type == 'datetime':
                         try:
-                            date = parse(row_data['data_entry'][field])
-                            row_data['data_entry'][field] = date.strftime('%Y-%m-%d')
+                            date = datetime.strptime(row_data['data_entry'][field], '%Y-%m-%d %H:%m:%S')
                         except:
-                            logging.info('Failed to parse date:' + row_data['data_entry'][field])
+                            try:
+                                date = datetime.strptime(row_data['data_entry'][field], '%Y-%m-%d')
+                            except:
+                                logging.info('Failed to parse date:' + row_data['data_entry'][field])
+                        row_data['data_entry'][field] = date.strftime('%Y-%m-%d %H:%m:%S')
                     elif meta_data.type == 'float':
                         row_data['data_entry'][field] = float(row_data['data_entry'][field])
+                    elif meta_data.type == 'decimal':
+                        row_data['data_entry'][field] = Decimal(row_data['data_entry'][field])
                     elif meta_data.type == 'file':
                         old_files = []
                         self.files[(instance_name, table_name_field)] = []

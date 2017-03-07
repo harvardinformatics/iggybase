@@ -1,5 +1,5 @@
 from wtforms import StringField, IntegerField, BooleanField, DateField, TextAreaField, FloatField, SelectField,\
-    FileField, PasswordField, DecimalField
+    FileField, PasswordField, DecimalField, DateTimeField
 
 
 class IggybaseLookUpField(StringField):
@@ -173,6 +173,54 @@ class IggybaseDateField(DateField):
         kwargs['data-instance-name'] = self.instance_name
 
         return super(IggybaseDateField, self).__call__(*args, **kwargs)
+
+
+class IggybaseDateTimeField(DateTimeField):
+    def __init__(self, *args, **kwargs):
+        if 'title' in kwargs:
+            self.title = kwargs['title']
+            del kwargs['title']
+        else:
+            self.title = None
+
+        if 'iggybase_class' in kwargs:
+            self.iggybase_class = 'datetimepicker ' + kwargs['iggybase_class']
+            temp_class = kwargs['iggybase_class']
+            del kwargs['iggybase_class']
+        else:
+            self.iggybase_class = 'datetimepicker'
+
+        self.iggybase_class += ' date-field'
+
+        self.readonly = kwargs['readonly']
+        del kwargs['readonly']
+
+        if self.readonly:
+            # remove datepicker for readonly
+            self.iggybase_class = temp_class
+
+        self.table_object = kwargs['table_object']
+        del kwargs['table_object']
+
+        self.instance_name = kwargs['instance_name']
+        del kwargs['instance_name']
+
+        super(IggybaseDateTimeField, self).__init__(*args, **kwargs)
+
+    def __call__(self, *args, **kwargs):
+        if self.title is not None:
+            kwargs['title'] = self.title
+
+        kwargs['class'] = self.iggybase_class
+
+        if self.readonly:
+            kwargs.setdefault('readonly', True)
+
+        kwargs['data-format'] = 'yyyy-MM-dd hh:mm:ss'
+        kwargs['data-table-object'] = self.table_object
+        kwargs['data-instance-name'] = self.instance_name
+
+        return super(IggybaseDateTimeField, self).__call__(*args, **kwargs)
 
 
 class IggybaseTextAreaField(TextAreaField):

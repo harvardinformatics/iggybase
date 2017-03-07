@@ -51,7 +51,7 @@ class InstanceCollection:
         instances_names = []
         
         for row in instances:
-            instance = InstanceData(row, row.name, self.tables[table_name].table_object, self.instance_counter)
+            instance = InstanceData(row, row.name, self.instance_counter)
 
             self.initialize_values(instance)
 
@@ -199,7 +199,7 @@ class InstanceCollection:
             setattr(self.instances[instance_name].instance, field_name, field_value)
         elif (field_name not in exclude_list and
                 ((instance_value is None and field_value is not None) or
-                 (instance_value is not None and field_value is None) or str(field_value) != str(instance_value)) and
+                 (instance_value is not None and field_value is None) or field_value != instance_value) and
                 ((not (field_name == 'name' and field_value is None and instance.new_instance) and
                   self.tables[table_name].level == 0) or (field_name != 'name'))):
             self.instances[instance_name].save = True
@@ -248,6 +248,7 @@ class InstanceCollection:
 
             self.instance_names[self.instances[instance_name].table_name][self.instances[instance_name].old_name] = \
                 self.instances[instance_name].instance_name
+            inst_names[self.instances[instance_name].old_name] = self.instances[instance_name].instance_name
 
         for history_name in self.table_instances['history'].keys():
             if self.instances[history_name].instance.instance_name in inst_names.keys():
@@ -268,7 +269,7 @@ class InstanceCollection:
 
         if commit_status:
             base_instance = next(iter(self.items()))[1]
-            if base_instance.instance.id not in commit_msg.keys() and base_instance.new_instance == False:
+            if base_instance.instance.id not in commit_msg.keys():
                 commit_msg[base_instance.instance.id] = {'id': base_instance.instance.id,
                                                          'name': base_instance.instance_name,
                                                          'table': base_instance.table_name,

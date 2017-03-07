@@ -22,6 +22,7 @@
                 <link href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.3/jquery-ui.min.css" rel="stylesheet">
 
                 <link href="{{ url_for('static', filename='main.css') }}" rel="stylesheet">
+                <link href="{{ url_for('static', filename='bootstrap-datetimepicker.min.css') }}" rel="stylesheet">
                 <link href="{{ url_for('static', filename='bootstrap_datepicker/css/bootstrap-datepicker.min.css') }}" rel="stylesheet">
                 {% if g.rac and g.rac.facility.css %}
                     <link href="{{ url_for('static', filename='css/' + g.rac.facility.css) }}" rel="stylesheet">
@@ -196,6 +197,7 @@
                     <script src="{{bootstrap_find_resource('js/bootstrap.js', cdn='bootstrap')}}"></script>
                     <script type="text/javascript" src="{{ url_for( 'static', filename='main.js' ) }}"></script>
                     <script type="text/javascript" src="{{ url_for( 'static', filename='ContextMenu.js' ) }}"></script>
+                    <script type="text/javascript" src="{{ url_for( 'static', filename='bootstrap-datetimepicker.min.js' ) }}"></script>
                     <script type="text/javascript" src="{{ url_for( 'static', filename='bootstrap_datepicker/js/bootstrap-datepicker.min.js' ) }}"></script>
                     {{ macros.render_scripts( scripts ) }}
                 {%- endblock scripts %}

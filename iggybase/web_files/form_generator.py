@@ -8,7 +8,7 @@ from iggybase.web_files import constants
 from iggybase.web_files.page_template import PageTemplate
 from iggybase.web_files.iggybase_form_fields import IggybaseBooleanField, IggybaseDateField, IggybaseFloatField,\
     IggybaseIntegerField, IggybaseLookUpField, IggybaseStringField, IggybaseTextAreaField, IggybaseSelectField,\
-    IggybaseFileField, IggybasePasswordField
+    IggybaseFileField, IggybasePasswordField, IggybaseDecimalField, IggybaseDateTimeField
 import logging
 
 
@@ -139,11 +139,15 @@ class FormGenerator(PageTemplate):
             return IggybaseIntegerField(display_name, **kwargs)
         elif field_data.Field.data_type_id == constants.FLOAT:
             return IggybaseFloatField(display_name, **kwargs)
+        elif field_data.Field.data_type_id == constants.DECIMAL:
+            return IggybaseDecimalField(display_name, **kwargs)
         elif field_data.Field.data_type_id == constants.BOOLEAN:
             self.classattr['bool_' + control_id]=HiddenField('bool_' + control_id, default=value)
             return IggybaseBooleanField(display_name, **kwargs)
         elif field_data.Field.data_type_id == constants.DATE:
             return IggybaseDateField(display_name, **kwargs)
+        elif field_data.Field.data_type_id == constants.DATETIME:
+            return IggybaseDateTimeField(display_name, **kwargs)
         elif field_data.Field.data_type_id == constants.PASSWORD:
             return IggybasePasswordField(display_name, **kwargs)
         elif field_data.Field.data_type_id == constants.FILE:
