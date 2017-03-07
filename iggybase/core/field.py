@@ -51,7 +51,6 @@ class Field:
         self.calculation_fields = self._get_calculation_fields(calculation)
         self.type = self._get_type()
         self.is_foreign_key = (self.Field.foreign_key_table_object_id is not None)
-        self.is_dynamic_field = (self.Field.dynamic_field_definition_field_id is not None)
         self.is_title_field = (self.TableObject.id == self.Field.table_object_id and self.Field.display_name == 'name')
         self.order = self.get_field_order()
 
