@@ -6,13 +6,14 @@ from .field_collection import FieldCollection
 
 # Retreives and formats data based on table_query
 class TableQuery:
-    def __init__ (self, id, order, display_name, table_name = None, criteria = {}):
+    def __init__ (self, id, order, display_name, table_name = None, criteria = {}, description = ''):
         self.id = id
         self.order = order
         self.display_name = (display_name or table_name).replace('_', ' ')
         self.table_name = table_name
         self.table_dict = OrderedDict() # results indexed by row id and table|field name
         self.criteria = criteria
+        self.description = description
         self.rac = g_helper.get_role_access_control()
         # fields will be decided with id or table_name
         self.fc = FieldCollection(id, table_name)

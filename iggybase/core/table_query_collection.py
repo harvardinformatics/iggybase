@@ -40,7 +40,8 @@ class TableQueryCollection:
                     query.TableQuery.order,
                     query.TableQuery.display_name,
                     None,
-                    criteria
+                    criteria,
+                    query.TableQueryRender.description
                 )
                 queries.append(query)
         elif self.table_name: # use table_name, show all fields, one table_query
