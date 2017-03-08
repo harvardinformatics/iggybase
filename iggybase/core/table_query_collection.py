@@ -9,6 +9,7 @@ class TableQueryCollection:
         self.table_name = table_name
         self.criteria = criteria
         self.rac = g_helper.get_role_access_control()
+        self.oac = g_helper.get_org_access_control()
         self.queries = self._get_queries()
 
     def get_results(self):
@@ -24,7 +25,6 @@ class TableQueryCollection:
         queries = []
         if table_queries_info: # if table_query defined, use id
             first_query = True
-            link_tbl_criteria = {}
             for query in table_queries_info: # page can have multiple
                 if first_query:
                     first_query = False
@@ -34,7 +34,16 @@ class TableQueryCollection:
                         # if there is criteria for row of first table
                         # then add that as id criteria for link tables
                         if c[0] == self.table_name and c[1] == 'name':
-                            criteria = {(query.TableQuery.display_name, (self.table_name + '_id')): val}
+                            link_table = self.table_name
+                            # if this is an extends table then we need to link
+                            # to parent
+                            to = self.oac.get_row('table_object', {'name':
+                                self.table_name})
+                            if to.extends_table_object_id:
+                                pto = self.oac.get_row('table_object', {'id':
+                                    to.extends_table_object_id})
+                                link_table = pto.name
+                            criteria = {(link_table, 'name'): val}
                 query = TableQuery(
                     query.TableQuery.id,
                     query.TableQuery.order,

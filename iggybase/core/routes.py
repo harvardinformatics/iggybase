@@ -68,6 +68,7 @@ def action_summary_ajax(facility_name, table_name, page_form='action_summary', c
 @login_required
 @templated()
 def detail(facility_name, table_name, row_name, page_context):
+    # pass criteria incase multiple queries
     criteria = {(table_name, 'name'): row_name}
     tqc = TableQueryCollection(table_name, criteria)
     tqc.get_results()
