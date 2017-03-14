@@ -4,7 +4,7 @@ from iggybase.core.instance_data import InstanceData
 from iggybase import utilities as util
 from iggybase import g_helper
 from collections import OrderedDict
-import datetime
+from datetime import datetime, date
 import logging
 
 
@@ -140,7 +140,10 @@ class InstanceCollection:
                         setattr(instance.instance, meta_data.Field.display_name, g.user.id)
                     elif meta_data.default == 'current_date':
                         setattr(instance.instance, meta_data.Field.display_name,
-                                datetime.date.today().strftime('%Y-%d-%m'))
+                                date.today().strftime('%Y-%d-%m'))
+                    elif meta_data.default == 'current_datetime':
+                        setattr(instance.instance, meta_data.Field.display_name,
+                                datetime.now().strftime('%Y-%d-%m  %H:%m:%S'))
                     else:
                         setattr(instance.instance, meta_data.Field.display_name, meta_data.default)
                 elif meta_data.Field.display_name == 'organization_id':
@@ -185,10 +188,28 @@ class InstanceCollection:
         instance = self.instances[instance_name].instance
         instance_value = getattr(instance, field_name)
 
-        if field.is_foreign_key:
+        if field.is_foreign_key and field_value is not None:
             field_value = self.set_foreign_key_field_id(table_name, field_name, field_value)
-        elif field.DataType.name.lower() == 'boolean' and field_value == True or field_value == 'True':
-            field_value = 1
+        elif field.type == 'boolean':
+            instance_value = bool(instance_value)
+        elif field.type == 'date':
+            logging.info(field_name)
+            if instance_value is not None:
+                logging.info("instance value: " + instance_value.strftime('%Y-%m-%d'))
+
+            if field_value is not None:
+                logging.info("field_value: " + field_value.strftime('%Y-%m-%d'))
+
+            logging.info(str(instance_value == field_value))
+        elif field.type == 'datetime':
+            logging.info(field_name)
+            if instance_value is not None:
+                logging.info("instance value: " + instance_value.strftime('%Y-%m-%d %H:%m:%S'))
+
+            if field_value is not None:
+                logging.info("field_value: " + field_value.strftime('%Y-%m-%d %H:%m:%S'))
+
+            logging.info(str(instance_value == field_value))
 
         # logging.info('field_name: ' + field_name + "   field_value: " + str(field_value) + " type: " +
         #              str(type(field_value)) + "   getattr: " +
@@ -226,9 +247,9 @@ class InstanceCollection:
                 continue
 
             if self.instances[instance_name].instance.date_created is None:
-                self.instances[instance_name].instance.date_created = datetime.datetime.utcnow()
+                self.instances[instance_name].instance.date_created = datetime.utcnow()
 
-            self.instances[instance_name].instance.last_modified = datetime.datetime.utcnow()
+            self.instances[instance_name].instance.last_modified = datetime.utcnow()
 
             if self.instances[instance_name].new_instance:
                 if self.instances[instance_name].instance.name is None or \
@@ -257,8 +278,8 @@ class InstanceCollection:
 
             new_name = self.tables['history'].table_object.get_new_name()
             self.instances[history_name].set_name(new_name)
-            self.instances[history_name].instance.date_created = datetime.datetime.utcnow()
-            self.instances[history_name].instance.last_modified = datetime.datetime.utcnow()
+            self.instances[history_name].instance.date_created = datetime.utcnow()
+            self.instances[history_name].instance.last_modified = datetime.utcnow()
 
             self.background_save_instances[history_name] = self.instances[history_name].instance
 

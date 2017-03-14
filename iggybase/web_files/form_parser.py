@@ -1,8 +1,7 @@
 import re
 import os
-import datetime
+from datetime import datetime
 from decimal import Decimal
-from dateutil.parser import parse
 from werkzeug.utils import secure_filename
 from iggybase.core.instance_collection import InstanceCollection
 from iggybase import utilities as util
@@ -113,41 +112,45 @@ class FormParser():
 
                     # handle empty and FK
                     if row_data['data_entry'][field] == '':
-                        row_data['data_entry'][field] = None
+                        self.instances.set_value(instance_name, field, None)
                     elif field_data.foreign_key_table_object_id is not None:
                         try:
-                            row_data['data_entry'][field] = int(row_data['id_data_entry'][field])
-                        except (ValueError, KeyError) as e:
+                            self.instances.set_value(instance_name, field, int(row_data['id_data_entry'][field]))
+                        except (ValueError, KeyError):
                             try:
                                 if row_data['data_entry'][field] is None or row_data['data_entry'][field] == '' \
                                         or int(row_data['data_entry'][field]) == -99:
-                                    row_data['data_entry'][field] = None
+                                    self.instances.set_value(instance_name, field, None)
                                 else:
-                                    row_data['data_entry'][field] = int(row_data['data_entry'][field])
-                            except (ValueError, KeyError) as e:
-                                row_data['data_entry'][field] = None
+                                    self.instances.set_value(instance_name, field, int(row_data['data_entry'][field]))
+                            except (ValueError, KeyError):
+                                self.instances.set_value(instance_name, field, None)
                     # handle datatypes
                     elif meta_data.type == 'integer':
-                        row_data['data_entry'][field] = int(row_data['data_entry'][field])
+                        self.instances.set_value(instance_name, field, int(row_data['data_entry'][field]))
                     elif meta_data.type == 'boolean':
-                        if row_data['data_entry'][field] == 'y' or row_data['data_entry'][field] == 'True' or \
-                                        row_data['data_entry'][field] == '1':
-                            row_data['data_entry'][field] = True
+                        if row_data['data_entry'][field] in ['yes', 'y', 'True', True, 1, '1']:
+                            self.instances.set_value(instance_name, field, True)
                         else:
-                            row_data['data_entry'][field] = False
+                            self.instances.set_value(instance_name, field, False)
                     elif meta_data.type == 'datetime':
                         try:
-                            date = datetime.strptime(row_data['data_entry'][field], '%Y-%m-%d %H:%m:%S')
-                        except:
-                            try:
-                                date = datetime.strptime(row_data['data_entry'][field], '%Y-%m-%d')
-                            except:
-                                logging.info('Failed to parse date:' + row_data['data_entry'][field])
-                        row_data['data_entry'][field] = date.strftime('%Y-%m-%d %H:%m:%S')
+                            datetime_val = datetime.strptime(row_data['data_entry'][field], '%Y-%m-%d %H:%M:%S')
+                            self.instances.set_value(instance_name, field, datetime_val)
+                        except ValueError as e:
+                            logging.info('Failed to parse datetime ' + field + ':' + row_data['data_entry'][field])
+                            logging.info(format(e))
+                    elif meta_data.type == 'date':
+                        try:
+                            date_val = datetime.strptime(row_data['data_entry'][field], '%Y-%m-%d')
+                            self.instances.set_value(instance_name, field, date_val.date())
+                        except ValueError as e:
+                            logging.info('Failed to parse date ' + field + ':' + row_data['data_entry'][field])
+                            logging.info(format(e))
                     elif meta_data.type == 'float':
-                        row_data['data_entry'][field] = float(row_data['data_entry'][field])
+                        self.instances.set_value(instance_name, field, float(row_data['data_entry'][field]))
                     elif meta_data.type == 'decimal':
-                        row_data['data_entry'][field] = Decimal(row_data['data_entry'][field])
+                        self.instances.set_value(instance_name, field, Decimal(row_data['data_entry'][field]))
                     elif meta_data.type == 'file':
                         old_files = []
                         self.files[(instance_name, table_name_field)] = []
@@ -165,9 +168,9 @@ class FormParser():
 
                         if len(old_files) > 0:
                             filenames = "|".join(old_files)
-                            row_data['data_entry'][field] = filenames
-
-                self.instances.set_values(instance_name, row_data['data_entry'])
+                            self.instances.set_value(instance_name, field, filenames)
+                    else:
+                        self.instances.set_value(instance_name, field, row_data['data_entry'][field])
 
     def save(self):
         commit_status, commit_msg = self.instances.commit()
