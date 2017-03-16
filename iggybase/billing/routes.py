@@ -67,10 +67,10 @@ def invoice_summary(facility_name, year, month):
     # options for dropdowns
     select_years = util.get_last_x_years(5)
     select_months = util.get_months_dict()
-    from_date, to_date = util.start_and_end_month(year, month)
 
+    ic = InvoiceCollection(year, month) # defaults to last complete
     criteria = {
-            ('invoice', 'invoice_month'): {'from': from_date, 'to': to_date},
+            ('invoice', 'invoice_month'): {'from': ic.from_date, 'to': ic.to_date},
     }
     tqc = TableQueryCollection('invoice', criteria)
     hidden_fields = {'year': year, 'month': month}
@@ -78,7 +78,8 @@ def invoice_summary(facility_name, year, month):
     return pt.page_template_context(
             select_years = select_years, select_months = select_months,
             year = year, month = month, from_date = from_date, table_name = 'invoice', table_query = tqc.queries[0],
-            hidden_fields = hidden_fields, facility_name = facility_name
+            hidden_fields = hidden_fields, facility_name = facility_name, ic =
+            ic
     )
 
 

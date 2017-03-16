@@ -7,4 +7,9 @@
         <h1>Invoice Summary: {{from_date.strftime('%b')}} {{year}}</h1>
         <a href="{{url_for('billing.invoice_pdf', facility_name = facility_name, year = year, month = month)}}" target="_blank">PDF of all invoices</a>
     </div>
-{%- endblock content_title %}
+    {%- endblock content_title %}
+
+{% block page_content %}
+    <h1>Total: {{ic.total}}</h1>
+    {{ super() }}
+{% endblock %}

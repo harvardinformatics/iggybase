@@ -45,6 +45,7 @@ class InvoiceCollection(LineItemCollection):
         self.invoices = self.get_invoices(self.from_date, self.to_date, self.org_list)
         self.set_invoices() # creates invoice rows in DB
         self.invoices.sort(key=lambda x: x.order) # sort by number
+        self.total = self.get_total()
 
     def get_invoices(self, from_date, to_date, org_list = []):
         invoices = []
@@ -91,6 +92,12 @@ class InvoiceCollection(LineItemCollection):
                 )
                 max_invoice_order = new_invoice_num
         return invoices
+
+    def get_total(self):
+        total = 0
+        for inv in self.invoices:
+            total += inv.total
+        return total
 
     def org_charge_tuple(self, x, row):
         # creates tuple from Org name, charge method
