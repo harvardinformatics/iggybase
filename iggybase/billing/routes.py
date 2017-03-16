@@ -77,7 +77,7 @@ def invoice_summary(facility_name, year, month):
     pt = PageTemplate(MODULE_NAME, 'invoice_summary')
     return pt.page_template_context(
             select_years = select_years, select_months = select_months,
-            year = year, month = month, from_date = from_date, table_name = 'invoice', table_query = tqc.queries[0],
+            year = year, month = month, from_date = ic.from_date, table_name = 'invoice', table_query = tqc.queries[0],
             hidden_fields = hidden_fields, facility_name = facility_name, ic =
             ic
     )

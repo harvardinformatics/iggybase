@@ -46,6 +46,7 @@ class InvoiceCollection(LineItemCollection):
         self.set_invoices() # creates invoice rows in DB
         self.invoices.sort(key=lambda x: x.order) # sort by number
         self.total = self.get_total()
+        self.display_total = util.format_money(self.total)
 
     def get_invoices(self, from_date, to_date, org_list = []):
         invoices = []

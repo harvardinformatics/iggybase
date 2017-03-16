@@ -161,3 +161,6 @@ def clean_billing_code(code):
     # replace prefix dash
     clean_code = re.sub(r'^\-+', '', clean_code)
     return clean_code
+
+def format_money(num):
+    return "${:.2f}".format(num)
