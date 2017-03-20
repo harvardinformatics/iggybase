@@ -28,8 +28,7 @@
     {%- endblock bottombuttonbar %}
     {% if table_queries.queries[1] %}
         {% for table_query in table_queries.queries[1:]: %}
-    <div class={{ table_query.display_name ~ "_table_div" }}>
-        <h1>{{table_query.display_name|title}}</h1>
+        <div class={{ table_query.display_name ~ "_table_div" }}>
         {{ macros.render_table( table_query ) }}
     </div>
         {% endfor %}

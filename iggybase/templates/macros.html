@@ -147,6 +147,7 @@
 
 {% macro render_table( table_query, page_form_name = None ) -%}
     {% if table_query.table_dict %}
+        <h1>{{table_query.display_name|title}}</h1>
         <table id="{{ table_query.display_name }}_summary_table" class="summary_table display">
             <thead><tr>
                 {% if page_form_name == 'action_summary' %}
