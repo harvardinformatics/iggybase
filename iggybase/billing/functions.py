@@ -7,9 +7,7 @@ def insert_line_item(test):
     hours = test.billable_hours
     analysis_id = test.analysis_id
     criteria = {
-            'sample': {
-                'id':test.sample_id,
-            }
+            ('sample', 'id'): test.sample_id,
     }
     first_row = True
     order_info = oac.get_row_multi_tbl(['sample', 'line_item', 'order'], criteria, [], first_row)
@@ -46,17 +44,11 @@ def find_price(analysis_id, quantity, unit_type):
     org_row = oac.get_row('organization', {'id': oac.current_org_id})
     org_type_id = getattr(org_row, 'organization_type_id')
     criteria = {
-            'price_item': {
-                'unit_id': unit.id
-            },
-            'price_item_assoc': {
-                'table_object_id':analysis_to.id,
-                'row_id': analysis_id
-            },
-            'price_list': {
-                'organization_type_id': org_type_id,
-                'minimum_quantity': {'compare': 'less than equal', 'value': quantity}
-            }
+            ('price_item', 'unit_id'): unit.id,
+            ('price_item_assoc', 'table_object_id'):analysis_to.id,
+            ('price_item_assoc', 'row_id'):analysis_id,
+            ('price_list', 'organization_type_id'): org_type_id,
+            ('price_list', 'minimum_quantity'):{'compare': 'less than equal', 'value': quantity}
     }
 
     order_by = oac.format_order_by({'minimum_quantity':{'desc':True}})
