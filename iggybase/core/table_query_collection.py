@@ -24,26 +24,12 @@ class TableQueryCollection:
             table_queries_info = self.rac.table_queries(route, self.table_name)
         queries = []
         if table_queries_info: # if table_query defined, use id
-            first_query = True
-            for query in table_queries_info: # page can have multiple
-                if first_query:
-                    first_query = False
-                    criteria = self.criteria
-                elif self.criteria:
-                    for c, val in self.criteria.items():
-                        # if there is criteria for row of first table
-                        # then add that as id criteria for link tables
-                        if c[0] == self.table_name and c[1] == 'name':
-                            link_table = self.table_name
-                            # if this is an extends table then we need to link
-                            # to parent
-                            to = self.oac.get_row('table_object', {'name':
-                                self.table_name})
-                            if to.extends_table_object_id:
-                                pto = self.oac.get_row('table_object', {'id':
-                                    to.extends_table_object_id})
-                                link_table = pto.name
-                            criteria = {(link_table, 'name'): val}
+            query_cnt = len(table_queries_info)
+            for i, query in enumerate(table_queries_info): # page can have multiple
+                criteria = self.criteria
+                if (i + 1) < query_cnt: # if there are more queries
+                    # set criteria for next query based on rows of this query
+                    self.criteria = self.row_criteria(query)
                 query = TableQuery(
                     query.TableQuery.id,
                     query.TableQuery.order,
@@ -71,6 +57,29 @@ class TableQueryCollection:
                     self.criteria)
             queries.append(query)
         return queries
+
+    def row_criteria(self, tq):
+        # link val will be the name of current table, following queries must
+        # include that column to work
+        link_table = tq.TableQuery.link_table
+        criteria = {}
+        # check criteria, link val might be passed in
+        for c, val in self.criteria.items():
+            if c[0] == link_table and c[1] == 'name':
+                criteria = {(link_table, 'name'): val}
+                break;
+        # if no link val was found then query for them
+        if not criteria:
+            tbls = [link_table]
+            for c, val in self.criteria.items():
+                tbls.append(c[0])
+            rows = self.oac.get_row_multi_tbl(tbls, self.criteria, [], False,
+                    False, [link_table])
+            names = []
+            for row in rows:
+                names.append(row.name)
+            criteria = {(link_table, 'name'): names}
+        return criteria
 
     def format_results(self, add_row_id = True, allow_links = True):
         for query in self.queries:

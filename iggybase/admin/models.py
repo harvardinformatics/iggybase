@@ -431,6 +431,7 @@ class Permission(Base):
 class TableQuery(Base):
     table_type = 'admin'
     display_name = Column(String(100))
+    link_table = Column(String(100))
 
     def __repr__(self):
         return "<%s(name=%s, description=%s, id=%d, organization_id=%d)>" % \

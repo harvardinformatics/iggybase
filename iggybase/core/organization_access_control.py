@@ -493,28 +493,32 @@ class OrganizationAccessControl:
         else:
             return None
 
-    def get_row_multi_tbl(self, table_names, params, order_by = [], first_row = False, org_filter = False):
+    def get_row_multi_tbl(self, table_names, params, order_by = [], first_row = False, org_filter = False, select_tbls = None):
         criteria = []
         joins = []
         selects = []
+        tbl_objs = {}
         for tbl in table_names:
             table_object = util.get_table(tbl)
+            tbl_objs[tbl] = table_object
             if selects: # join tables after first
                 joins.append(table_object)
-            selects.append(table_object)
-            if tbl in params:
-                print(tbl)
-                for key, val in params[tbl].items():
-                    col = getattr(table_object, key)
-                    if isinstance(val, dict):
-                        print(val)
-                        include_nulls, crit_where = self.criteria_dict(col, val)
-                        criteria.extend(crit_where)
-                    else:
-                        print(val)
-                        criteria.append(col == val)
+            # always select first query, if select_tbls is set then only select
+            # tables in the list
+            if not selects or not select_tbls or tbl in select_tbls:
+                selects.append(table_object)
             if org_filter:
                 criteria.append(getattr(table_object, 'organization_id') == self.current_org_id)
+        for key, val in params.items():
+            if key[0] in tbl_objs:
+                col = getattr(tbl_objs[key[0]], key[1])
+                if isinstance(val, dict):
+                    include_nulls, crit_where = self.criteria_dict(col, val)
+                    criteria.extend(crit_where)
+                elif isinstance(val, list):
+                    criteria.append(col.in_(val))
+                else:
+                    criteria.append(col == val)
         if first_row:
             result = self.session.query(*selects).join(*joins).filter(*criteria).order_by(*order_by).first()
         else:
