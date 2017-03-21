@@ -99,18 +99,6 @@ class TableQuery:
                 elif name in calc_fields:
                         col = self.fc.fields[name].calculate(col, row,
                                 keys)
-                elif name in link_fields and col:
-                    col_str = str(col)
-                    if ',' in col_str:
-                        col_arr = col_str.split(',')
-                        link_arr = []
-                        for item in col_arr:
-                            link_arr.append('<a href="' + link_fields[name] + item + '">' +
-                                item + '</a>')
-                        col = ', '.join(link_arr)
-                    else:
-                        col = ('<a href="' + link_fields[name] + col_str + '">' +
-                                col_str + '</a>')
                 elif col != None and self.fc.fields[name].type == 'file':
                     filelist = col.split('|')
                     file_links = []
@@ -128,11 +116,11 @@ class TableQuery:
                         link = self.fc.fields[name].get_file_link(url_root, row_name, file)
                         file_links.append('<a href="' + link + '" target="_blank">' + file + '</a>')
                     col = '|'.join(file_links)
-                elif (col != None
+                '''elif (col != None
                         and (self.fc.fields[name].type == 'decimal'
                             or self.fc.fields[name].type == 'float')
                 ):
-                    col = int(col)
+                    col = int(col)'''
                 '''elif col != None and self.fc.fields[name].type == 'datetime':
                     col = int(col).strftime("%Y-%m-%d")'''
                 row_dict[name] = col
