@@ -12,9 +12,9 @@ class TableQueryCollection:
         self.oac = g_helper.get_org_access_control()
         self.queries = self._get_queries()
 
-    def get_results(self):
+    def get_results(self, allow_links = True):
         for query in self.queries:
-            query.get_results()
+            query.get_results(allow_links)
 
     def _get_queries(self):
         filters = util.get_filters()
@@ -36,7 +36,8 @@ class TableQueryCollection:
                     query.TableQuery.display_name,
                     None,
                     criteria,
-                    query.TableQueryRender.description
+                    query.TableQueryRender.description,
+
                 )
                 queries.append(query)
         elif self.table_name: # use table_name, show all fields, one table_query

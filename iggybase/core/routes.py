@@ -97,8 +97,8 @@ def summary_download(facility_name, table_name):
     add_row_id = False
     allow_links = False
     tqc = TableQueryCollection(table_name)
-    tqc.get_results()
-    tqc.format_results(add_row_id, allow_links)
+    tqc.get_results(allow_links)
+    tqc.format_results(add_row_id)
     tq = tqc.get_first()
     csv = excel.make_response_from_array(tq.get_list_of_list(), 'csv')
     return csv
@@ -449,6 +449,7 @@ def build_summary_ajax(table_name, criteria = {}):
     # both should clear the cache
     # TODO: add filters and criteria to cache
     print(filters)
+    ret = None
     if (not criteria and not filters):
         print('checking cache')
         ret = current_app.cache.get(key)

@@ -1,4 +1,5 @@
 import os, logging, sys
+import time
 from collections import OrderedDict
 from flask import Flask, g, send_from_directory, abort, url_for, request
 from wtforms import StringField, SelectField
@@ -120,6 +121,7 @@ def configure_blueprints(app):
 def configure_hook( app ):
     @app.before_request
     def before_request():
+        start = time.time()
         g.user = current_user
         g.facility = ""
 
@@ -150,6 +152,8 @@ def configure_hook( app ):
             print(route_access)
             if not route_access:
                 abort(404)
+        current = time.time()
+        print('before_request:' + str(current - start))
 
 def configure_error_handlers( app ):
     from iggybase import base_routes

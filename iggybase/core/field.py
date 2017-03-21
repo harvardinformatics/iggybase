@@ -1,5 +1,5 @@
 from iggybase import g_helper
-from flask import g, session
+from flask import g, session, request
 from .calculation import get_calculation
 import datetime, re
 import logging
@@ -195,12 +195,12 @@ class Field:
                 )
             )
 
-    def get_link(self, url_root, page = None, table = None):
-        link = url_root + g.facility + '/' + 'core'
-        if page:
-            link += '/' + page
-        if table:
-            link += '/' + table + '/'
+    def get_link(self, page):
+        link = request.url_root + g.facility + '/' + 'core' + '/' + page
+        if self.is_foreign_key:
+            link += '/' + self.FK_TableObject.name + '/'
+        else:
+            link += '/' + self.TableObject.name + '/'
         return link
 
     def get_file_link(self, url_root, row_name, file):

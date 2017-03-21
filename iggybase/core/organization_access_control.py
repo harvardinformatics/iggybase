@@ -244,7 +244,7 @@ class OrganizationAccessControl:
                 results.append((row.id, row.name))
         return results
 
-    def get_table_query_data(self, fc, criteria={}, active = 1):
+    def get_table_query_data(self, fc, criteria={}, allow_links = True, active = 1):
         # TODO: consider factoring out part of this or something to make this
         # easier to digest
         results = []
@@ -259,6 +259,32 @@ class OrganizationAccessControl:
         group_by = []
         order_by = {}
         first_table_named = None  # set to first table name, dont add to joins
+        '''link_fields = {}
+        col_str = str(col)
+        if ',' in col_str:
+            col_arr = col_str.split(',')
+            link_arr = []
+            for item in col_arr:
+                link_arr.append('<a href="' + link_fields[name] + item + '">' +
+                    item + '</a>')
+            col = ', '.join(link_arr)
+        else:
+            col = ('<a href="' + link_fields[name] + col_str + '">' +
+                    col_str + '</a>')
+
+        calc_fields = []
+        invisible_fields = []
+        url_root = request.url_root
+        for field in self.fc.fields.values():
+            if field.link_visible() and allow_links:
+                if field.is_foreign_key:
+                    link_fields[field.name] = field.get_link(url_root, 'detail', field.FK_TableObject.name)
+                else:
+                    link_fields[field.name] = field.get_link(url_root, 'detail', field.TableObject.name)
+            if field.is_calculation():
+                calc_fields.append(field.name)
+            if not field.visible:
+                invisible_fields.append(field.name)'''
         for key, field in fc.fields.items():
             join_type = None # set to outer or inner
             # Get the table to display, fk table for fks
@@ -271,7 +297,10 @@ class OrganizationAccessControl:
             else:
                 table_model = util.get_table(table_name)
                 table_models[table_name] = table_model
-
+            # set any link details
+            link = None
+            if field.link_visible() and allow_links:
+                link = field.get_link('detail')
             # handle fks
             if field.is_foreign_key:
                 if field.TableObject.name in table_models:
@@ -314,9 +343,10 @@ class OrganizationAccessControl:
                         if table_model not in tables:
                             tables.append(table_model)
                         join_type = 'inner'
-
             if field.group_by == 1:
                 group_by.append(col)
+            if link:
+                col = ('<a href="' + link + col + '">' + col + '</a>')
             if field.group_func:
                 col = func.ifnull((getattr(func, field.group_func)(col.op('SEPARATOR')(', '))), '')
             columns.append(col.label(field.name))

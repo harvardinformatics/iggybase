@@ -18,7 +18,7 @@ class TableQuery:
         # fields will be decided with id or table_name
         self.fc = FieldCollection(id, table_name)
 
-    def get_results(self):
+    def get_results(self, allow_links):
         """ calls several class functions and returns results
         """
         self.fc.set_fk_fields()
@@ -27,7 +27,8 @@ class TableQuery:
         self.oac = g_helper.get_org_access_control()
         self.results = self.oac.get_table_query_data(
                 self.fc,
-                self.criteria
+                self.criteria,
+                allow_links
         )
         return self.results
 
@@ -73,11 +74,11 @@ class TableQuery:
         invisible_fields = []
         url_root = request.url_root
         for field in self.fc.fields.values():
-            if field.link_visible() and allow_links:
+            '''if field.link_visible() and allow_links:
                 if field.is_foreign_key:
                     link_fields[field.name] = field.get_link(url_root, 'detail', field.FK_TableObject.name)
                 else:
-                    link_fields[field.name] = field.get_link(url_root, 'detail', field.TableObject.name)
+                    link_fields[field.name] = field.get_link(url_root, 'detail', field.TableObject.name)'''
             if field.is_calculation():
                 calc_fields.append(field.name)
             if not field.visible:
@@ -132,8 +133,8 @@ class TableQuery:
                             or self.fc.fields[name].type == 'float')
                 ):
                     col = int(col)
-                elif col != None and self.fc.fields[name].type == 'datetime':
-                    col = col.strftime("%Y-%m-%d")
+                '''elif col != None and self.fc.fields[name].type == 'datetime':
+                    col = int(col).strftime("%Y-%m-%d")'''
                 row_dict[name] = col
             if row_dict:
                 # store values as a dict of dict so we can access any of the
