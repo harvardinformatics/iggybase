@@ -74,11 +74,6 @@ class TableQuery:
         invisible_fields = []
         url_root = request.url_root
         for field in self.fc.fields.values():
-            '''if field.link_visible() and allow_links:
-                if field.is_foreign_key:
-                    link_fields[field.name] = field.get_link(url_root, 'detail', field.FK_TableObject.name)
-                else:
-                    link_fields[field.name] = field.get_link(url_root, 'detail', field.TableObject.name)'''
             if field.is_calculation():
                 calc_fields.append(field.name)
             if not field.visible:
@@ -86,44 +81,44 @@ class TableQuery:
         # create dictionary for each row
         for i, row in enumerate(self.results):
             row_dict = OrderedDict()
-            for i, col in enumerate(row):
-                name = keys[i]
+            if row:
+                dt_row_id = row[len(row)-1]
+            else:
+                dt_row_id = None
+            if invisible_fields or calc_fields:
+                print('in loop')
+                for i, col in enumerate(row):
+                    name = keys[i]
 
-                # set column value
-                if name == 'DT_RowId':
-                    dt_row_id = col
-                    if not add_row_id:
+                    '''if name == 'DT_RowId':
+                        dt_row_id = col
+                        if not add_row_id:
+                            continue'''
+                    if name in invisible_fields:
                         continue
-                elif name in invisible_fields:
-                    continue
-                elif name in calc_fields:
-                        col = self.fc.fields[name].calculate(col, row,
-                                keys)
-                elif col != None and self.fc.fields[name].type == 'file':
-                    filelist = col.split('|')
-                    file_links = []
-                    row_name = None
-                    for file in filelist:
-                        if not row_name:
-                            # row_name is being selected like:
-                            # rowname/one,two,three
-                            # it will only show up in the split of the first
-                            # file but should be used for all
-                            file_split = file.split('/')
-                            if len(file_split) > 1:
-                                row_name = file_split[0]
-                                file = ('/').join(file_split[1:])
-                        link = self.fc.fields[name].get_file_link(url_root, row_name, file)
-                        file_links.append('<a href="' + link + '" target="_blank">' + file + '</a>')
-                    col = '|'.join(file_links)
-                '''elif (col != None
-                        and (self.fc.fields[name].type == 'decimal'
-                            or self.fc.fields[name].type == 'float')
-                ):
-                    col = int(col)'''
-                '''elif col != None and self.fc.fields[name].type == 'datetime':
-                    col = int(col).strftime("%Y-%m-%d")'''
-                row_dict[name] = col
+                    elif name in calc_fields:
+                            col = self.fc.fields[name].calculate(col, row,
+                                    keys)
+                    elif col != None and self.fc.fields[name].type == 'file':
+                        filelist = col.split('|')
+                        file_links = []
+                        row_name = None
+                        for file in filelist:
+                            if not row_name:
+                                # row_name is being selected like:
+                                # rowname/one,two,three
+                                # it will only show up in the split of the first
+                                # file but should be used for all
+                                file_split = file.split('/')
+                                if len(file_split) > 1:
+                                    row_name = file_split[0]
+                                    file = ('/').join(file_split[1:])
+                            link = self.fc.fields[name].get_file_link(url_root, row_name, file)
+                            file_links.append('<a href="' + link + '" target="_blank">' + file + '</a>')
+                        col = '|'.join(file_links)
+                    row_dict[name] = col
+            else:
+                row_dict = row
             if row_dict:
                 # store values as a dict of dict so we can access any of the
                 # data by row_id and field display_name

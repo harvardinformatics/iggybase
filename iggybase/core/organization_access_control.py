@@ -259,32 +259,23 @@ class OrganizationAccessControl:
         group_by = []
         order_by = {}
         first_table_named = None  # set to first table name, dont add to joins
-        '''link_fields = {}
-        col_str = str(col)
-        if ',' in col_str:
-            col_arr = col_str.split(',')
-            link_arr = []
-            for item in col_arr:
-                link_arr.append('<a href="' + link_fields[name] + item + '">' +
-                    item + '</a>')
-            col = ', '.join(link_arr)
-        else:
-            col = ('<a href="' + link_fields[name] + col_str + '">' +
-                    col_str + '</a>')
-
-        calc_fields = []
-        invisible_fields = []
-        url_root = request.url_root
-        for field in self.fc.fields.values():
-            if field.link_visible() and allow_links:
-                if field.is_foreign_key:
-                    link_fields[field.name] = field.get_link(url_root, 'detail', field.FK_TableObject.name)
-                else:
-                    link_fields[field.name] = field.get_link(url_root, 'detail', field.TableObject.name)
-            if field.is_calculation():
-                calc_fields.append(field.name)
-            if not field.visible:
-                invisible_fields.append(field.name)'''
+        '''elif col != None and self.fc.fields[name].type == 'file':
+                    filelist = col.split('|')
+                    file_links = []
+                    row_name = None
+                    for file in filelist:
+                        if not row_name:
+                            # row_name is being selected like:
+                            # rowname/one,two,three
+                            # it will only show up in the split of the first
+                            # file but should be used for all
+                            file_split = file.split('/')
+                            if len(file_split) > 1:
+                                row_name = file_split[0]
+                                file = ('/').join(file_split[1:])
+                        link = self.fc.fields[name].get_file_link(url_root, row_name, file)
+                        file_links.append('<a href="' + link + '" target="_blank">' + file + '</a>')
+                    col = '|'.join(file_links)'''
         for key, field in fc.fields.items():
             join_type = None # set to outer or inner
             # Get the table to display, fk table for fks
