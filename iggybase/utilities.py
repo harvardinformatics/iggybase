@@ -4,10 +4,11 @@ from importlib import import_module
 from dateutil.relativedelta import relativedelta
 from iggybase.admin.models import TableObject
 from iggybase.database import db_session
-import datetime
+import datetime, decimal
 import re
 import logging
 import urllib
+import json
 
 FACILITY = 0
 MODULE = 1
@@ -164,3 +165,13 @@ def clean_billing_code(code):
 
 def format_money(num):
     return "${:.2f}".format(num)
+
+class CustomEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, datetime.datetime):
+            return obj.strftime('%d-%m-%Y %H:%M:%SZ')
+        elif isinstance(obj, datetime.date):
+            return obj.strftime('%d-%m-%Y')
+        elif isinstance(obj, decimal.Decimal):
+            return str(obj)
+        return json.JSONEncoder.default(self, obj)

@@ -470,7 +470,7 @@ def build_summary_ajax(table_name, criteria = {}):
         json_rows = table_query.get_row_list()
         current = time.time()
         print(str(current - start))
-        ret = jsonify({'data': json_rows})
+        ret = json.dumps({'data': json_rows}, cls=util.CustomEncoder)
         if (('clear_cache' in filters and len(filters) ==1) or
         (not criteria and not filters)):
             print('caching')
