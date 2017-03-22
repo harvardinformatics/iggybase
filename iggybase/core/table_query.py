@@ -1,4 +1,5 @@
 from flask import request, g
+import time
 from collections import OrderedDict
 from iggybase import utilities as util
 from iggybase import g_helper
@@ -21,10 +22,13 @@ class TableQuery:
     def get_results(self, allow_links):
         """ calls several class functions and returns results
         """
+        start = time.time()
         self.fc.set_fk_fields()
         results = []
         self.criteria = self.add_table_query_criteria(self.criteria)
         self.oac = g_helper.get_org_access_control()
+        current = time.time()
+        print('before table query data: ' + str(current - start))
         self.results = self.oac.get_table_query_data(
                 self.fc,
                 self.criteria,
@@ -71,6 +75,7 @@ class TableQuery:
         # keep track of special fields
         link_fields = {}
         calc_fields = []
+        file_fields = []
         invisible_fields = []
         url_root = request.url_root
         for field in self.fc.fields.values():
@@ -78,28 +83,24 @@ class TableQuery:
                 calc_fields.append(field.name)
             if not field.visible:
                 invisible_fields.append(field.name)
+            if field.type == 'file':
+                file_fields.append(field.name)
         # create dictionary for each row
-        for i, row in enumerate(self.results):
-            row_dict = OrderedDict()
-            if row:
-                dt_row_id = row[len(row)-1]
-            else:
-                dt_row_id = None
-            if invisible_fields or calc_fields:
-                print('in loop')
+        if invisible_fields or calc_fields or file_fields:
+            for i, row in enumerate(self.results):
+                row_dict = OrderedDict()
+                if row:
+                    dt_row_id = row[len(row)-1]
+                else:
+                    dt_row_id = None
                 for i, col in enumerate(row):
                     name = keys[i]
-
-                    '''if name == 'DT_RowId':
-                        dt_row_id = col
-                        if not add_row_id:
-                            continue'''
                     if name in invisible_fields:
                         continue
                     elif name in calc_fields:
                             col = self.fc.fields[name].calculate(col, row,
                                     keys)
-                    elif col != None and self.fc.fields[name].type == 'file':
+                    elif name in file_fields and col != None:
                         filelist = col.split('|')
                         file_links = []
                         row_name = None
@@ -117,12 +118,12 @@ class TableQuery:
                             file_links.append('<a href="' + link + '" target="_blank">' + file + '</a>')
                         col = '|'.join(file_links)
                     row_dict[name] = col
+                if row_dict:
+                    # store values as a dict of dict so we can access any of the
+                    # data by row_id and field display_name
+                    self.table_dict[dt_row_id] = row_dict
             else:
-                row_dict = row
-            if row_dict:
-                # store values as a dict of dict so we can access any of the
-                # data by row_id and field display_name
-                self.table_dict[dt_row_id] = row_dict
+                return list(self.results)
 
     def get_list_of_list(self): # for download
         table_list = []

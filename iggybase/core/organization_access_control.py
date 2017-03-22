@@ -15,16 +15,19 @@ import time
 # all data db access should run through this class
 class OrganizationAccessControl:
     def __init__(self):
+        start = time.time()
         self.current_org_id = None
         self.session = self.get_session()
         self.org_ids = self.get_default_org_ids()
-
         if (g.user is not None and not g.user.is_anonymous):
             self.set_user(g.user.id)
         else:
             self.user = None
+        current = time.time()
+        print('set user: ' + str(current - start))
 
     def set_user(self, user_id):
+        start = time.time()
         self.user =  self.session.query(models.User).filter_by(id=user_id).first()
         # must distinguish user level orgs from group level org ids
         query = self.session.query(models.Organization.parent_id.distinct().label('parent_id'))
@@ -32,7 +35,9 @@ class OrganizationAccessControl:
         facility_root_org_id = session['root_org_id']
 
         user_orgs = self.session.query(models.UserOrganization).filter_by(active=1, user_id=self.user.id).all()
-
+        print(test)
+        current = time.time()
+        print('queries: ' + str(current - start))
         facility_orgs = {}
         for user_org in user_orgs:
             if user_org.user_organization_id is not None:
@@ -40,7 +45,12 @@ class OrganizationAccessControl:
                 if level is not None:
                     facility_orgs[user_org.user_organization_id] = level
 
+        current = time.time()
+        print('fac org: ' + str(current - start))
         filters = util.get_filters()
+
+        current = time.time()
+        print('filters: ' + str(current - start))
         if 'set_orgs' not in filters and 'org_id' in session and session['org_id']:
             self.current_org_id = session['org_id']['current_org_id']
             self.org_ids.extend(session['org_id']['org_ids'])
@@ -59,6 +69,8 @@ class OrganizationAccessControl:
                     self.current_org_id = user_org
                 self.get_child_organization(user_org)
             session['org_id'] = {'current_org_id': self.current_org_id, 'org_ids': self.org_ids}
+        current = time.time()
+        print('rest: ' + str(current - start))
         return (self.org_ids != [])
 
     def __del__ (self):
@@ -245,6 +257,7 @@ class OrganizationAccessControl:
         return results
 
     def get_table_query_data(self, fc, criteria={}, allow_links = True, active = 1):
+        start = time.time()
         # TODO: consider factoring out part of this or something to make this
         # easier to digest
         results = []
@@ -259,23 +272,6 @@ class OrganizationAccessControl:
         group_by = []
         order_by = {}
         first_table_named = None  # set to first table name, dont add to joins
-        '''elif col != None and self.fc.fields[name].type == 'file':
-                    filelist = col.split('|')
-                    file_links = []
-                    row_name = None
-                    for file in filelist:
-                        if not row_name:
-                            # row_name is being selected like:
-                            # rowname/one,two,three
-                            # it will only show up in the split of the first
-                            # file but should be used for all
-                            file_split = file.split('/')
-                            if len(file_split) > 1:
-                                row_name = file_split[0]
-                                file = ('/').join(file_split[1:])
-                        link = self.fc.fields[name].get_file_link(url_root, row_name, file)
-                        file_links.append('<a href="' + link + '" target="_blank">' + file + '</a>')
-                    col = '|'.join(file_links)'''
         for key, field in fc.fields.items():
             join_type = None # set to outer or inner
             # Get the table to display, fk table for fks
@@ -395,7 +391,8 @@ class OrganizationAccessControl:
         # format order_by
         order_by_list = self.format_order_by(order_by)
         columns.append(id_col.label('DT_RowId'))
-        start = time.time()
+        current = time.time()
+        print('before query: ' + str(current - start))
 
         stmt = self.session.query(*columns). \
                 join(*joins). \
@@ -409,7 +406,8 @@ class OrganizationAccessControl:
 
         results = (stmt.all())
 
-        print('query: ' + str(time.time() - start))
+        current = time.time()
+        print('query: ' + str(current - start))
         return results
 
     def criteria_dict(self, col, criteria):

@@ -436,6 +436,8 @@ def build_summary_ajax(table_name, criteria = {}):
     route = util.get_path(util.ROUTE)
     # TODO: we don't want oac instantiated multiple times
     oac = g_helper.get_org_access_control()
+    current = time.time()
+    print('oac: ' + str(current - start))
     ret = None
     filters = util.get_filters()
     key = current_app.cache.make_key(
@@ -449,25 +451,25 @@ def build_summary_ajax(table_name, criteria = {}):
     # both should clear the cache
     # TODO: add filters and criteria to cache
     print(filters)
-    ret = None
     if (not criteria and not filters):
         print('checking cache')
         ret = current_app.cache.get(key)
+    ret = None
     if not ret:
         print('cache miss')
         tqc = TableQueryCollection(table_name, criteria)
         current = time.time()
-        print(str(current - start))
+        print('through collection: ' + str(current - start))
         tqc.get_results()
         current = time.time()
-        print(str(current - start))
+        print('get_results: ' + str(current - start))
         tqc.format_results()
         current = time.time()
-        print(str(current - start))
+        print('format_results: ' + str(current - start))
         table_query = tqc.get_first()
         current = time.time()
         print(str(current - start))
-        json_rows = table_query.get_row_list()
+        json_rows = table_query.results
         current = time.time()
         print(str(current - start))
         ret = json.dumps({'data': json_rows}, cls=util.CustomEncoder)
