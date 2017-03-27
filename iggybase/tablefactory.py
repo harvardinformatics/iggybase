@@ -23,7 +23,8 @@ class TableFactory:
             return None
 
         # logging.info( 'table name: ' + class_name )
-        for col in table_object_cols:
+        for row in table_object_cols:
+            col = row.Field
             if col.display_name in self.predefined_columns:
                 continue
 
@@ -33,21 +34,23 @@ class TableFactory:
                 foreign_column = self.session.query(Field).filter_by(id=col.foreign_key_field_id).first()
 
                 if foreign_table is not None and foreign_column is not None:
-                    classattr[col.display_name] = self.create_column(col, foreign_table.name,
+                    classattr[col.display_name] = self.create_column(col, row.DataType.name, foreign_table.name,
                                                                      foreign_column.display_name)
 
                     classattr[table_object.name + "_" + col.display_name + "_" + foreign_table.name] = \
                         self.create_foreign_key(TableFactory.to_camel_case(foreign_table.name), \
                                                 classattr[col.display_name])
                 elif col.select_list_id is not None:
-                    classattr[col.display_name] = self.create_column(col, 'select_list_item','name')
+                    classattr[col.display_name] = self.create_column(col, row.DataType.name, 'select_list_item','name')
 
                     classattr[table_object.name + "_" + col.display_name + "_select_list_item"] = \
                         self.create_foreign_key('SelectListItem', classattr[col.display_name])
                 else:
-                    classattr[col.display_name] = self.create_column(col)
+                    classattr[col.display_name] = self.create_column(col,
+                            row.DataType.name)
             else:
-                classattr[col.display_name] = self.create_column(col)
+                classattr[col.display_name] = self.create_column(col,
+                        row.DataType.name)
 
         if extend_class is not None:
             # this will always join on id
@@ -58,7 +61,7 @@ class TableFactory:
             id_col.default = ''
             id_col.unique = 0
 
-            classattr['id'] = self.create_column(id_col, extend_table, 'id')
+            classattr['id'] = self.create_column(id_col, 'Integer', extend_table, 'id')
 
             classattr[table_object.name + "_id_" + extend_table] = \
                 self.create_foreign_key(TableFactory.to_camel_case(extend_table), classattr['id'])
@@ -82,9 +85,8 @@ class TableFactory:
 
         return "".join(x.title() for x in components)
 
-    def create_column(self, attributes, foreign_table_name=None, foreign_column_name=None):
+    def create_column(self, attributes, datatype_name, foreign_table_name=None, foreign_column_name=None):
         # logging.info('attributes.data_type_id: ' +str(attributes.data_type_id))
-        datatype = self.session.query(DataType).filter_by(id=attributes.data_type_id).filter_by(active=1).first()
 
         if attributes.data_type_id == 6:
             # file datatype
@@ -94,7 +96,7 @@ class TableFactory:
             dtcname = getattr(sqlalchemy, 'Numeric')
             dtinst = dtcname(10, 2)
         else:
-            dtcname = getattr(sqlalchemy, datatype.name)
+            dtcname = getattr(sqlalchemy, datatype_name)
             if attributes.data_type_id == 2:
                 #string datatype
                 dtinst = dtcname(attributes.length)
@@ -145,8 +147,9 @@ class TableFactory:
     def fields(self, table_object_id):
         fields = []
 
-        res = self.session.query(Field). \
-            filter_by(table_object_id=table_object_id, active=self.active).all()
+        res = (self.session.query(Field, DataType)
+            .join(DataType)
+            .filter(Field.table_object_id == table_object_id, Field.active == self.active).all())
 
         for row in res:
             fields.append(row)
