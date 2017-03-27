@@ -27,32 +27,34 @@ class OrganizationAccessControl:
 
     def set_user(self, user_id):
         start = time.time()
-        self.user =  self.session.query(models.User).filter_by(id=user_id).first()
-        # must distinguish user level orgs from group level org ids
-        query = self.session.query(models.Organization.parent_id.distinct().label('parent_id'))
-        self.parent_orgs = [row.parent_id for row in query.all()]
-        facility_root_org_id = session['root_org_id']
-
-        user_orgs = self.session.query(models.UserOrganization).filter_by(active=1, user_id=self.user.id).all()
-        current = time.time()
-        # TODO: this is the slowest part, remove this loop query
-        facility_orgs = {}
-        for user_org in user_orgs:
-            if user_org.user_organization_id is not None:
-                level = self.get_facility_orgs(user_org.user_organization_id, facility_root_org_id, 0)
-                if level is not None:
-                    facility_orgs[user_org.user_organization_id] = level
-
-        current = time.time()
         filters = util.get_filters()
-
-        current = time.time()
         if 'set_orgs' not in filters and 'org_id' in session and session['org_id']:
             self.current_org_id = session['org_id']['current_org_id']
             self.org_ids.extend(session['org_id']['org_ids'])
             print('in session')
         else:
             print('not in session')
+            self.user =  self.session.query(models.User).filter_by(id=user_id).first()
+            # must distinguish user level orgs from group level org ids
+            facility_root_org_id = session['root_org_id']
+            query = self.session.query(models.Organization.parent_id.distinct().label('parent_id'))
+            self.parent_orgs = [row.parent_id for row in query.all()]
+            # TODO: rethink this, the level logic is very confusing
+            user_orgs = (self.session.query(models.UserOrganization, models.Organization)
+            .join(models.Organization,
+                models.UserOrganization.user_organization_id ==
+                models.Organization.id)
+            .filter(
+                models.UserOrganization.active == 1,
+                models.Organization.active == 1,
+                models.UserOrganization.user_id == self.user.id).all())
+            facility_orgs = {}
+            for user_org in user_orgs:
+                level = self.get_facility_orgs(user_org.Organization, facility_root_org_id, 0)
+                if level is not None:
+                    facility_orgs[user_org.Organization.id] = level
+            current = time.time()
+            print('facs: ' + str(current - start))
             self.current_org_id = None
             self.org_ids = self.get_default_org_ids()
             min_level = None
@@ -66,6 +68,7 @@ class OrganizationAccessControl:
                 self.get_child_organization(user_org)
             session['org_id'] = {'current_org_id': self.current_org_id, 'org_ids': self.org_ids}
         current = time.time()
+        print('oac init: ' + str(current - start))
         return (self.org_ids != [])
 
     def __del__ (self):
@@ -139,19 +142,21 @@ class OrganizationAccessControl:
         else:
             return []
 
-    def get_facility_orgs(self, org_id, root_org_id, level):
+    def get_facility_orgs(self, org_row, root_org_id, level):
         level += 1
 
-        if org_id == root_org_id:
+        if org_row.id == root_org_id:
             return level
 
-        root_org = self.session.query(models.Organization).filter_by(id=org_id).first()
-        if root_org is None:
-            return None
-        elif root_org.parent_id is None:
+        if org_row.parent_id is None:
             return None
         else:
-            return self.get_facility_orgs(root_org.parent_id, root_org_id, level)
+            print(org_row.id)
+            print(org_row.parent_id)
+            print('extra')
+            org_row = (self.session.query(models.Organization)
+                    .filter_by(id=org_row.parent_id).first())
+            return self.get_facility_orgs(org_row, root_org_id, level)
 
     def get_child_organization(self, parent_organization_id):
         self.org_ids.append(parent_organization_id)
