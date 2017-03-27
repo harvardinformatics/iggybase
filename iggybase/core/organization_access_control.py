@@ -24,7 +24,6 @@ class OrganizationAccessControl:
         else:
             self.user = None
         current = time.time()
-        print('set user: ' + str(current - start))
 
     def set_user(self, user_id):
         start = time.time()
@@ -35,9 +34,8 @@ class OrganizationAccessControl:
         facility_root_org_id = session['root_org_id']
 
         user_orgs = self.session.query(models.UserOrganization).filter_by(active=1, user_id=self.user.id).all()
-        print(test)
         current = time.time()
-        print('queries: ' + str(current - start))
+        # TODO: this is the slowest part, remove this loop query
         facility_orgs = {}
         for user_org in user_orgs:
             if user_org.user_organization_id is not None:
@@ -46,11 +44,9 @@ class OrganizationAccessControl:
                     facility_orgs[user_org.user_organization_id] = level
 
         current = time.time()
-        print('fac org: ' + str(current - start))
         filters = util.get_filters()
 
         current = time.time()
-        print('filters: ' + str(current - start))
         if 'set_orgs' not in filters and 'org_id' in session and session['org_id']:
             self.current_org_id = session['org_id']['current_org_id']
             self.org_ids.extend(session['org_id']['org_ids'])
@@ -70,7 +66,6 @@ class OrganizationAccessControl:
                 self.get_child_organization(user_org)
             session['org_id'] = {'current_org_id': self.current_org_id, 'org_ids': self.org_ids}
         current = time.time()
-        print('rest: ' + str(current - start))
         return (self.org_ids != [])
 
     def __del__ (self):
@@ -330,6 +325,8 @@ class OrganizationAccessControl:
                         if table_model not in tables:
                             tables.append(table_model)
                         join_type = 'inner'
+            # save unformatted col to be used in where if needed
+            base_col = col
             if field.group_by == 1:
                 group_by.append(col)
             if link:
@@ -349,19 +346,19 @@ class OrganizationAccessControl:
             if criteria_key in criteria and not (field.is_foreign_key and
                 field.FK_TableObject.name == first_table_named):
                 if type(criteria[criteria_key]) is list:
-                    crit_where = [(col.in_(criteria[criteria_key]))]
+                    crit_where = [(base_col.in_(criteria[criteria_key]))]
                     include_nulls = False
                 elif type(criteria[criteria_key]) is dict:
-                    include_nulls, crit_where = self.criteria_dict(col, criteria[criteria_key])
+                    include_nulls, crit_where = self.criteria_dict(base_col, criteria[criteria_key])
                 else:
-                    crit_where = [col == criteria[criteria_key]]
+                    crit_where = [base_col == criteria[criteria_key]]
                     include_nulls = False
                 # if outer join criteria then must include nulls
                 # TODO: possible to add criteria to table join - first try at
                 # this failed since we are using natural joins
                 if include_nulls and join_type == 'outer':
                     for i, c in enumerate(crit_where):
-                        crit_where[i] = (or_(col == None, c))
+                        crit_where[i] = (or_(base_col == None, c))
                 # add any criteria to the where
                 wheres.extend(crit_where)
         id_cols = []
@@ -393,7 +390,6 @@ class OrganizationAccessControl:
         columns.append(id_col.label('DT_RowId'))
         current = time.time()
         print('before query: ' + str(current - start))
-
         stmt = self.session.query(*columns). \
                 join(*joins). \
                 outerjoin(*outer_joins). \
