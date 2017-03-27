@@ -1,8 +1,4 @@
 $(document).ready(function(){
-    var columns = [];
-    $('th').each(function(){
-        columns.push({data: $(this).data('name')});
-    });
     var table = $('.summary_table').DataTable({
         deferRender:true,
         scrollX:true,
@@ -10,7 +6,6 @@ $(document).ready(function(){
             'url':'ajax',
             'data': function(d) { d.search = window.location.search;}
         },
-        columns: columns,
         dom:'Bfrtip',
         buttons:[
             'selectAll',

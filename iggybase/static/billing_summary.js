@@ -1,8 +1,4 @@
 $(document).ready(function(){
-    var columns = [];
-    $('th').each(function(){
-        columns.push({data: $(this).data('name')});
-    });
     var path = window.location.pathname;
     var last_path_part = path.split('/').slice(-2)[0];
     var ajax_url = 'ajax';
@@ -15,7 +11,6 @@ $(document).ready(function(){
         ajax:{
             'url': ajax_url
         },
-        columns: columns,
         dom:"<'row'<'col-md-6'B><'col-md-6'f>><'row'<'col-md-12't>><'row'<'col-md-12'i>><'row'<'col-md-6'l><'col-md-6'p>>",
         lengthMenu:[[10,25,50,100,-1],[10,25,50,100,'All']],
         buttons:[

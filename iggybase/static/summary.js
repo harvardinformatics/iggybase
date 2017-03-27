@@ -1,8 +1,4 @@
 $(document).ready(function(){
-    var columns = [];
-    $('th').each(function(){
-        columns.push({data: $(this).data('name')});
-    });
     var table = $('.summary_table').DataTable({
         deferRender:true,
         order:[],
@@ -14,8 +10,7 @@ $(document).ready(function(){
         },
         dom:"<'row'<'col-md-6'B><'col-md-6'f>><'row'<'col-md-12't>><'row'<'col-md-12'i>><'row'<'col-md-6'l><'col-md-6'p>>",
         buttons:['csv'],
-        lengthMenu:[[10,25,50,100,-1],[10,25,50,100,'All']],
-        columns: columns
+        lengthMenu:[[10,25,50,100,-1],[10,25,50,100,'All']]
     });
 
     // add event listeners for date range filter
