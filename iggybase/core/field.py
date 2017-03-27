@@ -137,7 +137,6 @@ class Field:
                     criteria = {'id': self.Field.foreign_key_display}
                 else:
                     criteria = {'display_name': 'name'}
-
                 fk_field = self.rac.table_query_fields(
                     None,
                     None,

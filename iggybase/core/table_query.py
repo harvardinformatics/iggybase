@@ -23,9 +23,14 @@ class TableQuery:
         """ calls several class functions and returns results
         """
         start = time.time()
+        # TODO: set_fk_fields is slow
         self.fc.set_fk_fields()
+        current = time.time()
+        print('set fk: ' + str(current - start))
         results = []
         self.criteria = self.add_table_query_criteria(self.criteria)
+        current = time.time()
+        print('crit: ' + str(current - start))
         self.oac = g_helper.get_org_access_control()
         current = time.time()
         print('before table query data: ' + str(current - start))

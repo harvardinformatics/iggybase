@@ -102,7 +102,13 @@ class FieldCollection:
                 if (field.Field.foreign_key_table_object_id, field.Field.foreign_key_display) in self.fields_by_id:
                     field_obj = self.fields_by_id[(field.Field.foreign_key_table_object_id, field.Field.foreign_key_display)]
                 field.set_fk_field(field_obj)
-            self.fields_by_id[(field.TableObject.id, field.Field.id)] = field
+                fk_display = field.FK_Field.id
+                if field.FK_Field.display_name == 'name':
+                    fk_display = None
+                self.fields_by_id[(field.FK_TableObject.id, fk_display)] = field
+            else:
+                # used by table_collection, stores id rather foreign_key_display  name or None
+                self.fields_by_id[(field.TableObject.id, field.Field.id)] = field
 
     def set_defaults(self, fk_defaults = {}):
         for field in self.fields.values():
