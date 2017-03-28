@@ -18,6 +18,8 @@ class TableFactory:
         classattr = {'table_type': 'user'}
 
         table_object_cols = self.fields(table_object.id)
+        tables_by_id = {}
+        fields_by_id = {}
 
         if not table_object_cols:
             return None
@@ -30,8 +32,17 @@ class TableFactory:
 
             # logging.info( col.field_name )
             if col.foreign_key_table_object_id is not None:
-                foreign_table =  self.session.query(TableObject).filter_by(id=col.foreign_key_table_object_id).first()
-                foreign_column = self.session.query(Field).filter_by(id=col.foreign_key_field_id).first()
+                # Keep tables and fields so we only have to query once
+                if col.foreign_key_table_object_id in tables_by_id:
+                    foreign_table = tables_by_id[col.foreign_key_table_object_id]
+                else:
+                    foreign_table =  self.session.query(TableObject).filter_by(id=col.foreign_key_table_object_id).first()
+                    tables_by_id[col.foreign_key_table_object_id] = foreign_table
+                if col.foreign_key_field_id in fields_by_id:
+                    foreign_column = fields_by_id[col.foreign_key_field_id]
+                else:
+                    foreign_column = self.session.query(Field).filter_by(id=col.foreign_key_field_id).first()
+                    fields_by_id[col.foreign_key_field_id] = foreign_column
 
                 if foreign_table is not None and foreign_column is not None:
                     classattr[col.display_name] = self.create_column(col, row.DataType.name, foreign_table.name,
@@ -127,8 +138,6 @@ class TableFactory:
         return relationship(foreign_table_name, **arg)
 
     def table_objects(self, active=1):
-        table_objects = []
-
         Extension = aliased(TableObject, name='Extension')
         Extended = aliased(TableObject, name='Extended')
 
@@ -139,19 +148,10 @@ class TableFactory:
                filter(or_(TableObject.admin_table==0, TableObject.admin_table is None)).
                order_by(TableObject.order)).all()
 
-        for row in res:
-            table_objects.append(row)
-
-        return table_objects
+        return res
 
     def fields(self, table_object_id):
-        fields = []
-
         res = (self.session.query(Field, DataType)
             .join(DataType)
             .filter(Field.table_object_id == table_object_id, Field.active == self.active).all())
-
-        for row in res:
-            fields.append(row)
-
-        return fields
+        return res
