@@ -12,7 +12,8 @@ class FieldCollection:
         self.table_query_id = table_query_id
         self.date_fields = {}
         self.rac = g_helper.get_role_access_control()
-        self.fields_by_id = {} # for setting fk_field
+        self.fields_by_id = {}
+        self.fk_field_objs = {} # for setting fk_field
         self.criteria = criteria
         self.role_filter = role_filter # used to ignore role for FK search
         # check if table_name extends
@@ -62,6 +63,8 @@ class FieldCollection:
                     table_query_field,
                     calculation)
             field_dict[field.name] = field
+            # Table collection needs this
+            self.fields_by_id[(row.TableObject.id, row.Field.id)] = field
 
             if field.type == 'datetime':
                 self.date_fields[field.display_name] = order
@@ -93,22 +96,39 @@ class FieldCollection:
                         self.table_names.append(extends_table_name)
         return extends_table_name
 
+    def get_fk_field_obj(self, field):
+        fk_field = None
+        # when possible reuse the same field to avoid extra queries, this is great when a query has
+        # many long text for example
+        if (field.Field.foreign_key_table_object_id, field.Field.foreign_key_display) in self.fk_field_objs:
+            fk_field = self.fk_field_objs[(field.Field.foreign_key_table_object_id, field.Field.foreign_key_display)]
+        else:
+            fk_to = field.Field.foreign_key_table_object_id
+            if fk_to:
+                if field.Field.foreign_key_display:
+                    criteria = {'id': field.Field.foreign_key_display}
+                    fk_display = field.Field.foreign_key_display
+                else:
+                    criteria = {'display_name': 'name'}
+                    fk_display = None
+                fk_field = self.rac.table_query_fields(
+                    None,
+                    None,
+                    fk_to,
+                    criteria,
+                    # we don't need role on fk table or field
+                    role_filter = False
+                )
+                if fk_field:
+                    fk_field = fk_field[0]
+                    self.fk_field_objs[(fk_field.TableObject.id, fk_display)] = fk_field
+        return fk_field
+
     def set_fk_fields(self):
         for field in self.fields.values():
             if field.is_foreign_key:
-                # when possible reuse the same field to avoid extra queries, this is great when a query has
-                # many long text for example
-                field_obj = None
-                if (field.Field.foreign_key_table_object_id, field.Field.foreign_key_display) in self.fields_by_id:
-                    field_obj = self.fields_by_id[(field.Field.foreign_key_table_object_id, field.Field.foreign_key_display)]
+                field_obj = self.get_fk_field_obj(field)
                 field.set_fk_field(field_obj)
-                fk_display = field.FK_Field.id
-                if field.FK_Field.display_name == 'name':
-                    fk_display = None
-                self.fields_by_id[(field.FK_TableObject.id, fk_display)] = field
-            else:
-                # used by table_collection, stores id rather foreign_key_display  name or None
-                self.fields_by_id[(field.TableObject.id, field.Field.id)] = field
 
     def set_defaults(self, fk_defaults = {}):
         for field in self.fields.values():

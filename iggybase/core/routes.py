@@ -452,9 +452,8 @@ def build_summary_ajax(table_name, criteria = {}):
     # TODO: add filters and criteria to cache
     print(filters)
     if (not criteria and not filters):
-        print('checking cache')
+        print('checking cache: ' + key)
         ret = current_app.cache.get(key)
-    ret = None
     if not ret:
         print('cache miss')
         tqc = TableQueryCollection(table_name, criteria)
@@ -475,10 +474,10 @@ def build_summary_ajax(table_name, criteria = {}):
         ret = json.dumps({'data': json_rows}, cls=util.CustomEncoder)
         if (('clear_cache' in filters and len(filters) ==1) or
         (not criteria and not filters)):
-            print('caching')
+            print('caching: ' + key)
             current_app.cache.set(key, ret, (24 * 60 * 60), [table_name])
     else:
-        print('cache hit')
+        print('cache hit: ' + key)
     return ret
 
 

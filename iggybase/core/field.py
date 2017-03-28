@@ -127,26 +127,7 @@ class Field:
             # end of row, order alphabetically
             return 10000
 
-    def set_fk_field(self, fk_field = None):
-        # if field instance exists it will be passed in,
-        # otherwise we create one and return it
-        if not fk_field:
-            fk_to = self.Field.foreign_key_table_object_id
-            if fk_to:
-                if self.Field.foreign_key_display:
-                    criteria = {'id': self.Field.foreign_key_display}
-                else:
-                    criteria = {'display_name': 'name'}
-                fk_field = self.rac.table_query_fields(
-                    None,
-                    None,
-                    fk_to,
-                    criteria,
-                    # we don't need role on fk table or field
-                    role_filter = False
-                )
-                if fk_field:
-                    fk_field = fk_field[0]
+    def set_fk_field(self, fk_field):
         if fk_field:
             self.FK_Field = fk_field.Field
             self.FK_FieldRole = fk_field.FieldRole
