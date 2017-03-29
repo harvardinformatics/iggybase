@@ -339,7 +339,7 @@ class OrganizationAccessControl:
                     col = ('<a href="' + link + col + '">' + col + '</a>')
                 if field.group_func:
                     col = func.ifnull((getattr(func, field.group_func)(col.op('SEPARATOR')(', '))), '')
-            columns.append(col.label(field.name))
+                columns.append(col.label(field.name))
             # set order by to first column asc if not set
             if not order_by:
                 if fc.order_by:
