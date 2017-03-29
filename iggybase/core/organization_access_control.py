@@ -332,12 +332,13 @@ class OrganizationAccessControl:
                         join_type = 'inner'
             # save unformatted col to be used in where if needed
             base_col = col
-            if field.group_by == 1:
-                group_by.append(col)
-            if link:
-                col = ('<a href="' + link + col + '">' + col + '</a>')
-            if field.group_func:
-                col = func.ifnull((getattr(func, field.group_func)(col.op('SEPARATOR')(', '))), '')
+            if field.visible:
+                if field.group_by == 1:
+                    group_by.append(col)
+                if link:
+                    col = ('<a href="' + link + col + '">' + col + '</a>')
+                if field.group_func:
+                    col = func.ifnull((getattr(func, field.group_func)(col.op('SEPARATOR')(', '))), '')
             columns.append(col.label(field.name))
             # set order by to first column asc if not set
             if not order_by:
