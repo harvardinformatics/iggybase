@@ -78,9 +78,13 @@ class TableCollection():
 
         if level == 0:
             self.tables[table_object.name].parent_link_field_display_name = None
-        else:
+        elif table_extends is None:
             self.tables[table_object.name].parent_link_field_display_name = \
                 (self.tables[table_object.name].fields.fields_by_id[(table_object.id,
+                                                              link_data.child_link_field_id)].Field.display_name)
+        else:
+            self.tables[table_object.name].parent_link_field_display_name = \
+                (self.tables[table_object.name].fields.fields_by_id[(table_extends.id,
                                                               link_data.child_link_field_id)].Field.display_name)
 
     def initialize_fields(self, table_name):
