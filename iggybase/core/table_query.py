@@ -89,7 +89,7 @@ class TableQuery:
             if field.type == 'file':
                 file_fields.append(field.name)
         # create dictionary for each row
-        if calc_fields:
+        if calc_fields or file_fields:
             row_list = []
             for i, row in enumerate(self.results):
                 row_formatted = []
@@ -125,7 +125,7 @@ class TableQuery:
                             link = self.fc.fields[name].get_file_link(url_root, row_name, file)
                             file_links.append('<a href="' + link + '" target="_blank">' + file + '</a>')
                         col = '|'.join(file_links)
-                    row_formatted.append = col
+                    row_formatted.append(col)
                 if row_formatted:
                     row_list.append(row_formatted)
                 return row_list

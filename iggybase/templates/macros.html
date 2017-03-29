@@ -154,9 +154,11 @@
                     <th>
                         <input type="button" id="select_all" value="Select All/ None">
                     </th>
-                {% endif %}
+                    {% endif %}
                 {% for field in table_query.fc.fields.values() %}
+                    {% if field.visible %}
                     <th>{{ field.display_name }}</th>
+                    {% endif %}
                 {% endfor %}
             </tr></thead>
             <tbody>
@@ -164,10 +166,10 @@
                     <tr>
                     {% if page_form_name == 'action_summary' %}
                         <td><input type="checkbox" class="action_checkbox"></td>
-                    {% endif %}
-                    {% for value in row %}
+                        {% endif %}
+                    {% for i in range (0, (row|length -1)) %}
                         <td>
-                            {{ value|safe }}
+                            {{ row[i]|safe }}
                         </td>
                     {% endfor %}
                     </tr>
