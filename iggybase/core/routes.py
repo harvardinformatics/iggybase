@@ -76,7 +76,7 @@ def detail(facility_name, table_name, row_name, page_context):
     tqc.format_results(add_row_id)
     if not tqc.get_first().fc.fields:
         abort(404)
-    if not tqc.get_first().table_dict:
+    if not tqc.get_first().get_first_row_dict():
         abort(403)
     hidden_fields = {'table': table_name, 'row_name': row_name}
 
@@ -100,7 +100,7 @@ def summary_download(facility_name, table_name):
     tqc.get_results(allow_links)
     tqc.format_results(add_row_id)
     tq = tqc.get_first()
-    csv = excel.make_response_from_array(tq.get_list_of_list(), 'csv')
+    csv = excel.make_response_from_array(tq.results, 'csv')
     return csv
 
 @core.route('/update_table_rows/<table_name>', methods=['GET', 'POST'])

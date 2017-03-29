@@ -155,17 +155,17 @@
                         <input type="button" id="select_all" value="Select All/ None">
                     </th>
                 {% endif %}
-                {% for key in table_query.get_first().keys() %}
-                    <th>{{ table_query.get_display_name(key) }}</th>
+                {% for field in table_query.fc.fields.values() %}
+                    <th>{{ field.display_name }}</th>
                 {% endfor %}
             </tr></thead>
             <tbody>
-                {% for row in table_query.table_dict.values() %}
+                {% for row in table_query.results %}
                     <tr>
                     {% if page_form_name == 'action_summary' %}
                         <td><input type="checkbox" class="action_checkbox"></td>
                     {% endif %}
-                    {% for value in row.values() %}
+                    {% for value in row %}
                         <td>
                             {{ value|safe }}
                         </td>
@@ -181,9 +181,9 @@
     <div class="detail">
     {% if tq.get_first() %}
         <table id="detail_table">
-        {% for name, value in tq.get_first().items() %}
+        {% for name, value in tq.get_first_row_dict().items() %}
             <tr>
-                <td><b>{{ tq.get_display_name(name) }}</b></td>
+                <td><b>{{ name }}</b></td>
                 <td>{{value|safe}}</td>
             </tr>
         {% endfor %}

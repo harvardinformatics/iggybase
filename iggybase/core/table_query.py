@@ -68,17 +68,15 @@ class TableQuery:
 
     def format_results(self, add_row_id = True, allow_links = True):
         """Formats data
-        - transforms into dictionary
-        - adds links
+        only loops through rows if
         - calculates calculated fields
-        - skips invisible fields, this must be done after data is retreived in
-          cases where invisible fields are used in calculations
+        TODO: there might be a bug to fix here since invisible fields that might
+        be in calculations will not be in the select from get_table_query_data
         """
         if self.results:
             keys = self.results[0].keys()
 
         # keep track of special fields
-        link_fields = {}
         calc_fields = []
         file_fields = []
         invisible_fields = []
@@ -91,15 +89,20 @@ class TableQuery:
             if field.type == 'file':
                 file_fields.append(field.name)
         # create dictionary for each row
-        if invisible_fields or calc_fields or file_fields:
+        if calc_fields:
+            row_list = []
             for i, row in enumerate(self.results):
-                row_dict = OrderedDict()
+                row_formatted = []
                 if row:
                     dt_row_id = row[len(row)-1]
                 else:
                     dt_row_id = None
                 for i, col in enumerate(row):
                     name = keys[i]
+                    if name == 'DT_RowId':
+                        dt_row_id = col
+                        if not add_row_id:
+                            continue
                     if name in invisible_fields:
                         continue
                     elif name in calc_fields:
@@ -122,30 +125,24 @@ class TableQuery:
                             link = self.fc.fields[name].get_file_link(url_root, row_name, file)
                             file_links.append('<a href="' + link + '" target="_blank">' + file + '</a>')
                         col = '|'.join(file_links)
-                    row_dict[name] = col
-                if row_dict:
-                    # store values as a dict of dict so we can access any of the
-                    # data by row_id and field display_name
-                    self.table_dict[dt_row_id] = row_dict
-            else:
-                return list(self.results)
+                    row_formatted.append = col
+                if row_formatted:
+                    row_list.append(row_formatted)
+                return row_list
+        else:
+            return self.results
 
-    def get_list_of_list(self): # for download
-        table_list = []
-        keys = []
-        for key in self.get_first().keys():
-            keys.append(self.get_display_name(key))
-        table_list.append(keys)
-        for row in self.table_dict.values():
-            table_list.append(list(row.values()))
-        return table_list
+    def get_first_row_dict(self):
+        row_dict = OrderedDict()
+        row = self.get_first()
+        for i, field in enumerate(self.fc.fields.values()):
+            row_dict[field.display_name] = row[i]
+        return row_dict
 
     def get_first(self): # for detail
-        return self.get_row_list()[0]
+        return self.results[0]
 
-    def get_row_list(self): # for summary_ajax
-        return list(self.table_dict.values())
-
+    # TODO: this will be broken, fix
     def update_and_get_message(self, table_name, updates, ids, message_fields,
             tbl_ids):
         updated_info = set([])

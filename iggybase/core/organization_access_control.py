@@ -315,7 +315,7 @@ class OrganizationAccessControl:
                     col = getattr(table_model, 'name') + '/' + col
 
                 # add to joins if not first table, avoid joining to self
-                if (not first_table_named
+                if (field.visible and not first_table_named
                     or (first_table_named == field.TableObject.name)):
                     first_table_named = field.TableObject.name
                     if table_model not in tables:
