@@ -70,12 +70,12 @@ class TableQuery:
         """Formats data
         only loops through rows if
         - calculates calculated fields
+        - file fields which need to be made into links
         TODO: there might be a bug to fix here since invisible fields that might
         be in calculations will not be in the select from get_table_query_data
         """
         if self.results:
             keys = self.results[0].keys()
-
         # keep track of special fields
         calc_fields = []
         file_fields = []
@@ -99,10 +99,6 @@ class TableQuery:
                     dt_row_id = None
                 for i, col in enumerate(row):
                     name = keys[i]
-                    if name == 'DT_RowId':
-                        dt_row_id = col
-                        if not add_row_id:
-                            continue
                     if name in invisible_fields:
                         continue
                     elif name in calc_fields:
@@ -128,9 +124,8 @@ class TableQuery:
                     row_formatted.append(col)
                 if row_formatted:
                     row_list.append(row_formatted)
-                return row_list
-        else:
-            return self.results
+                    self.results = row_list
+        return self.results
 
     def get_first_row_dict(self):
         row_dict = OrderedDict()
