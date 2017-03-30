@@ -297,7 +297,10 @@ class OrganizationAccessControl:
                     table_models[field.TableObject.name] = fk_table_model
                 # create alias to the fk table
                 # solves the case of more than one join to same table
-                alias_name = field.TableObject.name + '_' + field.Field.display_name + '_' + field.FK_TableObject.name + '_' + field.FK_Field.display_name
+                alias_name = (field.TableObject.name + '_'
+                        + field.Field.display_name + '_'
+                        + field.FK_TableObject.name + '_'
+                        + field.FK_Field.display_name)
                 # possible to have two of the same field with calculations
                 if alias_name not in aliases:
                     aliases[alias_name] = aliased(table_model, name = alias_name)

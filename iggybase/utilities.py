@@ -169,7 +169,7 @@ def format_money(num):
 class CustomEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, datetime.datetime):
-            return obj.strftime('%d-%m-%Y %H:%M:%SZ')
+            return obj.strftime('%Y-%d-%m')
         elif isinstance(obj, datetime.date):
             return obj.strftime('%d-%m-%Y')
         elif isinstance(obj, decimal.Decimal):
