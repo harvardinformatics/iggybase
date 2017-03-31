@@ -11,10 +11,10 @@ class TableCollection():
         self.role_access_control = g_helper.get_role_access_control()
         self.organization_access_control = g_helper.get_org_access_control()
 
+        self.depth = depth
         self.table_names = []
         self.tables = OrderedDict()
-
-        self.get_tables(table_names, depth)
+        self.get_tables(table_names)
 
     def __iter__(self):
         return iter(self.tables)
@@ -31,33 +31,37 @@ class TableCollection():
     def values(self):
         return self.tables.values()
 
-    def get_tables(self, table_names, depth):
-        history = self.organization_access_control.get_table_object({'name': 'history'})
-        self.initialize_table(history)
-
+    def get_tables(self, table_names):
         for table_name in table_names:
-            access = self.role_access_control.has_access('TableObject',{'name': table_name})
-            if access.TableObject.extends_table_object_id:
-                extends = self.role_access_control.has_access('TableObject',{'id':
-                                                                             access.TableObject.extends_table_object_id})
-                self.initialize_table(access.TableObject, access.TableObjectRole, extends.TableObject,
-                                      extends.TableObjectRole)
-            else:
-                self.initialize_table(access.TableObject, access.TableObjectRole)
+            self.add_table(table_name)
 
-            if depth > 0 and self.tables[table_name].table_object:
-                data = self.role_access_control.get_link_tables(self.tables[table_name].table_object, depth)
+    def add_table(self, table_name):
+        if 'history' not in self.table_names:
+            history = self.organization_access_control.get_table_object({'name': 'history'})
+            self.initialize_table(history)
 
-                for index, link_data in enumerate(data):
-                    if link_data['table_meta_data']:
-                        self.initialize_table(link_data['table_meta_data'],
-                                              link_data['table_role_data'],
-                                              link_data['table_extends'],
-                                              link_data['table_extends_role'],
-                                              link_data['level'],
-                                              link_data['parent'],
-                                              link_data['link_data'],
-                                              link_data['link_type'])
+        access = self.role_access_control.has_access('TableObject',{'name': table_name})
+        if access.TableObject.extends_table_object_id:
+            extends = self.role_access_control.has_access('TableObject',{'id':
+                                                                         access.TableObject.extends_table_object_id})
+            self.initialize_table(access.TableObject, access.TableObjectRole, extends.TableObject,
+                                  extends.TableObjectRole)
+        else:
+            self.initialize_table(access.TableObject, access.TableObjectRole)
+
+        if self.depth > 0 and self.tables[table_name].table_object:
+            data = self.role_access_control.get_link_tables(self.tables[table_name].table_object, self.depth)
+
+            for index, link_data in enumerate(data):
+                if link_data['table_meta_data']:
+                    self.initialize_table(link_data['table_meta_data'],
+                                          link_data['table_role_data'],
+                                          link_data['table_extends'],
+                                          link_data['table_extends_role'],
+                                          link_data['level'],
+                                          link_data['parent'],
+                                          link_data['link_data'],
+                                          link_data['link_type'])
 
     def initialize_table(self, table_object, table_object_role=None, table_extends=None, table_extends_role=None,
                          level=0, parent=None, link_data=None, link_type=None):

@@ -68,7 +68,6 @@ def action_summary_ajax(facility_name, table_name, page_form='action_summary', c
 @login_required
 @templated()
 def detail(facility_name, table_name, row_name, page_context):
-    # pass criteria incase multiple queries
     criteria = {(table_name, 'name'): row_name}
     tqc = TableQueryCollection(table_name, criteria)
     tqc.get_results()
@@ -217,18 +216,19 @@ def data_entry(facility_name, table_name, row_name, page_context):
         depth = request.args.get('depth', 0, int)
     else:
         depth = request.args.get('depth', 2, int)
+
     fg = FormGenerator('data_entry', 'SingleForm', table_name, page_context, module_name)
     fg.data_entry_form([row_name], None, depth)
+
     if request.method == 'POST' and fg.form_class.validate_csrf_data(request.form.get('csrf_token')):
         fp = FormParser(table_name)
-        fp.parse()
+        form_errors = fp.parse()
 
         fg.data_entry_form([row_name], fp.instances)
-        fg.form_class.validate_on_submit()
-
-        # Token has been validated above, this removes the error since the form was regenerated with dynamically
-        # added fields and the new token is no longer valid with the session token
-        del fg.form_class.errors['csrf_token']
+        if form_errors:
+            for form_id, error in form_errors.items():
+                fg.form_class[form_id].errors = []
+                fg.form_class[form_id].errors.append(error)
 
         if not fg.form_class.errors:
             save_status, save_msg = fp.save()
@@ -273,7 +273,7 @@ def modal_add_submit(facility_name, table_name, page_context):
     fp.parse()
     save_status, save_msg = fp.save()
 
-    return json.dumps({'error': False})
+    return json.dumps({'error': not save_status})
 
 
 @core.route('/multiple_entry/<table_name>/<row_names>', defaults={'page_context': 'base-context'},
@@ -513,4 +513,5 @@ def saved_data(facility_name, module_name, table_name, row_names,
         return pt.page_template_context(table_name=table_name, page_msg=msg)
     else:
         pt = PageTemplate(MODULE_NAME, 'save_message', page_context)
-        return pt.page_template_context(table_name=table_name, page_msg=msg, saved_rows=json.dumps(saved_rows), fg=fg)
+        return pt.page_template_context(table_name=table_name, page_msg=msg, saved_rows=json.dumps(saved_rows))
+

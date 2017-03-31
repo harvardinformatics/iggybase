@@ -21,12 +21,18 @@
 {%- endmacro %}
 
 {% macro render_buttons( buttons ) -%}
-{% for button in buttons -%}
-    {% if button %}
-        {{html_button(button)|safe}}
-        {% endif %}
+    {% for button in buttons -%}
+        <input
+        {% for prop, value in button.props.items() -%}
+            {% if value == '' -%}
+                {{ prop }}
+            {% else -%}
+                {{ prop }} ='{{ value }}'
+            {% endif -%}
+        {% endfor %}
+        {{ button.special_props }}>
     {% endfor -%}
-{%-endmacro%}
+{%-endmacro -%}
 
 {% macro render_select(options, id, default = None) -%}
 <select id="{{id}}">
@@ -194,7 +200,6 @@
     </div>
 {%- endmacro %}
 
-
 {% macro render_scripts( scripts ) -%}
     {% for script in scripts -%}
         <script type="text/javascript" src="{{ url_for('static', filename='' ) }}{{ script }}"></script>
@@ -295,11 +300,15 @@ the necessary fix for required=False attributes, but will also not set the requi
     </div>
     {%- endmacro %}
 
-{% macro form_field_th(field, label_style) -%}
+{% macro form_field_th(field) -%}
     {% if not bootstrap_is_hidden_field( field ) %}
-        <div class='{{ label_style }} label-row'>
-        <div class="label-th">{{ field.label }}
-        {% if field.flags.required %}
+        {% if field['wide'] %}
+            <div class='col-md-4 label-row'>
+        {% else -%}
+            <div class='col-md-2 label-row'>
+        {% endif-%}
+        <div class="label-th">{{ field.name }}
+        {% if field.required %}
             <span class='required'>*</span>
         {% endif %}
         </div>

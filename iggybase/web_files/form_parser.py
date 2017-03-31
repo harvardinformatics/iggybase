@@ -15,17 +15,28 @@ class FormParser():
         self.table_names = []
         self.instances = None
         self.files = {}
+        self.fields = {}
 
     def parse(self, form_data = None):
-        fields = {}
-        web_request = False
-        if not form_data:
+        if form_data:
+            web_request = False
+            self.instances = InstanceCollection(int(form_data['max_depth']),{form_data['main_table']:[]})
+        else:
             web_request = True
             form_data = request.form
+            self.instances = InstanceCollection(int(request.form.get('max_depth')),{request.form.get('main_table'):[]})
+
+        errors = {}
+        instances = {}
+
+        if self.instances.oac.current_org_id is not None:
+            default_org_id = session['org_id']['current_org_id']
+        else:
+            default_org_id = 1
 
         # used to identify fields that contain data that needs to be saved
-        field_pattern = \
-            re.compile('^(files_data_entry|id_data_entry|data_entry|record_data|form_data)-(\S+)-(\S+)-(\S+)')
+        field_pattern = re.compile('^(files_data_entry|data_entry)-(\S+)-(\S+)-(\S+)-(\d+)')
+
         for key in form_data:
             if web_request:
                 data = request.form.get(key)
@@ -36,141 +47,128 @@ class FormParser():
                 key = key[key.index('_') + 1:]
 
             field_id = field_pattern.match(key)
+
             if field_id is not None:
-                # TODO: The different types of information being stored in this
-                # multilevel array could be made parts of an object
-                if field_id.group(2) not in fields.keys():
-                    fields[field_id.group(2)] = {}
+                if field_id.group(4) not in instances.keys():
+                    try:
+                        instance_name = self.instances.add_instance(field_id.group(2), {'id': [int(field_id.group(4))]})
+                    except (ValueError, KeyError) as e:
+                        instance_name = self.instances.add_instance(field_id.group(2), {'name': ['new']})
 
-                if field_id.group(4) not in fields[field_id.group(2)].keys():
-                    fields[field_id.group(2)][field_id.group(4)] = {'data_entry': {}, 'id_data_entry': {},
-                                                                    'files_data_entry': {}}
+                    self.instances[instance_name].form_index = field_id.group(5)
+                    instances[field_id.group(4)] = instance_name
+                else:
+                    instance_name = instances[field_id.group(4)]
 
-                fields[field_id.group(2)][field_id.group(4)][field_id.group(1)][field_id.group(3)] = data
-            elif key == 'max_level':
-                max_level = data
+                field_name = field_id.group(3)
+                table_name = field_id.group(2)
 
-        if request.files:
-            # http://werkzeug.pocoo.org/docs/0.11/datastructures/#werkzeug.datastructures.FileStorage
-            files = request.files
+                if table_name not in self.table_names:
+                    self.table_names.append(table_name)
 
-            for key in files:
-                if files[key] and util.allowed_file(files[key].filename):
-                    field_id = field_pattern.match(files[key].name)
+                meta_data = self.instances.tables[table_name].fields[table_name + "|" + field_name]
+                field_data = meta_data.Field
 
-                    filename = secure_filename(files[key].filename)
-
-                    if field_id.group(3) not in fields[field_id.group(2)][field_id.group(4)][field_id.group(1)]:
-                        fields[field_id.group(2)][field_id.group(4)][field_id.group(1)][field_id.group(3)] = {}
-
-                    fields[field_id.group(2)][field_id.group(4)][field_id.group(1)][field_id.group(3)][filename] = \
-                        files[key]
-
-        # for key1, value1 in fields.items():
-        #     for key2, value2 in value1.items():
-        #         for key3, value3 in value2.items():
-        #             for key4, value4 in value3.items():
-        #                logging.info(str(key1) + ' ' + str(key2) + ' ' + str(key3) + ' ' + str(key4) + ': ' +
-        #                             str(value4))
-
-        self.instances = InstanceCollection(int(max_level), {self.table_name: []} )
-
-        for table_name_field, rows in fields.items():
-            for row_id, row_data in rows.items():
-                if table_name_field not in self.table_names:
-                    self.table_names.append(table_name_field)
-
-                try:
-                    instance_name = self.instances.add_new_instance(table_name_field, {'id': [int(row_id)]})
-                except (ValueError, KeyError) as e:
-                    instance_name = self.instances.add_new_instance(table_name_field, {'name': ['new']})
-
-                if ('organization_id' in row_data['data_entry'].keys() and
-                        row_data['data_entry']['organization_id']):
-                    row_org_id = row_data['data_entry']['organization_id']
-
-                    if not isinstance(row_org_id, int):
-                        row_org_id = self.instances.set_foreign_key_field_id(table_name_field, 'organization_id', row_org_id)
-
-                if row_org_id is None:
-                    if self.instances[instance_name] and self.instances[instance_name].organization_id:
-                        row_org_id = self.instances[instance_name].organization_id
-                    elif self.instances.oac.current_org_id is not None:
-                        row_org_id = session['org_id']['current_org_id']
-                    else:
-                        row_org_id = 1
-
-                row_data['data_entry']['organization_id'] = row_org_id
-
-                for table_field, meta_data in self.instances.tables[table_name_field].fields.items():
-                    # only update fields that were on the form
-                    if meta_data.Field.display_name not in row_data['data_entry'].keys():
-                        continue
-
-                    field_data = meta_data.Field
-                    field = field_data.display_name
-
-                    # handle empty and FK
-                    if row_data['data_entry'][field] == '':
-                        self.instances.set_value(instance_name, field, None)
-                    elif field_data.foreign_key_table_object_id is not None:
+                # handle empty and FK
+                if data == '':
+                    self.instances.set_value(instance_name, field_name, None)
+                elif field_data.foreign_key_table_object_id is not None:
+                    try:
+                        lookup_value = int(data)
+                        if lookup_value == -99:
+                            lookup_value = None
+                    except (ValueError, KeyError):
                         try:
-                            self.instances.set_value(instance_name, field, int(row_data['id_data_entry'][field]))
-                        except (ValueError, KeyError):
-                            try:
-                                if row_data['data_entry'][field] is None or row_data['data_entry'][field] == '' \
-                                        or int(row_data['data_entry'][field]) == -99:
-                                    self.instances.set_value(instance_name, field, None)
+                            if data is None or data == '':
+                                lookup_value = None
+                            else:
+                                if web_request:
+                                    data = request.form.get('id_' + key)
                                 else:
-                                    self.instances.set_value(instance_name, field, int(row_data['data_entry'][field]))
-                            except (ValueError, KeyError):
-                                self.instances.set_value(instance_name, field, None)
-                    # handle datatypes
-                    elif meta_data.type == 'integer':
-                        self.instances.set_value(instance_name, field, int(row_data['data_entry'][field]))
-                    elif meta_data.type == 'boolean':
-                        if row_data['data_entry'][field] in ['yes', 'y', 'True', True, 1, '1']:
-                            self.instances.set_value(instance_name, field, True)
-                        else:
-                            self.instances.set_value(instance_name, field, False)
-                    elif meta_data.type == 'datetime':
-                        try:
-                            datetime_val = datetime.strptime(row_data['data_entry'][field], '%Y-%m-%d %H:%M:%S')
-                            self.instances.set_value(instance_name, field, datetime_val)
-                        except ValueError as e:
-                            logging.info('Failed to parse datetime ' + field + ':' + row_data['data_entry'][field])
-                            logging.info(format(e))
-                    elif meta_data.type == 'date':
-                        try:
-                            date_val = datetime.strptime(row_data['data_entry'][field], '%Y-%m-%d')
-                            self.instances.set_value(instance_name, field, date_val.date())
-                        except ValueError as e:
-                            logging.info('Failed to parse date ' + field + ':' + row_data['data_entry'][field])
-                            logging.info(format(e))
-                    elif meta_data.type == 'float':
-                        self.instances.set_value(instance_name, field, float(row_data['data_entry'][field]))
-                    elif meta_data.type == 'decimal':
-                        self.instances.set_value(instance_name, field, Decimal(row_data['data_entry'][field]))
-                    elif meta_data.type == 'file':
-                        old_files = []
-                        self.files[(instance_name, table_name_field)] = []
+                                    data = form_data['id_' + key]
 
-                        if row_data['files_data_entry'][field] != "":
-                            old_files = row_data['files_data_entry'][field].split("|")
+                                lookup_value = int(data)
+                        except (ValueError, KeyError):
+                            lookup_value = None
 
-                        if request.files:
-                            for filename, file in row_data['data_entry'][field].items():
-                                self.files[(instance_name, table_name_field)].append({'filename': filename,
-                                                                                      'file': file})
+                    if field_name == 'organization_id' and lookup_value is None:
+                        lookup_value = default_org_id
 
-                                if filename not in old_files:
-                                    old_files.append(filename)
-
-                        if len(old_files) > 0:
-                            filenames = "|".join(old_files)
-                            self.instances.set_value(instance_name, field, filenames)
+                    self.instances.set_value(instance_name, field_name, lookup_value)
+                # handle datatypes
+                elif meta_data.type == 'integer':
+                    try:
+                        self.instances.set_value(instance_name, field_name, int(data))
+                    except ValueError as e:
+                        self.instances.set_value(instance_name, field_name, data)
+                        errors[key] = e.args[0]
+                        logging.info('Failed to parse int ' + field_name + ':' + str(data))
+                        logging.info(format(e))
+                elif meta_data.type == 'boolean':
+                    if data in ['yes', 'y', 'True', True, 1, '1', 'on']:
+                        self.instances.set_value(instance_name, field_name, True)
                     else:
-                        self.instances.set_value(instance_name, field, row_data['data_entry'][field])
+                        self.instances.set_value(instance_name, field_name, False)
+                elif meta_data.type == 'datetime':
+                    try:
+                        datetime_val = datetime.strptime(data, '%Y-%m-%d %H:%M:%S')
+                        self.instances.set_value(instance_name, field_name, datetime_val)
+                    except ValueError as e:
+                        self.instances.set_value(instance_name, field_name, data)
+                        errors[key] = e.args[0]
+                        logging.info('Failed to parse datetime ' + field_name + ':' + str(data))
+                        logging.info(format(e))
+                elif meta_data.type == 'date':
+                    try:
+                        date_val = datetime.strptime(data, '%Y-%m-%d')
+                        self.instances.set_value(instance_name, field_name, date_val.date())
+                    except ValueError as e:
+                        self.instances.set_value(instance_name, field_name, data)
+                        errors[key] = e.args[0]
+                        logging.info('Failed to parse date ' + field_name + ':' + str(data))
+                        logging.info(format(e))
+                elif meta_data.type == 'float':
+                    try:
+                        self.instances.set_value(instance_name, field_name, float(data))
+                    except ValueError as e:
+                        self.instances.set_value(instance_name, field_name, data)
+                        errors[key] = e.args[0]
+                        logging.info('Failed to parse date ' + field_name + ':' + str(data))
+                        logging.info(format(e))
+                elif meta_data.type == 'decimal':
+                    try:
+                        self.instances.set_value(instance_name, field_name, Decimal(data))
+                    except ValueError as e:
+                        self.instances.set_value(instance_name, field_name, data)
+                        errors[key] = e.args[0]
+                        logging.info('Failed to parse date ' + field_name + ':' + str(data))
+                        logging.info(format(e))
+                elif meta_data.type == 'file':
+                    self.files[(instance_name, table_name)] = []
+
+                    old_files = []
+                    if data != "":
+                        old_files = data.split("|")
+
+                    if request.files[key] and util.allowed_file(self.files[key].filename):
+                        # http://werkzeug.pocoo.org/docs/0.11/datastructures/#werkzeug.datastructures.FileStorage
+                        for filename, file in request.files[key].items():
+                            filename = secure_filename(filename)
+
+                            self.files[(instance_name, table_name)].append({'filename': filename, 'file': file})
+
+                            if filename not in old_files:
+                                old_files.append(filename)
+                    elif request.files[key]:
+                        self.instances.set_value(instance_name, field_name, data)
+                        errors[key] = 'File type not allowed'
+
+                    if len(old_files) > 0:
+                        self.instances.set_value(instance_name, field_name, "|".join(old_files))
+                else:
+                    self.instances.set_value(instance_name, field_name, data)
+
+        return errors
 
     def save(self):
         commit_status, commit_msg = self.instances.commit()
@@ -180,13 +178,13 @@ class FormParser():
                 if not self.instances.instance_names[key[1]][key[0]]:
                     continue
 
+                directory = (os.path.join(current_app.config['UPLOAD_FOLDER'], key[1],
+                                          self.instances.instance_names[key[1]][key[0]])).strip()
+
+                if not os.path.exists(directory):
+                    os.makedirs(directory)
+
                 for file_data in self.files[key]:
-                    directory = (os.path.join(current_app.config['UPLOAD_FOLDER'], key[1],
-                                              self.instances.instance_names[key[1]][key[0]])).strip()
-
-                    if not os.path.exists(directory):
-                        os.makedirs(directory)
-
                     if os.path.exists(os.path.join(directory, file_data['filename'])):
                         os.remove(os.path.join(directory, file_data['filename']))
 

@@ -40,7 +40,7 @@ $( document ).ready( function () {
             $.fn.updateScrollBar( $( this ) )
         }
     );
-    $( ".multi-row-entry" ).find( "input, select, textarea" ).each( function( ) {
+    $( ".multi-row-data" ).find( "input, select, textarea" ).each( function( ) {
         if ( ! $( this ).is('[readonly]') ) {
             $( this ).contextMenu( cm, { theme: 'human' } );
         }
@@ -281,10 +281,9 @@ $( document ).ready( function () {
         if ( new_row.has( 'new-row' ).length < 1 )
             new_row.addClass( 'new-row' );
 
-        if ( new_row.has( '.remove-row' ).length < 1 )
-            new_row.prepend('<span data_row_id="' + row_id + '" class="glyphicon glyphicon-minus remove-row"></span>');
-
         new_row.find( '.spacer-15' ).remove();
+        new_row.find( '.remove-row' ).remove();
+        new_row.prepend('<span data_row_id="' + row_id + '" class="glyphicon glyphicon-minus remove-row"></span>');
 
         new_row.find( "input, select" ).each(
             function() {
@@ -297,7 +296,7 @@ $( document ).ready( function () {
                     if ( matches && matches.length > 1 ) {
                         var td = $( this ).closest( 'td' );
 
-                        var new_id = matches[ 1 ] + "-" +  matches[ 2 ] + "-" +  matches[ 3 ] + "-new_" + ( row_id );
+                        var new_id = matches[ 1 ] + "-" +  matches[ 2 ] + "-" +  matches[ 3 ] + "-new_" + row_id + "-" + row_id;
 
                         if ( $( this ).prop( 'type' ) == 'select-one' ) {
                             //alert('select matches[ 1 ]: ' + matches[ 1 ]);
@@ -435,11 +434,6 @@ $( document ).ready( function () {
 
     $.fn.updateScrollBar = function( data_div ) {
         var table_name = data_div.attr( 'name' );
-
         $( '#' + table_name + '_header' ).scrollLeft( data_div.scrollLeft( ) )
-    }
-
-    $.fn.submitData = function () {
-
     }
 } ) ( jQuery );

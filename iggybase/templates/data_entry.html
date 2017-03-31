@@ -17,8 +17,8 @@
 
     {% block content_title -%}
         <div class="content_title">
-            {% if table_name is defined %}
-                <h1>{{ fg.instance.tables[fg.table_name].table_display_name.replace( '_',' ' )|title }} {{ page_header.replace( '_',' ' )|title }}</h1>
+            {% if form_tables is defined and table_name is defined %}
+                <h1>{{ form_tables[0].title }}</h1>
                 <br/>
                 <div style="color:red;float:left;margin-right:5px;">*</div><div style="color:black;float:left;margin-right:5px;">= required field <input readonly class="lookupfieldex"/> = lookup field</div>
             {% else %}
@@ -27,20 +27,18 @@
         </div>
     {%- endblock content_title %}
 
-    {% block topbuttonbar -%}
-        {{ super() }}
-    {% endblock topbuttonbar -%}
-
     {% block hidden_fields -%}
-        {{ super() }}
+        {% if form_tables is defined %}
+            {{ macros.render_buttons(form_tables[0].top_buttons) }}
+        {% endif %}
     {% endblock hidden_fields -%}
 
     {% block page_msg -%}
-        {% if fg.form_class.errors %}
+        {% if form is defined and form.errors %}
             <div class="red">
         {% endif %}
             {{ super() }}
-        {% if fg.form_class.errors %}
+        {% if form is defined and form.errors %}
             </div>
         {% endif %}
     {% endblock page_msg -%}
@@ -49,108 +47,85 @@
         {% block page_content -%}
 
         <div class="page_content md-col-12">
-            {% set form_fields = form._fields %}
-            {%- for field_name, field in form_fields.items() %}
-                {% if "table_level_" in field.id -%}
-                    {% set table_level = field.data|int -%}
-                {% elif "table_name_" in field.id -%}
-                    {% set table_name = field.data -%}
-                    {% set table_title = fg.instance.tables[table_name].table_display_name.replace( '_',' ' )|title -%}
+            {%- for table in form_tables %}
+                <div class="div_level_{{ table.level }}">
+                {% if table.level != 0 %}
+                    <h3>{{ table.title }}</h3>
 
-                    {%- if "modal_form" in page_context %}
-                        <div class="div_level_0">
-                        {% set col_style = 'col-md-2' -%}
-                        {% set label_style = 'col-md-2' -%}
-                    {%- elif (table_level == 0 and form_type == "SingleForm") %}
-                        <div class="div_level_0">
-                        {% set col_style = 'col-md-4' -%}
-                        {% set label_style = 'col-md-2' -%}
-                    {% else -%}
-                        <div class="div_level_{{ table_level }}">
-                        {% set col_style = 'col-md-2' -%}
-                        {% set label_style = 'col-md-2' -%}
-                        <h3>{{ table_title }}</h3>
-                    {% endif -%}
-                {% elif "start_table_" in field.id -%}
-                    {%- if "modal_form" in page_context %}
-                        <div class="container">
-                    {%- elif (table_level == 0 and form_type == "SingleForm") %}
-                        <div id="{{ table_name }}" class="container">
-                    {% else -%}
-                        <div class="container multi-row-entry">
-                        <div class="row multi-row-header" id="{{ table_name }}_header" name="{{ table_name }}_header">
-                        {% set field_loop = loop %}
-                        {% set firstrow = 1 %}
-                        {% set found = 0 %}
-                        {% for field_header_name, field_header in form_fields.items() if firstrow == 1 %}
-                            {%- if 'wide' in field_header.iggybase_class %}
-                                {% set tmp_label_style = 'col-md-4' -%}
-                            {% else -%}
-                                {% set tmp_label_style = label_style -%}
-                            {% endif -%}
-
-                            {% if 'end_row_' in field_header.id and found == 1 %}
-                                {% set firstrow = 0 %}
-                            {% endif %}
-
-                            {% if found == 1 %}
-                                {{ macros.form_field_th( field_header, tmp_label_style ) }}
-                            {% endif %}
-
-                            {% if field_name == field_header_name %}
-                                {% set found = 1 %}
-                            {% endif %}
-                        {%- endfor %}
-                        </div>
-                        <div id="{{ table_name }}" name="{{ table_name }}" class="multi-row-data pre-scrollable">
-                    {% endif -%}
-                {% elif "_buttons_top" in field.id or "_buttons_bottom" in field.id -%}
-                    {{ field.data|safe }}
-                {% elif "end_table_" in field.id -%}
-                    {%- if form_type == "SingleForm" and table_level > 0 %}
-                        </div></div></div><br>
-                    {% else %}
-                        </div><br>
-                    {% endif -%}
-                {% elif 'start_row_' in field.id-%}
-                    {% set row_name = field.data %}
-                    {% set field_vars = field.id.split("_") %}
-                    <div class="row" row_id="{{ field_vars[field_vars|length - 1] }}" table_object_name="{{ table_name }}">
-                    {%- if "new" in row_name %}
-                        <span data_row_id="{{ field_vars[field_vars|length - 1] }}" class="glyphicon glyphicon-minus remove-row"></span>
-                    {% else -%}
-                        <span class="spacer-15"></span>
-                    {%- endif %}
-                {% elif 'end_row_' in field.id-%}
+                    <div id='{{ table.table_name}}_top_buttons' class='top_buttons'>
+                        {{ macros.render_buttons(table.top_buttons) }}
                     </div>
-                {% elif not bootstrap_is_hidden_field( field ) -%}
-                    {% if (table_level == 0 and form_type == "SingleForm") or "modal_form" in page_context -%}
-                        {% set field_vars = field.id.split("_") %}
-                        {{ macros.render_field_data_entry( field, field_vars[field_vars|length - 1], table_name, row_name, col_style, label_style ) }}
-                    {% else -%}
-                        {%- if 'wide' in field.iggybase_class %}
-                            {% set tmp_col_style = 'col-md-4' -%}
-                        {% else -%}
-                            {% set tmp_col_style = col_style -%}
-                        {% endif -%}
-                        <div class="{{ tmp_col_style }}">
-                            {{ macros.table_field( field, tmp_col_style ) }}
-                            {% if field.type == "IggybaseFileField" and field.data is string %}
-                                {% set files = field.data.split('|') -%}
-                                {% for file in files -%}
-                                    <a href="/{{ g.facility }}/core/files/{{ table_name }}/{{ row_name }}/{{ file }}" target="_blank">{{ file }}</a>
-                                {% endfor -%}
-                            {% endif -%}
-                        </div>
-                    {%- endif -%}
                 {% endif -%}
+
+                {%- if table.display == 'vertical' -%}
+                    <div id="{{ table.table_name }}" class="{{ table.class }} container">
+                {% else -%}
+                    <div id="{{ table.table_name }}_child" class="{{ table.class }} child_table">
+                    <div class="row multi-row-header" id="{{ table.table_name }}_header" name="{{ table.table_name }}_header">
+                    {% for field_header in table.field_display_names -%}
+                        {{ macros.form_field_th( field_header ) }}
+                    {% endfor -%}
+                    </div>
+                    <div id="{{ table.table_name }}" name="{{ table.table_name }}" class="multi-row-data pre-scrollable">
+                {% endif -%}
+
+                {% for row in table.children %}
+                    {%- if table.display == 'horizontal' -%}
+                        <div class="row" row_id="{{ row.record_name }}" table_object_name="{{ table.table_name }}">
+                        {%- if row.new_record %}
+                            <span data_row_id="{{ row.record_name }}" class="glyphicon glyphicon-minus remove-row"></span>
+                        {% else -%}
+                            <span class="spacer-15"></span>
+                        {%- endif %}
+                    {% endif -%}
+                    {% for iggybase_field in row.children %}
+                        {% set field = form.__getitem__(iggybase_field.field_id) -%}
+                        {% if not bootstrap_is_hidden_field( field ) -%}
+                            {%- if table.display == 'vertical' -%}
+                                <div class="row">
+                                {% set field_vars = field.id.split("_") %}
+                                {{ macros.render_field_data_entry( field, field_vars[field_vars|length - 1], table.table_name, row_name, 'col-md-4', 'col-md-2' ) }}
+                                </div>
+                            {% else -%}
+                                {%- if 'wide' in field.iggybase_class %}
+                                    {% set col_style = 'col-md-4' -%}
+                                {% else -%}
+                                    {% set col_style = 'col-md-2' -%}
+                                {% endif -%}
+                                <div class="{{ col_style }}">
+                                    {{ macros.table_field( field, tmp_col_style ) }}
+                                    {% if field.type == "IggybaseFileField" and field.data is string %}
+                                        {% set files = field.data.split('|') -%}
+                                        {% for file in files -%}
+                                            <a href="/{{ g.facility }}/core/files/{{ table.table_name }}/{{ row_name }}/{{ file }}" target="_blank">{{ file }}</a>
+                                        {% endfor -%}
+                                    {% endif -%}
+                                </div>
+                            {% endif -%}
+                        {% endif -%}
+                    {%- endfor -%}
+                    {%- if table.display == 'horizontal' -%}
+                        </div>
+                    {% endif -%}
+                {%- endfor -%}
+                {%- if table.display == 'horizontal' -%}
+                    </div>
+                {% endif -%}
+                </div>
+                {% if table.level != 0 %}
+                    <div id='{{ table.table_name}}_bottom_buttons' class='bottom_buttons'>
+                        {{ macros.render_buttons(table.bottom_buttons) }}
+                    </div>
+                {% endif -%}
+                </div>
             {%- endfor -%}
-        </div>
         {% endblock page_content -%}
     {% endif -%}
 
     {% block bottombuttonbar -%}
-        {{ super() }}
+        {% if form_tables is defined %}
+            {{ macros.render_buttons(form_tables[0].bottom_buttons) }}
+        {% endif %}
     {% endblock bottombuttonbar -%}
 
     {% if form is defined %}

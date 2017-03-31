@@ -1,9 +1,12 @@
 from types import new_class
+from flask import request
 from flask.ext.wtf import Form
 from wtforms import HiddenField
 from wtforms.validators import DataRequired, Length, email, Optional
 from iggybase import utilities as util
 from iggybase.core.instance_collection import InstanceCollection
+from iggybase.web_files.iggybase_form_objects import IggybaseFormTable, IggybaseFormRecord, IggybaseFormField, \
+    IggybaseFormButton
 from iggybase.web_files import constants
 from iggybase.web_files.page_template import PageTemplate
 from iggybase.web_files.iggybase_form_fields import IggybaseBooleanField, IggybaseDateField, IggybaseFloatField,\
@@ -20,20 +23,22 @@ class FormGenerator(PageTemplate):
         self.classattr = {}
         self.dropdowns = {}
         self.form_class = None
+        self.form_tables = []
         self.context = {'table_name': self.table_name, 'form_type': self.form_type}
-        self.instance = None
+        self.instances = None
 
     def page_template_context(self):
+        self.context['submit_action_url'] = self.get_submit_action_url()
         self.context['form'] = self.form_class
-        self.context['fg'] = self
+        self.context['form_tables'] = self.form_tables
         return super(FormGenerator, self).page_template_context(**self.context)
 
-    def add_page_context(self, context = {}):
-        for k, v in context.items():
-            self.context[k] = v
+    def add_page_context(self, context=None):
+        if context is not None:
+            for k, v in context.items():
+                self.context[k] = v
 
-    def input_field(self, field_data, display_name, table_name, row_name, control_id, control_type, control_str,
-                    value=None):
+    def input_field(self, field_data, display_name, table_name, row_name, control_id, field_class, value=None):
         kwargs = {}
         validators = []
 
@@ -63,11 +68,7 @@ class FormGenerator(PageTemplate):
             validators.append(email())
 
         kwargs['validators'] = validators
-
-        if field_data.Field.field_class is not None:
-            kwargs['iggybase_class'] = control_type + ' ' + field_data.Field.field_class
-        else:
-            kwargs['iggybase_class'] = control_type
+        kwargs['iggybase_class'] = field_class
 
         if ((field_data.FieldRole.permission_id == constants.DEFAULTED and row_name != 'new') or
                 (field_data.FieldRole.permission_id == constants.IMMUTABLE and row_name == 'new') or
@@ -161,25 +162,28 @@ class FormGenerator(PageTemplate):
     def data_entry_form(self, row_names=['new'], instances = None, depth = 2):
         self.form_class = None
         self.classattr = {}
+        self.form_tables = []
 
         if instances is None:
-            instances = InstanceCollection(depth, {self.table_name: row_names})
+            self.instances = InstanceCollection(depth, {self.table_name: row_names})
 
-            if not instances[row_names[0]].new_instance and self.form_type == 'SingleForm':
-                instances.get_linked_instances(instances[row_names[0]].instance.id)
+            if row_names[0] != 'new' and self.form_type == 'SingleForm':
+                self.instances.get_linked_instances(self.instances[row_names[0]].instance.id)
+        else:
+            self.instances = instances
 
-        self.instance = instances
+        row_index = self.get_table()
 
-        self.get_table(instances)
+        self.classattr['row_counter'] = HiddenField('row_counter', default=row_index)
+        self.classattr['max_depth'] = HiddenField('max_depth', default=depth)
 
-        self.classattr['row_counter'] = HiddenField('row_counter', default=len(instances.instances))
 
         form_class = new_class(self.form_type, (Form,), {}, lambda ns: ns.update(self.classattr))
 
         self.form_class = form_class(None)
 
-    def get_table(self, instances):
-        row_counter = 0
+    def get_table(self):
+        row_index = 0
         level = 0
 
         table_context = []
@@ -188,8 +192,8 @@ class FormGenerator(PageTemplate):
             if context not in ['base-context', 'workflow','modal_form']:
                 table_context.append(context)
 
-        for table_name, table_data in instances.tables.items():
-            if table_name == 'history' or table_name == 'long_text':
+        for table_name, table_data in self.instances.tables.items():
+            if table_name == 'history':
                 continue
 
             table_id = table_data.table_object.id
@@ -202,24 +206,33 @@ class FormGenerator(PageTemplate):
                 self.classattr['linkcolumn_' + str(table_id)] = HiddenField('linkcolumn_' + str(table_id),
                                                                             default=link_field.Field.display_name)
 
-            self.classattr['table_level_' + str(table_id)] = HiddenField('table_level_' + str(table_id),
-                                                                         default=table_level)
-
             if level < table_level:
                 level = table_level
 
             self.classattr['table_name_' + str(table_id)] = HiddenField('table_name_' + str(table_id),
                                                                         default=table_name)
 
+            title = table_data.table_display_name.replace('_', ' ').title()
             if table_level == 0 and self.form_type == 'SingleForm':
+                form_table = IggybaseFormTable(table_name,
+                                               title + ' ' + self.page_form.page_header.replace("_", " ").title(),
+                                               level)
                 control_type = 'data-control'
                 temp_page_context = ['main-table'] + table_context
                 buttons = self.role_access_control.page_form_buttons(self.page_form_ids, temp_page_context, table_id)
             elif self.form_type == 'SingleForm':
+                form_table = IggybaseFormTable(table_name,
+                                               title,
+                                               level,
+                                               'horizontal')
                 control_type = 'table-control'
                 temp_page_context = ['child-table'] + table_context
                 buttons = self.role_access_control.page_form_buttons(self.page_form_ids, temp_page_context, table_id)
             else:
+                form_table = IggybaseFormTable(table_name,
+                                               title,
+                                               level,
+                                               'horizontal')
                 control_type = 'table-control'
                 temp_page_context = ['multiple'] + table_context
                 buttons = self.role_access_control.page_form_buttons(self.page_form_ids, temp_page_context, table_id)
@@ -234,47 +247,72 @@ class FormGenerator(PageTemplate):
                        'table_level': str(table_level),
                        'table_title': table_data.table_display_name.replace('_', ' ').title()}
 
-            buttons['top'], buttons['bottom'] = self.button_generator(buttons, context)
+            if level == 0:
+                self.classattr['main_table'] = HiddenField('main_table', default=table_name)
+                top_buttons, bottom_buttons = self.button_generator(self.buttons, context)
+                form_table.add_buttons(top_buttons, bottom_buttons)
 
-            if buttons['top']:
-                self.classattr[table_name + '_buttons_top'] =  HiddenField('buttons_top', default=util.html_buttons(buttons['top']))
+            top_buttons, bottom_buttons = self.button_generator(buttons, context)
+            form_table.add_buttons(top_buttons, bottom_buttons)
 
-            self.classattr['start_table_' + str(table_id)] = HiddenField('start_table_' + str(table_id),
-                                                                         default=table_name)
+            instances = sorted(list(self.instances.table_instances[table_name].values()), key=lambda x: x.form_index)
 
-            for instance_name, instance in instances.table_instances[table_name].items():
-                self.get_row(instances, table_name, instance, control_type, row_counter)
+            for instance in instances:
+                self.get_row(form_table, instance, control_type)
 
-                row_counter += 1
+                if row_index < int(instance.form_index):
+                    row_index = int(instance.form_index)
 
-            if buttons['bottom']:
-                self.classattr[table_name + '_buttons_bottom'] =  HiddenField('buttons_bottom',
-                                                                              default=util.html_buttons(buttons['bottom']))
+            self.form_tables.append(form_table)
 
-            self.classattr['end_table_' + str(table_id)] = HiddenField('end_table_' + str(table_id),default=table_name)
+        return row_index
 
-        self.classattr['max_level'] = HiddenField('max_level', default=level)
+    def get_row(self, form_table, instance, control_type):
+        record_index = form_table.add_new_record(instance.instance.name)
 
-    def get_row(self, instances, table_name, instance, control_type, row_counter):
-        self.classattr['start_row_'+str(row_counter)] = HiddenField('start_row_'+str(row_counter),
-                                                                    default=instance.instance.name)
+        for field_name, field in self.instances.tables[form_table.table_name].fields.items():
+            if field.Field.field_class is not None:
+                field_class = control_type + ' ' + field.Field.field_class
+            else:
+                field_class = control_type
 
-        for field_name, field in instances.tables[table_name].fields.items():
-            field_display_name = field.display_name.title()
+            if field.visible:
+                form_table.field_display_names.append({'name': field.display_name.title(),
+                                                       'required': field.FieldRole.required,
+                                                       'wide': 'wide' in field_class})
 
             value = getattr(instance.instance, field.Field.display_name)
 
-            if field.Field.display_name == 'name' and value is not None and 'empty_row' in value:
+            if field.Field.display_name == 'name' and ('empty_row' in value or 'new' in value):
+                form_table[record_index].new_record = True
                 value = None
 
             if instance.new_instance:
-                control_str = table_name + "-" + field.Field.display_name + "-" + instance.instance.name
+                control_str = form_table.table_name + "-" + field.Field.display_name + "-" + instance.instance.name
             else :
-                control_str = table_name + "-" + field.Field.display_name + "-" + str(instance.instance.id)
+                control_str = form_table.table_name + "-" + field.Field.display_name + "-" + str(instance.instance.id)
 
-            control_id = 'data_entry-' + control_str
-            self.classattr[control_id] = self.input_field(field, field_display_name,
-                                                          table_name, instance.instance.name,
-                                                          control_id, control_type, control_str, value)
+            control_id = 'data_entry-' + control_str + "-" + str(instance.form_index)
+            self.classattr[control_id] = self.input_field(field, field.display_name.title(),
+                                                          form_table.table_name, instance.instance.name,
+                                                          control_id, field_class, value)
 
-        self.classattr['end_row_'+str(row_counter)] = HiddenField('end_row_'+str(row_counter))
+            form_table[record_index].add_new_field(control_id, field_class)
+
+    def get_submit_action_url(self):
+        url = ''
+
+        for button_locations, button_objects in self.buttons.items():
+            for button in button_objects:
+                if button.submit_action_url is not None:
+                    url = button.submit_action_url
+
+        if url != '':
+            url = url.replace('<facility>', g.facility)
+            url = url.replace('<module>', self.module_name)
+            url = url.replace('<table>', self.table_name)
+
+        if url == '' or "<" in url:
+            return ''
+        else:
+            return request.url_root + url

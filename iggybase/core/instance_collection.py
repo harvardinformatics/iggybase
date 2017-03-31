@@ -15,6 +15,7 @@ class InstanceCollection:
 
         self.tables = TableCollection(instance_data.keys(), depth)
 
+        self.base_instance = None
         self.instance_counter = 1
         self.instances = OrderedDict()
         self.table_instances = OrderedDict()
@@ -53,6 +54,9 @@ class InstanceCollection:
         for row in instances:
             instance = InstanceData(row, row.name, self.instance_counter)
 
+            if self.base_instance is None:
+                self.base_instance = instance
+
             self.initialize_values(instance)
 
             self.instances[instance.instance_name] = instance
@@ -82,16 +86,16 @@ class InstanceCollection:
 
         i = 0
         while i < quantity:
-            instance_names.append(self.add_new_instance(table_name))
+            instance_names.append(self.add_instance(table_name))
             i += 1
 
         return instance_names
 
-    def add_new_instance(self, table_name, instance_name={'name': ['new']}, parent_link_field=None, parent_id=None):
-        instance_name = self.get_data(table_name, instance_name)
+    def add_instance(self, table_name, instance_name=None):
+        if instance_name is None:
+            instance_name = {'name': ['new']}
 
-        if parent_link_field is not None:
-            setattr(self.instances[instance_name[0]], parent_link_field, parent_id)
+        instance_name = self.get_data(table_name, instance_name)
 
         return instance_name[0]
 
@@ -192,24 +196,6 @@ class InstanceCollection:
             field_value = self.set_foreign_key_field_id(table_name, field_name, field_value)
         elif field.type == 'boolean':
             instance_value = bool(instance_value)
-        elif field.type == 'date':
-            logging.info(field_name)
-            if instance_value is not None:
-                logging.info("instance value: " + instance_value.strftime('%Y-%m-%d'))
-
-            if field_value is not None:
-                logging.info("field_value: " + field_value.strftime('%Y-%m-%d'))
-
-            logging.info(str(instance_value == field_value))
-        elif field.type == 'datetime':
-            logging.info(field_name)
-            if instance_value is not None:
-                logging.info("instance value: " + instance_value.strftime('%Y-%m-%d %H:%m:%S'))
-
-            if field_value is not None:
-                logging.info("field_value: " + field_value.strftime('%Y-%m-%d %H:%m:%S'))
-
-            logging.info(str(instance_value == field_value))
 
         # logging.info('field_name: ' + field_name + "   field_value: " + str(field_value) + " type: " +
         #              str(type(field_value)) + "   getattr: " +
@@ -224,7 +210,7 @@ class InstanceCollection:
                 ((not (field_name == 'name' and field_value is None and instance.new_instance) and
                   self.tables[table_name].level == 0) or (field_name != 'name'))):
             self.instances[instance_name].save = True
-            new_key = self.add_new_instance('history')
+            new_key = self.add_instance('history')
 
             self.set_values(new_key,
                             {'table_object_id': self.tables[table_name].table_object.id,
@@ -289,12 +275,11 @@ class InstanceCollection:
                                                                 list(self.background_save_instances.values()))
 
         if commit_status:
-            base_instance = next(iter(self.items()))[1]
-            if base_instance.instance.id not in commit_msg.keys():
-                commit_msg[base_instance.instance.id] = {'id': base_instance.instance.id,
-                                                         'name': base_instance.instance_name,
-                                                         'table': base_instance.table_name,
-                                                         'old_name': base_instance.old_name}
+            if self.base_instance.instance.id not in commit_msg.keys():
+                commit_msg[self.base_instance.instance.id] = {'id': self.base_instance.instance.id,
+                                                              'name': self.base_instance.instance_name,
+                                                              'table': self.base_instance.table_name,
+                                                              'old_name': self.base_instance.old_name}
 
         return commit_status, commit_msg
 

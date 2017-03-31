@@ -220,6 +220,9 @@ pre {
     color: red;
     font-weight:bold;
 }
+.child_table {
+    margin-bottom: 10px;
+}
 .div_level_0 {
     margin-left: 0px;
     display:inline-block;

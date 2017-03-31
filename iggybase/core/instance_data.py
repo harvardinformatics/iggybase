@@ -7,6 +7,7 @@ class InstanceData():
         self.save = False
         self.instance_name = None
         self.new_instance = None
+        self.form_index = index
 
         self.initialize_name(instance_name, index)
 

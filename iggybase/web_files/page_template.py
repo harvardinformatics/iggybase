@@ -45,14 +45,11 @@ class PageTemplate():
         context['page_header'] = self.page_form.page_header
         context['page_title'] = self.page_form.page_title
         context['top_buttons'], context['bottom_buttons'] = self.button_generator(self.buttons, context)
-        print(context['top_buttons'])
-        print(context['bottom_buttons'])
 
         # logging.info('context[top_buttons]: ' + context['top_buttons'])
         # logging.info('context[bottom_buttons]: ' + context['bottom_buttons'])
 
         context['scripts'] = self.page_scripts(self.scripts)
-        submit_action_url = self.page_button_action(self.buttons)
 
         if not 'hidden_fields' in context:
             context['hidden_fields'] = {}
@@ -61,19 +58,10 @@ class PageTemplate():
         context['hidden_fields'].update({'facility': g.facility})
 
         if 'module_name' in context:
-            if submit_action_url is not None:
-                submit_action_url = submit_action_url.replace('<module>', context['module_name'])
             context['hidden_fields'].update({'mod': context['module_name']})
 
         if 'table_name' in context:
             context['hidden_fields'].update({'table': context['table_name']})
-            if submit_action_url is not None:
-                submit_action_url = submit_action_url.replace('<table>', context['table_name'])
-
-        if submit_action_url is None or "<" in submit_action_url:
-            context['submit_action_url'] = ''
-        else:
-            context['submit_action_url'] = request.url_root + submit_action_url
 
         ## Menus
         # add home to navbar
@@ -166,16 +154,3 @@ class PageTemplate():
                         })
 
         return button_dict['top'], button_dict['bottom']
-
-    def page_button_action(self, buttons):
-        submit_action_url = None
-
-        for button_locations, button_objects in buttons.items():
-            for button in button_objects:
-                if button.submit_action_url is not None:
-                    submit_action_url = button.submit_action_url
-
-        if submit_action_url is not None:
-            submit_action_url = submit_action_url.replace('<facility>', g.facility)
-
-        return submit_action_url
