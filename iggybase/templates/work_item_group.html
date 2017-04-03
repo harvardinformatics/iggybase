@@ -28,7 +28,7 @@
             <h4 class="red">Step already done: any edits will overwrite existing work</h4>
         {% endif %}
         {% if wig.step.Step.notes %}
-            <p>{{ wig.step.Step.notes }}</p>
+            <p>{{ wig.step.Step.notes|safe }}</p>
         {% endif %}
         {% if wig.WorkItemGroup.notes %}
             <br><p>{{ wig.WorkItemGroup.notes }}</p>
