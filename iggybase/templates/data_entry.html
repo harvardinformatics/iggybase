@@ -29,7 +29,7 @@
 
     {% block hidden_fields -%}
         {% if form_tables is defined %}
-            {{ macros.render_buttons(form_tables[0].top_buttons) }}
+            {{ macros.form_buttons(form_tables[0].top_buttons) }}
         {% endif %}
     {% endblock hidden_fields -%}
 
@@ -53,7 +53,7 @@
                     <h3>{{ table.title }}</h3>
 
                     <div id='{{ table.table_name}}_top_buttons' class='top_buttons'>
-                        {{ macros.render_buttons(table.top_buttons) }}
+                        {{ macros.form_buttons(table.top_buttons) }}
                     </div>
                 {% endif -%}
 
@@ -114,7 +114,7 @@
                 </div>
                 {% if table.level != 0 %}
                     <div id='{{ table.table_name}}_bottom_buttons' class='bottom_buttons'>
-                        {{ macros.render_buttons(table.bottom_buttons) }}
+                        {{ macros.form_buttons(table.bottom_buttons) }}
                     </div>
                 {% endif -%}
                 </div>
@@ -124,7 +124,7 @@
 
     {% block bottombuttonbar -%}
         {% if form_tables is defined %}
-            {{ macros.render_buttons(form_tables[0].bottom_buttons) }}
+            {{ macros.form_buttons(form_tables[0].bottom_buttons) }}
         {% endif %}
     {% endblock bottombuttonbar -%}
 

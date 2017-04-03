@@ -15,6 +15,9 @@ class TableCollection():
         self.tables = OrderedDict()
         self.get_tables(table_names)
 
+        self.table_names.append('history')
+        self.tables['history'] = TableData('history')
+
     def __iter__(self):
         return iter(self.tables)
 
@@ -35,27 +38,17 @@ class TableCollection():
             self.add_table(table_name)
 
     def add_table(self, table_name):
-        if 'history' not in self.table_names:
-            history = self.organization_access_control.get_table_object({'name': 'history'})
-            self.initialize_table(history)
-
-        access = self.role_access_control.has_access('TableObject',{'name': table_name})
-        if access.TableObject.extends_table_object_id:
-            extends = self.role_access_control.has_access('TableObject',{'id':
-                                                                         access.TableObject.extends_table_object_id})
-            self.initialize_table(access.TableObject, access.TableObjectRole, extends.TableObject,
-                                  extends.TableObjectRole)
-        else:
-            self.initialize_table(access.TableObject, access.TableObjectRole)
+        self.table_names.append(table_name)
+        self.tables[table_name] = TableData(table_name)
 
         if self.depth > 0 and self.tables[table_name].table_object:
             data = self.role_access_control.get_link_tables(self.tables[table_name].table_object, self.depth)
 
             for index, link_data in enumerate(data):
                 if link_data['table_meta_data']:
-                    table_name = link_data['table_meta_data'].name
-                    self.table_names.append(table_name)
-                    self.tables[table_name] = TableData(table_name)
+                    link_name = link_data['table_meta_data'].name
+                    self.table_names.append(link_name)
+                    self.tables[link_name] = TableData(link_name)
 
                     self.tables[table_name].initialize_table(link_data['level'],
                                           link_data['parent'],

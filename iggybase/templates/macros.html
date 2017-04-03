@@ -21,6 +21,14 @@
 {%- endmacro %}
 
 {% macro render_buttons( buttons ) -%}
+{% for button in buttons -%}
+    {% if button %}
+        {{html_button(button)|safe}}
+        {% endif %}
+    {% endfor -%}
+{%-endmacro%}
+
+{% macro form_buttons( buttons ) -%}
     {% for button in buttons -%}
         <input
         {% for prop, value in button.props.items() -%}

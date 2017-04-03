@@ -1,6 +1,7 @@
 from iggybase.core.field_collection import FieldCollection
 from flask import abort
 from iggybase import g_helper
+from importlib import import_module
 import logging
 
 
@@ -24,7 +25,9 @@ class TableData():
             self.extends = table_data.TableObject
             self.extends_role = table_data.TableObjectRole
 
-        self.level = None
+            self.extends_instance = self.get_table(self.extends)
+
+        self.level = 0
         self.parent_link_field_display_name = None
         self.parent = None
         self.link_data = None
@@ -79,9 +82,12 @@ class TableData():
             self.parent_link_field_display_name = \
                 self.fields.fields_by_id[(self.extends.id, link_data.child_link_field_id)].Field.display_name
 
-    def get_table(self):
+    def get_table(self, table_object = None):
+        if table_object is None:
+            table_object = self.table_object
+
         try:
-            if hasattr(self.table_object, 'admin_table') and self.table_object.admin_table == 1:
+            if hasattr(table_object, 'admin_table') and table_object.admin_table == 1:
                 module_model = import_module('iggybase.admin.models')
             else:
                 module_model = import_module('iggybase.models')
