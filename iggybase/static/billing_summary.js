@@ -23,13 +23,17 @@ $(document).ready(function(){
         },
         footerCallback: function(row, data, start, end, display) {
             var api = this.api();
-            var intVal = function (i) {
+            var intVal = function (i, def) {
                 return typeof i == 'string' ? i.replace(/[\$,]/g, '')*1 :
-                    typeof i == 'number' ? i : 0;
+                    typeof i == 'number' ? i : def;
             };
-            $(api.column(11).footer()).html("total: $" + (api.column(11).data().reduce(function (a, b){
-                return intVal(a) + intVal(b);
-            }, 0)).toFixed(2)
+            var tot = [];
+            api.data().each(function (v, k) {
+              tot[k] = intVal(v[11], 0) + intVal(v[12], 1);
+            });
+            $(api.column(11).footer()).html("total: $" + (
+            tot.reduce(function (a, b) { return a + b;}, 0)
+                        ).toFixed(2)
             );
         }
 
