@@ -20,7 +20,19 @@ $(document).ready(function(){
         ],
         select: {
             style:'multi'
+        },
+        footerCallback: function(row, data, start, end, display) {
+            var api = this.api();
+            var intVal = function (i) {
+                return typeof i == 'string' ? i.replace(/[\$,]/g, '')*1 :
+                    typeof i == 'number' ? i : 0;
+            };
+            $(api.column(11).footer()).html("total: $" + (api.column(11).data().reduce(function (a, b){
+                return intVal(a) + intVal(b);
+            }, 0)).toFixed(2)
+            );
         }
+
     });
     $( '#edit' ).click( function(){ return $.fn.editSelected(table);} );
     $( '#create_invoice, #regenerate' ).click( function(){ return $.fn.createInvoice(table);} );

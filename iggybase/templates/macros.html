@@ -147,7 +147,13 @@
                     {% endif %}
                 {% endfor %}
         </tr></thead>
-    </table>
+        <tfoot>
+                {% for name, field in table_query.fc.fields.items() %}
+                    {% if field.visible %}
+                    <th data-name="{{field.name}}"></th>
+                    {% endif %}
+                {% endfor %}
+    </tfoot></table>
     {% endif %}
 {%- endmacro %}
 
