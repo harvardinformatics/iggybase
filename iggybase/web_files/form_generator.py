@@ -3,10 +3,8 @@ from flask import request
 from flask.ext.wtf import Form
 from wtforms import HiddenField
 from wtforms.validators import DataRequired, Length, email, Optional
-from iggybase import utilities as util
 from iggybase.core.instance_collection import InstanceCollection
-from iggybase.web_files.iggybase_form_objects import IggybaseFormTable, IggybaseFormRecord, IggybaseFormField, \
-    IggybaseFormButton
+from iggybase.web_files.iggybase_form_objects import IggybaseFormTable
 from iggybase.web_files import constants
 from iggybase.web_files.page_template import PageTemplate
 from iggybase.web_files.iggybase_form_fields import IggybaseBooleanField, IggybaseDateField, IggybaseFloatField,\

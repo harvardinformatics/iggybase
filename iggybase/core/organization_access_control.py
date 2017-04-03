@@ -98,36 +98,6 @@ class OrganizationAccessControl:
             logging.error("Flush Error: " + format(e))
             return False, "Flush Error: " + format(e)
 
-    def fields(self, table_object_id, filter=None, active=1):
-        filters = [
-            (models.FieldRole.role_id == self.role.id),
-            (models.Field.table_object_id == table_object_id),
-            (models.Field.active == active),
-            (models.FieldRole.active == active)
-        ]
-
-        if filter is not None:
-            for display_name, value in filter.items():
-                field_data = display_name.split(".")
-
-                if field_data[0] == "field":
-                    filters.append((getattr(models.Field, field_data[1]) == value))
-                else:
-                    filters.append((getattr(models.FieldRole, field_data[1]) == value))
-
-        res = (self.session.query(models.Field, models.FieldRole, models.DataType).
-               join(models.FieldRole).
-               join(models.DataType).
-               filter(*filters).
-               order_by(models.FieldRole.order, models.FieldRole.display_name).all())
-
-
-        if res is None:
-            return {'Field': {}, 'FieldRole': {}, 'DataType': {}}
-        else:
-            return res
-
-
     def rollback(self):
         self.session.rollback()
 
@@ -472,12 +442,6 @@ class OrganizationAccessControl:
             filters.append((getattr(table, 'organization_id')).in_(self.org_ids))
 
         return table.query.filter(*filters).order_by(getattr(table, 'name'))
-
-    def get_long_text(self, lt_id, table=None):
-        if table is None:
-            table = util.get_table("long_text")
-
-        return table.query.filter_by(id=lt_id).first()
 
     def save_data_instance(self, update_instances, new_instances, background_instances=[]):
         # actions = self.get_table_object_actions()
