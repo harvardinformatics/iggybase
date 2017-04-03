@@ -73,6 +73,7 @@ class TableData():
         self.link_data = link_data
         self.link_type = link_type
 
+        logging.info(self.table_name)
         if level == 0:
             self.parent_link_field_display_name = None
         elif self.extends is None:
