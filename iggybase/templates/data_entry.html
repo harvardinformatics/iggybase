@@ -28,10 +28,12 @@
     {%- endblock content_title %}
 
     {% block hidden_fields -%}
-        {% if form_tables is defined %}
-            {{ macros.form_buttons(form_tables[0].top_buttons) }}
-        {% endif %}
+        {{ super() }}
     {% endblock hidden_fields -%}
+
+    {% if form_tables is defined %}
+        {{ macros.form_buttons(form_tables[0].top_buttons) }}
+    {% endif %}
 
     {% block page_msg -%}
         {% if form is defined and form.errors %}

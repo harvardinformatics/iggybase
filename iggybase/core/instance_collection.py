@@ -155,6 +155,9 @@ class InstanceCollection:
                     setattr(instance.instance, 'organization_id', org_id)
                 elif meta_data.Field.data_type_id == 3:
                     setattr(instance.instance, meta_data.Field.display_name, False)
+                elif meta_data.Field.display_name == self.tables[table_name].parent_link_field_display_name and \
+                                self.tables[table_name].level == 1:
+                    setattr(instance.instance, meta_data.Field.display_name, self.base_instance.instance_name)
 
     def set_foreign_key_field_id(self, table_name, field, value):
         if isinstance( value, int ):

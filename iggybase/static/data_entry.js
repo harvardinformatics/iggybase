@@ -158,7 +158,7 @@ $( document ).ready( function () {
     $.fn.searchResults = function ( ele, modal_open, search_vals ) {
         search_input = ele.attr( 'id' );
 
-        var matches = search_input.match( /(\S+)-(\S+)-(\S+)-(\S+)/ );
+        var matches = search_input.match( /(\S+)-(\S+)-(\S+)-(\S+)-(\d+)/ );
 
         if ( !search_vals )
             var search_vals = {};
@@ -291,7 +291,7 @@ $( document ).ready( function () {
                     $( this ).remove( );
                 } else {
                     var id = $(this).attr( 'id' );
-                    var matches = id.match( /(\S+)-(\S+)-(\S+)-(\S+)/ );
+                    var matches = id.match( /(\S+)-(\S+)-(\S+)-(\S+)-(\d+)/ );
 
                     if ( matches && matches.length > 1 ) {
                         var td = $( this ).closest( 'td' );

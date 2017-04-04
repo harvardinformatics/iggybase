@@ -71,6 +71,9 @@ class FormParser():
 
                 # handle empty and FK
                 if data == '':
+                    if meta_data.FieldRole.required == 1:
+                        errors[key] = "Field is required"
+                        logging.info('required field not entered: ' + field_name)
                     self.instances.set_value(instance_name, field_name, None)
                 elif field_data.foreign_key_table_object_id is not None:
                     try:
