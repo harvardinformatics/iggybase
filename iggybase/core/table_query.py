@@ -130,8 +130,9 @@ class TableQuery:
     def get_first_row_dict(self):
         row_dict = OrderedDict()
         row = self.get_first()
-        for i, field in enumerate(self.fc.fields.values()):
-            row_dict[field.display_name] = row[i]
+        for i, key in enumerate(row.keys()):
+            if key in self.fc.fields:
+                row_dict[self.fc.fields[key].display_name] = row[i]
         return row_dict
 
     def get_first(self): # for detail

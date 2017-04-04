@@ -288,21 +288,23 @@ class OrganizationAccessControl:
                     col = getattr(table_model, 'name') + '/' + col
 
                 # add to joins if not first table, avoid joining to self
-                if (field.visible and not first_table_named
-                    or (first_table_named == field.TableObject.name)):
-                    first_table_named = field.TableObject.name
-                    if table_model not in tables:
-                        tables.append(table_model)
-                    join_type = 'inner'
-                else:
-                    if field.group_func:
-                        outer_joins.append(table_model)
-                        join_type = 'outer'
-                    elif table_model not in joins:
-                        joins.append(table_model)
+                if field.visible:
+                    # first table not yet named
+                    if (not first_table_named
+                        or (first_table_named == field.TableObject.name)):
+                        first_table_named = field.TableObject.name
                         if table_model not in tables:
                             tables.append(table_model)
                         join_type = 'inner'
+                    else:
+                        if field.group_func:
+                            outer_joins.append(table_model)
+                            join_type = 'outer'
+                        elif table_model not in joins:
+                            joins.append(table_model)
+                            if table_model not in tables:
+                                tables.append(table_model)
+                            join_type = 'inner'
             # save unformatted col to be used in where if needed
             base_col = col
             if field.visible:
