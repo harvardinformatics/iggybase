@@ -329,3 +329,6 @@ pre {
 #modal_search_results input {
     white-space: normal;
 }
+.tall {
+    height: 60px;
+}
