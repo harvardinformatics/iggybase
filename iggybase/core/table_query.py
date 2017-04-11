@@ -124,15 +124,20 @@ class TableQuery:
                     row_formatted.append(col)
                 if row_formatted:
                     row_list.append(row_formatted)
-                    self.results = row_list
+            self.results = row_list
         return self.results
 
     def get_first_row_dict(self):
         row_dict = OrderedDict()
         row = self.get_first()
-        for i, key in enumerate(row.keys()):
-            if key in self.fc.fields:
-                row_dict[self.fc.fields[key].display_name] = row[i]
+        # using index because formatted results are list and unformatted results
+        # are a sqlalchemy object and both contian only visible fields and need
+        # to pull the display name from fields dict
+        i = 0
+        for key, field in self.fc.fields.items():
+            if field.visible:
+                row_dict[field.display_name] = row[i]
+                i += 1 # only visible values will be in results
         return row_dict
 
     def get_first(self): # for detail
