@@ -50,6 +50,7 @@
 
         <div class="page_content md-col-12">
             {%- for table in form_tables %}
+                {% if table.children %}
                 <div class="div_level_{{ table.level }}">
                 {% if table.level != 0 %}
                     <h3>{{ table.title }}</h3>
@@ -119,7 +120,8 @@
                         {{ macros.form_buttons(table.bottom_buttons) }}
                     </div>
                 {% endif -%}
-                </div>
+            </div>
+            {% endif %}
             {%- endfor -%}
             </div>
         {% endblock page_content -%}
