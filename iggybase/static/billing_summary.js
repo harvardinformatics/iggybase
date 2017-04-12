@@ -21,29 +21,29 @@ $(document).ready(function(){
         select: {
             style:'multi'
         },
-        /*footerCallback: function(row, data, start, end, display) {
+        footerCallback: function(row, data, start, end, display) {
             var api = this.api();
             var intVal = function (i, def) {
                 return typeof i == 'string' ? i.replace(/[\$,]/g, '')*1 :
                     typeof i == 'number' ? i : def;
             };
-            var tot = [];
-            var tot2 = [];
+            var data_code = [];
+            var data_po = [];
             api.data().each(function (v, k) {
-              if ((k % 2) == 0) {
-                tot[k] = intVal(v[11], 0) + intVal(v[12], 1);
+              if (v[9] == 'code') {
+                data_code[k] = intVal(v[6], 0) * intVal(v[7], 1);
               } else {
-                tot2[k] = intVal(v[11], 0) + intVal(v[12], 1);
+                data_po[k] = intVal(v[6], 0) * intVal(v[7], 1);
               }
             });
-            var red1 = (tot.reduce(function (a, b) { return a + b;}, 0)
+            var tot_code = (data_code.reduce(function (a, b) { return a + b;}, 0)
                         ).toFixed(2);
-            var red2 = (tot2.reduce(function (a, b) { return a + b;}, 0)
+            var tot_po = (data_po.reduce(function (a, b) { return a + b;}, 0)
                         ).toFixed(2);
 
-            $(api.column(11).footer()).html("total: $" + red1 + " and " + red2
+            $(api.column(6).footer()).html("total code: $" + tot_code + " po: $" + tot_po
             );
-        }*/
+        }
 
     });
     $( '#edit' ).click( function(){ return $.fn.editSelected(table);} );
