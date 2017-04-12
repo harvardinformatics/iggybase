@@ -36,7 +36,7 @@ $(document).ready(function(){
         var hidden_fields = $("#hidden_fields");
         var table_name = hidden_fields.find('input[name=table]').val();
         var column_name = table_name + '|name';
-        var names = $.map(table.rows('.selected').data(), function (i) { return $(i[column_name]).text()});
+        var names = $.map(table.rows('.selected').data(), function (i) { return $(i[0]).text()});
         if (names.length > 0) {
             var url = $URL_ROOT;
             url += hidden_fields.find('input[name=facility]').val()

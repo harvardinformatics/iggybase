@@ -21,21 +21,29 @@ $(document).ready(function(){
         select: {
             style:'multi'
         },
-        footerCallback: function(row, data, start, end, display) {
+        /*footerCallback: function(row, data, start, end, display) {
             var api = this.api();
             var intVal = function (i, def) {
                 return typeof i == 'string' ? i.replace(/[\$,]/g, '')*1 :
                     typeof i == 'number' ? i : def;
             };
             var tot = [];
+            var tot2 = [];
             api.data().each(function (v, k) {
-              tot[k] = intVal(v[11], 0) + intVal(v[12], 1);
+              if ((k % 2) == 0) {
+                tot[k] = intVal(v[11], 0) + intVal(v[12], 1);
+              } else {
+                tot2[k] = intVal(v[11], 0) + intVal(v[12], 1);
+              }
             });
-            $(api.column(11).footer()).html("total: $" + (
-            tot.reduce(function (a, b) { return a + b;}, 0)
-                        ).toFixed(2)
+            var red1 = (tot.reduce(function (a, b) { return a + b;}, 0)
+                        ).toFixed(2);
+            var red2 = (tot2.reduce(function (a, b) { return a + b;}, 0)
+                        ).toFixed(2);
+
+            $(api.column(11).footer()).html("total: $" + red1 + " and " + red2
             );
-        }
+        }*/
 
     });
     $( '#edit' ).click( function(){ return $.fn.editSelected(table);} );
@@ -51,7 +59,7 @@ $(document).ready(function(){
         var hidden_fields = $("#hidden_fields");
         var table_name = hidden_fields.find('input[name=table]').val();
         var column_name = table_name + '|name';
-        var names = $.map(table.rows('.selected').data(), function (i) { return $(i[column_name]).text()});
+        var names = $.map(table.rows('.selected').data(), function (i) { return $(i[0]).text()});
         if (names.length > 0) {
             var url = $URL_ROOT;
             url += hidden_fields.find('input[name=facility]').val()

@@ -58,7 +58,6 @@ class RoleAccessControl:
                     self.facility = fac.Facility
                     self.level_id = fac.Role.level_id
                     session['root_org_id'] = fac.Facility.root_organization_id
-
             # if set_routes is a url param then set_routes
             filters = util.get_filters()
             if 'set_routes' not in filters and 'routes' in session and session['routes']:

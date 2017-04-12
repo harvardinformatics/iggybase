@@ -284,7 +284,6 @@ def modal_add_submit(facility_name, table_name, page_context):
 def multiple_entry(facility_name, table_name, row_names, page_context):
     module_name = MODULE_NAME
     row_names = json.loads(row_names)
-
     fg = FormGenerator('data_entry', 'MultipleForm', table_name, page_context, module_name)
     fg.data_entry_form(row_names)
 

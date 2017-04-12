@@ -124,7 +124,6 @@ def configure_hook( app ):
         start = time.time()
         g.user = current_user
         g.facility = ""
-
         path = request.path.split('/')
 
         # TODO: consider caching this for the session
@@ -140,7 +139,7 @@ def configure_hook( app ):
                 g.module = path[2]
 
             access = role_access.has_facility_access(path[1])
-            print(access)
+            print('Facility access: ' + str(access))
             if not access:
                 if path[1] in role_access.facilities:
                     role_access.change_role(role_access.facilities[path[1]]['top_role'])
@@ -149,7 +148,7 @@ def configure_hook( app ):
 
             g.facility = path[1]
             route_access = role_access.route_access(request.path)
-            print(route_access)
+            print('Route access: ' + str(route_access))
             if not route_access:
                 abort(404)
         current = time.time()

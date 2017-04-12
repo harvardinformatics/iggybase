@@ -37,7 +37,7 @@ def review(facility_name, year = None, month = None):
             ('line_item', 'date_created'): {'from': from_date, 'to': to_date},
             ('line_item', 'price_per_unit'): {'compare': 'greater than', 'value': 0}
     }
-    tqc = TableQueryCollection('line_item', criteria)
+    tqc = TableQueryCollection(None, criteria)
     table_query = tqc.get_first()
     pt = PageTemplate(MODULE_NAME, 'review')
     return pt.page_template_context(
@@ -55,7 +55,7 @@ def review_ajax(facility_name, year, month):
             ('line_item', 'date_created'): {'from': from_date, 'to': to_date},
             ('line_item', 'price_per_unit'): {'compare': 'greater than', 'value': 0}
     }
-    return core_routes.build_summary_ajax('line_item', criteria)
+    return core_routes.build_summary_ajax(None, criteria)
 
 
 
