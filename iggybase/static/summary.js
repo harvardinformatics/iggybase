@@ -1,6 +1,9 @@
 $(document).ready(function(){
     var table = $('.summary_table').DataTable({
         deferRender:true,
+        language: {
+            loadingRecords: '<img src="/static/images/ajax-loader.gif">'
+        },
         order:[],
         autoWidth:false,
         scrollX:true,
