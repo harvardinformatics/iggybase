@@ -14,6 +14,7 @@ from sqlalchemy.dialects import mysql
 # Uses the permissions stored in the admin db
 class RoleAccessControl:
     def __init__(self):
+        # TODO: use session to store some of this
         self.session = db_session()
         # set user and role
         if (g.user is not None and not g.user.is_anonymous):
@@ -257,10 +258,10 @@ class RoleAccessControl:
         session['routes'] = self.routes
 
     def route_access(self, route):
-        route = route.strip('/')
-        route = route.split('/')
+        module = route[1]
         route = '.'.join(route[1:3])
         if route in self.routes:
+            g.module = module
             return True
         else:
             logging.info(
@@ -629,7 +630,7 @@ class RoleAccessControl:
 
         return rec is None
 
-    def has_facility_access(self, facility):
+    def is_current_facility(self, facility):
         if self.role.role_facility.name == facility:
             return True
         return False

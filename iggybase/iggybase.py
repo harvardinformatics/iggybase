@@ -2,6 +2,7 @@ import os, logging, sys
 import time
 from collections import OrderedDict
 from flask import Flask, g, send_from_directory, abort, url_for, request
+from flask import redirect
 from wtforms import StringField, SelectField
 from wtforms.validators import DataRequired
 from config import Config
@@ -28,9 +29,9 @@ def create_app():
     configure_blueprints(iggybase)
     security, user_datastore = configure_extensions( iggybase, db )
     configure_error_handlers( iggybase )
-    configure_hook( iggybase )
 
     add_base_routes(iggybase, conf, security, user_datastore)
+    configure_hook( iggybase )
 
     sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
     sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), 'iggybase.log'))
@@ -124,33 +125,31 @@ def configure_hook( app ):
         start = time.time()
         g.user = current_user
         g.facility = ""
-        path = request.path.split('/')
-
         # TODO: consider caching this for the session
-        ignore_facility = ['static', 'logout', 'favicon.ico', 'welcome', 'registration_success']
-        if (current_user.is_authenticated and path and path[1] not in ignore_facility):
+        if (current_user.is_authenticated):
             import iggybase.core.role_access_control as rac
             role_access = rac.RoleAccessControl()
             g.rac = role_access
-            if path[1] == 'home':
+            path = list(filter(bool, request.path.split('/')))
+            # always allow some paths
+            ignore_facility = ['static', 'logout', 'favicon.ico', 'welcome', 'registration_success', 'home']
+            if path and path[0] in ignore_facility:
                 return
-            # set module in g
-            if len(path) > 2:
-                g.module = path[2]
-
-            access = role_access.has_facility_access(path[1])
-            print('Facility access: ' + str(access))
-            if not access:
-                if path[1] in role_access.facilities:
-                    role_access.change_role(role_access.facilities[path[1]]['top_role'])
-                else:
+            if len(path) < 2: # if no facility or no module send home
+                return redirect(url_for('home'))
+            else: # check access
+                access = role_access.is_current_facility(path[0])
+                logging.info('Facility access: ' + str(access))
+                if not access:
+                    if path[0] in role_access.facilities:
+                        role_access.change_role(role_access.facilities[path[0]]['top_role'])
+                    else:
+                        abort(404)
+                g.facility = path[1]
+                route_access = role_access.route_access(path)
+                print('Route access: ' + str(route_access))
+                if not route_access:
                     abort(404)
-
-            g.facility = path[1]
-            route_access = role_access.route_access(request.path)
-            print('Route access: ' + str(route_access))
-            if not route_access:
-                abort(404)
         current = time.time()
         print('before_request:' + str(current - start))
 
