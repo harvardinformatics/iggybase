@@ -798,7 +798,7 @@ class OrganizationAccessControl:
             filters.append(models.Organization.name.in_(org_list))
         res = (self.session.query(line_item, price_item, service_type, order,
             order_charge_method, charge_method, charge_method_type, models.User,
-            models.Organization, models.OrganizationType, invoice, institution,
+            models.Organization, models.OrganizationType, models.Address, invoice, institution,
             models.Department)
                 # limit natural joins so that we get errors rather than omit
                 # billing something that has missing data
@@ -808,6 +808,8 @@ class OrganizationAccessControl:
                         models.Organization.id),
                     (models.OrganizationType, models.Organization.organization_type_id ==
                         models.OrganizationType.id),
+                    (models.Address, models.Address.id ==
+                        models.Organization.billing_address_id),
                     (invoice, invoice.id == line_item.invoice_id),
                     (price_item, line_item.price_item_id == price_item.id),
                     (service_type, price_item.service_type_id ==

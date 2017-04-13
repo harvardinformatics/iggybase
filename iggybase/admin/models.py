@@ -39,6 +39,7 @@ class Address(Base):
 
     address_1 = Column(String(255))
     address_2 = Column(String(255))
+    address_3 = Column(String(255))
     city = Column(String(255))
     state = Column(String(255))
     postcode = Column(String(255))

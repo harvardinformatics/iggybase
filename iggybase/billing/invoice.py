@@ -207,10 +207,26 @@ class Invoice:
         return info
 
     def populate_po_info(self):
+        address = []
+        # custom charge_method address will take precedence
+        # TODO: eventually have user enter new address and save id
         if self.first_charge.ChargeMethod.billing_address:
             address = self.first_charge.ChargeMethod.billing_address.split(",")
-        else:
-            address = []
+        # default to the billing address from org
+        # TODO: need to display this to user in data entry
+        elif self.first_charge.Address.address_1:
+            row = self.first_charge.Address
+            if row.address_1:
+                address.append(row.address_1)
+            if row.address_2:
+                address.append(row.address_2)
+            if row.address_3:
+                address.append(row.address_3)
+            if row.city or row.state:
+                cit_st = [row.city, row.state]
+                address.append(', '.join(cit_st))
+            if row.postcode:
+                address.append(row.postcode)
 
         info = {
                 'invoice address': address,

@@ -7,6 +7,7 @@ class Item:
         self.PriceItem = item.PriceItem
         self.Organization = item.Organization
         self.OrganizationType = item.OrganizationType
+        self.Address = item.Address
         self.add_charge(item)
         self.ServiceType = item.ServiceType
         self.Invoice = getattr(item, 'Invoice', None)
