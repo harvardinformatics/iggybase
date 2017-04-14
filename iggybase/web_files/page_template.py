@@ -65,10 +65,9 @@ class PageTemplate():
 
         ## Menus
         # add home to navbar
-        home = g.user.home_page or self.role_access_control.get_role_home()
         navbar = OrderedDict({'home': {
                 'title': 'home',
-                'url': self.add_context(home, context)
+                'url': '/home'
                 }
         })
         navbar_root = self.role_access_control.get_menu(admin_consts.MENU_NAVBAR_ROOT)
