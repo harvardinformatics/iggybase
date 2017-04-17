@@ -16,6 +16,7 @@ class Item:
         self.display_amount = "${:.2f}".format(self.amount)
         # assume no split charges between types
         self.charge_type = item.ChargeMethodType.name
+        self.ChargeMethod = item.ChargeMethod
 
     def add_charge(self, item):
         if item.ChargeMethod.code not in self.charges:

@@ -120,6 +120,15 @@ class Invoice:
                 'invoice_number': self.order
             }
             invoice_row = self.oac.insert_row('invoice', cols)
+            # if this is a PO then update remaining_value
+            if self.charge_method_type == 'po':
+                new_amt = (float(self.first_item.ChargeMethod.remaining_value) -
+                self.total)
+                # TODO: email sunia if less than 0
+                updated = self.oac.update_obj_rows(
+                        [self.first_item.ChargeMethod],
+                        {'remaining_value': new_amt}
+                )
         if invoice_row:
             self.id = invoice_row.id
             self.name = invoice_row.name
