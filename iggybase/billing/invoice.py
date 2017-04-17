@@ -223,7 +223,7 @@ class Invoice:
             address = self.first_charge.ChargeMethod.billing_address.split(",")
         # default to the billing address from org
         # TODO: need to display this to user in data entry
-        elif self.first_charge.Address.address_1:
+        elif self.first_charge.Address:
             row = self.first_charge.Address
             if row.address_1:
                 address.append(row.address_1)
