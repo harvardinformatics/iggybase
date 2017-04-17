@@ -145,7 +145,7 @@ def configure_hook( app ):
                         role_access.change_role(role_access.facilities[path[0]]['top_role'])
                     else:
                         abort(404)
-                g.facility = path[1]
+                g.facility = path[0]
                 route_access = role_access.route_access(path)
                 print('Route access: ' + str(route_access))
                 if not route_access:
