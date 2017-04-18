@@ -141,7 +141,7 @@ class FormGenerator(PageTemplate):
         elif field_data.Field.data_type_id == constants.DECIMAL:
             return IggybaseDecimalField(display_name, **kwargs)
         elif field_data.Field.data_type_id == constants.BOOLEAN:
-            self.classattr['bool_' + control_id]=HiddenField('bool_' + control_id, default=value)
+            self.classattr['bool_' + control_id]=HiddenField('bool_' + control_id, default=bool(value))
             return IggybaseBooleanField(display_name, **kwargs)
         elif field_data.Field.data_type_id == constants.DATE:
             return IggybaseDateField(display_name, **kwargs)
@@ -165,8 +165,8 @@ class FormGenerator(PageTemplate):
         if instances is None:
             self.instances = InstanceCollection(depth, {self.table_name: row_names})
 
-            if row_names[0] != 'new' and self.form_type == 'SingleForm':
-                self.instances.get_linked_instances(self.instances[row_names[0]].instance.id)
+            if self.instances.instance.new_instance == False and self.form_type == 'SingleForm':
+                self.instances.get_linked_instances(self.instances.instance.instance.id)
         else:
             self.instances = instances
 
@@ -191,7 +191,7 @@ class FormGenerator(PageTemplate):
                 table_context.append(context)
 
         for table_name, table_data in self.instances.tables.items():
-            if table_name == 'history':
+            if table_name == 'history' or not self.instances.table_instances[table_name]:
                 continue
 
             table_id = table_data.table_object.id
@@ -204,24 +204,21 @@ class FormGenerator(PageTemplate):
                 self.classattr['linkcolumn_' + str(table_id)] = HiddenField('linkcolumn_' + str(table_id),
                                                                             default=link_field.Field.display_name)
 
-            if level < table_level:
-                level = table_level
-
             self.classattr['table_name_' + str(table_id)] = HiddenField('table_name_' + str(table_id),
                                                                         default=table_name)
 
             title = table_data.table_display_name.replace('_', ' ').title()
-            if table_level == 0 and self.form_type == 'SingleForm':
+            if (table_level == 0 and self.form_type == 'SingleForm') or 'modal_form' in self.page_context:
                 form_table = IggybaseFormTable(table_name,
                                                title + ' ' + self.page_form.page_header.replace("_", " ").title(),
-                                               level)
+                                               table_level)
                 control_type = 'data-control'
                 temp_page_context = ['main-table'] + table_context
                 buttons = self.role_access_control.page_form_buttons(self.page_form_ids, temp_page_context, table_id)
             elif self.form_type == 'SingleForm':
                 form_table = IggybaseFormTable(table_name,
                                                title,
-                                               level,
+                                               table_level,
                                                'horizontal')
                 control_type = 'table-control'
                 temp_page_context = ['child-table'] + table_context
@@ -229,7 +226,7 @@ class FormGenerator(PageTemplate):
             else:
                 form_table = IggybaseFormTable(table_name,
                                                title,
-                                               level,
+                                               table_level,
                                                'horizontal')
                 control_type = 'table-control'
                 temp_page_context = ['multiple'] + table_context
@@ -245,8 +242,10 @@ class FormGenerator(PageTemplate):
                        'table_level': str(table_level),
                        'table_title': table_data.table_display_name.replace('_', ' ').title()}
 
-            if level == 0:
+            if table_level == 0:
                 self.classattr['main_table'] = HiddenField('main_table', default=table_name)
+                self.classattr['base_instance'] = HiddenField('base_instance',
+                                                              default=self.instances.base_instance.instance_name)
                 top_buttons, bottom_buttons = self.button_generator(self.buttons, context)
                 form_table.add_buttons(top_buttons, bottom_buttons)
 
@@ -291,6 +290,7 @@ class FormGenerator(PageTemplate):
                 control_str = form_table.table_name + "-" + field.Field.display_name + "-" + str(instance.instance.id)
 
             control_id = 'data_entry-' + control_str + "-" + str(instance.form_index)
+
             self.classattr[control_id] = self.input_field(field, field.display_name.title(),
                                                           form_table.table_name, instance.instance.name,
                                                           control_id, field_class, value)

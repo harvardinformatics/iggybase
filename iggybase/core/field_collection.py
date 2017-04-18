@@ -140,10 +140,6 @@ class FieldCollection:
             if field.FieldRole.search_field:
                 search_fields.append(field)
 
-        logging.info(json.dumps(self.table_names) + ' self.fields: ')
-        for key, value in self.fields.items():
-            logging.info(key)
-
         if search_fields:
             return search_fields
         else:

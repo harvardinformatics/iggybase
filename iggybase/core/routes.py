@@ -224,7 +224,7 @@ def data_entry(facility_name, table_name, row_name, page_context):
         fp = FormParser(table_name)
         form_errors = fp.parse()
 
-        fg.data_entry_form([row_name], fp.instances)
+        fg.data_entry_form([row_name], fp.instances, depth)
         if form_errors:
             for form_id, error in form_errors.items():
                 fg.form_class[form_id].errors = []
@@ -239,7 +239,7 @@ def data_entry(facility_name, table_name, row_name, page_context):
                 # the same base context for both post and get here
                 return saved_data(facility_name, module_name, table_name, save_msg, page_context, fg)
             else:
-                fg.add_page_context({'page_msg': save_msg})
+                fg.add_page_context(save_msg)
                 fp.undo()
         else:
             flash('Please fix validation errors below and save again.')
@@ -303,7 +303,7 @@ def multiple_entry(facility_name, table_name, row_names, page_context):
             if save_status is True:
                 return saved_data(facility_name, module_name, table_name, save_msg, page_context)
             else:
-                fg.add_page_context({'page_msg': save_msg})
+                fg.add_page_context(save_msg)
         else:
             fp.undo()
 

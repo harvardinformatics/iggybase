@@ -1,5 +1,5 @@
 from flask import g, current_app, session
-from sqlalchemy import DateTime, func, cast, String, desc, or_
+from sqlalchemy import DateTime, func, cast, String, desc, or_, func
 from sqlalchemy.exc import IntegrityError, DataError, SQLAlchemyError, NoForeignKeysError, IdentifierError, \
     NoReferenceError
 from iggybase.database import db_session
@@ -87,7 +87,7 @@ class OrganizationAccessControl:
         except (IntegrityError, DataError, SQLAlchemyError, NoForeignKeysError, IdentifierError, NoReferenceError) as e:
             self.session.rollback()
             logging.error("Commit Error: " + format(e))
-            return False, "Commit Error: " + format(e)
+            return False, {"page_msg": "Commit Error: " + format(e)}
 
     def flush(self):
         try:
@@ -96,7 +96,7 @@ class OrganizationAccessControl:
         except (IntegrityError, DataError, SQLAlchemyError, NoForeignKeysError, IdentifierError, NoReferenceError) as e:
             self.session.rollback()
             logging.error("Flush Error: " + format(e))
-            return False, "Flush Error: " + format(e)
+            return False, {"page_msg": "Flush Error: " + format(e)}
 
     def rollback(self):
         self.session.rollback()
@@ -147,7 +147,7 @@ class OrganizationAccessControl:
     def get_instance_data(self, table_object, criteria):
         filters = [getattr(table_object, 'organization_id').in_(self.org_ids)]
 
-        if 'name' in criteria and (criteria['name'] == ['new'] or criteria['name'] == ['empty_row']):
+        if 'name' in criteria and ('new' in criteria['name'][0] or 'empty_row' in criteria['name'][0]):
             instance = table_object()
             instance.name = criteria['name'][0]
             return [instance]
@@ -159,10 +159,29 @@ class OrganizationAccessControl:
         qry_count = self.get_query_count(qry)
 
         if qry_count == 0:
-            return [table_object()]
+            instance = table_object()
+            return [instance]
         else:
             res = qry.all()
             return res
+
+    def get_users_by_position(self, position, org_id = None, active=1):
+        if org_id is None:
+            if self.current_org_id is None:
+                return []
+
+            org_id = self.current_org_id
+
+        res = self.session.query(models.User, models.UserOrganizationPosition, models.Position). \
+            join(models.User, models.UserOrganizationPosition.user_id == models.User.id). \
+            join(models.Position, models.UserOrganizationPosition.position_id == models.Position.id). \
+            filter(models.UserOrganizationPosition.active==org_id). \
+            filter(func.lower(models.Position.name)==func.lower(position)). \
+            filter(models.User.active==active). \
+            filter(models.Position.active==active). \
+            filter(models.UserOrganizationPosition.active==active). \
+            order_by(models.UserOrganizationPosition.position_id, models.User.last_name).all()
+        return res
 
     def get_select_list(self, select_list_id, active=1):
         select_list_items = self.get_select_list_items_from_id(select_list_id)
@@ -445,7 +464,7 @@ class OrganizationAccessControl:
 
         return table.query.filter(*filters).order_by(getattr(table, 'name'))
 
-    def save_data_instance(self, update_instances, new_instances, background_instances=[]):
+    def save_data_instance(self, instances, background_instances):
         # actions = self.get_table_object_actions()
         # TODO: remove this and replace with actions
         # actions may want to be done after the commit which will require change
@@ -457,13 +476,13 @@ class OrganizationAccessControl:
                 # if func:
                 #     func(instance)
 
-        self.session.add_all(new_instances + update_instances + background_instances)
+        self.session.add_all(instances + background_instances)
 
         flush_status, flush_err = self.flush()
 
         if flush_status:
             inst_data = {}
-            for instance in (new_instances + update_instances):
+            for instance in instances:
                 inst_data[instance.id] = {'id': instance.id, 'name': instance.name, 'table': instance.__tablename__}
 
             commit_status, commit_err = self.commit()
@@ -475,13 +494,6 @@ class OrganizationAccessControl:
         else:
             self.rollback()
             return flush_status, flush_err
-
-    def get_row_id(self, table_name, params):
-        result = self.get_row(table_name, params)
-        if result:
-            return result.id
-        else:
-            return None
 
     def get_row_multi_tbl(self, table_names, params, order_by = [], first_row = False, org_filter = False, select_tbls = None):
         criteria = []
@@ -652,7 +664,6 @@ class OrganizationAccessControl:
                         if old_item.WorkItem.table_object_id == table_object_id and old_item.WorkItem.row_id == item['id']:
                             old_item_exists = old_item
                             break # break loop because we found it
-                            continue # skip to next saved_item
 
                 # if we didn't find an old one then insert a new row
                 new_name = work_item_table_object.get_new_name()
@@ -687,7 +698,8 @@ class OrganizationAccessControl:
         return success
 
     def get_step_actions(self, step_id, timing, active = 1):
-        return (self.session.query(models.Action, models.ActionStep, models.SelectListItem,
+        logging.info('get_step_actions: ' + str(step_id) + ' ' + str(timing))
+        stmt = (self.session.query(models.Action, models.ActionStep, models.SelectListItem,
                                    models.ActionEmail)
                 .join(models.ActionStep,  models.Action.id == models.ActionStep.action_id)
                 .join(models.SelectListItem,  models.SelectListItem.id == models.ActionStep.timing)
@@ -696,10 +708,17 @@ class OrganizationAccessControl:
                     models.ActionStep.step_id==step_id,
                     models.ActionStep.active==active,
                     models.Action.active==active,
-                    models.SelectListItem.display_name == timing
-                ).order_by(models.ActionStep.order).all())
+                    func.lower(models.SelectListItem.display_name) == func.lower(timing)
+                ).order_by(models.ActionStep.order))
 
-    def get_table_object_actions(self, table_object_id, event_id, active = 1):
+        query = stmt.statement.compile(dialect=mysql.dialect())
+        logging.info('query')
+        logging.info(str(query))
+        logging.info(str(query.params))
+
+        return stmt.all()
+
+    def get_table_object_actions(self, table_object_id, event_name, active = 1):
         return (self.session.query(models.Action, models.ActionTableObject, models.SelectListItem,
                                    models.ActionEmail, models.Field)
                 .join(models.ActionTableObject,  models.Action.id == models.ActionTableObject.action_id)
@@ -710,7 +729,7 @@ class OrganizationAccessControl:
                     models.ActionTableObject.table_object_id==table_object_id,
                     models.ActionTableObject.active==active,
                     models.Action.active==active,
-                    models.SelectListItem.display_name == event_id
+                    func.lower(models.SelectListItem.display_name) == func.lower(event_name)
                 ).order_by(models.ActionTableObject.order).all())
 
     def get_action(self, action_id, active = 1):

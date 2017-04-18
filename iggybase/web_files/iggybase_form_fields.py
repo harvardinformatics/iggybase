@@ -143,14 +143,14 @@ class IggybaseDateField(DateField):
         else:
             self.iggybase_class = 'datepicker'
 
-        self.iggybase_class += ' date-field'
-
         self.readonly = kwargs['readonly']
         del kwargs['readonly']
 
         if self.readonly:
             # remove datepicker for readonly
             self.iggybase_class = temp_class
+
+        self.iggybase_class += ' date-field'
 
         self.table_object = kwargs['table_object']
         del kwargs['table_object']
@@ -190,14 +190,14 @@ class IggybaseDateTimeField(DateTimeField):
         else:
             self.iggybase_class = 'datetimepicker'
 
-        self.iggybase_class += ' date-field'
-
         self.readonly = kwargs['readonly']
         del kwargs['readonly']
 
         if self.readonly:
             # remove datepicker for readonly
             self.iggybase_class = temp_class
+
+        self.iggybase_class += ' datetime-field'
 
         self.table_object = kwargs['table_object']
         del kwargs['table_object']

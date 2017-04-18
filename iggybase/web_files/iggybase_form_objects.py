@@ -2,6 +2,8 @@ class IggybaseFormObject():
     def __init__(self, props):
         if props is None:
             props= {}
+        elif not isinstance(props, dict):
+            raise TypeError('props should be dictionary containing {html attribute: value string}')
 
         self.props = props
 
@@ -58,7 +60,7 @@ class IggybaseFormTable(IggybaseFormContainer):
         super(IggybaseFormTable, self).__init__(props)
 
     def add_new_record(self, record_name, new_record=False, row_class=None, row_props=None):
-        child_record = IggybaseFormRecord(new_record, row_class, row_props)
+        child_record = IggybaseFormRecord(record_name, new_record, row_class, row_props)
         self.add_child(child_record)
 
         return len(self.children) - 1
@@ -81,6 +83,7 @@ class IggybaseFormRecord(IggybaseFormContainer):
         self.row_class = row_class
         self.new_record = new_record
         self.record_name = record_name
+        self.record_delete = 'new' in record_name
 
         super(IggybaseFormRecord, self).__init__(props)
 

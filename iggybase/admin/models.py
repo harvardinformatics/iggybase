@@ -715,7 +715,8 @@ class Action(Base):
     table_type = 'admin'
     namespace = Column(String(255), default=None)
     function = Column(String(255), default=None)
-    params = Column(String(255), default=None)
+    variable_parameters = Column(String(255), default=None)
+    fixed_parameters = Column(String(255), default=None)
     type = Column(String(50), default=None)
 
 

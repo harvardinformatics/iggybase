@@ -318,7 +318,14 @@ $( document ).ready( function () {
                             if ( link_column == matches[ 3 ] )
                                 $( this ).val( parent_name ).attr( 'id', new_id ).attr( 'name', new_id );
                             else if ( $( this ).attr( 'class' ).includes( 'date-field' ) ) {
-                                var utc = new Date().toJSON().slice(0,10);
+                                var date = new Date();
+                                date = new Date(date.getTime() - (date.getTimezoneOffset() * 60000)).toJSON();
+                                var utc = date.slice(0,10);
+                                $( this ).val( utc ).attr( 'id', new_id ).attr( 'name', new_id );
+                            } else if ( $( this ).attr( 'class' ).includes( 'datetime-field' ) ) {
+                                var date = new Date();
+                                date = new Date(date.getTime() - (date.getTimezoneOffset() * 60000)).toJSON();
+                                var utc = date.slice(0,10) + " " + date.slice(11,19);
                                 $( this ).val( utc ).attr( 'id', new_id ).attr( 'name', new_id );
                             } else
                                 $( this ).val( '' ).attr( 'id', new_id ).attr( 'name', new_id );
@@ -360,6 +367,7 @@ $( document ).ready( function () {
 
         new_row.find( '.lookupfield' ).each(
             function ( ) {
+                var new_id = $( this ).attr( 'id' );
                 $( '<input>' ).attr( {
                     style: 'display:none;',
                     id: 'id_' + new_id,

@@ -49,7 +49,7 @@ class TableCollection():
                     link_name = link_data['table_meta_data'].name
                     self.table_names.append(link_name)
                     self.tables[link_name] = TableData(link_name)
-                    logging.info(link_name)
+                    
                     self.tables[link_name].set_collection_data(link_data['level'],
                                                                link_data['parent'],
                                                                link_data['link_data'],

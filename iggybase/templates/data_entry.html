@@ -75,7 +75,7 @@
                 {% for row in table.children %}
                     {%- if table.display == 'horizontal' -%}
                         <div class="row" row_id="{{ row.record_name }}" table_object_name="{{ table.table_name }}">
-                        {%- if row.new_record %}
+                        {%- if row.record_delete %}
                             <span data_row_id="{{ row.record_name }}" class="glyphicon glyphicon-minus remove-row"></span>
                         {% else -%}
                             <span class="spacer-15"></span>

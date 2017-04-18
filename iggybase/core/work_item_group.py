@@ -1,11 +1,11 @@
 from flask import request, g, session, url_for
 import json
 from collections import OrderedDict
-from iggybase import utilities as util
 from iggybase import g_helper
 from .workflow import Workflow
 from .field_collection import FieldCollection
-from iggybase.core.constants import status, timing
+from iggybase.core.constants import status, timing, ActionType
+from iggybase.core.action import Action
 import logging
 
 # Retreives work_item_group info and processes steps and actions
@@ -42,6 +42,7 @@ class WorkItemGroup:
         self.active_steps = self.get_active_steps(self.workflow.steps)
         self.buttons = []
         self.saved_rows = {}
+        self.dynamic_params = {}
 
         # do before step actions, if current step
         if self.show_step_num == self.step_num:
@@ -51,6 +52,7 @@ class WorkItemGroup:
         self.endpoint = self.step.Module.name + '.' + self.step.Route.url_path
         self.dynamic_params = self.set_dynamic_params()
         self.url = self.workflow.get_step_url(self.show_step_num, self.name)
+
 
     def get_work_item_group(self):
         if self.name != 'new':
@@ -128,22 +130,24 @@ class WorkItemGroup:
         # first perform any actions on this step
         # if new then insert work_item_group
         if self.step_num == 1 and self.name == 'new' and not self.is_complete():
-            table = 'work_item_group'
-            fields = {'workflow_id': self.workflow.id,
-                'status': status.IN_PROGRESS, 'step_id': self.step.Step.id, 'before_action_complete': 0}
-            values = self.get_insert_values(table, fields)
-            row = self.oac.insert_row(table, values)
-            self.name = row.name
-            self.WorkItemGroup = row
+            action = Action(ActionType.STEP, self.step.Step.id)
+            logging.info(action)
+            action_status = action.execute_action(time,
+                                                  table_name='work_item_group',
+                                                  workflow_id=self.workflow.id,
+                                                  status=status.IN_PROGRESS,
+                                                  step_id=self.step.Step.id,
+                                                  before_action_complete=0)
+
+            if action_status:
+                self.name = action.results['name']
+                self.WorkItemGroup = self.oac.get_row('work_item_group', {'id': action.results['id']})
+            elif action.results is not None:
+                self.dynamic_params.update(action.results)
+
         if time != timing.BEFORE or (time == timing.BEFORE and not self.WorkItemGroup.before_action_complete):
-            actions = self.oac.get_step_actions(self.step.Step.id, time)
-            for action in actions:
-                if hasattr(self, action.Action.function):
-                    func = getattr(self, action.Action.function)
-                    params = {}
-                    if action.Action.params:
-                        params = json.loads(action.Action.params)
-                    func(**params)
+            action = Action(ActionType.STEP, self.step.Step.id)
+            action.execute_action(time)
             if time == timing.BEFORE:
                 self.oac.update_rows('work_item_group', {'before_action_complete': 1}, [self.WorkItemGroup.id])
 

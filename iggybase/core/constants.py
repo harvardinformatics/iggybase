@@ -1,7 +1,3 @@
-class ActionType:
-    STEP = 1
-    TABLE = 2
-
 class status:
     IN_PROGRESS = 2
     COMPLETE = 3
@@ -11,6 +7,6 @@ class timing:
     BEFORE = 'Before'
     AFTER = 'After'
 
-class EventType:
-    NEW_RECORD = 1
-    UPDATE = 2
+class ActionType:
+    STEP = 1
+    TABLE = 2
