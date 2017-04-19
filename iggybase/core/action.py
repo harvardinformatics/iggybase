@@ -12,7 +12,7 @@ import logging
 class Action:
     def __init__(self, action_type=None, action_target=None):
         self.oac = g_helper.get_org_access_control()
-        self.results = None
+        self.results = OrderedDict()
         self.actions = {}
         self.action_type = action_type
         if action_type == ActionType.STEP and action_target is not None:
@@ -106,19 +106,15 @@ class Action:
         action_status = False
 
         for action_name, action_data in self.actions[event].items():
-            logging.info(action_name)
             action_kwargs = {}
             parameter_not_found = False
 
             if action_data.Action.variable_parameters:
                 parameters = split(', |,|;|; ', action_data.Action.variable_parameters)
-                logging.info(parameters)
                 for parameter in parameters:
                     if parameter in kwargs:
-                        logging.info('parameter found: ' + parameter)
                         action_kwargs[parameter] = kwargs[parameter]
                     else:
-                        logging.info('parameter not found: ' + parameter)
                         parameter_not_found = True
 
             if action_data.Action.fixed_parameters:
@@ -130,14 +126,12 @@ class Action:
 
             if action_data.Action.namespace and action_data.Action.function and not parameter_not_found:
 
-                logging.info(self.actions[event][action_name].Action.namespace)
-                logging.info(self.actions[event][action_name].Action.function)
                 action_module = import_module(self.actions[event][action_name].Action.namespace)
                 action_method = getattr(action_module, self.actions[event][action_name].Action.function)
 
-                logging.info('**action_kwargs')
-                logging.info(action_kwargs)
-                action_status, self.results = action_method(**action_kwargs)
+                action_status, action_results = action_method(**action_kwargs)
+
+                self.results[action_name] = action_results
 
             if self.actions[event][action_name].ActionEmail and not parameter_not_found:
                 self.send_mail(self.actions[event][action_name].ActionEmail, **action_kwargs)

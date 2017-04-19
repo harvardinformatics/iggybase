@@ -129,27 +129,19 @@ class WorkItemGroup:
     def do_step_actions(self, time = timing.AFTER):
         # first perform any actions on this step
         # if new then insert work_item_group
-        if self.step_num == 1 and self.name == 'new' and not self.is_complete():
-            action = Action(ActionType.STEP, self.step.Step.id)
-            logging.info(action)
-            action_status = action.execute_action(time,
-                                                  table_name='work_item_group',
-                                                  workflow_id=self.workflow.id,
-                                                  status=status.IN_PROGRESS,
-                                                  step_id=self.step.Step.id,
-                                                  before_action_complete=0)
+        action = Action(ActionType.STEP, self.step.Step.id)
+        action_status = action.execute_action(time,
+                                              table_name='work_item_group',
+                                              fields={'workflow_id': self.workflow.id,
+                                                      'status': status.IN_PROGRESS,
+                                                      'step_id': self.step.Step.id,
+                                                      'before_action_complete': 0})
 
-            if action_status:
-                self.name = action.results['name']
-                self.WorkItemGroup = self.oac.get_row('work_item_group', {'id': action.results['id']})
-            elif action.results is not None:
-                self.dynamic_params.update(action.results)
-
-        if time != timing.BEFORE or (time == timing.BEFORE and not self.WorkItemGroup.before_action_complete):
-            action = Action(ActionType.STEP, self.step.Step.id)
-            action.execute_action(time)
-            if time == timing.BEFORE:
-                self.oac.update_rows('work_item_group', {'before_action_complete': 1}, [self.WorkItemGroup.id])
+        if action_status:
+            self.name = action.results['name']
+            self.WorkItemGroup = self.oac.get_row('work_item_group', {'id': action.results['id']})
+        elif action.results is not None:
+            self.dynamic_params.update(action.results)
 
     def set_dynamic_params(self):
         args = []
@@ -280,8 +272,7 @@ class WorkItemGroup:
             if table in self.saved_rows:
                 self.saved_rows[table].append({'table': table, 'name': row.name, 'id': row.id})
             else:
-                self.saved_rows[table] = [{'table': table, 'name': row.name,
-                    'id':row.id}]
+                self.saved_rows[table] = [{'table': table, 'name': row.name, 'id':row.id}]
 
     def get_defaults(self):
         # gets defaults from work_items

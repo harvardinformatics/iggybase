@@ -79,21 +79,23 @@ class Field:
         # set fk_default if there is one
         elif (self.is_foreign_key and self.FK_TableObject is not None and self.FK_TableObject.name in fk_defaults):
             default = fk_defaults[self.FK_TableObject.name]
-        else: # set default from field
-            if self.Field.default == 'now':
-                default = datetime.datetime.utcnow()
-            elif self.Field.default == 'today':
-                default = datetime.date.today()
-            elif self.Field.default == 'user':
+        elif self.Field.data_type_id == 3:
+            # default sets booleans to false rather than null
+            if self.Field.default is not None and (self.Field.default.lower == 'true' or self.Field.default == '1' or
+                                                           self.Field.default.lower == 'yes'):
+                default = True
+            else:
+                default = False
+        elif self.Field.default is not None and self.Field.default != '':
+            if self.Field.default == 'user':
                 default = g.user.id
-            elif self.Field.default == 'org':
+            elif self.Field.data_type_id == 10 and self.Field.default == 'today':
+                default = datetime.date.today()
+            elif self.Field.data_type_id == 4 and self.Field.default == 'now':
+                default = datetime.date.utcnow()
+            elif self.Field.display_name == 'organization_id' and self.Field.default == 'org':
                 default = session['org_id']['current_org_id']
-            # TODO: all trues should be stored at 1 but right now child and
-            # grandchild tables only work with True, we should fix this once we
-            # have a data_instance class
-            elif self.Field.default == 'True':
-                default = 1
-            elif self.Field.default is not None:
+            else:
                 default = self.Field.default
         self.default = default
 
@@ -169,7 +171,6 @@ class Field:
                         # data on both name and fk_display for same table from
                         # oac query, this is rare and acceptable
                         self.FK_Field.display_name == 'name' and
-                        self.FK_TableObject.name != 'long_text' and
                         self.visible
                     )
                 )

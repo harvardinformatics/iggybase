@@ -3,7 +3,7 @@ from iggybase.core.table_collection import TableCollection
 from iggybase.core.instance_data import InstanceData
 from iggybase import g_helper
 from collections import OrderedDict
-from datetime import datetime, date
+from datetime import datetime
 from iggybase.core.action import Action
 import logging
 
@@ -64,10 +64,11 @@ class InstanceCollection:
         for row in instances:
             instance = InstanceData(row, row.name, self.instance_counter)
 
+            if instance.new_instance:
+                instance.initialize_values(self.tables[instance.table_name].fields)
+
             if self.base_instance is None:
                 self.base_instance = instance
-
-            self.initialize_values(instance)
 
             self.instances[instance.instance_name] = instance
             self.table_instances[instance.table_name][instance.instance_name] = instance
@@ -122,55 +123,18 @@ class InstanceCollection:
                 if child_rows:
                     for row in child_rows:
                         instance_names = self.set_instances([row['instance']])
-                        self.instances[instance_names[0]].parent_id = row['parent_id']
+                        self.instances[instance_names[0]].set_parent_id(table_data.parent_link_field_display_name,
+                                                                        row['parent_id'])
                         ids.append(row['instance'].id)
                 else:
                     instance_names = self.get_data(table_name, {'name': ['empty_row']})
                     if table_data.level == 1:
-                        self.instances[instance_names[0]].parent_id = root_id
+                        self.instances[instance_names[0]].set_parent_id(table_data.parent_link_field_display_name,
+                                                                        root_id)
             elif table_data.link_type == "many":
                 pass
             elif table_data.link_type == "table_id":
                 pass
-
-    def initialize_values(self, instance):
-        table_name = instance.table_name
-        if self.tables[table_name].parent is None:
-            self.tables[table_name].fields.set_defaults()
-        else:
-            self.tables[table_name].fields.set_defaults({self.tables[table_name].parent: instance.parent_id,
-                                                         'link_display_name': self.tables[table_name].\
-                                                        parent_link_field_display_name})
-
-        if instance.new_instance:
-            for field, meta_data in self.tables[table_name].fields.items():
-                if meta_data.default is not None and meta_data.default != '':
-                    if meta_data.Field.data_type_id == 3:
-                        if meta_data.default.lower == 'true' or meta_data.default == '1':
-                            setattr(instance.instance, meta_data.Field.display_name, True)
-                        else:
-                            setattr(instance.instance, meta_data.Field.display_name, False)
-                    elif meta_data.default == 'current_user':
-                        setattr(instance.instance, meta_data.Field.display_name, g.user.id)
-                    elif meta_data.default == 'current_date':
-                        setattr(instance.instance, meta_data.Field.display_name,
-                                date.today())
-                    elif meta_data.default == 'current_datetime':
-                        setattr(instance.instance, meta_data.Field.display_name,
-                                datetime.now().replace(microsecond=0))
-                    elif meta_data.Field.display_name == 'organization_id':
-                        instance.set_organization_id(meta_data.default)
-                    elif meta_data.Field.foreign_key_table_object_id is not None:
-                        instance.set_foreign_key_field(self.tables[table_name].id, meta_data.Field, meta_data.default)
-                    else:
-                        setattr(instance.instance, meta_data.Field.display_name, meta_data.default)
-                elif meta_data.Field.display_name == 'organization_id':
-                    instance.set_organization_id()
-                elif meta_data.Field.data_type_id == 3:
-                    setattr(instance.instance, meta_data.Field.display_name, False)
-                elif meta_data.Field.display_name == self.tables[table_name].parent_link_field_display_name and \
-                                self.tables[table_name].level == 1:
-                    setattr(instance.instance, meta_data.Field.display_name, self.base_instance.instance.id)
 
     def set_values(self, instance_name, field_values = {}):
         for field_name, field_value in field_values.items():

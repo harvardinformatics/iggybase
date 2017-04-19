@@ -64,6 +64,7 @@ class TableData():
         else:
             fields = FieldCollection(None, self.table_object.name)
         fields.set_fk_fields()
+        fields.set_defaults()
 
         return fields
 

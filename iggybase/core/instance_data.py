@@ -2,9 +2,9 @@ from iggybase import g_helper
 import logging
 
 class InstanceData():
-    def __init__(self, instance, instance_name, index=0, parent_id=None):
+    def __init__(self, instance, instance_name, index=0):
         self.instance = instance
-        self.parent_id = parent_id
+        self.parent_id = None
         self.save = False
         self.new_instance = None
         self.form_index = index
@@ -40,6 +40,23 @@ class InstanceData():
 
     def set_name(self, instance_name):
         self.instance.name = instance_name
+
+    def set_parent_id(self, field, parent_id=None):
+        if self.new_instance:
+            setattr(self.instance, field, parent_id)
+            self.parent_id = parent_id
+        else:
+            self.parent_id = getattr(self.instance, field)
+
+    def initialize_values(self, field_collection):
+        for field, meta_data in field_collection.items():
+            if meta_data.default is not None and meta_data.default != '':
+                if meta_data.Field.foreign_key_table_object_id is not None:
+                    self.set_foreign_key_field(meta_data.TableObject.id, meta_data.Field, meta_data.default)
+                elif meta_data.Field.display_name == 'organization_id':
+                    self.set_organization_id(meta_data.default)
+                else:
+                    setattr(self.instance, meta_data.Field.display_name, meta_data.default)
 
     def set_organization_id(self, row_org_id = None):
         oac = g_helper.get_org_access_control()
