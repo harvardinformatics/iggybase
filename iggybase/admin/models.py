@@ -56,6 +56,7 @@ class Organization(Base):
     # dept is most applicable to universities and less so to industry
     department_id = Column(Integer, ForeignKey('department.id'))
     institution_id = Column(Integer, ForeignKey('institution.id'))
+    public = Column(Boolean)
 
     parent = relation('Organization', remote_side="Organization.id", foreign_keys=[parent_id])
     organization_department = relationship("Department", foreign_keys=[department_id])
@@ -169,6 +170,7 @@ class Facility(Base):
     banner_subtitle = Column(String(255))
     css = Column(String(255))
     table_suffix = Column(String(255))
+    public = Column(Boolean)
 
     def __repr__(self):
         return "<%s(name=%s, description=%s, id=%d, organization_id=%d)>" % \

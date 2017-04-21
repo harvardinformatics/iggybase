@@ -3,13 +3,16 @@ import time
 from collections import OrderedDict
 from flask import Flask, g, send_from_directory, abort, url_for, request
 from flask import redirect
-from wtforms import StringField, SelectField
-from wtforms.validators import DataRequired
+from flask.ext.wtf import Form
+from wtforms import StringField, SelectField, ValidationError
+from wtforms.validators import DataRequired, Email
 from config import Config
 from flask import render_template
 from flask.ext.security import Security, SQLAlchemyUserDatastore, UserMixin, \
 RoleMixin, login_required, current_user, LoginForm, RegisterForm, \
 user_registered, logout_user
+from flask.ext.security.utils import encrypt_password
+from flask.ext.security.registerable import register_user
 from iggybase.extensions import mail, lm, bootstrap
 from iggybase.admin import models
 from iggybase.cache import Cache
@@ -65,17 +68,36 @@ def configure_extensions( app, db ):
 
 def add_base_routes( app, conf, security, user_datastore ):
     from iggybase import base_routes
+    @app.route('/register', methods=['GET', 'POST'])
+    def register():
+        form_class = ExtendedRegisterForm
+        form_data = request.form
+        form = form_class(form_data)
+        if form.validate_on_submit():
+            user = register_user(**form.to_dict())
+            '''kwargs = form.to_dict()
+            kwargs['password'] = encrypt_password(kwargs['password'])
+            user = security.datastore.create_user(**kwargs)
+            security.datastore.commit()
+            print(user)'''
+            print(user)
+            form.user = user
+
+        return render_template('security/register_user.html', register_user_form =
+                form)
 
     @user_registered.connect_via(app)
     def user_registered_sighandler(sender, **extra):
         # TODO: we should dynamically enter facility based on what's in user
         # or perhaps we just need to overide some other function in sqlalchemy
         # for now i'm hardcogin one facility
-        user = extra.get('user')
+        print(extra)
+        print(sender)
+        '''user = extra.get('user')
         role = user_datastore.find_or_create_role('new_user', facility_id = 2,
                 level_id = 7)
         user_datastore.add_role_to_user(user, role)
-        db.session.commit()
+        db.session.commit()'''
 
     @app.route( '/registration_success' )
     def registration_success():
@@ -108,7 +130,7 @@ def add_base_routes( app, conf, security, user_datastore ):
 
     @security.context_processor
     def security_context_processor():
-        navbar = OrderedDict([('Login', {'title': 'Login', 'url':url_for('security.login')}), ('Register', {'title':'Register', 'url':url_for('security.register')}),
+        navbar = OrderedDict([('Login', {'title': 'Login', 'url':url_for('security.login')}), ('Register', {'title':'Register', 'url':url_for('register')}),
             ('Reset Password', {'title':'Reset Password', 'url':url_for('security.forgot_password')}), ('Logout', {'title':'Logout', 'url':url_for('security.logout')})])
         return dict(navbar = navbar)
 
@@ -179,30 +201,38 @@ class ExtendedRegisterForm(RegisterForm):
     name = StringField('Username:', [DataRequired()])
     first_name = StringField('First Name:', [DataRequired()])
     last_name = StringField('Last Name:', [DataRequired()])
-    email = StringField('Email:', [DataRequired()])
-    organization = StringField('Organization:', [DataRequired()])
+    email = StringField('Email:', [DataRequired(), Email()])
     address1 = StringField('Address 1:', [DataRequired()])
-    address2 = StringField('Address 2:', [DataRequired()])
+    address2 = StringField('Address 2:', )
     city = StringField('City:', [DataRequired()])
     state = StringField('State:', [DataRequired()])
     zipcode = StringField('Zipcode:', [DataRequired()])
-    phone = StringField('Phone:', [DataRequired()])
-    organization = SelectField('Organization:', coerce=int)
-    facility = SelectField('Service:', coerce=int)
+    phone = StringField('Phone:')
+    organization = SelectField('Group/ PI:', [DataRequired()], coerce=int)
+    lab_admin = StringField('Lab Admin (billing contact):', [DataRequired()])
+    facility = SelectField('Facility:', [DataRequired()], coerce=int)
 
     def __init__(self, *args, **kwargs):
         super(ExtendedRegisterForm, self).__init__(*args, **kwargs)
 
-        orgs = models.Organization.query
+        orgs = models.Organization.query.filter(models.Organization.organization_type_id != 1, models.Organization.public == 1).all()
         org_choices = []
         for org in orgs:
             org_choices.append((org.id, org.name))
         self.organization.choices = org_choices
 
-        facilities = models.Facility.query
+        facilities = models.Facility.query.filter(models.Facility.public == 1).all()
         fac_choices = []
         for fac in facilities:
             fac_choices.append((fac.id, fac.name))
         self.facility.choices = fac_choices
+
+    def validate_name(form, field):
+        # check for unique name
+        username = models.User.query.filter(models.User.name ==
+                field.data).first()
+        if username is not None:
+            raise ValidationError('This username exists please choose a'
+            ' different one.')
 
 
