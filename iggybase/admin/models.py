@@ -648,7 +648,6 @@ class UserRole(Base):
 
 class User(Base, UserMixin):
     table_type = 'admin'
-    password_hash = Column(String(120))
     password = Column(String(120))
     first_name = Column(String(50))
     last_name = Column(String(50))
@@ -668,10 +667,10 @@ class User(Base, UserMixin):
         return str(self.id)
 
     def set_password(self, password):
-        self.password_hash = generate_password_hash(password)
+        self.password = generate_password_hash(password)
 
     def verify_password(self, password):
-        return check_password_hash(self.password_hash, password)
+        return check_password_hash(self.password, password)
 
     @staticmethod
     def get_password_hash(password):

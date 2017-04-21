@@ -10,8 +10,7 @@ from config import Config
 from flask import render_template
 from flask.ext.security import Security, SQLAlchemyUserDatastore, UserMixin, \
 RoleMixin, login_required, current_user, LoginForm, RegisterForm, \
-user_registered, logout_user
-from flask.ext.security.utils import encrypt_password
+logout_user
 from flask.ext.security.registerable import register_user
 from iggybase.extensions import mail, lm, bootstrap
 from iggybase.admin import models
@@ -68,6 +67,15 @@ def configure_extensions( app, db ):
 
 def add_base_routes( app, conf, security, user_datastore ):
     from iggybase import base_routes
+    @security.context_processor
+    def security_context_processor():
+        return security_menu()
+
+    def security_menu():
+        navbar = OrderedDict([('Login', {'title': 'Login', 'url':url_for('security.login')}), ('Register', {'title':'Register', 'url':url_for('register')}),
+            ('Reset Password', {'title':'Reset Password', 'url':url_for('security.forgot_password')}), ('Logout', {'title':'Logout', 'url':url_for('security.logout')})])
+        return dict(navbar = navbar)
+
     @app.route('/register', methods=['GET', 'POST'])
     def register():
         form_class = ExtendedRegisterForm
@@ -75,25 +83,23 @@ def add_base_routes( app, conf, security, user_datastore ):
         form = form_class(form_data)
         if form.validate_on_submit():
             user = register_user(**form.to_dict())
-            '''kwargs = form.to_dict()
-            kwargs['password'] = encrypt_password(kwargs['password'])
-            user = security.datastore.create_user(**kwargs)
-            security.datastore.commit()
-            print(user)'''
-            print(user)
-            form.user = user
-
+            role = user_datastore.find_or_create_role('new_user', facility_id = 2,
+                level_id = 7)
+            user_datastore.add_role_to_user(user, role)
+            db.session.commit()
+            return redirect(url_for('registration_success'))
+        ctx = security_menu()
         return render_template('security/register_user.html', register_user_form =
-                form)
+                form, **ctx)
 
-    @user_registered.connect_via(app)
+    '''@user_registered.connect_via(app)
     def user_registered_sighandler(sender, **extra):
         # TODO: we should dynamically enter facility based on what's in user
         # or perhaps we just need to overide some other function in sqlalchemy
         # for now i'm hardcogin one facility
         print(extra)
         print(sender)
-        '''user = extra.get('user')
+        user = extra.get('user')
         role = user_datastore.find_or_create_role('new_user', facility_id = 2,
                 level_id = 7)
         user_datastore.add_role_to_user(user, role)
@@ -102,7 +108,8 @@ def add_base_routes( app, conf, security, user_datastore ):
     @app.route( '/registration_success' )
     def registration_success():
         logout_user()
-        return render_template( 'registration_sucess.html')
+        ctx = security_menu()
+        return render_template('registration_sucess.html', **ctx)
 
     @app.route( '/welcome' )
     def welcome():
@@ -127,12 +134,6 @@ def add_base_routes( app, conf, security, user_datastore ):
     def favicon():
         return send_from_directory(os.path.join(app.root_path, 'static'),
         'favicon.ico')
-
-    @security.context_processor
-    def security_context_processor():
-        navbar = OrderedDict([('Login', {'title': 'Login', 'url':url_for('security.login')}), ('Register', {'title':'Register', 'url':url_for('register')}),
-            ('Reset Password', {'title':'Reset Password', 'url':url_for('security.forgot_password')}), ('Logout', {'title':'Logout', 'url':url_for('security.logout')})])
-        return dict(navbar = navbar)
 
 def configure_blueprints(app):
     blueprints = models.Module.query.filter_by(blueprint = 1).all()
