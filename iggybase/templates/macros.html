@@ -12,7 +12,7 @@
                 {% elif f.type == 'RadioField' %}
                     {{ render_radio_field(f) }}
                 {% else %}
-                    {{ render_field(f) }}
+                    {{ render_field(f, False) }}
                 {% endif %}
             {% endfor %}
         {% endif %}
@@ -102,18 +102,23 @@
     </ul>
 {%- endmacro %}
 
-{% macro render_field(field) -%}
-    <label for="{{ field.id }}" class="control-label">{{ field.label }}
+{% macro render_field(field, p = True) -%}
+    {% if p %} <p> {% endif %}
+    <label for="{{ field.id }}"
         {% if field.flags.required %}
-            <span class='required'>*</span>
+            class='control-label required'
+            {% else %}
+            class='control-label'
         {% endif -%}
-    :</label>
+        >{{ field.label.text }}:
+    </label>
     {{ field(**kwargs) }}
     {% if field.errors -%}
         {% for e in field.errors -%}
             <p class="help-block">{{ e }}</p>
         {% endfor -%}
     {% endif -%}
+    {% if p %} </p> {% endif %}
 {%- endmacro %}
 
 {% macro render_field_data_entry(field, row_id, table_name, row_name, col_style, label_style) -%}

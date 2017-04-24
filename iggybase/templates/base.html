@@ -24,6 +24,7 @@
                 <link href="{{ url_for('static', filename='main.css') }}" rel="stylesheet">
                 <link href="{{ url_for('static', filename='bootstrap-datetimepicker.min.css') }}" rel="stylesheet">
                 <link href="{{ url_for('static', filename='bootstrap_datepicker/css/bootstrap-datepicker.min.css') }}" rel="stylesheet">
+                <link href="{{ url_for('static', filename='jquery/select2.min.css') }}" rel="stylesheet">
                 {% if g.rac and g.rac.facility.css %}
                     <link href="{{ url_for('static', filename='css/' + g.rac.facility.css) }}" rel="stylesheet">
                 {% endif %}
@@ -198,6 +199,7 @@
                     <script type="text/javascript" src="{{ url_for( 'static', filename='main.js' ) }}"></script>
                     <script type="text/javascript" src="{{ url_for( 'static', filename='ContextMenu.js' ) }}"></script>
                     <script type="text/javascript" src="{{ url_for( 'static', filename='bootstrap-datetimepicker.min.js' ) }}"></script>
+                    <script type="text/javascript" src="{{ url_for( 'static', filename='jquery/select2.min.js' ) }}"></script>
                     <script type="text/javascript" src="{{ url_for( 'static', filename='bootstrap_datepicker/js/bootstrap-datepicker.min.js' ) }}"></script>
                     {{ macros.render_scripts( scripts ) }}
                 {%- endblock scripts %}

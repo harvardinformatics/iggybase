@@ -1,6 +1,7 @@
 var search_click = false;
 
 $( document ).ready( function () {
+    $('.select2').select2({placeholder: 'Select an option'});
     $('.datepicker').datepicker({format: 'yyyy-mm-dd', autoclose: true});
     $('.datetimepicker').datetimepicker({format: 'yyyy-mm-dd hh:ii:ss', autoclose: true});
     /* add a hack to get mac firefox scrollbars to show, no way in pure css */

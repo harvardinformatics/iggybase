@@ -216,9 +216,10 @@ pre {
 .container-fluid {
     clear: both;
 }
-.required {
+.required:after {
     color: red;
     font-weight:bold;
+    content:" *";
 }
 .child_table {
     margin-bottom: 10px;
@@ -331,4 +332,24 @@ pre {
 }
 .tall {
     height: 60px;
+}
+.form_table {
+    display: table;
+}
+.form_table p {
+    display: table-row;
+}
+.form_table label {
+    display: table-cell;
+    margin-bottom: 4%;
+}
+.form_table input, select {
+    display: table-cell;
+    margin-bottom: 4%;
+    margin-left: 2%;
+}
+
+.form_table span.select2 {
+    margin-bottom: 4%;
+    margin-left: 2%;
 }

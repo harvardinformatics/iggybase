@@ -1,28 +1,28 @@
 {% extends "base.html" %}
 {% import "bootstrap/wtf.html" as wtf %}
+{% import 'macros.html' as macros %}
 {% from "security/_macros.html" import render_field_with_errors, render_field %}
 {% block title %}Register{% endblock %}
 {% block page_content %}
 <h1>Register</h1>
-<form action="{{ url_for('register') }}" method="POST" name="register_user_form">
+<form action="{{ url_for('register') }}" method="POST" name="register_user_form" class="form_table">
   {{ register_user_form.hidden_tag() }}
-  {{ render_field_with_errors(register_user_form.name) }}
-  {{ render_field_with_errors(register_user_form.first_name) }}
-  {{ render_field_with_errors(register_user_form.last_name) }}
-  {{ render_field_with_errors(register_user_form.email) }}
-  {{ render_field_with_errors(register_user_form.address1) }}
-  {{ render_field_with_errors(register_user_form.address2) }}
-  {{ render_field_with_errors(register_user_form.city) }}
-  {{ render_field_with_errors(register_user_form.state) }}
-  {{ render_field_with_errors(register_user_form.zipcode) }}
-  {{ render_field_with_errors(register_user_form.phone) }}
-  {{ render_field_with_errors(register_user_form.organization) }}
-  {{ render_field_with_errors(register_user_form.lab_admin) }}
-  {{ render_field_with_errors(register_user_form.facility) }}
-  {{ render_field_with_errors(register_user_form.password) }}
-  {% if register_user_form.password_confirm %}
-    {{ render_field_with_errors(register_user_form.password_confirm) }}
-  {% endif %}
+  {{ macros.render_field(register_user_form.name) }}
+  {{ macros.render_field(register_user_form.first_name) }}
+  {{ macros.render_field(register_user_form.last_name) }}
+  {{ macros.render_field(register_user_form.email) }}
+  {{ macros.render_field(register_user_form.address1) }}
+  {{ macros.render_field(register_user_form.address2) }}
+  {{ macros.render_field(register_user_form.city) }}
+  {{ macros.render_field(register_user_form.state) }}
+  {{ macros.render_field(register_user_form.zipcode) }}
+  {{ macros.render_field(register_user_form.phone) }}
+  {{ macros.render_field(register_user_form.facility, class="select2") }}
+  {{ macros.render_field(register_user_form.organization,
+  class="select2") }}
+  {{ macros.render_field(register_user_form.lab_admin) }}
+  {{ macros.render_field(register_user_form.password) }}
+  {{ macros.render_field(register_user_form.password_confirm) }}
   {{ render_field(register_user_form.submit) }}
 </form>
 {% endblock %}

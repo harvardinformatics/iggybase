@@ -82,28 +82,20 @@ def add_base_routes( app, conf, security, user_datastore ):
         form_data = request.form
         form = form_class(form_data)
         if form.validate_on_submit():
-            user = register_user(**form.to_dict())
-            role = user_datastore.find_or_create_role('new_user', facility_id = 2,
-                level_id = 7)
+            user_dict = form.to_dict()
+            # ensure new accounts are unverified
+            user_dict['verified'] = 0
+            user = register_user(**user_dict)
+            level = models.Level.query.filter_by(name = 'User').first()
+            role = models.Role.query.filter(
+                    models.Role.facility_id == form.facility.data,
+                    models.Role.level_id == level.id).first()
             user_datastore.add_role_to_user(user, role)
             db.session.commit()
             return redirect(url_for('registration_success'))
         ctx = security_menu()
         return render_template('security/register_user.html', register_user_form =
                 form, **ctx)
-
-    '''@user_registered.connect_via(app)
-    def user_registered_sighandler(sender, **extra):
-        # TODO: we should dynamically enter facility based on what's in user
-        # or perhaps we just need to overide some other function in sqlalchemy
-        # for now i'm hardcogin one facility
-        print(extra)
-        print(sender)
-        user = extra.get('user')
-        role = user_datastore.find_or_create_role('new_user', facility_id = 2,
-                level_id = 7)
-        user_datastore.add_role_to_user(user, role)
-        db.session.commit()'''
 
     @app.route( '/registration_success' )
     def registration_success():
@@ -199,31 +191,40 @@ class ExtendedLoginForm(LoginForm):
     email = StringField('Username or email:')
 
 class ExtendedRegisterForm(RegisterForm):
-    name = StringField('Username:', [DataRequired()])
-    first_name = StringField('First Name:', [DataRequired()])
-    last_name = StringField('Last Name:', [DataRequired()])
-    email = StringField('Email:', [DataRequired(), Email()])
-    address1 = StringField('Address 1:', [DataRequired()])
-    address2 = StringField('Address 2:', )
-    city = StringField('City:', [DataRequired()])
-    state = StringField('State:', [DataRequired()])
-    zipcode = StringField('Zipcode:', [DataRequired()])
-    phone = StringField('Phone:')
-    organization = SelectField('Group/ PI:', [DataRequired()], coerce=int)
-    lab_admin = StringField('Lab Admin (billing contact):', [DataRequired()])
-    facility = SelectField('Facility:', [DataRequired()], coerce=int)
+    def ints_but_first(x):
+        if x == '':
+            return ''
+        else:
+            return int(x)
+    name = StringField('Username', [DataRequired()])
+    first_name = StringField('First Name', [DataRequired()])
+    last_name = StringField('Last Name', [DataRequired()])
+    email = StringField('Email', [DataRequired(), Email()])
+    address1 = StringField('Address 1', [DataRequired()])
+    address2 = StringField('Address 2', )
+    city = StringField('City', [DataRequired()])
+    state = StringField('State', [DataRequired()])
+    zipcode = StringField('Zipcode', [DataRequired()])
+    phone = StringField('Phone')
+    organization = SelectField('Group/ PI',
+            [DataRequired()], coerce = ints_but_first)
+    lab_admin = StringField('Lab Admin (billing contact)', [DataRequired()])
+    facility = SelectField('Facility', [DataRequired()], coerce=ints_but_first)
 
     def __init__(self, *args, **kwargs):
         super(ExtendedRegisterForm, self).__init__(*args, **kwargs)
 
-        orgs = models.Organization.query.filter(models.Organization.organization_type_id != 1, models.Organization.public == 1).all()
-        org_choices = []
+        orgs = (models.Organization.query.filter(
+                models.Organization.organization_type_id != 1,
+                models.Organization.public == 1)
+            .order_by(models.Organization.name).all())
+        org_choices = [('', '')]
         for org in orgs:
             org_choices.append((org.id, org.name))
         self.organization.choices = org_choices
 
         facilities = models.Facility.query.filter(models.Facility.public == 1).all()
-        fac_choices = []
+        fac_choices = [('', '')]
         for fac in facilities:
             fac_choices.append((fac.id, fac.name))
         self.facility.choices = fac_choices

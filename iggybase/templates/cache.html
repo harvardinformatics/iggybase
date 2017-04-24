@@ -24,7 +24,7 @@
         {{ wtf.form_errors(form, hiddens='only') }}
             {%- for field in form %}
                 {% if not bootstrap_is_hidden_field( field ) -%}
-                    {{ macros.render_field( field ) }}
+                    {{ macros.render_field( field, False ) }}
                 {% endif %}
             {%- endfor -%}
     {% endif -%}
