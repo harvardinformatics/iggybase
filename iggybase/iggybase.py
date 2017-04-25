@@ -3,9 +3,10 @@ import time
 from collections import OrderedDict
 from flask import Flask, g, send_from_directory, abort, url_for, request
 from flask import redirect
-from flask.ext.wtf import Form
 from wtforms import StringField, SelectField, ValidationError
 from wtforms.validators import DataRequired, Email
+from wtforms.ext.sqlalchemy.orm import model_form
+from flask_wtf import Form
 from config import Config
 from flask import render_template
 from flask.ext.security import Security, SQLAlchemyUserDatastore, UserMixin, \
@@ -103,6 +104,35 @@ def add_base_routes( app, conf, security, user_datastore ):
         ctx = security_menu()
         return render_template('registration_sucess.html', **ctx)
 
+    @app.route('/new_group', methods=['GET', 'POST'])
+    def new_group():
+        form_data = request.form
+        form_class = model_form(models.Organization, db_session=db_session,
+                base_class=Form,
+                only=['name', 'description'],
+                field_args={
+                    'name':{'validators':[DataRequired(), unique_name]}
+                    },
+                type_name='New Group'
+        )
+        form = form_class(form_data)
+        if form.validate_on_submit():
+            user_dict = form.to_dict()
+            # ensure new accounts are unverified
+            user_dict['verified'] = 0
+            user = register_user(**user_dict)
+            level = models.Level.query.filter_by(name = 'User').first()
+            role = models.Role.query.filter(
+                    models.Role.facility_id == form.facility.data,
+                    models.Role.level_id == level.id).first()
+            user_datastore.add_role_to_user(user, role)
+            db.session.commit()
+            return redirect(url_for('registration_success'))
+        ctx = security_menu()
+        return render_template('dynamic_model_form.html', form =
+                form, action='new_group', **ctx)
+
+
     @app.route( '/welcome' )
     def welcome():
         return render_template( 'welcome.html')
@@ -187,6 +217,19 @@ def configure_error_handlers( app ):
     def server_error_page(error):
         return render_template( "errors/server_error.html" ), 500
 
+# Validators and Forms
+def unique_name(obj):
+    # check for unique name
+    def _unique_name(form, field):
+        model = getattr(models, obj)
+        name = model.query.filter(model.name ==
+                field.data).first()
+        if name:
+            raise ValidationError('This name exists please choose a'
+            ' different one.')
+    return _unique_name
+
+
 class ExtendedLoginForm(LoginForm):
     email = StringField('Username or email:')
 
@@ -196,7 +239,7 @@ class ExtendedRegisterForm(RegisterForm):
             return ''
         else:
             return int(x)
-    name = StringField('Username', [DataRequired()])
+    name = StringField('Username', [DataRequired(), unique_name(obj = 'User')])
     first_name = StringField('First Name', [DataRequired()])
     last_name = StringField('Last Name', [DataRequired()])
     email = StringField('Email', [DataRequired(), Email()])
@@ -208,7 +251,6 @@ class ExtendedRegisterForm(RegisterForm):
     phone = StringField('Phone')
     organization = SelectField('Group/ PI',
             [DataRequired()], coerce = ints_but_first)
-    lab_admin = StringField('Lab Admin (billing contact)', [DataRequired()])
     facility = SelectField('Facility', [DataRequired()], coerce=ints_but_first)
 
     def __init__(self, *args, **kwargs):
@@ -228,13 +270,4 @@ class ExtendedRegisterForm(RegisterForm):
         for fac in facilities:
             fac_choices.append((fac.id, fac.name))
         self.facility.choices = fac_choices
-
-    def validate_name(form, field):
-        # check for unique name
-        username = models.User.query.filter(models.User.name ==
-                field.data).first()
-        if username is not None:
-            raise ValidationError('This username exists please choose a'
-            ' different one.')
-
 

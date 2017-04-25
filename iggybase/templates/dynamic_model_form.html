@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+{% import 'macros.html' as macros %}
+{% from "security/_macros.html" import render_field_with_errors, render_field %}
+{% block title %}{{form.__class__.__name__}}{% endblock %}
+{% block page_content %}
+<h1>{{form.__class__.__name__}}</h1>
+<form action="{{ url_for(action) }}" method="POST" name="new_group_form" class="form_table">
+    {% for key, field in form._fields.items() %}
+    {% if field.type in ['CSRFTokenField', 'HiddenField'] %}
+    {{ field() }}
+    {% elif key == 'submit' %}
+    {{ render_field(field) }}
+    {% else %}
+    {{ macros.render_field(field) }}
+    {% endif %}
+    {% endfor %}
+    <p>
+    <input id="submit" name="submit" type="submit" value="Submit">
+    </p>
+</form>
+{% endblock %}

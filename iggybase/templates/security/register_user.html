@@ -7,6 +7,10 @@
 <h1>Register</h1>
 <form action="{{ url_for('register') }}" method="POST" name="register_user_form" class="form_table">
   {{ register_user_form.hidden_tag() }}
+  {{ macros.render_field(register_user_form.organization,
+  class="select2", p=False) }}
+  <p>or</p>
+  {{ macros.new_org_modal() }}
   {{ macros.render_field(register_user_form.name) }}
   {{ macros.render_field(register_user_form.first_name) }}
   {{ macros.render_field(register_user_form.last_name) }}
@@ -18,9 +22,7 @@
   {{ macros.render_field(register_user_form.zipcode) }}
   {{ macros.render_field(register_user_form.phone) }}
   {{ macros.render_field(register_user_form.facility, class="select2") }}
-  {{ macros.render_field(register_user_form.organization,
-  class="select2") }}
-  {{ macros.render_field(register_user_form.lab_admin) }}
+  {% include 'modal.html' %}
   {{ macros.render_field(register_user_form.password) }}
   {{ macros.render_field(register_user_form.password_confirm) }}
   {{ render_field(register_user_form.submit) }}

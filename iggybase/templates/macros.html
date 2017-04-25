@@ -358,3 +358,31 @@ the necessary fix for required=False attributes, but will also not set the requi
         </table>
     {% endif %}
 {%- endmacro %}
+
+{% macro new_org_modal() %}
+<a href="/new_group" type="button" id="new_group" value="New
+    Group">New Group</a>
+{%- endmacro %}
+{% macro new_org_modal2() %}
+<input type="button" id="new_group" value="New
+Group">
+<div id="my_modal" class="modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;  </button>
+                <h4 class="modal-title" id="myModalLabel">New Group</h4>
+            </div>
+            <div class="modal-body">
+               <p>If your group is new
+                    to iggybase and did not aprear in the dropdown you may enter
+                one subject to admin approval.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary">Save changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+{%- endmacro %}
