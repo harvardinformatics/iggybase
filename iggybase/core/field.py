@@ -90,9 +90,9 @@ class Field:
             if self.Field.default == 'user':
                 default = g.user.id
             elif self.Field.data_type_id == 10 and self.Field.default == 'today':
-                default = datetime.date.today().strftime('%Y-%m-%d')
+                default = datetime.date.today()
             elif self.Field.data_type_id == 4 and self.Field.default == 'now':
-                default = datetime.datetime.utcnow().strftime('%Y-%m-%d  %H:%m:%S')
+                default = datetime.datetime.utcnow().replace(microsecond=0)
             elif self.Field.display_name == 'organization_id' and self.Field.default == 'org':
                 default = session['org_id']['current_org_id']
             else:
