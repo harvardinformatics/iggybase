@@ -58,6 +58,16 @@ class InstanceData():
                         self.set_foreign_key_field(meta_data.TableObject.id, meta_data.Field, meta_data.default)
                     else:
                         setattr(self.instance, meta_data.Field.display_name, meta_data.default)
+                ''' TODO: fix values on instance to contain parent defaults,
+                this does not work because parent_link_field_display_name is
+                part of table data class, not this class
+                elif (meta_data.Field.display_name ==
+                    self.tables[table_name].parent_link_field_display_name and
+                    self.tables[table_name].level == 1):
+                    print('INITIALIZED')
+                    setattr(instance.instance, meta_data.Field.display_name,
+                        self.base_instance.instance_name) '''
+
 
     def set_organization_id(self, row_org_id = None):
         oac = g_helper.get_org_access_control()
