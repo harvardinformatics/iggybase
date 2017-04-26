@@ -4,7 +4,7 @@ from collections import OrderedDict
 from iggybase import g_helper
 from .workflow import Workflow
 from .field_collection import FieldCollection
-from iggybase.core.constants import status, timing, ActionType
+from iggybase.core.constants import WorkflowStatus, Timing, ActionType
 from iggybase.core.action import Action
 import logging
 
@@ -46,7 +46,7 @@ class WorkItemGroup:
 
         # do before step actions, if current step
         if self.show_step_num == self.step_num:
-            self.do_step_actions(timing.BEFORE)
+            self.do_step_actions(Timing.BEFORE)
 
         # set the url and dynamic params for current step
         self.endpoint = self.step.Module.name + '.' + self.step.Route.url_path
@@ -126,16 +126,14 @@ class WorkItemGroup:
             url = self.workflow.get_step_url(self.next_step, self.name)
         return url
 
-    def do_step_actions(self, time = timing.AFTER):
+    def do_step_actions(self, time = Timing.AFTER):
         # first perform any actions on this step
         # if new then insert work_item_group
-        action = Action(ActionType.STEP, self.step.Step.id)
-        action_status = action.execute_action(time,
-                                              table_name='work_item_group',
-                                              fields={'workflow_id': self.workflow.id,
-                                                      'status': status.IN_PROGRESS,
-                                                      'step_id': self.step.Step.id,
-                                                      'before_action_complete': 0})
+        logging.info('pre do_step_actions')
+        action = Action(ActionType.STEP, action_step=self.step.Step.id, action_timing=time)
+
+        action_status = action.execute_action(workflow_id=self.workflow.id, step_id=self.step.Step.id)
+        logging.info('post do_step_actions')
 
         if action_status:
             self.name = action.results['name']
@@ -196,7 +194,7 @@ class WorkItemGroup:
         return work_steps
 
     def is_complete(self):
-        if self.WorkItemGroup and self.WorkItemGroup.status == status.COMPLETE:
+        if self.WorkItemGroup and self.WorkItemGroup.status == WorkflowStatus.COMPLETE:
             return True
         else:
             return False
@@ -231,8 +229,8 @@ class WorkItemGroup:
 
     def set_complete(self):
         self.do_step_actions() # after step actions
-        if self.WorkItemGroup.status != status.COMPLETE:
-            self.oac.update_rows('work_item_group', {'status': status.COMPLETE}, [self.WorkItemGroup.id])
+        if self.WorkItemGroup.status != WorkflowStatus.COMPLETE:
+            self.oac.update_rows('work_item_group', {'status': WorkflowStatus.COMPLETE}, [self.WorkItemGroup.id])
 
     def set_review_items_link(self):
         if self.parent_work_item and self.parent_table:
@@ -312,5 +310,6 @@ class WorkItemGroup:
 
                 if skip_step: # if there are no samples
                     self.next_step = self.step_num
-                    self.oac.update_rows('work_item_group', {'status': status.COMPLETE}, [self.WorkItemGroup.id])
+                    self.oac.update_rows('work_item_group', {'status': WorkflowStatus.COMPLETE},
+                                         [self.WorkItemGroup.id])
 

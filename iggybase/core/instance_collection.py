@@ -65,6 +65,10 @@ class InstanceCollection:
             instance = InstanceData(row, row.name, self.instance_counter)
 
             if instance.new_instance:
+                if instance.table_name not in self.tables.keys():
+                    self.tables.add_table(instance.table_name)
+                    logging.info('set_instances new table: ' + instance.table_name)
+                logging.info('set_instances initialize values: ' + instance.table_name)
                 instance.initialize_values(self.tables[instance.table_name].fields)
 
             if self.base_instance is None:
@@ -83,12 +87,11 @@ class InstanceCollection:
     def get_data(self, table_name, instance_dict):
         instances_names = []
 
-        for key, values in instance_dict.items():
-            instances = self.oac.get_instance_data(self.tables[table_name].table_instance, {key: values})
+        instances = self.oac.get_instance_data(self.tables[table_name].table_instance, instance_dict)
 
-            tmp_instances_names = self.set_instances(instances)
+        tmp_instances_names = self.set_instances(instances)
 
-            instances_names += tmp_instances_names
+        instances_names += tmp_instances_names
 
         return instances_names
 

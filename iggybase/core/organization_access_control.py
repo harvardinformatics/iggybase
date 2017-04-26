@@ -1,5 +1,5 @@
 from flask import g, current_app, session
-from sqlalchemy import DateTime, func, cast, String, desc, or_, func
+from sqlalchemy import DateTime, func, cast, String, desc, or_, func, and_
 from sqlalchemy.exc import IntegrityError, DataError, SQLAlchemyError, NoForeignKeysError, IdentifierError, \
     NoReferenceError
 from iggybase.database import db_session
@@ -697,48 +697,43 @@ class OrganizationAccessControl:
             success = True
         return success
 
+    def get_action(self, action_name, active = 1):
+        return (self.session.query(models.Action, models.ActionEmail)
+                .outerjoin(models.ActionEmail, and_(models.ActionEmail.id == models.Action.id,
+                                                    models.ActionEmail.active == active))
+                .filter(
+                    models.Action.name==action_name,
+                    models.Action.active==active
+                ).first())
+
     def get_step_actions(self, step_id, timing, active = 1):
-        logging.info('get_step_actions: ' + str(step_id) + ' ' + str(timing))
-        stmt = (self.session.query(models.Action, models.ActionStep, models.SelectListItem,
+        return (self.session.query(models.Action, models.ActionStep, models.SelectListItem,
                                    models.ActionEmail)
                 .join(models.ActionStep,  models.Action.id == models.ActionStep.action_id)
                 .join(models.SelectListItem,  models.SelectListItem.id == models.ActionStep.timing)
-                .outerjoin(models.ActionEmail, models.ActionEmail.id == models.Action.id)
+                .outerjoin(models.ActionEmail, and_(models.ActionEmail.id == models.Action.id,
+                                                    models.ActionEmail.active == active))
                 .filter(
                     models.ActionStep.step_id==step_id,
                     models.ActionStep.active==active,
                     models.Action.active==active,
                     func.lower(models.SelectListItem.display_name) == func.lower(timing)
-                ).order_by(models.ActionStep.order))
-
-        query = stmt.statement.compile(dialect=mysql.dialect())
-        logging.info('query')
-        logging.info(str(query))
-        logging.info(str(query.params))
-
-        return stmt.all()
+                ).order_by(models.ActionStep.order).first())
 
     def get_table_object_actions(self, table_object_id, event_name, active = 1):
         return (self.session.query(models.Action, models.ActionTableObject, models.SelectListItem,
                                    models.ActionEmail, models.Field)
                 .join(models.ActionTableObject,  models.Action.id == models.ActionTableObject.action_id)
                 .join(models.SelectListItem,  models.SelectListItem.id == models.ActionTableObject.event_id)
-                .outerjoin(models.ActionEmail, models.ActionEmail.id == models.Action.id)
+                .outerjoin(models.ActionEmail, and_(models.ActionEmail.id == models.Action.id,
+                                                    models.ActionEmail.active == active))
                 .outerjoin(models.Field, models.Field.id == models.ActionTableObject.field_id)
                 .filter(
                     models.ActionTableObject.table_object_id==table_object_id,
                     models.ActionTableObject.active==active,
                     models.Action.active==active,
                     func.lower(models.SelectListItem.display_name) == func.lower(event_name)
-                ).order_by(models.ActionTableObject.order).all())
-
-    def get_action(self, action_id, active = 1):
-        return (self.session.query(models.Action, models.ActionEmail)
-                .outerjoin(models.ActionEmail, models.ActionEmail.id == models.Action.id)
-                .filter(
-                    models.Action.active==active,
-                    models.Active.id == action_id
-                ).order_by(models.Action.order).all())
+                ).order_by(models.ActionTableObject.order).first())
 
     def get_attr_from_id(self, table_object_id, row_id, attr):
         table_object = self.session.query(models.TableObject).filter_by(id=table_object_id).first()

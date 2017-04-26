@@ -90,9 +90,9 @@ class Field:
             if self.Field.default == 'user':
                 default = g.user.id
             elif self.Field.data_type_id == 10 and self.Field.default == 'today':
-                default = datetime.date.today()
+                default = datetime.date.today().strftime('%Y-%m-%d')
             elif self.Field.data_type_id == 4 and self.Field.default == 'now':
-                default = datetime.date.utcnow()
+                default = datetime.datetime.utcnow().strftime('%Y-%m-%d  %H:%m:%S')
             elif self.Field.display_name == 'organization_id' and self.Field.default == 'org':
                 default = session['org_id']['current_org_id']
             else:
@@ -131,10 +131,12 @@ class Field:
 
     def set_fk_field(self, fk_field):
         if fk_field:
+            logging.info('set_fk_field: ' + self.display_name)
             self.FK_Field = fk_field.Field
             self.FK_FieldRole = fk_field.FieldRole
             self.FK_TableObject = fk_field.TableObject
         else:
+            logging.info('not an fk_field: ' + self.display_name)
             self.is_foreign_key = False # maybe no role access
 
     def _get_type(self):

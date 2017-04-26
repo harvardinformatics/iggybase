@@ -37,12 +37,14 @@ class TableCollection():
         for table_name in table_names:
             self.add_table(table_name)
 
-    def add_table(self, table_name):
+    def add_table(self, table_name, depth=None):
+        if depth is None:
+            depth = self.depth
         self.table_names.append(table_name)
         self.tables[table_name] = TableData(table_name)
 
-        if self.depth > 0 and self.tables[table_name].table_object:
-            data = self.role_access_control.get_link_tables(self.tables[table_name].table_object, self.depth)
+        if depth > 0 and self.tables[table_name].table_object:
+            data = self.role_access_control.get_link_tables(self.tables[table_name].table_object, depth)
 
             for index, link_data in enumerate(data):
                 if link_data['table_meta_data']:

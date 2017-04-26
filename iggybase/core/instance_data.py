@@ -49,14 +49,15 @@ class InstanceData():
             self.parent_id = getattr(self.instance, field)
 
     def initialize_values(self, field_collection):
-        for field, meta_data in field_collection.items():
-            if meta_data.default is not None and meta_data.default != '':
-                if meta_data.Field.foreign_key_table_object_id is not None:
-                    self.set_foreign_key_field(meta_data.TableObject.id, meta_data.Field, meta_data.default)
-                elif meta_data.Field.display_name == 'organization_id':
-                    self.set_organization_id(meta_data.default)
-                else:
-                    setattr(self.instance, meta_data.Field.display_name, meta_data.default)
+        if self.table_name != 'history':
+            for field, meta_data in field_collection.items():
+                if meta_data.default is not None and meta_data.default != '':
+                    if meta_data.Field.display_name == 'organization_id':
+                        self.set_organization_id(meta_data.default)
+                    elif meta_data.Field.foreign_key_table_object_id is not None:
+                        self.set_foreign_key_field(meta_data.TableObject.id, meta_data.Field, meta_data.default)
+                    else:
+                        setattr(self.instance, meta_data.Field.display_name, meta_data.default)
 
     def set_organization_id(self, row_org_id = None):
         oac = g_helper.get_org_access_control()

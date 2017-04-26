@@ -57,12 +57,14 @@ class TableData():
             return self.table_name
 
     def initialize_fields(self):
+        logging.info('initialize_fields: ' + self.table_object.name)
         if self.table_object is None:
             fields = FieldCollection()
         elif self.table_object.name == 'history':
             fields = FieldCollection(None, self.table_object.name, {}, False)
         else:
             fields = FieldCollection(None, self.table_object.name)
+
         fields.set_fk_fields()
         fields.set_defaults()
 
