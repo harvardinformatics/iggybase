@@ -12,8 +12,8 @@ class Institution(Base):
     table_type = 'admin'
 
     def __repr__(self):
-        return "<%s(name=%s, description=%s, id=%d, organization_id=%d)>" % \
-               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id)
+        return "%s" % \
+               (self.name)
 
 
 class Department(Base):
@@ -23,16 +23,16 @@ class Department(Base):
     department_institution = relationship("Institution", foreign_keys=[institution_id])
 
     def __repr__(self):
-        return "<%s(name=%s, description=%s, id=%d, organization_id=%d)>" % \
-               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id)
+        return "%s" % \
+               (self.name)
 
 
 class OrganizationType(Base):
     table_type = 'admin'
 
     def __repr__(self):
-        return "<%s(name=%s, description=%s, id=%d, organization_id=%d)>" % \
-               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id)
+        return "%s" % \
+               (self.name)
 
 class Address(Base):
     table_type = 'admin'
@@ -59,8 +59,9 @@ class Organization(Base):
     public = Column(Boolean)
 
     parent = relation('Organization', remote_side="Organization.id", foreign_keys=[parent_id])
-    organization_department = relationship("Department", foreign_keys=[department_id])
-    organization_organization_type = relationship("OrganizationType", foreign_keys=[organization_type_id])
+    department = relationship("Department", foreign_keys=[department_id])
+    institution = relationship("Institution", foreign_keys=[institution_id])
+    organization_type = relationship("OrganizationType", foreign_keys=[organization_type_id])
     organization_address = relationship("Address", foreign_keys=[address_id])
 
     def __repr__(self):

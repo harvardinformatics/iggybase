@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+{% import 'macros.html' as macros %}
+{% from "security/_macros.html" import render_field_with_errors, render_field %}
+{% block title %}New Group{% endblock %}
+{% block page_content %}
+<h1>New Group</h1>
+<form action="{{ url_for('new_group') }}" method="POST" name="new_group_form" class="form_table">
+    {{ form.hidden_tag() }}
+    {{ macros.render_field(form.name) }}
+    {{ macros.render_field(form.description) }}
+    {{ macros.render_field(form.organization_type, class='select2') }}
+    {{ macros.render_field(form.institution, class='select2') }}
+    {{ macros.render_field(form.department, class='select2') }}
+    {{ macros.render_field(form.facility, class='select2') }}
+    <fieldset>
+        <legend>Mailing Address</legend>
+        {{ macros.render_field(form.address1) }}
+        {{ macros.render_field(form.address2) }}
+        {{ macros.render_field(form.city) }}
+        {{ macros.render_field(form.state) }}
+        {{ macros.render_field(form.zipcode) }}
+        {{ macros.render_field(form.phone) }}
+    </fieldset>
+    <fieldset>
+        <legend>Billing Address</legend>
+        {{ macros.render_field(form.same_as_above) }}
+        {{ macros.render_field(form.b_address1) }}
+        {{ macros.render_field(form.b_address2) }}
+        {{ macros.render_field(form.b_city) }}
+        {{ macros.render_field(form.b_state) }}
+        {{ macros.render_field(form.b_zipcode) }}
+        {{ macros.render_field(form.b_phone) }}
+    </fieldset>
+    <p>
+    <input id="submit" name="submit" type="submit" value="Submit">
+    </p>
+</form>
+{% endblock %}

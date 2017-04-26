@@ -3,7 +3,7 @@ import time
 from collections import OrderedDict
 from flask import Flask, g, send_from_directory, abort, url_for, request
 from flask import redirect
-from wtforms import StringField, SelectField, ValidationError
+from wtforms import StringField, SelectField, ValidationError, BooleanField
 from wtforms.validators import DataRequired, Email
 from wtforms.ext.sqlalchemy.orm import model_form
 from flask_wtf import Form
@@ -109,13 +109,14 @@ def add_base_routes( app, conf, security, user_datastore ):
         form_data = request.form
         form_class = model_form(models.Organization, db_session=db_session,
                 base_class=Form,
-                only=['name', 'description'],
+                only=['name', 'description', 'organization_type'],
                 field_args={
-                    'name':{'validators':[DataRequired(), unique_name]}
+                    'name':{'validators':[DataRequired(), unique_name]},
+                    'organization_type':{'validators':[DataRequired()]}
                     },
                 type_name='New Group'
         )
-        form = form_class(form_data)
+        form = NewGroupForm(form_data)
         if form.validate_on_submit():
             user_dict = form.to_dict()
             # ensure new accounts are unverified
@@ -129,8 +130,8 @@ def add_base_routes( app, conf, security, user_datastore ):
             db.session.commit()
             return redirect(url_for('registration_success'))
         ctx = security_menu()
-        return render_template('dynamic_model_form.html', form =
-                form, action='new_group', **ctx)
+        return render_template('new_group.html', form =
+                form, **ctx)
 
 
     @app.route( '/welcome' )
@@ -270,4 +271,49 @@ class ExtendedRegisterForm(RegisterForm):
         for fac in facilities:
             fac_choices.append((fac.id, fac.name))
         self.facility.choices = fac_choices
+
+group_form = model_form(models.Organization, db_session=db_session,
+                base_class=Form,
+                only=['name', 'description', 'organization_type', 'institution',
+                    'department'],
+                field_args={
+                    'name':{'validators':[DataRequired(), unique_name]},
+                    'organization_type':{'validators':[DataRequired()]}
+                    },
+                type_name='New Group'
+        )
+
+class NewGroupForm(group_form):
+    def ints_but_first(x):
+        if x == '':
+            return ''
+        else:
+            return int(x)
+    facility = SelectField('Facility', [DataRequired()], coerce=ints_but_first)
+    # Mailing address
+    address1 = StringField('Address line 1', [DataRequired()])
+    address2 = StringField('Address line 2', )
+    city = StringField('City', [DataRequired()])
+    state = StringField('State', [DataRequired()])
+    zipcode = StringField('Zipcode', [DataRequired()])
+    phone = StringField('Phone')
+
+    # Billing address
+    same_as_above = BooleanField('Same as above')
+    b_address1 = StringField('Address line 1', [DataRequired()])
+    b_address2 = StringField('Address line 2', )
+    b_city = StringField('City', [DataRequired()])
+    b_state = StringField('State', [DataRequired()])
+    b_zipcode = StringField('Zipcode', [DataRequired()])
+    b_phone = StringField('Phone')
+
+    def __init__(self, *args, **kwargs):
+        super(group_form, self).__init__(*args, **kwargs)
+
+        facilities = models.Facility.query.filter(models.Facility.public == 1).all()
+        fac_choices = [('', '')]
+        for fac in facilities:
+            fac_choices.append((fac.id, fac.name))
+        self.facility.choices = fac_choices
+
 
