@@ -702,10 +702,6 @@ class UserOrganization(Base):
     user_organization_organization = relationship('Organization', foreign_keys=[user_organization_id])
     user_organization_user = relationship('User', foreign_keys=[user_id])
 
-    def __repr__(self):
-        return "<%s(name=%s, description=%s, id=%d, organization_id=%d)>" % \
-               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id)
-
 class UserOrganizationPosition(Base):
     table_type = 'admin'
     user_id = Column(Integer, ForeignKey('user.id'))

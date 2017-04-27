@@ -5,7 +5,8 @@ $( document ).ready( function () {
         allowClear: true,
         placeholder: {
             id: '__None',
-            text: 'Select an option'
+            text: 'Select an option',
+            selected: 'selected'
         }
     });
     $('.datepicker').datepicker({format: 'yyyy-mm-dd', autoclose: true});

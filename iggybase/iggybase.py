@@ -77,6 +77,11 @@ def add_base_routes( app, conf, security, user_datastore ):
             ('Reset Password', {'title':'Reset Password', 'url':url_for('security.forgot_password')}), ('Logout', {'title':'Logout', 'url':url_for('security.logout')})])
         return dict(navbar = navbar)
 
+    def get_new_name(model):
+        to = (models.TableObject.query.
+                filter_by(name=model.__tablename__).first())
+        return to.get_new_name()
+
     @app.route('/register', methods=['GET', 'POST'])
     def register():
         form_class = ExtendedRegisterForm
@@ -86,12 +91,41 @@ def add_base_routes( app, conf, security, user_datastore ):
             user_dict = form.to_dict()
             # ensure new accounts are unverified
             user_dict['verified'] = 0
+            org = form.data['organization']
+            user_dict['organization_id'] = org
             user = register_user(**user_dict)
+            # insert user_org
+            user_org = models.UserOrganization()
+            user_org.name = get_new_name(user_org)
+            user_org.organization_id = org
+            user_org.user_organization_id = org
+            user_org.user_id = user.id
+            user_org.active = 1
+            user_org.default_organization = 1
+            db.session.add(user_org)
+            # insert address
+            address = models.Address()
+            address.name = get_new_name(address)
+            address.address_1 = form.data['address1']
+            address.address_2 = form.data['address2']
+            address.city = form.data['city']
+            address.state = form.data['state']
+            address.postcode = form.data['zipcode']
+            address.organization_id = org
+            address.active = 1
+            db.session.add(address)
+            # insert role
             level = models.Level.query.filter_by(name = 'User').first()
             role = models.Role.query.filter(
                     models.Role.facility_id == form.facility.data,
                     models.Role.level_id == level.id).first()
             user_datastore.add_role_to_user(user, role)
+            db.session.commit()
+            # update user address and role
+            user.address_id = address.id
+            user_role = (models.UserRole.query.filter_by(user_id = user.id, role_id =
+                    role.id).first())
+            user.current_user_role_id = user_role.id
             db.session.commit()
             return redirect(url_for('registration_success'))
         ctx = security_menu()
@@ -221,10 +255,10 @@ def unique_name(obj):
     return _unique_name
 
 def ints_but_first(x):
-    if x == '' or '__None':
-        return x
+    if (x == '' or  x == '__None'):
+        # this must be empty for DataRequired to fail
+        return ''
     else:
-        print(x)
         return int(x)
 
 def get_fac_choices():
@@ -279,7 +313,7 @@ group_form = model_form(models.Organization, db_session=db_session,
 )
 
 class NewGroupForm(group_form):
-    facility = SelectField('Facility', [DataRequired()])
+    facility = SelectField('Facility', [DataRequired()], coerce = ints_but_first)
     # Mailing address
     address1 = StringField('Address line 1', [DataRequired()])
     address2 = StringField('Address line 2', )
