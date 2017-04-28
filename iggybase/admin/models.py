@@ -65,8 +65,7 @@ class Organization(Base):
     organization_address = relationship("Address", foreign_keys=[address_id])
 
     def __repr__(self):
-        return "<%s(name=%s, description=%s, id=%d)>" % \
-               (self.__class__.__name__, self.name, self.description, self.id)
+        return self.name
 
 
 class TableObject(Base):

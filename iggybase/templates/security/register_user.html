@@ -15,14 +15,15 @@
   {{ macros.render_field(register_user_form.first_name) }}
   {{ macros.render_field(register_user_form.last_name) }}
   {{ macros.render_field(register_user_form.email) }}
-  {{ macros.render_field(register_user_form.address1) }}
-  {{ macros.render_field(register_user_form.address2) }}
+  {{ macros.render_field(register_user_form.address_1) }}
+  {{ macros.render_field(register_user_form.address_2) }}
+  {{ macros.render_field(register_user_form.address_3) }}
   {{ macros.render_field(register_user_form.city) }}
   {{ macros.render_field(register_user_form.state) }}
-  {{ macros.render_field(register_user_form.zipcode) }}
+  {{ macros.render_field(register_user_form.postcode) }}
   {{ macros.render_field(register_user_form.phone) }}
+  {{ macros.render_field(register_user_form.country) }}
   {{ macros.render_field(register_user_form.facility, class="select2") }}
-  {% include 'modal.html' %}
   {{ macros.render_field(register_user_form.password) }}
   {{ macros.render_field(register_user_form.password_confirm) }}
   {{ render_field(register_user_form.submit) }}

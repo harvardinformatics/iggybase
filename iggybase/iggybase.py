@@ -82,6 +82,24 @@ def add_base_routes( app, conf, security, user_datastore ):
                 filter_by(name=model.__tablename__).first())
         return to.get_new_name()
 
+    def populate_model(model_name, form, extra, prefix = ''):
+        obj = getattr(models, model_name)()
+        cols = obj.__table__.columns.keys()
+        # create dict from keys and add form prefix if any
+        # exp for billing address "b_"
+        fields = {k: (prefix + k) for k in cols}
+        for key, val in fields.items():
+            if hasattr(form, val) and hasattr(obj, key):
+                setattr(obj, key, getattr(form, val).data)
+        # add name
+        setattr(obj, 'name', get_new_name(obj))
+        # add extra non-form values
+        for key, val in extra.items():
+            if hasattr(obj, key):
+                setattr(obj, key, val)
+        return obj
+
+
     @app.route('/register', methods=['GET', 'POST'])
     def register():
         form_class = ExtendedRegisterForm
@@ -91,33 +109,28 @@ def add_base_routes( app, conf, security, user_datastore ):
             user_dict = form.to_dict()
             # ensure new accounts are unverified
             user_dict['verified'] = 0
-            org = form.data['organization']
+            org = form.data['organization'].id
             user_dict['organization_id'] = org
             user = register_user(**user_dict)
             # insert user_org
-            user_org = models.UserOrganization()
-            user_org.name = get_new_name(user_org)
-            user_org.organization_id = org
-            user_org.user_organization_id = org
-            user_org.user_id = user.id
-            user_org.active = 1
-            user_org.default_organization = 1
+            user_org = populate_model('UserOrganization',
+                    form,
+                    {
+                        'user_id': user.id,
+                        'active': 1,
+                        'default_organization': 1,
+                        'organization_id': org,
+                        'user_organization_id': org
+                    }
+            )
             db.session.add(user_org)
             # insert address
-            address = models.Address()
-            address.name = get_new_name(address)
-            address.address_1 = form.data['address1']
-            address.address_2 = form.data['address2']
-            address.city = form.data['city']
-            address.state = form.data['state']
-            address.postcode = form.data['zipcode']
-            address.organization_id = org
-            address.active = 1
+            address = populate_model('Address', form, {'organization_id': org, 'active': 1})
             db.session.add(address)
             # insert role
             level = models.Level.query.filter_by(name = 'User').first()
             role = models.Role.query.filter(
-                    models.Role.facility_id == form.facility.data,
+                    models.Role.facility_id == form.facility.data.id,
                     models.Role.level_id == level.id).first()
             user_datastore.add_role_to_user(user, role)
             db.session.commit()
@@ -296,51 +309,39 @@ class ElseRequired(DataRequired):
         if getattr(form, self.attr).data == False:
             super(ElseRequired, self).__call__(form, field)
 
-def ints_but_first(x):
-    if (x == '' or  x == '__None'):
-        # this must be empty for DataRequired to fail
-        return ''
-    else:
-        return int(x)
+def get_facility_select():
+    def fac_opts():
+        return models.Facility.query.filter(models.Facility.public ==
+        1).order_by(models.Facility.name)
 
-def get_fac_choices():
-    facilities = (models.Facility.query.filter(models.Facility.public == 1)
-        .order_by(models.Facility.name).all())
-    fac_choices = [('__None', '')]
-    for fac in facilities:
-        fac_choices.append((fac.id, fac.name))
-    return fac_choices
+    return QuerySelectField('Facility', [DataRequired()],
+            query_factory=fac_opts, allow_blank=True)
 
 class ExtendedLoginForm(LoginForm):
     email = StringField('Username or email:')
 
 class ExtendedRegisterForm(RegisterForm):
+    def org_opts():
+        return (models.Organization.query.filter(
+                models.Organization.organization_type_id != 1,
+                models.Organization.public == 1)
+            .order_by(models.Organization.name).all())
+
     name = StringField('Username', [DataRequired(), unique_name(obj = 'User')])
     first_name = StringField('First Name', [DataRequired()])
     last_name = StringField('Last Name', [DataRequired()])
     email = StringField('Email', [DataRequired(), Email()])
-    address1 = StringField('Address 1', [DataRequired()])
-    address2 = StringField('Address 2', )
+    address_1 = StringField('Address line 1', [DataRequired()])
+    address_2 = StringField('Address line 2')
+    address_3 = StringField('Address line 3')
     city = StringField('City', [DataRequired()])
     state = StringField('State', [DataRequired()])
-    zipcode = StringField('Zipcode', [DataRequired()])
+    postcode = StringField('Zipcode', [DataRequired()])
     phone = StringField('Phone')
-    organization = SelectField('Group/ PI', [DataRequired()], coerce =
-            ints_but_first)
-    facility = SelectField('Facility', [DataRequired()], coerce = ints_but_first)
-
-    def __init__(self, *args, **kwargs):
-        super(ExtendedRegisterForm, self).__init__(*args, **kwargs)
-
-        orgs = (models.Organization.query.filter(
-                models.Organization.organization_type_id != 1,
-                models.Organization.public == 1)
-            .order_by(models.Organization.name).all())
-        org_choices = [('__None', '')]
-        for org in orgs:
-            org_choices.append((org.id, org.name))
-        self.organization.choices = org_choices
-        self.facility.choices = get_fac_choices()
+    country = StringField('Country')
+    organization = QuerySelectField('Group/ PI', [DataRequired()],
+            query_factory= org_opts, allow_blank = True)
+    facility = get_facility_select()
 
 # dynamic form using modal_form, base for NewGroupForm
 group_form = model_form(models.Organization, db_session=db_session,
@@ -355,12 +356,7 @@ group_form = model_form(models.Organization, db_session=db_session,
 )
 
 class NewGroupForm(group_form):
-    def fac_opts():
-        return models.Facility.query.filter(models.Facility.public ==
-        1).order_by(models.Facility.name)
-
-    facility = QuerySelectField('Facility', [DataRequired()],
-            query_factory=fac_opts, allow_blank=True)
+    facility = get_facility_select()
 
     # Mailing address
     address1 = StringField('Address line 1', [DataRequired()])
@@ -378,10 +374,4 @@ class NewGroupForm(group_form):
     b_state = StringField('State', [ElseRequired(attr = 'same_as_above')])
     b_zipcode = StringField('Zipcode', [ElseRequired(attr = 'same_as_above')])
     b_phone = StringField('Phone')
-
-    def __init__(self, *args, **kwargs):
-        super(group_form, self).__init__(*args, **kwargs)
-        self.facility.choices = get_fac_choices()
-
-
 
