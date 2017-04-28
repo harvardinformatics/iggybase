@@ -289,16 +289,17 @@ def configure_error_handlers( app ):
         return render_template( "errors/server_error.html" ), 500
 
 # Validators and Forms
-def unique_name(obj):
+def unique_field(obj, attr = 'name'):
     # check for unique name
-    def _unique_name(form, field):
+    def _unique_field(form, field):
         model = getattr(models, obj)
-        name = model.query.filter(model.name ==
+        col = getattr(model, attr)
+        name = model.query.filter(col ==
                 field.data).first()
         if name:
             raise ValidationError('This name exists please choose a'
             ' different one.')
-    return _unique_name
+    return _unique_field
 
 class ElseRequired(DataRequired):
     def __init__(self, attr, *args, **kwargs):
@@ -327,10 +328,11 @@ class ExtendedRegisterForm(RegisterForm):
                 models.Organization.public == 1)
             .order_by(models.Organization.name).all())
 
-    name = StringField('Username', [DataRequired(), unique_name(obj = 'User')])
+    name = StringField('Username', [DataRequired(), unique_field(obj = 'User')])
     first_name = StringField('First Name', [DataRequired()])
     last_name = StringField('Last Name', [DataRequired()])
-    email = StringField('Email', [DataRequired(), Email()])
+    email = StringField('Email', [DataRequired(), Email(), unique_field(obj=
+    'User', attr = 'email')])
     address_1 = StringField('Address line 1', [DataRequired()])
     address_2 = StringField('Address line 2')
     address_3 = StringField('Address line 3')
@@ -349,7 +351,7 @@ group_form = model_form(models.Organization, db_session=db_session,
         only=['name', 'description', 'organization_type', 'institution',
             'department'],
         field_args={
-            'name':{'validators':[DataRequired(), unique_name(obj='Organization')]},
+            'name':{'validators':[DataRequired(), unique_field(obj='Organization')]},
             'organization_type':{'validators':[DataRequired()]}
             },
         type_name='New Group'
