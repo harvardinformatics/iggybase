@@ -162,7 +162,6 @@ class Role(Base, RoleMixin):
         return "<%s(name=%s, description=%s, id=%d, organization_id=%d)>" % \
                (self.__class__.__name__, self.name, self.description, self.id, self.organization_id)
 
-
 class Facility(Base):
     table_type = 'admin'
     root_organization_id = Column(Integer)
@@ -174,9 +173,7 @@ class Facility(Base):
     public = Column(Boolean)
 
     def __repr__(self):
-        return "<%s(name=%s, description=%s, id=%d, organization_id=%d)>" % \
-               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id)
-
+        return self.name
 
 class MenuRole(Base):
     table_type = 'admin'

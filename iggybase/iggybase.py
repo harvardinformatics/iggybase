@@ -5,7 +5,7 @@ from flask import Flask, g, send_from_directory, abort, url_for, request
 from flask import redirect
 from wtforms import StringField, SelectField, ValidationError, BooleanField
 from wtforms.validators import DataRequired, Email
-from wtforms.ext.sqlalchemy.orm import model_form
+from wtforms.ext.sqlalchemy.orm import model_form, QuerySelectField
 from flask_wtf import Form
 from config import Config
 from flask import render_template
@@ -144,14 +144,47 @@ def add_base_routes( app, conf, security, user_datastore ):
         form = NewGroupForm(form_data)
         if form.validate_on_submit():
             org = models.Organization()
-            org.name = form.data.name
-            org.description = form.data.description
-            org.organization_type_id = form.data.organization_type
+            org.name = form.data['name']
+            org.description = form.data['description']
+            org.organization_type_id = form.data['organization_type'].id
+            org.institution_id = getattr(form.data['institution'], 'id', None)
+            org.department_id = getattr(form.data['department'], 'id', None)
             org.active = 0
-            org.organization_id = 1
+            org.organization_id = form.data['facility'].id
+            org.parent_id = form.data['facility'].id
             org.public = 1
-            org.save()
-            #db.session.commit()
+            db.session.add(org)
+            db.session.commit()
+            # insert address
+            address = models.Address()
+            address.name = get_new_name(address)
+            address.address_1 = form.data['address1']
+            address.address_2 = form.data['address2']
+            address.city = form.data['city']
+            address.state = form.data['state']
+            address.postcode = form.data['zipcode']
+            address.organization_id = org.id
+            address.active = 1
+            db.session.add(address)
+            db.session.commit()
+            main_addr = address.id
+            if getattr(form.data, 'same_as_above', None) == None:
+                # insert billing address
+                address = models.Address()
+                address.name = get_new_name(address)
+                address.address_1 = form.data['b_address1']
+                address.address_2 = form.data['b_address2']
+                address.city = form.data['b_city']
+                address.state = form.data['b_state']
+                address.postcode = form.data['b_zipcode']
+                address.organization_id = org.id
+                address.active = 1
+                db.session.add(address)
+                db.session.commit()
+            # set to billing address or default to address
+            org.billing_address_id = address.id
+            org.address_id = main_addr
+            db.session.commit()
             return redirect(url_for('register'))
         ctx = security_menu()
         return render_template('new_group.html', form =
@@ -254,6 +287,15 @@ def unique_name(obj):
             ' different one.')
     return _unique_name
 
+class ElseRequired(DataRequired):
+    def __init__(self, attr, *args, **kwargs):
+        self.attr = attr
+        super(ElseRequired, self).__init__(*args, **kwargs)
+
+    def __call__(self, form, field):
+        if getattr(form, self.attr).data == False:
+            super(ElseRequired, self).__call__(form, field)
+
 def ints_but_first(x):
     if (x == '' or  x == '__None'):
         # this must be empty for DataRequired to fail
@@ -306,14 +348,20 @@ group_form = model_form(models.Organization, db_session=db_session,
         only=['name', 'description', 'organization_type', 'institution',
             'department'],
         field_args={
-            'name':{'validators':[DataRequired(), unique_name]},
+            'name':{'validators':[DataRequired(), unique_name(obj='Organization')]},
             'organization_type':{'validators':[DataRequired()]}
             },
         type_name='New Group'
 )
 
 class NewGroupForm(group_form):
-    facility = SelectField('Facility', [DataRequired()], coerce = ints_but_first)
+    def fac_opts():
+        return models.Facility.query.filter(models.Facility.public ==
+        1).order_by(models.Facility.name)
+
+    facility = QuerySelectField('Facility', [DataRequired()],
+            query_factory=fac_opts, allow_blank=True)
+
     # Mailing address
     address1 = StringField('Address line 1', [DataRequired()])
     address2 = StringField('Address line 2', )
@@ -324,11 +372,11 @@ class NewGroupForm(group_form):
 
     # Billing address
     same_as_above = BooleanField('Same as above')
-    b_address1 = StringField('Address line 1', [DataRequired()])
+    b_address1 = StringField('Address line 1', [ElseRequired(attr = 'same_as_above')])
     b_address2 = StringField('Address line 2', )
-    b_city = StringField('City', [DataRequired()])
-    b_state = StringField('State', [DataRequired()])
-    b_zipcode = StringField('Zipcode', [DataRequired()])
+    b_city = StringField('City', [ElseRequired(attr = 'same_as_above')])
+    b_state = StringField('State', [ElseRequired(attr = 'same_as_above')])
+    b_zipcode = StringField('Zipcode', [ElseRequired(attr = 'same_as_above')])
     b_phone = StringField('Phone')
 
     def __init__(self, *args, **kwargs):
