@@ -22,18 +22,25 @@
         {{ macros.render_field(form.zipcode) }}
         {{ macros.render_field(form.phone) }}
     </fieldset>
-    <fieldset>
+    <fieldset id = 'billing_address'>
         <legend>Billing Address</legend>
         {{ macros.render_field(form.same_as_above) }}
+        <div class='billing_address'>
         {{ macros.render_field(form.b_address1) }}
         {{ macros.render_field(form.b_address2) }}
         {{ macros.render_field(form.b_city) }}
         {{ macros.render_field(form.b_state) }}
         {{ macros.render_field(form.b_zipcode) }}
         {{ macros.render_field(form.b_phone) }}
+    </div>
     </fieldset>
+    <br>
     <p>
     <input id="submit" name="submit" type="submit" value="Submit">
     </p>
 </form>
+    {% block scripts %}
+        {{super()}}
+        <script type="text/javascript" src="{{ url_for( 'static', filename='new_group.js' ) }}"></script>
+    {% endblock %}
 {% endblock %}
