@@ -289,7 +289,7 @@ def configure_error_handlers( app ):
         return render_template( "errors/server_error.html" ), 500
 
 # Validators and Forms
-def unique_field(obj, attr = 'name'):
+def unique_field(obj, attr = 'name', msg = ''):
     # check for unique name
     def _unique_field(form, field):
         model = getattr(models, obj)
@@ -297,8 +297,8 @@ def unique_field(obj, attr = 'name'):
         name = model.query.filter(col ==
                 field.data).first()
         if name:
-            raise ValidationError('This name exists please choose a'
-            ' different one.')
+            raise ValidationError('This ' + attr + ' exists please choose a'
+            ' different one. ' + msg)
     return _unique_field
 
 class ElseRequired(DataRequired):
@@ -331,8 +331,9 @@ class ExtendedRegisterForm(RegisterForm):
     name = StringField('Username', [DataRequired(), unique_field(obj = 'User')])
     first_name = StringField('First Name', [DataRequired()])
     last_name = StringField('Last Name', [DataRequired()])
+    msg = 'If your email exists then please reset your password rather then re-register.'
     email = StringField('Email', [DataRequired(), Email(), unique_field(obj=
-    'User', attr = 'email')])
+    'User', attr = 'email', msg = msg)])
     address_1 = StringField('Address line 1', [DataRequired()])
     address_2 = StringField('Address line 2')
     address_3 = StringField('Address line 3')
