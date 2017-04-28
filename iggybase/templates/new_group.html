@@ -15,23 +15,27 @@
     {{ macros.render_field(form.facility, class='select2') }}
     <fieldset>
         <legend>Mailing Address</legend>
-        {{ macros.render_field(form.address1) }}
-        {{ macros.render_field(form.address2) }}
+        {{ macros.render_field(form.address_1) }}
+        {{ macros.render_field(form.address_2) }}
+        {{ macros.render_field(form.address_3) }}
         {{ macros.render_field(form.city) }}
         {{ macros.render_field(form.state) }}
-        {{ macros.render_field(form.zipcode) }}
+        {{ macros.render_field(form.postcode) }}
         {{ macros.render_field(form.phone) }}
+        {{ macros.render_field(form.country) }}
     </fieldset>
     <fieldset id = 'billing_address'>
         <legend>Billing Address</legend>
         {{ macros.render_field(form.same_as_above) }}
         <div class='billing_address'>
-        {{ macros.render_field(form.b_address1) }}
-        {{ macros.render_field(form.b_address2) }}
+        {{ macros.render_field(form.b_address_1) }}
+        {{ macros.render_field(form.b_address_2) }}
+        {{ macros.render_field(form.b_address_3) }}
         {{ macros.render_field(form.b_city) }}
         {{ macros.render_field(form.b_state) }}
-        {{ macros.render_field(form.b_zipcode) }}
+        {{ macros.render_field(form.b_postcode) }}
         {{ macros.render_field(form.b_phone) }}
+        {{ macros.render_field(form.b_country) }}
     </div>
     </fieldset>
     <br>

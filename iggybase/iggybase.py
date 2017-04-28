@@ -2,7 +2,7 @@ import os, logging, sys
 import time
 from collections import OrderedDict
 from flask import Flask, g, send_from_directory, abort, url_for, request
-from flask import redirect
+from flask import redirect, flash
 from wtforms import StringField, SelectField, ValidationError, BooleanField
 from wtforms.validators import DataRequired, Email
 from wtforms.ext.sqlalchemy.orm import model_form, QuerySelectField
@@ -82,7 +82,7 @@ def add_base_routes( app, conf, security, user_datastore ):
                 filter_by(name=model.__tablename__).first())
         return to.get_new_name()
 
-    def populate_model(model_name, form, extra, prefix = ''):
+    def populate_model(model_name, form, extra, set_name = True, prefix = ''):
         obj = getattr(models, model_name)()
         cols = obj.__table__.columns.keys()
         # create dict from keys and add form prefix if any
@@ -90,9 +90,14 @@ def add_base_routes( app, conf, security, user_datastore ):
         fields = {k: (prefix + k) for k in cols}
         for key, val in fields.items():
             if hasattr(form, val) and hasattr(obj, key):
+                new_val = getattr(form, val).data
+                # QuerySelectFields save objects, we need id
+                if hasattr(new_val, 'id'):
+                    new_val = new_val.id
                 setattr(obj, key, getattr(form, val).data)
-        # add name
-        setattr(obj, 'name', get_new_name(obj))
+        # add auto name
+        if set_name:
+            setattr(obj, 'name', get_new_name(obj))
         # add extra non-form values
         for key, val in extra.items():
             if hasattr(obj, key):
@@ -119,13 +124,14 @@ def add_base_routes( app, conf, security, user_datastore ):
                         'user_id': user.id,
                         'active': 1,
                         'default_organization': 1,
-                        'organization_id': org,
-                        'user_organization_id': org
+                        'user_organization_id': org,
+                        'organization_id': org
                     }
             )
             db.session.add(user_org)
             # insert address
-            address = populate_model('Address', form, {'organization_id': org, 'active': 1})
+            address = populate_model('Address', form, {'active': 1,
+                'organization_id': org})
             db.session.add(address)
             # insert role
             level = models.Level.query.filter_by(name = 'User').first()
@@ -156,48 +162,42 @@ def add_base_routes( app, conf, security, user_datastore ):
         form_data = request.form
         form = NewGroupForm(form_data)
         if form.validate_on_submit():
-            org = models.Organization()
-            org.name = form.data['name']
-            org.description = form.data['description']
-            org.organization_type_id = form.data['organization_type'].id
-            org.institution_id = getattr(form.data['institution'], 'id', None)
-            org.department_id = getattr(form.data['department'], 'id', None)
-            org.active = 0
-            org.organization_id = form.data['facility'].id
-            org.parent_id = form.data['facility'].id
-            org.public = 1
+            root_org = form.data['facility'].root_organization_id
+            org = populate_model('Organization',
+                    form,
+                    {
+                        'organization_id': root_org,
+                        'parent_id': root_org,
+                        'active': 0,
+                        'public': 1,
+                        'organization_type_id':
+                        form.data['organization_type'].id,
+                        # TODO: we should find a way to get these automoatically
+                        'department_id': getattr(form.data['department'], 'id',
+                            None),
+                        'institution_id': getattr(form.data['institution'],
+                            'id', None)
+                    },
+                    False
+            )
             db.session.add(org)
             db.session.commit()
             # insert address
-            address = models.Address()
-            address.name = get_new_name(address)
-            address.address_1 = form.data['address1']
-            address.address_2 = form.data['address2']
-            address.city = form.data['city']
-            address.state = form.data['state']
-            address.postcode = form.data['zipcode']
-            address.organization_id = org.id
-            address.active = 1
+            address = populate_model('Address', form, {'active': 1,
+                'organization_id': org.id})
             db.session.add(address)
             db.session.commit()
             main_addr = address.id
-            if getattr(form.data, 'same_as_above', None) == None:
+            if getattr(form, 'same_as_above').data == False:
                 # insert billing address
-                address = models.Address()
-                address.name = get_new_name(address)
-                address.address_1 = form.data['b_address1']
-                address.address_2 = form.data['b_address2']
-                address.city = form.data['b_city']
-                address.state = form.data['b_state']
-                address.postcode = form.data['b_zipcode']
-                address.organization_id = org.id
-                address.active = 1
+                address = populate_model('Address', form, {'active': 1, 'organization_id': org.id}, True, 'b_')
                 db.session.add(address)
                 db.session.commit()
             # set to billing address or default to address
             org.billing_address_id = address.id
             org.address_id = main_addr
             db.session.commit()
+            flash('New group ' + org.name + ' added.')
             return redirect(url_for('register'))
         ctx = security_menu()
         return render_template('new_group.html', form =
@@ -359,19 +359,23 @@ class NewGroupForm(group_form):
     facility = get_facility_select()
 
     # Mailing address
-    address1 = StringField('Address line 1', [DataRequired()])
-    address2 = StringField('Address line 2', )
+    address_1 = StringField('Address line 1', [DataRequired()])
+    address_2 = StringField('Address line 2', )
+    address_3 = StringField('Address line 3', )
     city = StringField('City', [DataRequired()])
     state = StringField('State', [DataRequired()])
-    zipcode = StringField('Zipcode', [DataRequired()])
+    postcode = StringField('Zipcode', [DataRequired()])
     phone = StringField('Phone')
+    country = StringField('Country')
 
     # Billing address
     same_as_above = BooleanField('Same as above')
-    b_address1 = StringField('Address line 1', [ElseRequired(attr = 'same_as_above')])
-    b_address2 = StringField('Address line 2', )
+    b_address_1 = StringField('Address line 1', [ElseRequired(attr = 'same_as_above')])
+    b_address_2 = StringField('Address line 2', )
+    b_address_3 = StringField('Address line 2', )
     b_city = StringField('City', [ElseRequired(attr = 'same_as_above')])
     b_state = StringField('State', [ElseRequired(attr = 'same_as_above')])
-    b_zipcode = StringField('Zipcode', [ElseRequired(attr = 'same_as_above')])
+    b_postcode = StringField('Zipcode', [ElseRequired(attr = 'same_as_above')])
     b_phone = StringField('Phone')
+    b_country = StringField('Country')
 
