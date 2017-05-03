@@ -182,6 +182,31 @@ def add_base_routes( app, conf, security, user_datastore ):
             )
             db.session.add(org)
             db.session.commit()
+            # find or create lab_admin
+            lab_admin_email = form.data['la_email']
+            lab_admin = (models.User.query.filter_by(email =
+                lab_admin_email).first())
+            if not lab_admin:
+                lab_admin = populate_model('User', {}, {'active': 1,
+                    'organization_id': org.id, 'first_name':
+                form.data['la_first_name'], 'last_name':
+                form.data['la_last_name'], 'email': lab_admin_email})
+                db.session.add(lab_admin)
+                db.session.commit()
+            # insert group position for lab admin
+            if lab_admin.id:
+                user_org = populate_model('UserOrganization', {}, {'active': 1,
+                     'organization_id': org.id, 'user_id': lab_admin.id,
+                     'user_organization_id': org.id})
+                db.session.add(user_org)
+                db.session.commit()
+                mng = (models.Position.query.filter_by(name = "manager").first())
+                if user_org.id and mng.id:
+                    user_org_pos = populate_model('UserOrganizationPosition', {}, {'active': 1,
+                        'organization_id': org.id, 'user_organization_id': user_org.id, 'position_id': mng.id})
+                    db.session.add(user_org_pos)
+                    db.session.commit()
+
             # insert address
             address = populate_model('Address', form, {'active': 1,
                 'organization_id': org.id})
@@ -360,6 +385,11 @@ group_form = model_form(models.Organization, db_session=db_session,
 
 class NewGroupForm(group_form):
     facility = get_facility_select()
+
+    # Lab Admin
+    la_first_name = StringField('First name', [DataRequired()])
+    la_last_name = StringField('Last name', [DataRequired()])
+    la_email = StringField('Email', [DataRequired(), Email()])
 
     # Mailing address
     address_1 = StringField('Address line 1', [DataRequired()])

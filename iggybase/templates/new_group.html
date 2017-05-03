@@ -14,6 +14,13 @@
     {{ macros.render_field(form.department, class='select2') }}
     {{ macros.render_field(form.facility, class='select2') }}
     <fieldset>
+        <legend>Lab Admin</legend>
+        <span>This is the person who manages 33 digit billing codes or receives bills for the group.</span>
+        {{ macros.render_field(form.la_first_name) }}
+        {{ macros.render_field(form.la_last_name) }}
+        {{ macros.render_field(form.la_email) }}
+    </fieldset>
+    <fieldset>
         <legend>Mailing Address</legend>
         {{ macros.render_field(form.address_1) }}
         {{ macros.render_field(form.address_2) }}
