@@ -4,7 +4,7 @@ from collections import OrderedDict
 from flask import Flask, g, send_from_directory, abort, url_for, request
 from flask import redirect, flash
 from wtforms import StringField, SelectField, ValidationError, BooleanField
-from wtforms.validators import DataRequired, Email
+from wtforms.validators import DataRequired, Email, Regexp
 from wtforms.ext.sqlalchemy.orm import model_form, QuerySelectField
 from flask_wtf import Form
 from config import Config
@@ -377,7 +377,8 @@ group_form = model_form(models.Organization, db_session=db_session,
         only=['name', 'description', 'organization_type', 'institution',
             'department'],
         field_args={
-            'name':{'validators':[DataRequired(), unique_field(obj='Organization')]},
+            'name':{'validators':[DataRequired(), unique_field(obj='Organization'),
+                Regexp("^[\w ]*$", message='only permits alphanumeric, underscore and space')]},
             'organization_type':{'validators':[DataRequired()]}
             },
         type_name='New Group'

@@ -7,15 +7,17 @@
 <h1>New Group</h1>
 <form action="{{ url_for('new_group') }}" method="POST" name="new_group_form" class="form_table">
     {{ form.hidden_tag() }}
-    {{ macros.render_field(form.name) }}
-    {{ macros.render_field(form.description) }}
-    {{ macros.render_field(form.organization_type, class='select2') }}
-    {{ macros.render_field(form.institution, class='select2') }}
-    {{ macros.render_field(form.department, class='select2') }}
-    {{ macros.render_field(form.facility, class='select2') }}
+    <fieldset>
+        {{ macros.render_field(form.name, title='PI (first_last name) or company name', class='has_tooltip') }}
+        {{ macros.render_field(form.description) }}
+        {{ macros.render_field(form.organization_type, class='select2') }}
+        {{ macros.render_field(form.institution, class='select2') }}
+        {{ macros.render_field(form.department, class='select2') }}
+        {{ macros.render_field(form.facility, class='select2') }}
+    </fieldset>
     <fieldset>
         <legend>Lab Admin</legend>
-        <span>This is the person who manages 33 digit billing codes or receives bills for the group.</span>
+        <span>The person who manages 33 digit billing codes or receives bills for the group.</span>
         {{ macros.render_field(form.la_first_name) }}
         {{ macros.render_field(form.la_last_name) }}
         {{ macros.render_field(form.la_email) }}
@@ -33,7 +35,7 @@
     </fieldset>
     <fieldset id = 'billing_address'>
         <legend>Billing Address</legend>
-        {{ macros.render_field(form.same_as_above) }}
+        {{ macros.render_field(form.same_as_above, title='External groups receive bills at this address', class='has_tooltip') }}
         <div class='billing_address'>
         {{ macros.render_field(form.b_address_1) }}
         {{ macros.render_field(form.b_address_2) }}

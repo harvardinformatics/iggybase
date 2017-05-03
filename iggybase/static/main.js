@@ -9,6 +9,7 @@ $( document ).ready( function () {
             selected: 'selected'
         }
     });
+    $('.has_tooltip').tooltip({placement:'right'});
     $('.datepicker').datepicker({format: 'yyyy-mm-dd', autoclose: true});
     $('.datetimepicker').datetimepicker({format: 'yyyy-mm-dd hh:ii:ss', autoclose: true});
     /* add a hack to get mac firefox scrollbars to show, no way in pure css */
