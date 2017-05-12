@@ -166,7 +166,7 @@ class OrganizationAccessControl:
             self.session.query(*columns).
                 join(*joins).
                 outerjoin(*outer_joins).
-                filter(*wheres).order_by(desc('date_created')).all()
+                filter(*wheres).order_by(order_by).all()
         )
         print('query: ' + str(time.time() - start))
         return results
