@@ -1,6 +1,6 @@
 from flask import g, request
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy import DateTime, func
+from sqlalchemy import DateTime, func, desc
 from iggybase.auth.role_access_control import RoleAccessControl
 from iggybase.database import db_session
 from iggybase.admin import models
@@ -104,8 +104,15 @@ class OrganizationAccessControl:
         fk_columns = []
         aliases = {}
         wheres = []
+        order_by = None
         first_table_named = None  # set to first table name, dont add to joins
         for field in field_dict.values():
+            if order_by is None or field.Field.field_name == 'date_created':
+                order_by_name = field.display_name
+                if order_by_name == 'date_created':
+                    order_by = desc(order_by_name)
+                else:
+                    order_by = order_by_name
             if field.TableObject.name in table_models:
                 table_model = table_models[field.TableObject.name]
             else:
@@ -134,7 +141,7 @@ class OrganizationAccessControl:
                 tables.add(table_model)
                 col = getattr(table_model, field.Field.field_name)
                 columns.append(col.label(field.display_name))
-                                # add to joins if not first table, avoid joining to self
+                # add to joins if not first table, avoid joining to self
                 if (not first_table_named
                     or (first_table_named == field.TableObject.name)):
                     first_table_named = field.TableObject.name
@@ -159,7 +166,7 @@ class OrganizationAccessControl:
             self.session.query(*columns).
                 join(*joins).
                 outerjoin(*outer_joins).
-                filter(*wheres).all()
+                filter(*wheres).order_by(desc('date_created')).all()
         )
         print('query: ' + str(time.time() - start))
         return results
@@ -282,7 +289,7 @@ class OrganizationAccessControl:
                 else:
                     fields[name] = old_fields[name]
             elif old_fields[name] == '' and fields[name] == '':
-                fields[name] = 'new' 
+                fields[name] = 'new'
 
         try:
             for field, data in fields.items():

@@ -12,7 +12,7 @@ class TableQuery:
         self.order = order
         self.display_name = display_name
         self.table_name = table_name
-        self.table_rows = {}
+        self.table_rows = OrderedDict()
         self.table_dict = []
         self.criteria = criteria
         self.rac = util.get_role_access_control()

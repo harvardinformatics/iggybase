@@ -6,6 +6,7 @@ $(document).ready(function(){
         buttons:[
             'csv'
         ],
+        order: [],
         lengthMenu:[[10,25,50,100,-1],[10,25,50,100,'All']],
         ajax:{
             url:'ajax',
