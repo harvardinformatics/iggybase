@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block content_title %}
+    <h1>Lipid Analysis</h1>
+{%- endblock content_title %}
+{% block page_content %}
+    <form action="{{ url_for('smallmolecule.lipid_analysis', facility_name = 'smallmolecule') }}" method="POST" name="lipid_analysis_form" class="form_table" enctype="multipart/form-data">
+        {{ form.hidden_tag() }}
+        {{ macros.render_field(form.retention_time_filter) }}
+        {{ macros.render_field(form.group_pq_filter) }}
+        {{ macros.render_field(form.group_sn_filter) }}
+        {{ macros.render_field(form.group_area_filter) }}
+        {{ macros.render_field(form.group_height_filter) }}
+        {{ macros.render_field(form.file1) }}
+        {{ macros.render_field(form.file2) }}
+        <input id="submit" name="submit" type="submit" value="Submit">
+    </form>
+    {% if csv %}
+        <a href="{{url_for('core.file', facility_name = 'smallmolecule',
+            table_name = 'lipid_analysis', filename = 'lipid_analysis.csv')}}"
+            target="_blank">Download Lipid Analysis File</a>
+    {% endif %}
+{% endblock page_content %}
+
