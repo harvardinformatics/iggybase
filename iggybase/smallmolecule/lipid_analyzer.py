@@ -1,4 +1,5 @@
 import csv
+import os
 
 def save_lipid_results(paths, ret_time_fil, group_pq_fil, group_sn_fil, group_area_fil,
     group_height_fil):
@@ -26,7 +27,10 @@ def save_lipid_results(paths, ret_time_fil, group_pq_fil, group_sn_fil, group_ar
                             selected[name] = [name] + row
     cols = ['name'] + cols
     selected_rows = [cols] + list(selected.values())
-    with open('files/lipid_analysis/lipid_analysis.csv','w') as c:
+    result_path = 'files/lipid_analysis/'
+    if not os.path.exists(result_path):
+        os.makedirs(result_path)
+    with open(result_path + 'lipid_analysis.csv','w') as c:
         writer = csv.writer(c)
         writer.writerows(selected_rows)
     return True
