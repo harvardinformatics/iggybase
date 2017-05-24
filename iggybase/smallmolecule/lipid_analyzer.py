@@ -1,6 +1,6 @@
 import csv
 import os
-from flask import current_app
+from config import Config
 
 def save_lipid_results(paths, ret_time_fil, group_pq_fil, group_sn_fil, group_area_fil,
     group_height_fil):
@@ -28,7 +28,7 @@ def save_lipid_results(paths, ret_time_fil, group_pq_fil, group_sn_fil, group_ar
                             selected[name] = [name] + row
     cols = ['name'] + cols
     selected_rows = [cols] + list(selected.values())
-    result_path = current_app.root_path + 'files/lipid_analysis/'
+    result_path = Config.UPLOAD_FOLDER + '/lipid_analysis/'
     if not os.path.exists(result_path):
         os.makedirs(result_path)
     with open(result_path + 'lipid_analysis.csv','w') as c:

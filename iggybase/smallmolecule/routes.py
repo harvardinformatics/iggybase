@@ -1,5 +1,5 @@
 from flask.ext.security import login_required
-from flask import request, current_app
+from flask import request
 from iggybase.web_files.decorators import templated
 from iggybase import core
 from iggybase import g_helper
@@ -8,6 +8,7 @@ from collections import OrderedDict
 from .forms import LipidAnalysisForm
 from .lipid_analyzer import save_lipid_results
 from . import smallmolecule
+from config import Config
 
 MODULE_NAME = 'smallmolecule'
 
@@ -58,7 +59,7 @@ def lipid_analysis(facility_name):
     form = LipidAnalysisForm(form_data)
     csv = None
     if form.validate_on_submit():
-        root_path = current_app.root_path + '/files/lipid_analysis/'
+        root_path = Config.UPLOAD_FOLDER + '/lipid_analysis/'
         file1 = request.files[form.file1.name]
         file1.save(root_path + 'file1.txt')
         file2 = request.files[form.file2.name]
