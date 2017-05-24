@@ -1,5 +1,5 @@
 from flask.ext.security import login_required
-from flask import request
+from flask import request, current_app
 from iggybase.web_files.decorators import templated
 from iggybase import core
 from iggybase import g_helper
@@ -58,11 +58,11 @@ def lipid_analysis(facility_name):
     form = LipidAnalysisForm(form_data)
     csv = None
     if form.validate_on_submit():
+        root_path = current_app.root_path + '/files/lipid_analysis/'
         file1 = request.files[form.file1.name]
-        file1.save('files/lipid_analysis/file1.txt')
+        file1.save(root_path + 'file1.txt')
         file2 = request.files[form.file2.name]
-        file2.save('files/lipid_analysis/file2.txt')
-        root_path = 'files/lipid_analysis/'
+        file2.save(root_path + 'file2.txt')
         file1_path = root_path + 'file1.txt'
         file2_path = root_path + 'file2.txt'
         retention_time = form.data['retention_time_filter']
