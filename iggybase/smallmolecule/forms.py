@@ -1,5 +1,5 @@
 from flask_wtf import Form
-from wtforms import IntegerField, FloatField, FileField
+from wtforms import IntegerField, FloatField, FileField, StringField
 from wtforms.validators import Regexp
 
 class LipidAnalysisForm(Form):
@@ -12,6 +12,8 @@ class LipidAnalysisForm(Form):
     group_height_filter = IntegerField('Group Height', default = 0)
     file1 = FileField('File 1', [Regexp(file_regex, message = file_msg)])
     file2 = FileField('File 2')
+    blank = StringField('Normalize using blank')
+    mult_factor = IntegerField('Blank Multiplication Factor', default = 3)
 
 
 
