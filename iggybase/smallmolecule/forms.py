@@ -1,8 +1,13 @@
 from flask_wtf import Form
-from wtforms import IntegerField, FloatField, FileField, StringField
+from wtforms import (IntegerField, FloatField, FileField, StringField,
+    TextAreaField)
 from wtforms.validators import Regexp
 
 class LipidAnalysisForm(Form):
+    cols_to_remove = ['ARatio', 'HRatio', 'ADiff', 'HDiff', 'GroupHeight', 'HeightRSD',
+    'Height', 'NormArea', 'NormHeight', 'Hwhm(L)', 'Hwhm(R)', 'AreaScore', 'DataId', 'Scan',
+    'It.', 'z', 'Delta(Da)', 'mScore', 'Occupy']
+
     file_msg = 'Must submit a file to process'
     file_regex = "[\w]*"
     retention_time_filter = IntegerField('Retention Time', default = 3)
@@ -14,6 +19,8 @@ class LipidAnalysisForm(Form):
     file2 = FileField('File 2')
     blank = StringField('Normalize using blank')
     mult_factor = IntegerField('Blank Multiplication Factor', default = 3)
+    remove_cols = TextAreaField('Columns to remove (comma seperated)', default =
+            ', '.join(cols_to_remove))
 
 
 

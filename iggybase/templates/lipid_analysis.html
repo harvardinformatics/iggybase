@@ -1,6 +1,9 @@
 {% extends "base.html" %}
 {% import "bootstrap/wtf.html" as wtf %}
-
+{%- block styles %}
+    {{ super() }}
+    <link href="{{ url_for('static', filename='lipid.css') }}" rel="stylesheet">
+{% endblock %}
 {% block content_title %}
     <h1>Lipid Analysis</h1>
 {%- endblock content_title %}
@@ -18,9 +21,13 @@
             {{ macros.render_field(form.file2) }}
         </fieldset>
         <fieldset>
-        <legend>Normalization (optional)</legend>
+        <legend>Blank subtraction (optional)</legend>
             {{ macros.render_field(form.blank) }}
             {{ macros.render_field(form.mult_factor) }}
+        </fieldset>
+        <fieldset>
+        <legend>Remove Columns</legend>
+            {{ form.remove_cols(class = 'remove_cols') }}
         </fieldset>
         <input id="submit" name="submit" type="submit" value="Submit">
     </form>

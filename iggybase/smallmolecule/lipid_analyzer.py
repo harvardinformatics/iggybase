@@ -3,7 +3,7 @@ import os
 from config import Config
 
 def save_lipid_results(paths, ret_time_fil, group_pq_fil, group_sn_fil, group_area_fil,
-    group_height_fil, blank, mult_factor):
+    group_height_fil, blank, mult_factor, remove_cols):
     selected = {}
     for path in paths:
         if path:
@@ -31,7 +31,7 @@ def save_lipid_results(paths, ret_time_fil, group_pq_fil, group_sn_fil, group_ar
     if blank:
         cols = cols + ['blank']
         selected = subtract_blank(selected, blank, cols, mult_factor)
-    cols, selected = drop_columns(cols, selected)
+    cols, selected = remove_columns(cols, selected, remove_cols)
     selected_rows = [cols] + list(selected.values())
     result_path = Config.UPLOAD_FOLDER + '/lipid_analysis/'
     if not os.path.exists(result_path):
@@ -58,6 +58,8 @@ def subtract_blank(selected, blank, cols, mult_factor):
         include_row = False
         for i in area_cols:
             normal = float(selected[name][i]) - (avg_blank * mult_factor)
+            if normal < 0: # no neg areas
+                normal = 0
             row[i] = normal
             if normal > 0:
                 include_row = True
@@ -72,25 +74,21 @@ def calculate_avg_blank(blank_cols, row):
             avg_blank += float(row[i])
         return avg_blank / len(blank_cols)
 
-def drop_columns(cols, selected):
+def remove_columns(cols, selected, remove_cols):
+    remove_cols = [x.strip().lower() for x in remove_cols.split(',')]
     clean_cols = []
     clean_selected = {}
-    dropped_cols = []
-    cols_to_drop = ['ARatio', 'HRatio', 'ADiff', 'GroupHeight', 'HeightRSD',
-    'Height', 'NormArea', 'Hwhm(L)', 'Hwhm(R)', 'AreaScore', 'DataId', 'Scan',
-    'It.', 'z', 'Delta(Da)', 'mScore', 'Occupy']
+    removed_cols = []
     for i, col in enumerate(cols):
         prefix = col.split('[')[0]
-        if prefix in cols_to_drop:
-            dropped_cols.append(i)
+        if prefix.lower() in remove_cols:
+            removed_cols.append(i)
         else:
             clean_cols.append(col)
     for name, row in selected.items():
         clean_selected[name] = [item for j, item in enumerate(row) if j not in
-                dropped_cols]
+                removed_cols]
     return clean_cols, clean_selected
-
-
 
 def avg_col_type(row, col_type, cols):
     avg = 0
