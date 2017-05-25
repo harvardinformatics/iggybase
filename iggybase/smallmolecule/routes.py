@@ -8,6 +8,7 @@ from collections import OrderedDict
 from .forms import LipidAnalysisForm
 from .lipid_analyzer import save_lipid_results
 from . import smallmolecule
+from config import Config
 
 MODULE_NAME = 'smallmolecule'
 
@@ -58,11 +59,11 @@ def lipid_analysis(facility_name):
     form = LipidAnalysisForm(form_data)
     csv = None
     if form.validate_on_submit():
+        root_path = Config.UPLOAD_FOLDER + '/lipid_analysis/'
         file1 = request.files[form.file1.name]
-        file1.save('files/lipid_analysis/file1.txt')
+        file1.save(root_path + 'file1.txt')
         file2 = request.files[form.file2.name]
-        file2.save('files/lipid_analysis/file2.txt')
-        root_path = 'files/lipid_analysis/'
+        file2.save(root_path + 'file2.txt')
         file1_path = root_path + 'file1.txt'
         file2_path = root_path + 'file2.txt'
         retention_time = form.data['retention_time_filter']
@@ -70,9 +71,11 @@ def lipid_analysis(facility_name):
         group_sn = form.data['group_sn_filter']
         group_area = form.data['group_area_filter']
         group_height = form.data['group_height_filter']
+        blank = form.data['blank']
+        mult_factor = form.data['mult_factor']
 
         csv = save_lipid_results([file1_path, file2_path], retention_time, group_pq,
-                group_sn, group_area, group_height)
+                group_sn, group_area, group_height, blank, mult_factor)
 
     context = {}
     pt = PageTemplate(MODULE_NAME, 'lipid_analysis', getattr(context, 'page_context', None))

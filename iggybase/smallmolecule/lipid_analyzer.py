@@ -1,14 +1,16 @@
 import csv
 import os
+from config import Config
 
 def save_lipid_results(paths, ret_time_fil, group_pq_fil, group_sn_fil, group_area_fil,
-    group_height_fil):
+    group_height_fil, blank, mult_factor):
     selected = {}
     for path in paths:
         if path:
             with open(path,'r') as f:
-                cols = []
                 for i,ln in enumerate(f):
+                    if i == 0:
+                        cols = []
                     if (ln.startswith('#') or ln.startswith('\t') or
                             ln.startswith('\n')):
                         continue
@@ -26,14 +28,69 @@ def save_lipid_results(paths, ret_time_fil, group_pq_fil, group_sn_fil, group_ar
                             name = lipid_ion + '_' + str(ret_time)
                             selected[name] = [name] + row
     cols = ['name'] + cols
+    if blank:
+        cols = cols + ['blank']
+        selected = subtract_blank(selected, blank, cols, mult_factor)
+    cols, selected = drop_columns(cols, selected)
     selected_rows = [cols] + list(selected.values())
-    result_path = 'files/lipid_analysis/'
+    result_path = Config.UPLOAD_FOLDER + '/lipid_analysis/'
     if not os.path.exists(result_path):
         os.makedirs(result_path)
     with open(result_path + 'lipid_analysis.csv','w') as c:
         writer = csv.writer(c)
         writer.writerows(selected_rows)
     return True
+
+def subtract_blank(selected, blank, cols, mult_factor):
+    normalized = {}
+    blank_cols = []
+    area_cols = []
+    area_start = 'Area['
+    blank_start = area_start + blank
+    for i, col in enumerate(cols):
+        if col.startswith(area_start):
+            if col.startswith(blank_start):
+                blank_cols.append(i)
+            else:
+                area_cols.append(i)
+    for name, row in selected.items():
+        avg_blank = calculate_avg_blank(blank_cols, row)
+        include_row = False
+        for i in area_cols:
+            normal = float(selected[name][i]) - (avg_blank * mult_factor)
+            row[i] = normal
+            if normal > 0:
+                include_row = True
+        if include_row:
+            print(avg_blank)
+            normalized[name] = row + [avg_blank]
+    return normalized
+
+def calculate_avg_blank(blank_cols, row):
+        avg_blank = 0
+        for i in blank_cols:
+            avg_blank += float(row[i])
+        return avg_blank / len(blank_cols)
+
+def drop_columns(cols, selected):
+    clean_cols = []
+    clean_selected = {}
+    dropped_cols = []
+    cols_to_drop = ['ARatio', 'HRatio', 'ADiff', 'GroupHeight', 'HeightRSD',
+    'Height', 'NormArea', 'Hwhm(L)', 'Hwhm(R)', 'AreaScore', 'DataId', 'Scan',
+    'It.', 'z', 'Delta(Da)', 'mScore', 'Occupy']
+    for i, col in enumerate(cols):
+        prefix = col.split('[')[0]
+        if prefix in cols_to_drop:
+            dropped_cols.append(i)
+        else:
+            clean_cols.append(col)
+    for name, row in selected.items():
+        clean_selected[name] = [item for j, item in enumerate(row) if j not in
+                dropped_cols]
+    return clean_cols, clean_selected
+
+
 
 def avg_col_type(row, col_type, cols):
     avg = 0
