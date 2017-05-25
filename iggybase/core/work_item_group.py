@@ -44,10 +44,6 @@ class WorkItemGroup:
         self.saved_rows = {}
         self.dynamic_params = {}
 
-        # do before step actions, if current step
-        if self.show_step_num == self.step_num:
-            self.do_step_actions(Timing.BEFORE)
-
         # set the url and dynamic params for current step
         self.endpoint = self.step.Module.name + '.' + self.step.Route.url_path
         self.dynamic_params = self.set_dynamic_params()
@@ -129,17 +125,18 @@ class WorkItemGroup:
     def do_step_actions(self, time = Timing.AFTER):
         # first perform any actions on this step
         # if new then insert work_item_group
-        logging.info('pre do_step_actions')
-        action = Action(ActionType.STEP, action_step=self.step.Step.id, action_timing=time)
+        actions = Action(ActionType.STEP, action_step=self.step.Step.id, action_timing=time)
 
-        action_status = action.execute_action(workflow_id=self.workflow.id, step_id=self.step.Step.id)
-        logging.info('post do_step_actions')
-
-        if action_status:
-            self.name = action.results['name']
-            self.WorkItemGroup = self.oac.get_row('work_item_group', {'id': action.results['id']})
-        elif action.results is not None:
-            self.dynamic_params.update(action.results)
+        for action in actions:
+            action_status = action.execute_action(workflow_id=self.workflow.id, step_id=self.step.Step.id)
+            if action_status:
+                for key, value in action.results.items():
+                    if key == 'work_item_group_name':
+                        self.name = value
+                    else:
+                        setattr(self, key, value)
+            elif action.results:
+                self.dynamic_params.update(action.results)
 
     def set_dynamic_params(self):
         args = []

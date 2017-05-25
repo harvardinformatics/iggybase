@@ -17,7 +17,7 @@ from iggybase.extensions import mail, lm, bootstrap
 from iggybase.admin import models
 from iggybase.cache import Cache
 from iggybase import utilities as util
-from iggybase.database import db, init_db, db_session
+from iggybase.database import db, init_db, db_session, db_inspector
 
 __all__ = [ 'create_app' ]
 
@@ -235,7 +235,7 @@ def add_base_routes( app, conf, security, user_datastore ):
 
     @app.after_request
     def remove_session(resp):
-        db_session.remove()
+        g.db_session.close()
         return resp
 
     @app.route( '/index/' )
@@ -266,11 +266,14 @@ def configure_hook( app ):
         start = time.time()
         g.user = current_user
         g.facility = ""
+        g.db_inspector = db_inspector
+        g.db_session = db_session()
         # TODO: consider caching this for the session
-        if (current_user.is_authenticated):
-            import iggybase.core.role_access_control as rac
-            role_access = rac.RoleAccessControl()
-            g.rac = role_access
+        if current_user.is_authenticated:
+            from iggybase.core.role_access_control import RoleAccessControl
+            from iggybase.core.organization_access_control import OrganizationAccessControl
+            g.rac = RoleAccessControl()
+            g.oac = OrganizationAccessControl()
             path = list(filter(bool, request.path.split('/')))
             # always allow some paths
             ignore_facility = ['static', 'logout', 'favicon.ico', 'welcome', 'registration_success', 'home']
@@ -279,15 +282,15 @@ def configure_hook( app ):
             if len(path) < 2: # if no facility or no module send home
                 return redirect(url_for('home'))
             else: # check access
-                access = role_access.is_current_facility(path[0])
-                logging.info('Facility access: ' + str(access))
+                access = g.rac.is_current_facility(path[0])
+                logging.info(path[0] + ' Facility access: ' + str(access))
                 if not access:
-                    if path[0] in role_access.facilities:
-                        role_access.change_role(role_access.facilities[path[0]]['top_role'])
+                    if path[0] in g.rac.facilities:
+                        g.rac.change_role(g.rac.facilities[path[0]]['top_role'])
                     else:
                         abort(404)
                 g.facility = path[0]
-                route_access = role_access.route_access(path)
+                route_access = g.rac.route_access(path)
                 print('Route access: ' + str(route_access))
                 if not route_access:
                     abort(404)

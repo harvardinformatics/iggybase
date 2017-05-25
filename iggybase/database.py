@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, inspect
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, UniqueConstraint, DateTime
 from sqlalchemy.orm import scoped_session, sessionmaker, relationship, reconstructor
 from sqlalchemy.ext.declarative import declarative_base, declared_attr
@@ -61,6 +61,7 @@ class DBFactory:
 
 
 engine = create_engine(conf.SQLALCHEMY_DATABASE_URI + conf.DATA_DB_NAME, pool_recycle=3600)
+db_inspector = inspect(engine)
 db_sessionmaker = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 db_session = scoped_session(db_sessionmaker)
 Base = declarative_base(cls=IggybaseBase)

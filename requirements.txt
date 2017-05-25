@@ -4,9 +4,10 @@ blinker==1.4
 cairocffi==0.8.0
 CairoSVG==2.0.1
 cffi==1.9.1
+click-6.7
 cssselect==1.0.1
 dominate==2.1.12
-Flask==0.10.1
+Flask==0.12.1
 Flask-Bootstrap==3.3.5.3
 Flask-Excel==0.0.3
 Flask-Login==0.3.2
@@ -19,9 +20,9 @@ Flask-WTF==0.12
 html5lib==0.999999999
 ipython==3.2.0
 itsdangerous==0.24
-Jinja2==2.7.3
+Jinja2==2.9.6
 lxml==3.7.3
-MarkupSafe==0.23
+MarkupSafe==1.0
 mod-wsgi==4.4.22
 mysql-connector-python-rf==2.0.4
 olefile==0.44
@@ -37,7 +38,7 @@ pyparsing==2.2.0
 Pyphen==0.9.4
 python-dateutil==2.6.0
 six==1.9.0
-SQLAlchemy==1.0.6
+SQLAlchemy==1.1.9
 stevedore==1.6.0
 texttable==0.8.4
 tinycss==0.4
@@ -46,5 +47,5 @@ virtualenv-clone==0.2.6
 virtualenvwrapper==4.6.0
 WeasyPrint==0.36
 webencodings==0.5
-Werkzeug==0.10.4
+Werkzeug==0.12.1
 WTForms==2.0.2

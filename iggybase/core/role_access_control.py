@@ -1,9 +1,7 @@
 from collections import OrderedDict as OrderedDict
 from flask import g, request, session, current_app
 import json
-from iggybase.database import db_session
 from iggybase.admin import models
-from iggybase.admin import constants as admin_consts
 from iggybase import utilities as util
 from sqlalchemy import or_, and_, distinct
 from sqlalchemy.orm import aliased
@@ -15,7 +13,7 @@ from sqlalchemy.dialects import mysql
 class RoleAccessControl:
     def __init__(self):
         # TODO: use session to store some of this
-        self.session = db_session()
+        self.session = g.db_session
         # set user and role
         if (g.user is not None and not g.user.is_anonymous):
             self.user = self.session.query(models.User).filter_by(id=g.user.id).first()

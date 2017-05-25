@@ -10,6 +10,8 @@ class TableData():
         rac = g_helper.get_role_access_control()
         table_data = rac.has_access('TableObject', {'name': table_name})
         if table_data is None:
+            logging.info('No ' + table_name + ' for you')
+            logging.info('role id: ' + rac.role.name)
             abort(403)
         self.table_object = table_data.TableObject
         self.table_object_role = table_data.TableObjectRole
@@ -38,6 +40,10 @@ class TableData():
         return self.table_object.name
 
     @property
+    def table_id(self):
+        return self.table_object.id
+
+    @property
     def sqlalchemy_object_name(self):
         components = self.table_object.name.split('_')
 
@@ -57,7 +63,6 @@ class TableData():
             return self.table_name
 
     def initialize_fields(self):
-        logging.info('initialize_fields: ' + self.table_object.name)
         if self.table_object is None:
             fields = FieldCollection()
         elif self.table_object.name == 'history':

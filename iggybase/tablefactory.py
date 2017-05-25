@@ -13,11 +13,10 @@ class TableFactory:
         self.active = active
         self.session = db_session()
 
-    def table_object_factory(self, class_name, table_object, extend_class = None, extend_table = None,
-                             is_extended = None):
+    def table_object_factory(self, class_name, table_object, table_object_cols, extend_class = None,
+                             extend_table = None, is_extended = None):
         classattr = {'table_type': 'user'}
 
-        table_object_cols = self.fields(table_object.id)
         tables_by_id = {}
         fields_by_id = {}
 
@@ -145,7 +144,7 @@ class TableFactory:
                outerjoin(Extension, TableObject.extends_table_object_id == Extension.id).
                outerjoin(Extended, TableObject.id == Extended.extends_table_object_id).
                filter(TableObject.active==active).
-               filter(or_(TableObject.admin_table==0, TableObject.admin_table is None)).
+               filter(or_(TableObject.admin_table is None, TableObject.admin_table == 0)).
                order_by(TableObject.order)).all()
 
         return res

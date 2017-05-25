@@ -2,7 +2,6 @@ from flask import g, current_app, session
 from sqlalchemy import DateTime, func, cast, String, desc, or_, func, and_
 from sqlalchemy.exc import IntegrityError, DataError, SQLAlchemyError, NoForeignKeysError, IdentifierError, \
     NoReferenceError
-from iggybase.database import db_session
 from iggybase.admin import models
 from iggybase import utilities as util
 from sqlalchemy.orm import aliased, defer
@@ -17,7 +16,7 @@ class OrganizationAccessControl:
     def __init__(self):
         start = time.time()
         self.current_org_id = None
-        self.session = self.get_session()
+        self.session = g.db_session
         self.org_ids = self.get_default_org_ids()
         if (g.user is not None and not g.user.is_anonymous):
             self.set_user(g.user.id)
@@ -74,13 +73,8 @@ class OrganizationAccessControl:
     def __del__ (self):
         self.session.rollback()
 
-    def get_session(self):
-        session = db_session()
-
-        return session
-
     def commit(self):
-
+        logging.info('commit')
         try:
             self.session.commit()
             return True, None
@@ -90,6 +84,7 @@ class OrganizationAccessControl:
             return False, {"page_msg": "Commit Error: " + format(e)}
 
     def flush(self):
+        logging.info('flush')
         try:
             self.session.flush()
             return True, None
@@ -144,7 +139,8 @@ class OrganizationAccessControl:
         count = self.session.execute(count_q).scalar()
         return count
 
-    def get_instance_data(self, table_object, criteria):
+    def get_instance_data(self, table_name, criteria):
+        table_object = util.get_table(table_name)
         filters = [getattr(table_object, 'organization_id').in_(self.org_ids)]
 
         if 'name' in criteria and ('new' in criteria['name'][0] or 'empty_row' in criteria['name'][0]):
@@ -200,6 +196,17 @@ class OrganizationAccessControl:
             .filter(*criteria).all())
         return select_list_items
 
+    def get_foreign_key_field_data(self, table_name, field_name):
+        fk_field = aliased(models.Field, name='fk_field')
+        fk_field_display = aliased(models.Field, name='fk_field_display')
+
+        return self.session.query(models.Field, models.TableObject, fk_field, fk_field_display). \
+            join(models.TableObject, models.TableObject.id == models.Field.foreign_key_table_object_id).\
+            outerjoin(fk_field, fk_field.id == models.Field.foreign_key_field_id). \
+            outerjoin(fk_field_display, fk_field_display.id == models.Field.foreign_key_display). \
+            filter(models.TableObject == table_name). \
+            filter(models.Field.display_name == field_name).first()
+
     def get_select_list_item(self, table, field, item, active=1):
         # TODO: using display_name here means we need to use display_name in
         # the table query or make adjustments here
@@ -233,7 +240,9 @@ class OrganizationAccessControl:
                 getattr(fk_table_object, 'active') == 1
             ]
             if params is None:
-                rows = self.session.query(getattr(fk_table_object, 'id'), getattr(fk_table_object, fk_field_data.display_name).label('name')).filter(*filters).order_by('order').all()
+                rows = self.session.query(getattr(fk_table_object, 'id'),
+                                          getattr(fk_table_object, fk_field_data.display_name).label('name')). \
+                    filter(*filters).order_by('order').all()
             else:
                 for key, value in params.items():
                     filters.append(getattr(fk_table_object, key) == value)
@@ -543,6 +552,16 @@ class OrganizationAccessControl:
 
         return result
 
+    def get_record(self, table_object, params):
+        criteria = []
+
+        for key, value in params.items():
+            criteria.append(getattr(table_object, key) == value)
+
+        result = self.session.query(table_object).filter(*criteria).first()
+
+        return result
+
     def get_price(self, criteria):
         result = None
         org_row = self.get_row('organization', {'id': self.current_org_id})
@@ -704,7 +723,7 @@ class OrganizationAccessControl:
                 .filter(
                     models.Action.name==action_name,
                     models.Action.active==active
-                ).first())
+                ).all())
 
     def get_step_actions(self, step_id, timing, active = 1):
         return (self.session.query(models.Action, models.ActionStep, models.SelectListItem,
@@ -718,7 +737,7 @@ class OrganizationAccessControl:
                     models.ActionStep.active==active,
                     models.Action.active==active,
                     func.lower(models.SelectListItem.display_name) == func.lower(timing)
-                ).order_by(models.ActionStep.order).first())
+                ).order_by(models.ActionStep.order).all())
 
     def get_table_object_actions(self, table_object_id, event_name, active = 1):
         return (self.session.query(models.Action, models.ActionTableObject, models.SelectListItem,
@@ -733,7 +752,7 @@ class OrganizationAccessControl:
                     models.ActionTableObject.active==active,
                     models.Action.active==active,
                     func.lower(models.SelectListItem.display_name) == func.lower(event_name)
-                ).order_by(models.ActionTableObject.order).first())
+                ).order_by(models.ActionTableObject.order).all())
 
     def get_attr_from_id(self, table_object_id, row_id, attr):
         table_object = self.session.query(models.TableObject).filter_by(id=table_object_id).first()

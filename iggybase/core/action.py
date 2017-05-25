@@ -11,7 +11,7 @@ import logging
 class Action:
     def __init__(self, action_type, **kwargs):
         self.oac = g_helper.get_org_access_control()
-        self.results = None
+        self.results = {}
         self.action = None
         self.action_type = None
         if action_type == ActionType.STEP and 'action_step' in kwargs and 'action_timing' in kwargs:
@@ -91,14 +91,15 @@ class Action:
             if attachment is not None:
                 msg.attachments = attachment
 
-        mail.send(msg)
+            mail.send(msg)
 
     def execute_action(self, *args, **kwargs):
-        action_status = False
-
+        expected_values = ['status']
         action_kwargs = {}
         parameter_not_found = False
+        return_values = {}
 
+        logging.info('self.action.Action.name: ' + self.action.Action.name)
         if self.action.Action.variable_parameters:
             parameters = split(', |,|;|; ', self.action.Action.variable_parameters)
             for parameter in parameters:
@@ -115,13 +116,30 @@ class Action:
             action_kwargs['field_value'] = self.action.Action.field_value
 
         if self.action.Action.namespace and self.action.Action.function and not parameter_not_found:
-
             action_module = import_module(self.action.Action.namespace)
             action_method = getattr(action_module, self.action.Action.function)
 
-            action_status, self.results = action_method(*args, **action_kwargs)
+            return_values = action_method(*args, **action_kwargs)
 
         if self.action.ActionEmail and not parameter_not_found:
             self.send_mail(self.action.ActionEmail, **action_kwargs)
 
-        return action_status
+        temp_values = {}
+        if self.action.Action.return_values and 'status' in return_values.keys() and return_values['status']:
+            expected_values += split(', |,|;|; ', self.action.Action.return_values)
+            for value in expected_values:
+                if value in return_values.keys() and return_values['status']:
+                    temp_values[value] = return_values[value]
+                else:
+                    if return_values['status']:
+                        temp_values = {}
+                        return_values['status'] = False
+
+                    temp_values[value] = 'Action return value ' + value + ' was not found.'
+        elif self.action.Action.return_values and 'status' not in return_values.keys():
+            temp_values['status'] = False
+            temp_values['error'] = 'Status was not returned from function'
+
+        self.results = temp_values
+
+        return self.results['status']

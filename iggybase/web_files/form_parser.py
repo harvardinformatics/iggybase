@@ -56,22 +56,22 @@ class FormParser():
             field_id = field_pattern.match(key)
 
             if field_id is not None:
+                field_name = field_id.group(3)
+                table_name = field_id.group(2)
+
                 if (field_id.group(2), field_id.group(4)) not in instances.keys():
                     try:
                         instance_name = self.instances.add_instance(field_id.group(2), {'id': [int(field_id.group(4))]})
                     except (ValueError, KeyError) as e:
                         instance_name = self.instances.add_instance(field_id.group(2), {'name': [field_id.group(4)]})
+                        if self.instances.tables[table_name].level == 1:
+                            self.instances.table_instances[table_name][instance_name].set_parent_id(self.instances.tables[table_name].parent_link_field_display_name,
+                                                                                                    self.instances.instance.instance_id)
 
-                    self.instances[instance_name].form_index = field_id.group(5)
+                    self.instances.table_instances[table_name][instance_name].form_index = field_id.group(5)
                     instances[(field_id.group(2), field_id.group(4))] = instance_name
                 else:
                     instance_name = instances[(field_id.group(2), field_id.group(4))]
-
-                new_key = (field_id.group(1) + "-" + field_id.group(2) + "-" + field_id.group(3) + "-" + instance_name +
-                           "-" + field_id.group(5))
-
-                field_name = field_id.group(3)
-                table_name = field_id.group(2)
 
                 if table_name not in self.table_names:
                     self.table_names.append(table_name)
@@ -79,12 +79,15 @@ class FormParser():
                 meta_data = self.instances.tables[table_name].fields[table_name + "|" + field_name]
                 field_data = meta_data.Field
 
-                # handle empty and FK
-                if data == '':
-                    if meta_data.FieldRole.required == 1:
-                        errors[new_key] = "Field is required"
-                        logging.info('required field not entered: ' + field_name)
-                    self.instances.set_value(instance_name, field_name, None)
+                if data == '' and meta_data.FieldRole.required == 1:
+                    errors[key] = "Field is required"
+                    logging.info('required field not entered: ' + field_name)
+
+                if field_name == 'name':
+                    if not (data is None or data == ''):
+                        self.instances.table_instances[table_name][instance_name].set_value(field_name, data)
+                elif data == '':
+                    self.instances.table_instances[table_name][instance_name].set_value(field_name, None)
                 elif field_data.foreign_key_table_object_id is not None:
                     try:
                         lookup_value = int(data)
@@ -110,53 +113,53 @@ class FormParser():
                     if field_name == 'organization_id' and lookup_value is None:
                         lookup_value = default_org_id
 
-                    self.instances.set_value(instance_name, field_name, lookup_value)
+                    self.instances.table_instances[table_name][instance_name].set_value(field_name, lookup_value)
                 # handle datatypes
                 elif meta_data.type == 'integer':
                     try:
-                        self.instances.set_value(instance_name, field_name, int(data))
+                        self.instances.table_instances[table_name][instance_name].set_value(field_name, int(data))
                     except ValueError as e:
-                        self.instances.set_value(instance_name, field_name, data)
-                        errors[new_key] = e.args[0]
+                        self.instances.table_instances[table_name][instance_name].set_value(field_name, data)
+                        errors[key] = e.args[0]
                         logging.info('Failed to parse int ' + field_name + ':' + str(data))
                         logging.info(format(e))
                 elif meta_data.type == 'boolean':
                     if data in ['yes', 'y', 'True', True, 1, '1', 'on']:
-                        self.instances.set_value(instance_name, field_name, True)
+                        self.instances.table_instances[table_name][instance_name].set_value(field_name, True)
                     else:
-                        self.instances.set_value(instance_name, field_name, False)
+                        self.instances.table_instances[table_name][instance_name].set_value(field_name, False)
                 elif meta_data.type == 'datetime':
                     try:
                         datetime_val = datetime.strptime(data, '%Y-%m-%d %H:%M:%S')
-                        self.instances.set_value(instance_name, field_name, datetime_val)
+                        self.instances.table_instances[table_name][instance_name].set_value(field_name, datetime_val)
                     except ValueError as e:
-                        self.instances.set_value(instance_name, field_name, data)
-                        errors[new_key] = e.args[0]
+                        self.instances.table_instances[table_name][instance_name].set_value(field_name, data)
+                        errors[key] = e.args[0]
                         logging.info('Failed to parse datetime ' + field_name + ':' + str(data))
                         logging.info(format(e))
                 elif meta_data.type == 'date':
                     try:
                         date_val = datetime.strptime(data, '%Y-%m-%d')
-                        self.instances.set_value(instance_name, field_name, date_val.date())
+                        self.instances.table_instances[table_name][instance_name].set_value(field_name, date_val.date())
                     except ValueError as e:
-                        self.instances.set_value(instance_name, field_name, data)
-                        errors[new_key] = e.args[0]
+                        self.instances.table_instances[table_name][instance_name].set_value(field_name, data)
+                        errors[key] = e.args[0]
                         logging.info('Failed to parse date ' + field_name + ':' + str(data))
                         logging.info(format(e))
                 elif meta_data.type == 'float':
                     try:
-                        self.instances.set_value(instance_name, field_name, float(data))
+                        self.instances.table_instances[table_name][instance_name].set_value(field_name, float(data))
                     except ValueError as e:
-                        self.instances.set_value(instance_name, field_name, data)
-                        errors[new_key] = e.args[0]
+                        self.instances.table_instances[table_name][instance_name].set_value(field_name, data)
+                        errors[key] = e.args[0]
                         logging.info('Failed to parse date ' + field_name + ':' + str(data))
                         logging.info(format(e))
                 elif meta_data.type == 'decimal':
                     try:
-                        self.instances.set_value(instance_name, field_name, Decimal(data))
+                        self.instances.table_instances[table_name][instance_name].set_value(field_name, Decimal(data))
                     except ValueError as e:
-                        self.instances.set_value(instance_name, field_name, data)
-                        errors[new_key] = e.args[0]
+                        self.instances.table_instances[table_name][instance_name].set_value(field_name, data)
+                        errors[key] = e.args[0]
                         logging.info('Failed to parse date ' + field_name + ':' + str(data))
                         logging.info(format(e))
                 elif meta_data.type == 'file':
@@ -176,13 +179,13 @@ class FormParser():
                             if filename not in old_files:
                                 old_files.append(filename)
                     elif request.files[key]:
-                        self.instances.set_value(instance_name, field_name, data)
-                        errors[new_key] = 'File type not allowed'
+                        self.instances.table_instances[table_name][instance_name].set_value(field_name, data)
+                        errors[key] = 'File type not allowed'
 
                     if len(old_files) > 0:
-                        self.instances.set_value(instance_name, field_name, "|".join(old_files))
+                        self.instances.table_instances[table_name][instance_name].set_value(field_name, "|".join(old_files))
                 else:
-                    self.instances.set_value(instance_name, field_name, data)
+                    self.instances.table_instances[table_name][instance_name].set_value(field_name, data)
 
         return errors
 

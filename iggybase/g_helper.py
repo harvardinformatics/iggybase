@@ -5,13 +5,13 @@ import logging
 
 
 def get_role_access_control():
-    if not hasattr(g, 'role_access'):
-        g.role_access = RoleAccessControl()
-    return g.role_access
+    if not hasattr(g, 'rac'):
+        g.rac = RoleAccessControl()
+    return g.rac
 
 
 def get_org_access_control():
-    if not hasattr(g, 'org_access'):
-        g.org_access = OrganizationAccessControl()
-    return g.org_access
+    if not hasattr(g, 'oac'):
+        g.oac = OrganizationAccessControl()
+    return g.oac
 

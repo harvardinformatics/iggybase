@@ -170,6 +170,12 @@ class FormGenerator(PageTemplate):
         else:
             self.instances = instances
 
+        # for table_name in self.instances.table_instances.keys():
+        #     for instance_name, instance_data in self.instances.table_instances[table_name].items():
+        #         logging.info('instance_data.instance.name: ' + str(instance_data.instance.name))
+        #         logging.info('instance_data.instance_name: ' + str(instance_data.instance_name))
+        #         logging.info('instance_data.instance.table_name: ' + str(instance_data.table_name))
+
         row_index = self.get_table()
 
         self.classattr['row_counter'] = HiddenField('row_counter', default=row_index)
@@ -182,7 +188,6 @@ class FormGenerator(PageTemplate):
 
     def get_table(self):
         row_index = 0
-        level = 0
 
         table_context = []
 
@@ -265,6 +270,10 @@ class FormGenerator(PageTemplate):
         return row_index
 
     def get_row(self, form_table, instance, control_type):
+        # logging.info('instance.instance.name: ' + str(instance.instance.name))
+        # logging.info('instance.form_index: ' + str(instance.form_index))
+        # logging.info('instance.instance_name: ' + str(instance.instance_name))
+        # logging.info('instance.instance.table_name: ' + str(instance.table_name))
         record_index = form_table.add_new_record(instance.instance.name)
 
         for field_name, field in self.instances.tables[form_table.table_name].fields.items():

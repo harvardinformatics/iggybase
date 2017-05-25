@@ -4,11 +4,9 @@ import os
 import time
 import urllib
 from importlib import import_module
-
 from flask import request, jsonify, abort, g, render_template, current_app, redirect, send_from_directory, session, flash
 from flask.ext import excel
 from flask.ext.security import login_required
-
 from iggybase import g_helper
 from iggybase import utilities as util
 from iggybase.web_files import forms
@@ -20,6 +18,7 @@ from iggybase.web_files.page_template import PageTemplate
 from . import core
 from .table_query_collection import TableQueryCollection
 from .work_item_group import WorkItemGroup
+from iggybase.core.constants import Timing
 
 MODULE_NAME = 'core'
 
@@ -390,28 +389,42 @@ def workflow_complete(facility_name, workflow_name, work_item_group):
 @login_required
 def work_item_group(facility_name, workflow_name, step, work_item_group):
     wig = WorkItemGroup(work_item_group, workflow_name, int(step))
+    wig.do_step_actions(Timing.BEFORE)
+    logging.info('route work_item_group: ' + wig.name)
     if work_item_group == 'new':
+        logging.info('route work_item_group is new ')
         return redirect(wig.workflow.get_step_url(1, wig.name))
     if 'next_step' in request.form:
+        logging.info('route work_item_group is next_step ')
         wig.set_saved(json.loads(request.form['saved_rows']))
         next_step_url = wig.update_step()
+        wig.do_step_actions(Timing.AFTER)
         return redirect(next_step_url)
     elif 'complete' in request.form:
+        logging.info('route work_item_group is complete ')
         wig.set_saved(json.loads(request.form['saved_rows']))
         wig.set_complete()
         complete_url = wig.workflow.get_complete_url(wig.name)
         return redirect(complete_url)
     table_name = ''
     if wig.step.Module.name == MODULE_NAME:
+        logging.info('route work_item_group is MODULE_NAME ')
         func = globals()[wig.step.Route.url_path]
     else:
+        logging.info('route work_item_group is not MODULE_NAME ')
         module = import_module('iggybase.' + wig.step.Module.name + '.routes')
         func = getattr(module, wig.step.Route.url_path)
+
+    logging.info('route wig.step.Route.url_path: ' + wig.step.Route.url_path)
+    logging.info('route wig.dynamic_params:')
+    logging.info(wig.dynamic_params)
     context = func(**wig.dynamic_params)
     wig.get_buttons(context['bottom_buttons'])
     if wig.buttons:
+        logging.info('route work_item_group is wig.buttons ')
         context['bottom_buttons'].extend(wig.buttons)
     if 'saved_rows' in context:
+        logging.info('route work_item_group is saved_rows ')
         wig.set_saved(context['saved_rows'])
     context['wig'] = wig
     return render_template('work_item_group.html', **context)

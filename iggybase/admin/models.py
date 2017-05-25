@@ -12,8 +12,8 @@ class Institution(Base):
     table_type = 'admin'
 
     def __repr__(self):
-        return "%s" % \
-               (self.name)
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id)
 
 
 class Department(Base):
@@ -23,16 +23,16 @@ class Department(Base):
     department_institution = relationship("Institution", foreign_keys=[institution_id])
 
     def __repr__(self):
-        return "%s" % \
-               (self.name)
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id)
 
 
 class OrganizationType(Base):
     table_type = 'admin'
 
     def __repr__(self):
-        return "%s" % \
-               (self.name)
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id)
 
 class Address(Base):
     table_type = 'admin'
@@ -59,9 +59,8 @@ class Organization(Base):
     public = Column(Boolean)
 
     parent = relation('Organization', remote_side="Organization.id", foreign_keys=[parent_id])
-    department = relationship("Department", foreign_keys=[department_id])
-    institution = relationship("Institution", foreign_keys=[institution_id])
-    organization_type = relationship("OrganizationType", foreign_keys=[organization_type_id])
+    organization_department = relationship("Department", foreign_keys=[department_id])
+    organization_organization_type = relationship("OrganizationType", foreign_keys=[organization_type_id])
     organization_address = relationship("Address", foreign_keys=[address_id])
 
     def __repr__(self):
@@ -79,6 +78,10 @@ class TableObject(Base):
     note_enabled = Column(Boolean)
 
     table_object_extends_table_object = relationship("TableObject", foreign_keys=[extends_table_object_id])
+    fields = relationship("Field", primaryjoin="TableObject.id==Field.table_object_id",
+                          back_populates="field_table_object")
+    referenced_by = relationship("Field", primaryjoin="TableObject.id==Field.foreign_key_table_object_id",
+                                 back_populates="fk_table_object")
 
     def get_new_name(self):
         if self.new_name_prefix is not None and self.new_name_prefix != "" and self.new_name_id is not None:
@@ -89,10 +92,6 @@ class TableObject(Base):
             new_name = self.name + str(random.randint(1000000000, 9999999999))
 
         return new_name
-
-    def __repr__(self):
-        return "<%s(name=%s, description=%s, id=%d, organization_id=%d)>" % \
-               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id)
 
 
 class Field(Base):
@@ -111,34 +110,30 @@ class Field(Base):
     foreign_key_display = Column(Integer, ForeignKey('field.id'))
     drop_down_list_limit = Column(Integer)
 
-    field_type = relationship("TableObject", foreign_keys=[table_object_id])
-    field_data_type = relationship("DataType", foreign_keys=[data_type_id])
-    field_select_list = relationship("SelectList", foreign_keys=[select_list_id])
-    field_foreign_key_table_object = relationship("TableObject", foreign_keys=[foreign_key_table_object_id])
-    field_foreign_key_field = relationship("Field", foreign_keys=[foreign_key_field_id])
-    field_foreign_key_display = relationship("Field", foreign_keys=[foreign_key_display])
-
-    def __repr__(self):
-        return "<%s(name=%s, description=%s, id=%d, organization_id=%d)>" % \
-               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id)
+    field_table_object = relationship("TableObject", foreign_keys=[table_object_id], back_populates="fields")
+    fk_table_object = relationship("TableObject", foreign_keys=[foreign_key_table_object_id],
+                                   back_populates="referenced_by")
+    fk_fields = relationship("Field",
+                             primaryjoin=('field.c.id==field.c.foreign_key_field_id'),
+                             remote_side='Field.id',
+                             backref=backref("referenced_by" ))
+    fk_fields_display = relationship("Field",
+                                     primaryjoin=('field.c.id==field.c.foreign_key_display'),
+                                     remote_side='Field.id',
+                                     backref=backref("referenced_by_display" ))
+    data_type = relationship("DataType", foreign_keys=[data_type_id], back_populates="fields")
+    select_list = relationship("SelectList", foreign_keys=[select_list_id], back_populates="fields")
 
 
 class DataType(Base):
     table_type = 'admin'
     db_data_type = Column(String(50))
 
-    def __repr__(self):
-        return "<%s(name=%s, description=%s, id=%d, organization_id=%d)>" % \
-               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id)
-
+    fields = relationship("Field", primaryjoin="DataType.id==Field.data_type_id", back_populates="data_type")
 
 class Level(Base):
     __tablename__ = 'level'
     table_type = 'admin'
-
-    def __repr__(self):
-        return "<%s(class=%s, name=%s, description=%s, id=%d, organization_id=%d)>" % \
-               (self.__class__, self.name, self.description, self.id, self.organization_id)
 
 
 class Role(Base, RoleMixin):
@@ -161,6 +156,7 @@ class Role(Base, RoleMixin):
         return "<%s(name=%s, description=%s, id=%d, organization_id=%d)>" % \
                (self.__class__.__name__, self.name, self.description, self.id, self.organization_id)
 
+
 class Facility(Base):
     table_type = 'admin'
     root_organization_id = Column(Integer)
@@ -172,7 +168,9 @@ class Facility(Base):
     public = Column(Boolean)
 
     def __repr__(self):
-        return self.name
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id)
+
 
 class MenuRole(Base):
     table_type = 'admin'
@@ -249,9 +247,7 @@ class MenuType(Base):
 class SelectList(Base):
     table_type = 'admin'
 
-    def __repr__(self):
-        return "<%s(name=%s, description=%s, id=%d, organization_id=%d)>" % \
-               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id)
+    fields = relationship("Field", primaryjoin="SelectList.id==Field.select_list_id", back_populates="select_list")
 
 
 class SelectListItem(Base):
@@ -343,10 +339,6 @@ class PageFormButtonContext(Base):
     page_form_button_context_page_form_context = relationship("PageFormContext", foreign_keys=[page_form_context_id])
     page_form_button_context_table_object = relationship("TableObject", foreign_keys=[table_object_id])
 
-    def __repr__(self):
-        return "<%s(name=%s, description=%s, id=%d, organization_id=%d)>" % \
-               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id)
-
 
 class TableObjectRole(Base):
     table_type = 'admin'
@@ -358,10 +350,6 @@ class TableObjectRole(Base):
     table_object_role_table_object = relationship("TableObject", foreign_keys=[table_object_id])
     table_object_role_unq = UniqueConstraint('role_id', 'table_object_id')
 
-    def __repr__(self):
-        return "<%s(name=%s, description=%s, id=%d, organization_id=%d)>" % \
-               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id)
-
 
 class TableObjectMany(Base):
     table_type = 'admin'
@@ -372,10 +360,6 @@ class TableObjectMany(Base):
     table_object_many_first_table_object = relationship("TableObject", foreign_keys=[first_table_object_id])
     table_object_many_second_table_object = relationship("TableObject", foreign_keys=[link_table_object_id])
     table_object_many_link_table_object = relationship("TableObject", foreign_keys=[second_table_object_id])
-
-    def __repr__(self):
-        return "<%s(name=%s, description=%s, id=%d, organization_id=%d)>" % \
-               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id)
 
 
 class TableObjectChildren(Base):
@@ -698,6 +682,10 @@ class UserOrganization(Base):
     user_organization_organization = relationship('Organization', foreign_keys=[user_organization_id])
     user_organization_user = relationship('User', foreign_keys=[user_id])
 
+    def __repr__(self):
+        return "<%s(name=%s, description=%s, id=%d, organization_id=%d)>" % \
+               (self.__class__.__name__, self.name, self.description, self.id, self.organization_id)
+
 class UserOrganizationPosition(Base):
     table_type = 'admin'
     user_id = Column(Integer, ForeignKey('user.id'))
@@ -715,6 +703,7 @@ class Action(Base):
     namespace = Column(String(255), default=None)
     function = Column(String(255), default=None)
     variable_parameters = Column(String(255), default=None)
+    return_values = Column(String(255), default=None)
     fixed_parameters = Column(String(255), default=None)
     type = Column(String(50), default=None)
 

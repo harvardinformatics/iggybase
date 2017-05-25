@@ -131,7 +131,6 @@ class Field:
 
     def set_fk_field(self, fk_field):
         if fk_field:
-            logging.info('set_fk_field: ' + self.display_name)
             self.FK_Field = fk_field.Field
             self.FK_FieldRole = fk_field.FieldRole
             self.FK_TableObject = fk_field.TableObject

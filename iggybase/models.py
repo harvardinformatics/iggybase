@@ -5,22 +5,25 @@ import logging
 table_factory = TableFactory()
 
 tables = table_factory.table_objects()
-for table_object in tables:
-    if table_object.TableObject.name not in Base.metadata.tables:
-        class_name = TableFactory.to_camel_case(table_object.TableObject.name)
+for table_data in tables:
+    if table_data.TableObject.name not in Base.metadata.tables:
+        table_object_cols = table_factory.fields(table_data.TableObject.id)
+        class_name = TableFactory.to_camel_case(table_data.TableObject.name)
 
         is_extended = False
-        if getattr(table_object, 'Extended') is not None:
+        if getattr(table_data, 'Extended') is not None:
             is_extended = True
 
         extend_table = None
         extend_class = None
-        if getattr(table_object, 'Extension') is not None:
-            extend_table = table_object.Extension.name
+        if getattr(table_data, 'Extension') is not None:
+            extend_table = table_data.Extension.name
             extend_class = globals()[TableFactory.to_camel_case(extend_table)]
 
-        new_table = table_factory.table_object_factory(class_name, table_object.TableObject, extend_class, extend_table,
-                                                       is_extended)
+        rows = table_factory.fields(table_data.TableObject.id)
+
+        new_table = table_factory.table_object_factory(class_name, table_data.TableObject, table_object_cols,
+                                                       extend_class, extend_table, is_extended)
 
         if new_table is not None:
             globals()[class_name] = new_table
