@@ -144,7 +144,6 @@ class TableFactory:
                outerjoin(Extension, TableObject.extends_table_object_id == Extension.id).
                outerjoin(Extended, TableObject.id == Extended.extends_table_object_id).
                filter(TableObject.active==active).
-               filter(or_(TableObject.admin_table is None, TableObject.admin_table == 0)).
                order_by(TableObject.order)).all()
 
         return res

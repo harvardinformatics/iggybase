@@ -51,14 +51,15 @@ class InstanceData():
             self._table_name = kwargs['instance'].__tablename__
             self.initialize_name(self.instance.name)
 
-        self._table_data = oac.get_record(TableObject, {'name': self._table_name})
-        self._history_table_data = oac.get_record(TableObject, {'name': 'history'})
+        self._table_data = getattr(models, self.table_name)
+        self._history_table_data = None
         self._extended_table_data = None
         self.foreign_keys = {}
         self.foreign_keys_display = {}
         self.columns = self.set_columns()
         self.modified_columns = {}
         self.initialize_values()
+        self.instance_id = self.instance.id
         self.old_name = self.instance.name
         self.action_results = {}
 
@@ -78,16 +79,16 @@ class InstanceData():
     def instance_name(self):
         return self.instance.name
 
-    @property
-    def instance_id(self):
-        return self.instance.id
-
     def get_new_name(self):
         self.name_set = True
+        oac = g_helper.get_org_access_control()
+
         if self._extended_table_data is not None:
-            self.set_name(self._extended_table_data.get_new_name())
+            table_data = oac.get_record(TableObject, {'name': self._extended_table_data.name})
+            self.set_name(table_data.get_new_name())
         else:
-            self.set_name(self._table_data.get_new_name())
+            table_data = oac.get_record(TableObject, {'name': self._table_data.name})
+            self.set_name(table_data.get_new_name())
 
         for instance in self.background_instances:
             if instance.__tablename__ == 'history':
@@ -98,7 +99,11 @@ class InstanceData():
             self.get_new_name()
 
         self.background_instances.append(self._history_table_data)
-        self.background_instances.append(self._table_data)
+        if self.new_instance:
+            if self._extended_table_data is not None:
+                self.background_instances.append(self._extended_table_data)
+            else:
+                self.background_instances.append(self._table_data)
 
     def commit(self):
         if self.instance.date_created is None and not self.new_instance:
@@ -161,6 +166,10 @@ class InstanceData():
                 ((field_name == 'name' and field_value is None and self.new_instance and self.save)
                  or (field_name != 'name'))):
 
+            if self._history_table_data is None:
+                oac = g_helper.get_org_access_control()
+                self._history_table_data = oac.get_record(TableObject, {'name': 'history'})
+
             self.save = True
             self.modified_columns[self.columns[field_name].id] = instance_value is None
 
@@ -188,11 +197,8 @@ class InstanceData():
             if row.fk_fields_display:
                 self.foreign_keys_display[row.display_name] = row.fk_fields_display
 
-        if self._table_data.extends_table_object_id:
-            oac = g_helper.get_org_access_control()
-            self._extended_table_data = oac.get_record(TableObject, {'id': self._table_data.extends_table_object_id})
-
-            for row in self._extended_table_data.fields:
+        if self._table_data.extends_table:
+            for row in self._table_data.extends_table.fields:
                 cols[row.display_name] = row
                 if row.fk_fields:
                     self.foreign_keys[row.display_name] = row.fk_fields
