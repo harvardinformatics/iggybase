@@ -161,26 +161,6 @@ class InstanceData():
                 ((field_name == 'name' and field_value is None and self.new_instance and self.save)
                  or (field_name != 'name'))):
 
-            logging.info('table_name: ' + self.table_name + '    field_name: ' + field_name + "   field_value: " +
-                         str(field_value) + " type: " +
-                         str(type(field_value)) + "   getattr: " +
-                         str(instance_value) + " type: " +
-                         str(type(instance_value)))
-            logging.info('self.instances[instance_name].new_instance: ' +
-                         str(self.new_instance))
-            logging.info('field_name not in exclude_list: ' + str(field_name not in exclude_list))
-            logging.info('(instance_value is None and field_value is not None): ' + str(
-                (instance_value is None and field_value is not None)))
-            logging.info('(instance_value is not None and field_value is None): ' + str(
-                (instance_value is not None and field_value is None)))
-            logging.info('field_value != instance_value: ' + str(field_value != instance_value))
-            logging.info('not (field_name == name and field_value is None and ' \
-                         'self.instances[instance_name].new_instance): ' + \
-                         str(not (field_name == 'name' and field_value is None and
-                                  self.new_instance)))
-            logging.info('saving data')
-            logging.info('')
-
             self.save = True
             self.modified_columns[self.columns[field_name].id] = instance_value is None
 
