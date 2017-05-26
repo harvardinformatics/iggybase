@@ -66,17 +66,8 @@ def lipid_analysis(facility_name):
         file2.save(root_path + 'file2.txt')
         file1_path = root_path + 'file1.txt'
         file2_path = root_path + 'file2.txt'
-        '''retention_time = form.data['retention_time_filter']
-        group_pq = form.data['group_pq_filter']
-        group_sn = form.data['group_sn_filter']
-        group_area = form.data['group_area_filter']
-        group_height = form.data['group_height_filter']
-        blank = form.data['blank']
-        mult_factor = form.data['mult_factor']
-        remove_cols = form.data['remove_cols']
-        normalize = form.data['normalize']'''
+
         la = LipidAnalysis([file1_path, file2_path])
-        print(len(la.rows))
         la.filter_rows(form.data['retention_time_filter'],
                 form.data['group_pq_filter'],
                 form.data['group_sn_filter'],
@@ -85,14 +76,9 @@ def lipid_analysis(facility_name):
         )
         la.subtract_blank(form.data['blank'], form.data['mult_factor'])
         key = list(la.rows.keys())[0]
-        print(len(la.rows[key]))
         la.remove_columns(form.data['remove_cols'])
-        print(len(la.rows))
-        print(len(la.rows[key]))
+        la.normalize(form.data)
         csv = la.write_csv()
-        #csv = save_lipid_results([file1_path, file2_path], form.data)
-    else:
-        print(form.errors)
 
     context = {}
     pt = PageTemplate(MODULE_NAME, 'lipid_analysis', getattr(context, 'page_context', None))

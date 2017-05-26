@@ -1,5 +1,6 @@
 import csv
 import os
+import numpy
 from flask.ext import excel
 from config import Config
 from collections import OrderedDict
@@ -8,6 +9,7 @@ class LipidAnalysis:
     def __init__ (self, paths):
         self.paths = paths
         self.rows = self.get_rows_from_files(self.paths)
+        self.area_start = 'Area['
 
     def get_rows_from_files(self, paths):
         rows = OrderedDict()
@@ -36,9 +38,12 @@ class LipidAnalysis:
                             rows[name] = row_d
         return rows
 
-    def get_cols(self):
+    def get_cols(self, start = None):
         first = list(self.rows.keys())[0]
-        return list(self.rows[first].keys())
+        keys = list(self.rows[first].keys())
+        if start:
+            keys = [i for i in keys if i.startswith(start)]
+        return keys
 
     def write_csv(self):
         result_path = Config.UPLOAD_FOLDER + '/lipid_analysis/'
@@ -55,28 +60,21 @@ class LipidAnalysis:
     def subtract_blank(self, blank, mult_factor):
         if blank:
             subtracted = {}
-            blank_cols = []
-            area_cols = []
-            area_start = 'Area['
-            blank_start = area_start + blank
-            for col in self.get_cols():
-                if col.startswith(area_start):
-                    if col.startswith(blank_start):
-                        blank_cols.append(col)
-                    else:
-                        area_cols.append(col)
+            area_cols = self.get_cols(self.area_start)
+            blank_start = self.area_start + blank
+            blank_cols = self.get_cols(blank_start)
             for name, row in self.rows.items():
                 avg_blank = self.calculate_avg_blank(blank_cols, row)
                 include_row = False
                 for col in area_cols:
-                    normal = float(row[col]) - (avg_blank * mult_factor)
-                    if normal < 0: # no neg areas
-                        normal = 0
-                    row[col] = normal
-                    if normal > 0:
+                    sub = float(row[col]) - (avg_blank * mult_factor)
+                    if sub < 0: # no neg areas
+                        sub = 0
+                    row[col] = sub
+                    if sub > 0:
                         include_row = True
                 if include_row:
-                    row['normal'] = avg_blank
+                    row['avg_blank'] = avg_blank
                     subtracted[name] = row
             self.rows = subtracted
 
@@ -145,3 +143,50 @@ class LipidAnalysis:
             if group_height_avg <= group_height_fil:
                 return False
         return True
+
+    def normalize(self, data):
+        normal = self.rows
+        if data['normalize'] != 'none':
+            area_cols = self.get_cols(self.area_start)
+            if data['normalize'] == 'values':
+                '''for name, row in normal.items():
+                    for col in area_cols:
+                        normal[name][col] = row[col]/data['blank']'''
+                print('values')
+            elif data['normalize'] == 'blank' and data['blank']:
+                for name, row in normal.items():
+                    for col in area_cols:
+                        normal[name][col] = row[col]/row['avg_blank']
+                self.recalc_cols()
+        return normal
+
+    def get_groups(self):
+        groups = {}
+        area_cols = self.get_cols(self.area_start)
+        for a_col in area_cols:
+            gr = a_col.split('[')[1]
+            gr = gr.split('-')
+            group = gr[0]
+            num = gr[1].split(']')[0]
+            if group not in groups:
+                groups[group] = []
+            groups[group].append(num)
+        print(groups)
+        return groups
+
+    def recalc_cols(self):
+        self.groups = self.get_groups()
+        stats = {}
+        for name, row in self.rows.items():
+            for group, nums in self.groups.items():
+                if group not in stats:
+                    stats[group] = []
+                for num in nums:
+                    num_col = self.area_start + group + '-' + num + ']'
+                stats[group].append(row[num_col])
+            for group, val_lst in stats.items():
+                self.rows[name]['GroupArea[' + group + ']'] = numpy.mean(val_lst)
+                self.rows[name]['GroupRSD[' + group + ']'] = numpy.std(val_lst)
+
+
+
