@@ -186,7 +186,8 @@ class FormGenerator(PageTemplate):
 
         form_class = new_class(self.form_type, (Form,), {}, lambda ns: ns.update(self.classattr))
 
-
+        self.form_class = form_class(None)
+        
     def get_table(self):
         row_index = 0
 
