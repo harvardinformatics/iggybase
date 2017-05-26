@@ -29,6 +29,23 @@
         <legend>Remove Columns</legend>
             {{ form.remove_cols(class = 'remove_cols') }}
         </fieldset>
+        <fieldset>
+        <legend>Normalization (optional)</legend>
+            {{ form.normalize(class = 'radio normalize') }}
+            <div class='normal_values'>
+                {{ macros.render_field(form.normal_c) }}
+                {{ macros.render_field(form.normal_s1) }}
+                {{ macros.render_field(form.normal_s2) }}
+                {{ macros.render_field(form.normal_s3) }}
+                {{ macros.render_field(form.normal_s4) }}
+                {{ macros.render_field(form.normal_s5) }}
+                {{ macros.render_field(form.normal_s6) }}
+                {{ macros.render_field(form.normal_s7) }}
+                {{ macros.render_field(form.normal_s8) }}
+                {{ macros.render_field(form.normal_s9) }}
+                {{ macros.render_field(form.normal_s10) }}
+            </div>
+        </fieldset>
         <input id="submit" name="submit" type="submit" value="Submit">
     </form>
     {% if csv %}
@@ -38,3 +55,7 @@
     {% endif %}
 {% endblock page_content %}
 
+{% block scripts %}
+    {{ super() }}
+    <script type="text/javascript" src="{{ url_for( 'static', filename='lipid.js' ) }}"></script>
+{% endblock %}
