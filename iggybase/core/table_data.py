@@ -1,4 +1,4 @@
-from iggybase.core.field_collection import FieldCollection
+# from iggybase.core.field_collection import FieldCollection
 from flask import abort
 from iggybase import g_helper
 from importlib import import_module
@@ -17,7 +17,6 @@ class TableData():
         self.table_object_role = table_data.TableObjectRole
 
         self.table_instance = self.get_table()
-        self.fields = self.initialize_fields()
 
         if self.table_object.extends_table_object_id is None:
             self.extends = None
@@ -63,17 +62,18 @@ class TableData():
             return self.table_name
 
     def initialize_fields(self):
-        if self.table_object is None:
-            fields = FieldCollection()
-        elif self.table_object.name == 'history':
-            fields = FieldCollection(None, self.table_object.name, {}, False)
-        else:
-            fields = FieldCollection(None, self.table_object.name)
+        # if self.table_object is None:
+        #     fields = FieldCollection()
+        # elif self.table_object.name == 'history':
+        #    fields = FieldCollection(None, self.table_object.name, {}, False)
+        # else:
+        #     fields = FieldCollection(None, self.table_object.name)
 
-        fields.set_fk_fields()
-        fields.set_defaults()
+        # fields.set_fk_fields()
+        # fields.set_defaults()
 
-        return fields
+        # return fields
+        pass
 
     def set_collection_data(self, level, parent, link_data, link_type):
         self.level = level
@@ -81,14 +81,14 @@ class TableData():
         self.link_data = link_data
         self.link_type = link_type
 
-        if level == 0:
-            self.parent_link_field_display_name = None
-        elif self.extends is None:
-            self.parent_link_field_display_name = \
-                self.fields.fields_by_id[(self.table_object.id, link_data.child_link_field_id)].Field.display_name
-        else:
-            self.parent_link_field_display_name = \
-                self.fields.fields_by_id[(self.extends.id, link_data.child_link_field_id)].Field.display_name
+        # if level == 0:
+        #     self.parent_link_field_display_name = None
+        # elif self.extends is None:
+        #     self.parent_link_field_display_name = \
+        #         self.fields.fields_by_id[(self.table_object.id, link_data.child_link_field_id)].Field.display_name
+        # else:
+        #     self.parent_link_field_display_name = \
+        #         self.fields.fields_by_id[(self.extends.id, link_data.child_link_field_id)].Field.display_name
 
     def get_table(self, table_object = None):
         if table_object is None:

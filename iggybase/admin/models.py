@@ -114,7 +114,10 @@ class Field(Base):
     foreign_key_display = Column(Integer, ForeignKey('field.id'))
     drop_down_list_limit = Column(Integer)
 
-    field_table_object = relationship("TableObject", foreign_keys=[table_object_id], back_populates="fields")
+    field_roles = relationship("FieldRole", primaryjoin="Field.id==FieldRole.field_id",
+                               back_populates="field", lazy='subquery')
+    field_table_object = relationship("TableObject", foreign_keys=[table_object_id], back_populates="fields",
+                                      lazy='subquery')
     fk_table_object = relationship("TableObject", foreign_keys=[foreign_key_table_object_id],
                                    back_populates="referenced_by", lazy='subquery')
     fk_fields = relationship("Field",
@@ -401,8 +404,8 @@ class FieldRole(Base):
     required = Column(Boolean)
     permission_id = Column(Integer, ForeignKey('permission.id'))
 
+    field = relationship("Field", foreign_keys=[field_id], back_populates="field_roles", lazy='subquery')
     field_role_role = relationship("Role", foreign_keys=[role_id])
-    field_role_field = relationship("Field", foreign_keys=[field_id])
     field_role_permission = relationship("Permission", foreign_keys=[permission_id])
     field_role_unq = UniqueConstraint('role_id', 'field_id', 'page_id')
 

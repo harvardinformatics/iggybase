@@ -35,16 +35,16 @@ class InstanceData():
         self.background_instances = []
         self.name_set = False
 
-        oac = g_helper.get_org_access_control()
+        self.oac = g_helper.get_org_access_control()
 
         if 'table_name' in kwargs:
             self._table_name = kwargs['table_name']
 
             if 'name' in kwargs:
-                self.instance = oac.get_instance_data(kwargs['table_name'], {'name': [kwargs['name']]})[0]
+                self.instance = self.oac.get_instance_data(kwargs['table_name'], {'name': [kwargs['name']]})[0]
                 self.initialize_name(kwargs['name'])
             else:
-                self.instance = oac.get_instance_data(kwargs['table_name'], {'id': [kwargs['id']]})[0]
+                self.instance = self.oac.get_instance_data(kwargs['table_name'], {'id': [kwargs['id']]})[0]
                 self.initialize_name(self.instance.name)
         else:
             self.instance = kwargs['instance']
@@ -56,6 +56,7 @@ class InstanceData():
         self._extended_table_data = None
         self.foreign_keys = {}
         self.foreign_keys_display = {}
+        self.field_roles = {}
         self.columns = self.set_columns()
         self.modified_columns = {}
         self.initialize_values()
@@ -81,14 +82,13 @@ class InstanceData():
 
     def get_new_name(self):
         self.name_set = True
-        oac = g_helper.get_org_access_control()
 
         if self._extended_table_data is not None:
-            table_data = oac.get_record(TableObject, {'name': self._extended_table_data.name})
-            self.set_name(table_data.get_new_name())
+            self._extended_table_data = self.oac.get_record(TableObject, {'name': self._extended_table_data.name})
+            self.set_name(self._extended_table_data.get_new_name())
         else:
-            table_data = oac.get_record(TableObject, {'name': self._table_data.name})
-            self.set_name(table_data.get_new_name())
+            self._table_data = self.oac.get_record(TableObject, {'name': self._table_data.name})
+            self.set_name(self._table_data.get_new_name())
 
         for instance in self.background_instances:
             if instance.__tablename__ == 'history':
@@ -112,8 +112,7 @@ class InstanceData():
             return False, {"page_msg": "Commit Error: instance data was not set to save"}
 
         self.set_save_data()
-        oac = g_helper.get_org_access_control()
-        commit_status, commit_msg = oac.save_data_instance([self.instance], self.background_instances)
+        commit_status, commit_msg = self.oac.save_data_instance([self.instance], self.background_instances)
 
         if commit_status:
             self.instance_id = commit_msg.items()[0]
@@ -122,13 +121,11 @@ class InstanceData():
         return commit_status, commit_msg
 
     def execute_actions(self, actions=None):
-        oac = g_helper.get_org_access_control()
-
         if actions is None:
             if self.new_instance:
-                actions = oac.get_table_object_actions(self._table_data.id, 'insert')
+                actions = self.oac.get_table_object_actions(self._table_data.id, 'insert')
             else:
-                actions = oac.get_table_object_actions(self._table_data.id, 'update')
+                actions = self.oac.get_table_object_actions(self._table_data.id, 'update')
 
         if actions is not None:
             for action in actions:
@@ -144,6 +141,14 @@ class InstanceData():
 
                 if status:
                     self.action_results.update(action.results.items())
+
+    def field_display_name(self, field_name):
+        if self.field_roles[field_name] and self.field_roles[field_name].display_name:
+            return self.field_roles[field_name].display_name.title()
+        elif self.columns[field_name].display_name:
+            return self.columns[field_name].display_name.title()
+        else:
+            return 'WHOA! Something is not right here. There is no display name for field ' + field_name + "."
 
     def set_values(self, field_values):
         for field_name, field_value in field_values.items():
@@ -167,8 +172,7 @@ class InstanceData():
                  or (field_name != 'name'))):
 
             if self._history_table_data is None:
-                oac = g_helper.get_org_access_control()
-                self._history_table_data = oac.get_record(TableObject, {'name': 'history'})
+                self._history_table_data = self.oac.get_record(TableObject, {'name': 'history'})
 
             self.save = True
             self.modified_columns[self.columns[field_name].id] = instance_value is None
@@ -189,9 +193,17 @@ class InstanceData():
     def set_columns(self):
         # http://docs.sqlalchemy.org/en/latest/core/metadata.html
         # http://docs.sqlalchemy.org/en/latest/core/reflection.html
+        rac = g_helper.get_role_access_control()
+
         cols = {}
         for row in self._table_data.fields:
             cols[row.display_name] = row
+            field_role = [role for role in row.field_roles if role.role_id == rac.role.id]
+            if field_role:
+                self.field_roles[row.display_name] = field_role[0]
+            else:
+                self.field_roles[row.display_name] = None
+
             if row.fk_fields:
                 self.foreign_keys[row.display_name] = row.fk_fields
             if row.fk_fields_display:
@@ -200,6 +212,12 @@ class InstanceData():
         if self._table_data.extends_table:
             for row in self._table_data.extends_table.fields:
                 cols[row.display_name] = row
+                field_role = [role for role in row.field_roles if role.role_id == rac.role.id]
+                if field_role:
+                    self.field_roles[row.display_name] = field_role[0]
+                else:
+                    self.field_roles[row.display_name] = None
+
                 if row.fk_fields:
                     self.foreign_keys[row.display_name] = row.fk_fields
                 if row.fk_fields_display:
@@ -233,8 +251,6 @@ class InstanceData():
             self.parent_id = getattr(self.instance, field)
 
     def initialize_values(self):
-        # logging.info('instance.instance.name: ' + str(self.instance.name))
-
         if self.new_instance:
             for field, meta_data in self.columns.items():
                 if self.parent_link == meta_data.display_name:
@@ -261,46 +277,41 @@ class InstanceData():
 
                     setattr(self.instance, meta_data.display_name, default)
 
-        # logging.info('instance.instance.name: ' + str(self.instance.name))
-
     def set_organization_id(self, row_org_id = None):
-        oac = g_helper.get_org_access_control()
-
         if row_org_id is not None:
             if isinstance(row_org_id, int):
                 self.instance.organization_id = row_org_id
             else:
-                org_record = oac.get_row('organization', {'name': row_org_id})
+                org_record = self.oac.get_row('organization', {'name': row_org_id})
 
                 if org_record:
                     self.instance.organization_id = org_record.id
 
-        if oac.current_org_id is not None:
-            self.instance.organization_id = oac.current_org_id
+        if self.oac.current_org_id is not None:
+            self.instance.organization_id = self.oac.current_org_id
         else:
             self.instance.organization_id = 1
 
     def set_foreign_key_field_value(self, field_name, field_value):
-        oac = g_helper.get_org_access_control()
         try:
             field_value = int(field_value)
-            fk_record = oac.get_row(self.columns[field_name].fk_table_object.name, {'id': field_value})
+            fk_record = self.oac.get_row(self.columns[field_name].fk_table_object.name, {'id': field_value})
             # crude error throwing for no record found
             fk_record.id
         except:
             if self.columns[field_name].fk_table_object.name == 'field':
-                fk_record = oac.get_row(self.columns[field_name].fk_table_object.name,
+                fk_record = self.oac.get_row(self.columns[field_name].fk_table_object.name,
                                         {self.foreign_keys[field_name].display_name: field_value,
                                          'table_object_id': self.columns[field_name].fk_table_object.id})
             elif self.columns[field_name].fk_table_object.name == 'select_list':
-                fk_record = oac.get_row(self.columns[field_name].fk_table_object.name,
+                fk_record = self.oac.get_row(self.columns[field_name].fk_table_object.name,
                                         {self.foreign_keys[field_name].display_name: field_value,
                                          'select_list_id': self.columns[field_name].select_list_id})
             elif field_name in self.foreign_keys_display:
-                fk_record = oac.get_row(self.columns[field_name].fk_table_object.name,
+                fk_record = self.oac.get_row(self.columns[field_name].fk_table_object.name,
                                         {self.foreign_keys_display[field_name].display_name: field_value})
             else:
-                fk_record = oac.get_row(self.columns[field_name].fk_table_object.name,
+                fk_record = self.oac.get_row(self.columns[field_name].fk_table_object.name,
                                         {self.foreign_keys[field_name].display_name: field_value})
 
         if fk_record:

@@ -2,6 +2,7 @@ from types import new_class
 from flask import request
 from flask.ext.wtf import Form
 from wtforms import HiddenField
+import datetime
 from wtforms.validators import DataRequired, Length, email, Optional
 from iggybase.core.instance_collection import InstanceCollection
 from iggybase.web_files.iggybase_form_objects import IggybaseFormTable
@@ -36,7 +37,8 @@ class FormGenerator(PageTemplate):
             for k, v in context.items():
                 self.context[k] = v
 
-    def input_field(self, field_data, display_name, table_name, row_name, control_id, field_class, value=None):
+    def input_field(self, field_data, field_role, display_name, table_name, row_name, control_id, field_class,
+                    value=None):
         kwargs = {}
         validators = []
 
@@ -45,38 +47,38 @@ class FormGenerator(PageTemplate):
 
         # no validators or classes attached to hidden fields, as it could cause issues
         # e.g. an empty hidden required field
-        if field_data.FieldRole.visible != constants.VISIBLE:
-            return HiddenField(field_data.FieldRole.display_name, **kwargs)
+        if not field_role or field_role.visible != constants.VISIBLE:
+            return HiddenField(field_data.display_name, **kwargs)
 
         kwargs['instance_name'] = row_name
         kwargs['table_object'] = table_name
 
-        if field_data.Field.description != "":
-            kwargs['title'] = field_data.Field.description
+        if field_data.description != "":
+            kwargs['title'] = field_data.description
 
-        if field_data.FieldRole.required == constants.REQUIRED:
+        if field_role.required == constants.REQUIRED:
             validators.append(DataRequired())
         else:
             validators.append(Optional())
 
-        if field_data.Field.length is not None and field_data.Field.data_type_id == constants.STRING:
-            validators.append(Length(0, field_data.Field.length))
+        if field_data.length is not None and field_data.data_type_id == constants.STRING:
+            validators.append(Length(0, field_data.length))
 
-        if "email" in field_data.Field.display_name:
+        if "email" in field_data.display_name:
             validators.append(email())
 
         kwargs['validators'] = validators
         kwargs['iggybase_class'] = field_class
 
-        if ((field_data.FieldRole.permission_id == constants.DEFAULTED and row_name != 'new') or
-                (field_data.FieldRole.permission_id == constants.IMMUTABLE and row_name == 'new') or
-                (field_data.FieldRole.permission_id == constants.READ_WRITE)):
+        if ((field_role.permission_id == constants.DEFAULTED and row_name != 'new') or
+                (field_role.permission_id == constants.IMMUTABLE and row_name == 'new') or
+                (field_role.permission_id == constants.READ_WRITE)):
             kwargs['readonly'] = False
         else:
             kwargs['readonly'] = True
 
-        if field_data.Field.select_list_id is not None:
-            choices = self.organization_access_control.get_select_list(field_data.Field.select_list_id)
+        if field_data.select_list_id is not None:
+            choices = self.organization_access_control.get_select_list(field_data.select_list_id)
 
             if kwargs['readonly']:
                 value = [item for item in choices if item[0] == value]
@@ -90,15 +92,15 @@ class FormGenerator(PageTemplate):
                 kwargs['choices'] = choices
 
                 return IggybaseSelectField(display_name, **kwargs)
-        elif field_data.is_foreign_key:
+        elif field_data.foreign_key_field_id is not None:
             if field_data.name not in self.dropdowns:
                 self.dropdowns[field_data.name] = self.organization_access_control.\
-                    get_foreign_key_data(field_data.FK_TableObject, field_data.FK_Field)
+                    get_foreign_key_data(field_data.fk_table_object, field_data.fk_fields)
 
             choices = self.dropdowns[field_data.name]
 
-            if field_data.Field.drop_down_list_limit:
-                drop_down_limit = field_data.Field.drop_down_list_limit
+            if field_data.drop_down_list_limit:
+                drop_down_limit = field_data.drop_down_list_limit
             else:
                 drop_down_limit = 25
 
@@ -134,34 +136,38 @@ class FormGenerator(PageTemplate):
                     kwargs['default'] = value
 
                 return IggybaseSelectField(display_name, **kwargs)
-        elif field_data.Field.data_type_id == constants.INTEGER:
+        elif field_data.data_type_id == constants.INTEGER:
             return IggybaseIntegerField(display_name, **kwargs)
-        elif field_data.Field.data_type_id == constants.FLOAT:
+        elif field_data.data_type_id == constants.FLOAT:
             return IggybaseFloatField(display_name, **kwargs)
-        elif field_data.Field.data_type_id == constants.DECIMAL:
+        elif field_data.data_type_id == constants.DECIMAL:
             return IggybaseDecimalField(display_name, **kwargs)
-        elif field_data.Field.data_type_id == constants.BOOLEAN:
+        elif field_data.data_type_id == constants.BOOLEAN:
             self.classattr['bool_' + control_id]=HiddenField('bool_' + control_id, default=bool(value))
             return IggybaseBooleanField(display_name, **kwargs)
-        elif field_data.Field.data_type_id == constants.DATE:
+        elif field_data.data_type_id == constants.DATE:
             return IggybaseDateField(display_name, **kwargs)
-        elif field_data.Field.data_type_id == constants.DATETIME:
+        elif field_data.data_type_id == constants.DATETIME:
             return IggybaseDateTimeField(display_name, **kwargs)
-        elif field_data.Field.data_type_id == constants.PASSWORD:
+        elif field_data.data_type_id == constants.PASSWORD:
             return IggybasePasswordField(display_name, **kwargs)
-        elif field_data.Field.data_type_id == constants.FILE:
+        elif field_data.data_type_id == constants.FILE:
             self.classattr['files_' + control_id] = HiddenField('files_' + control_id, default=value)
             return IggybaseFileField(display_name, **kwargs)
-        elif field_data.Field.data_type_id == constants.TEXT_AREA:
+        elif field_data.data_type_id == constants.TEXT_AREA:
             return IggybaseTextAreaField(display_name, **kwargs)
         else:
             return IggybaseStringField(display_name, **kwargs)
 
     def data_entry_form(self, row_names=['new'], instances = None, depth = 2):
+        start_time = datetime.datetime.now()
+        logging.info('form start: ' + start_time.strftime('%Y-%m-%d %H:%M:%S'))
         self.form_class = None
         self.classattr = {}
         self.form_tables = []
 
+        form_inst_time = datetime.datetime.now()
+        logging.info('instance instantiation start: ' + form_inst_time.strftime('%Y-%m-%d %H:%M:%S'))
         if instances is None:
             self.instances = InstanceCollection(depth, {self.table_name: row_names})
 
@@ -169,6 +175,8 @@ class FormGenerator(PageTemplate):
                 self.instances.get_linked_instances(self.instances.instance.instance.id)
         else:
             self.instances = instances
+        form_inst_time = datetime.datetime.now()
+        logging.info('instance instantiation end: ' + form_inst_time.strftime('%Y-%m-%d %H:%M:%S'))
 
         # for table_name in self.instances.table_instances.keys():
         #     for instance_name, instance_data in self.instances.table_instances[table_name].items():
@@ -184,7 +192,13 @@ class FormGenerator(PageTemplate):
 
         form_class = new_class(self.form_type, (Form,), {}, lambda ns: ns.update(self.classattr))
 
+        form_inst_time = datetime.datetime.now()
+        logging.info('form instantiation start: ' + form_inst_time.strftime('%Y-%m-%d %H:%M:%S'))
         self.form_class = form_class(None)
+
+        end_time = datetime.datetime.now()
+        logging.info('form end: ' + end_time.strftime('%Y-%m-%d %H:%M:%S'))
+        logging.info('total time: ' + str(end_time - start_time))
 
     def get_table(self):
         row_index = 0
@@ -257,7 +271,12 @@ class FormGenerator(PageTemplate):
             top_buttons, bottom_buttons = self.button_generator(buttons, context)
             form_table.add_buttons(top_buttons, bottom_buttons)
 
+            start_time = datetime.datetime.now()
+            logging.info('sort start: ' + start_time.strftime('%Y-%m-%d %H:%M:%S'))
             instances = sorted(list(self.instances.table_instances[table_name].values()), key=lambda x: x.form_index)
+            end_time = datetime.datetime.now()
+            logging.info('sort end: ' + end_time.strftime('%Y-%m-%d %H:%M:%S'))
+            logging.info('total sort time: ' + str(end_time - start_time))
 
             for instance in instances:
                 self.get_row(form_table, instance, control_type)
@@ -276,31 +295,32 @@ class FormGenerator(PageTemplate):
         # logging.info('instance.instance.table_name: ' + str(instance.table_name))
         record_index = form_table.add_new_record(instance.instance.name)
 
-        for field_name, field in self.instances.tables[form_table.table_name].fields.items():
-            if field.Field.field_class is not None:
-                field_class = control_type + ' ' + field.Field.field_class
+        for field_name, field in instance.columns.items():
+            if field.field_class is not None:
+                field_class = control_type + ' ' + field.field_class
             else:
                 field_class = control_type
 
-            if field.visible:
+            if instance.field_roles[field_name] and instance.field_roles[field_name].visible:
                 form_table.field_display_names.append({'name': field.display_name.title(),
-                                                       'required': field.FieldRole.required,
+                                                       'required': instance.field_roles[field_name].required,
                                                        'wide': 'wide' in field_class})
 
-            value = getattr(instance.instance, field.Field.display_name)
+            value = getattr(instance.instance, field_name)
 
-            if field.Field.display_name == 'name' and ('empty_row' in value or 'new' in value):
+            if field_name == 'name' and ('empty_row' in value or 'new' in value):
                 form_table[record_index].new_record = True
                 value = None
 
             if instance.new_instance:
-                control_str = form_table.table_name + "-" + field.Field.display_name + "-" + instance.instance.name
+                control_str = form_table.table_name + "-" + field_name + "-" + instance.instance.name
             else :
-                control_str = form_table.table_name + "-" + field.Field.display_name + "-" + str(instance.instance.id)
+                control_str = form_table.table_name + "-" + field_name + "-" + str(instance.instance.id)
 
             control_id = 'data_entry-' + control_str + "-" + str(instance.form_index)
 
-            self.classattr[control_id] = self.input_field(field, field.display_name.title(),
+            self.classattr[control_id] = self.input_field(field, instance.field_roles[field_name],
+                                                          instance.field_display_name(field_name).title(),
                                                           form_table.table_name, instance.instance.name,
                                                           control_id, field_class, value)
 

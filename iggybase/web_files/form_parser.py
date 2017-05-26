@@ -76,10 +76,11 @@ class FormParser():
                 if table_name not in self.table_names:
                     self.table_names.append(table_name)
 
-                meta_data = self.instances.tables[table_name].fields[table_name + "|" + field_name]
-                field_data = meta_data.Field
+                field_data = self.instances.table_instances[table_name][instance_name].columns[field_name]
 
-                if data == '' and meta_data.FieldRole.required == 1:
+                if self.instances.table_instances[table_name][instance_name].field_roles[field_name] and \
+                                self.instances.table_instances[table_name][instance_name].field_roles[field_name].required == 1 and \
+                                data == '':
                     errors[key] = "Field is required"
                     logging.info('required field not entered: ' + field_name)
 
@@ -115,7 +116,7 @@ class FormParser():
 
                     self.instances.table_instances[table_name][instance_name].set_value(field_name, lookup_value)
                 # handle datatypes
-                elif meta_data.type == 'integer':
+                elif field_data.data_type.name.lower() == 'integer':
                     try:
                         self.instances.table_instances[table_name][instance_name].set_value(field_name, int(data))
                     except ValueError as e:
@@ -123,12 +124,12 @@ class FormParser():
                         errors[key] = e.args[0]
                         logging.info('Failed to parse int ' + field_name + ':' + str(data))
                         logging.info(format(e))
-                elif meta_data.type == 'boolean':
+                elif field_data.data_type.name.lower() == 'boolean':
                     if data in ['yes', 'y', 'True', True, 1, '1', 'on']:
                         self.instances.table_instances[table_name][instance_name].set_value(field_name, True)
                     else:
                         self.instances.table_instances[table_name][instance_name].set_value(field_name, False)
-                elif meta_data.type == 'datetime':
+                elif field_data.data_type.name.lower() == 'datetime':
                     try:
                         datetime_val = datetime.strptime(data, '%Y-%m-%d %H:%M:%S')
                         self.instances.table_instances[table_name][instance_name].set_value(field_name, datetime_val)
@@ -137,7 +138,7 @@ class FormParser():
                         errors[key] = e.args[0]
                         logging.info('Failed to parse datetime ' + field_name + ':' + str(data))
                         logging.info(format(e))
-                elif meta_data.type == 'date':
+                elif field_data.data_type.name.lower() == 'date':
                     try:
                         date_val = datetime.strptime(data, '%Y-%m-%d')
                         self.instances.table_instances[table_name][instance_name].set_value(field_name, date_val.date())
@@ -146,7 +147,7 @@ class FormParser():
                         errors[key] = e.args[0]
                         logging.info('Failed to parse date ' + field_name + ':' + str(data))
                         logging.info(format(e))
-                elif meta_data.type == 'float':
+                elif field_data.data_type.name.lower() == 'float':
                     try:
                         self.instances.table_instances[table_name][instance_name].set_value(field_name, float(data))
                     except ValueError as e:
@@ -154,7 +155,7 @@ class FormParser():
                         errors[key] = e.args[0]
                         logging.info('Failed to parse date ' + field_name + ':' + str(data))
                         logging.info(format(e))
-                elif meta_data.type == 'decimal':
+                elif field_data.data_type.name.lower() == 'decimal':
                     try:
                         self.instances.table_instances[table_name][instance_name].set_value(field_name, Decimal(data))
                     except ValueError as e:
@@ -162,7 +163,7 @@ class FormParser():
                         errors[key] = e.args[0]
                         logging.info('Failed to parse date ' + field_name + ':' + str(data))
                         logging.info(format(e))
-                elif meta_data.type == 'file':
+                elif field_data.data_type.name.lower() == 'file':
                     self.files[(instance_name, table_name)] = []
 
                     old_files = []
