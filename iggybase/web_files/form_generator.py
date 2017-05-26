@@ -160,14 +160,10 @@ class FormGenerator(PageTemplate):
             return IggybaseStringField(display_name, **kwargs)
 
     def data_entry_form(self, row_names=['new'], instances = None, depth = 2):
-        start_time = datetime.datetime.now()
-        logging.info('form start: ' + start_time.strftime('%Y-%m-%d %H:%M:%S'))
         self.form_class = None
         self.classattr = {}
         self.form_tables = []
 
-        form_inst_time = datetime.datetime.now()
-        logging.info('instance instantiation start: ' + form_inst_time.strftime('%Y-%m-%d %H:%M:%S'))
         if instances is None:
             self.instances = InstanceCollection(depth, {self.table_name: row_names})
 
@@ -175,8 +171,6 @@ class FormGenerator(PageTemplate):
                 self.instances.get_linked_instances(self.instances.instance.instance.id)
         else:
             self.instances = instances
-        form_inst_time = datetime.datetime.now()
-        logging.info('instance instantiation end: ' + form_inst_time.strftime('%Y-%m-%d %H:%M:%S'))
 
         # for table_name in self.instances.table_instances.keys():
         #     for instance_name, instance_data in self.instances.table_instances[table_name].items():
@@ -192,13 +186,6 @@ class FormGenerator(PageTemplate):
 
         form_class = new_class(self.form_type, (Form,), {}, lambda ns: ns.update(self.classattr))
 
-        form_inst_time = datetime.datetime.now()
-        logging.info('form instantiation start: ' + form_inst_time.strftime('%Y-%m-%d %H:%M:%S'))
-        self.form_class = form_class(None)
-
-        end_time = datetime.datetime.now()
-        logging.info('form end: ' + end_time.strftime('%Y-%m-%d %H:%M:%S'))
-        logging.info('total time: ' + str(end_time - start_time))
 
     def get_table(self):
         row_index = 0
@@ -271,12 +258,7 @@ class FormGenerator(PageTemplate):
             top_buttons, bottom_buttons = self.button_generator(buttons, context)
             form_table.add_buttons(top_buttons, bottom_buttons)
 
-            start_time = datetime.datetime.now()
-            logging.info('sort start: ' + start_time.strftime('%Y-%m-%d %H:%M:%S'))
             instances = sorted(list(self.instances.table_instances[table_name].values()), key=lambda x: x.form_index)
-            end_time = datetime.datetime.now()
-            logging.info('sort end: ' + end_time.strftime('%Y-%m-%d %H:%M:%S'))
-            logging.info('total sort time: ' + str(end_time - start_time))
 
             for instance in instances:
                 self.get_row(form_table, instance, control_type)
