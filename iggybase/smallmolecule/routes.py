@@ -74,10 +74,11 @@ def lipid_analysis(facility_name):
         blank = form.data['blank']
         mult_factor = form.data['mult_factor']
         remove_cols = form.data['remove_cols']
+        normalize = form.data['normalize']
 
         csv = save_lipid_results([file1_path, file2_path], retention_time, group_pq,
                 group_sn, group_area, group_height, blank, mult_factor,
-                remove_cols)
+                remove_cols, normalize)
 
     context = {}
     pt = PageTemplate(MODULE_NAME, 'lipid_analysis', getattr(context, 'page_context', None))
