@@ -56,7 +56,7 @@ def qc(facility_name):
 @templated()
 def lipid_analysis(facility_name):
     form_data = request.form
-    form = LipidAnalysisForm(form_data)
+    form = LipidAnalysisForm()
     csv = None
     if form.validate_on_submit():
         root_path = Config.UPLOAD_FOLDER + '/lipid_analysis/'
@@ -75,7 +75,6 @@ def lipid_analysis(facility_name):
                 form.data['group_height_filter']
         )
         la.subtract_blank(form.data['blank'], form.data['mult_factor'])
-        key = list(la.rows.keys())[0]
         la.remove_columns(form.data['remove_cols'])
         la.normalize(form.data)
         csv = la.write_csv()

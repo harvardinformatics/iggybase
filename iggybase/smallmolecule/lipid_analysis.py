@@ -46,19 +46,22 @@ class LipidAnalysis:
         return keys
 
     def write_csv(self):
-        result_path = Config.UPLOAD_FOLDER + '/lipid_analysis/'
-        if not os.path.exists(result_path):
-            os.makedirs(result_path)
-        with open(result_path + 'lipid_analysis.csv','w') as c:
-            w = csv.DictWriter(c, self.get_cols())
-            w.writeheader()
-            w.writerows(self.rows.values())
-            '''for row in self.rows.values():
-                w.writerow(row.values())'''
-        return True
+        success = False
+        if self.rows:
+            result_path = Config.UPLOAD_FOLDER + '/lipid_analysis/'
+            if not os.path.exists(result_path):
+                os.makedirs(result_path)
+            with open(result_path + 'lipid_analysis.csv','w') as c:
+                w = csv.DictWriter(c, self.get_cols())
+                w.writeheader()
+                w.writerows(self.rows.values())
+                '''for row in self.rows.values():
+                    w.writerow(row.values())'''
+                success = True
+        return success
 
     def subtract_blank(self, blank, mult_factor):
-        if blank:
+        if blank and self.rows:
             subtracted = {}
             area_cols = self.get_cols(self.area_start)
             blank_start = self.area_start + blank
@@ -85,23 +88,24 @@ class LipidAnalysis:
             return avg_blank / len(blank_cols)
 
     def remove_columns(self, remove_cols):
-        remove_cols = [x.strip().lower() for x in remove_cols.split(',')]
-        clean_selected = {}
-        removed_cols = []
-        clean_cols = []
-        for col in self.get_cols():
-            prefix = col.split('[')[0]
-            if prefix.lower() in remove_cols:
-                removed_cols.append(col)
-            else:
-                clean_cols.append(col)
-        for name, row in self.rows.items():
-            new_row = OrderedDict()
-            for col, val in row.items():
-                if col not in removed_cols:
-                    new_row[col] = val
-            clean_selected[name] = new_row
-        self.rows = clean_selected
+        if self.rows:
+            remove_cols = [x.strip().lower() for x in remove_cols.split(',')]
+            clean_selected = {}
+            removed_cols = []
+            clean_cols = []
+            for col in self.get_cols():
+                prefix = col.split('[')[0]
+                if prefix.lower() in remove_cols:
+                    removed_cols.append(col)
+                else:
+                    clean_cols.append(col)
+            for name, row in self.rows.items():
+                new_row = OrderedDict()
+                for col, val in row.items():
+                    if col not in removed_cols:
+                        new_row[col] = val
+                clean_selected[name] = new_row
+            self.rows = clean_selected
 
     def avg_col_type(self, row, col_type):
         avg = 0
@@ -145,34 +149,39 @@ class LipidAnalysis:
         return True
 
     def normalize(self, data):
-        normal = self.rows
-        if data['normalize'] != 'none':
-            area_cols = self.get_cols(self.area_start)
-            if data['normalize'] == 'values':
-                '''for name, row in normal.items():
-                    for col in area_cols:
-                        normal[name][col] = row[col]/data['blank']'''
-                print('values')
-            elif data['normalize'] == 'blank' and data['blank']:
-                for name, row in normal.items():
-                    for col in area_cols:
-                        normal[name][col] = row[col]/row['avg_blank']
-                self.recalc_cols()
-        return normal
+        if self.rows:
+            normal = self.rows
+            if data['normalize'] != 'none':
+                area_cols = self.get_cols(self.area_start)
+                if data['normalize'] == 'values':
+                    for name, row in normal.items():
+                        for col in area_cols:
+                            group, num = self.get_group_from_area(col)
+                            form_name = 'normal_' + group
+                            if data[form_name]:
+                                normal[name][col] = row[col] / float(data[form_name])
+                elif data['normalize'] == 'blank' and data['blank']:
+                    for name, row in normal.items():
+                        for col in area_cols:
+                            normal[name][col] = row[col]/row['avg_blank']
+                    self.recalc_cols()
+            self.rows = normal
 
     def get_groups(self):
         groups = {}
         area_cols = self.get_cols(self.area_start)
         for a_col in area_cols:
-            gr = a_col.split('[')[1]
-            gr = gr.split('-')
-            group = gr[0]
-            num = gr[1].split(']')[0]
+            group, num = self.get_group_from_area(a_col)
             if group not in groups:
                 groups[group] = []
             groups[group].append(num)
-        print(groups)
         return groups
+
+    def get_group_from_area(self, col):
+        gr = col.split('[')[1]
+        gr = gr.split('-')
+        num = gr[1].split(']')[0]
+        return gr[0], num
 
     def recalc_cols(self):
         self.groups = self.get_groups()
