@@ -23,8 +23,10 @@ class LipidAnalysis:
                                 ln.startswith('\n')):
                             continue
                         if not cols:
+                            ln = ln.replace('\n', '')
                             cols = ln.split('\t')
                         else: # data lines
+                            ln = ln.replace('\n', '')
                             row = ln.split('\t')
                             # remove trailing newline
                             row[(len(row) - 1)] = row[(len(row) - 1)].strip('\n')
