@@ -178,8 +178,6 @@ class LipidAnalysis:
                     for name, row in normal.items():
                         for col in area_cols:
                             sam = self.get_sample_from_col(col)
-                            normal[name][col + 'old'] = row[col]
-                            normal[name][col + 'intensity'] = intensities[sam]
                             normal[name][col] = row[col]/intensities[sam]
                     self.recalc_cols()
             self.rows = normal
