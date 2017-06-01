@@ -8,37 +8,48 @@ from collections import OrderedDict
 class LipidAnalysis:
     def __init__ (self, paths):
         self.paths = paths
-        self.rows = self.get_rows_from_files(self.paths)
         self.area_start = 'Area['
+        self.rows = self.get_rows_from_files(self.paths)
 
     def get_rows_from_files(self, paths):
         rows = OrderedDict()
+        cols = []
         for path in paths:
             if path:
                 with open(path,'r') as f:
                     for i,ln in enumerate(f):
                         if i == 0:
-                            cols = []
+                            row_cols = []
                         if (ln.startswith('#') or ln.startswith('\t') or
                                 ln.startswith('\n')):
                             continue
-                        if not cols:
+                        if not row_cols:
                             ln = ln.replace('\n', '')
-                            cols = ln.split('\t')
+                            row_cols = ln.split('\t')
                         else: # data lines
                             ln = ln.replace('\n', '')
                             row = ln.split('\t')
                             # remove trailing newline
                             row[(len(row) - 1)] = row[(len(row) - 1)].strip('\n')
-                            row_d = OrderedDict(zip(cols, row))
+                            row_d = OrderedDict(zip(row_cols, row))
                             ret_time = self.avg_col_type(row_d, 'GroupTopPos')
                             row_d['ret_time'] = ret_time
                             row_d.move_to_end('ret_time', last=False)
                             name = row_d['LipidIon'] + '_' + str(ret_time)
                             row_d['name'] = name
                             row_d.move_to_end('name', last=False)
+                            row_d = self.clean_cols(cols, row_cols, row_d)
                             rows[name] = row_d
+                    cols = row_cols
         return rows
+
+    def clean_cols(self, cols, row_cols, row_d):
+        if cols:
+            # exclude any cols not in first file
+            diff = [x for x in row_cols if x not in cols]
+            for k in diff:
+                del row_d[k]
+        return row_d
 
     def get_cols(self, start = None):
         first = list(self.rows.keys())[0]
@@ -158,36 +169,60 @@ class LipidAnalysis:
                 if data['normalize'] == 'values':
                     for name, row in normal.items():
                         for col in area_cols:
-                            group, num = self.get_group_from_area(col)
+                            group, num = self.get_group_from_col(col)
                             form_name = 'normal_' + group
                             if data[form_name]:
                                 normal[name][col] = row[col] / float(data[form_name])
-                elif data['normalize'] == 'blank' and data['blank']:
+                elif data['normalize'] == 'intensity':
+                    intensities = self.calc_intensities(area_cols)
                     for name, row in normal.items():
                         for col in area_cols:
-                            normal[name][col] = row[col]/row['avg_blank']
+                            sam = self.get_sample_from_col(col)
+                            normal[name][col + 'old'] = row[col]
+                            normal[name][col + 'intensity'] = intensities[sam]
+                            normal[name][col] = row[col]/intensities[sam]
                     self.recalc_cols()
             self.rows = normal
+
+    def calc_intensities(self, area_cols):
+        intensities = {}
+        cnt = len(self.rows)
+        for name, row in self.rows.items():
+            for col in area_cols:
+                sam = self.get_sample_from_col(col)
+                if sam not in intensities:
+                    intensities[sam] = 0
+                intensities[sam] += row[col]
+        for sam, i_sum in intensities.items():
+            intensities[sam] = i_sum / cnt
+        print(intensities)
+        return intensities
+
 
     def get_groups(self):
         groups = {}
         area_cols = self.get_cols(self.area_start)
         for a_col in area_cols:
-            group, num = self.get_group_from_area(a_col)
+            group, num = self.get_group_from_col(a_col)
             if group not in groups:
                 groups[group] = []
             groups[group].append(num)
         return groups
 
-    def get_group_from_area(self, col):
+    def get_group_from_col(self, col):
         gr = col.split('[')[1]
         gr = gr.split('-')
         num = gr[1].split(']')[0]
         return gr[0], num
 
+    def get_sample_from_col(self, col):
+        sam = col.split('[')[1]
+        sam = sam.split(']')
+        return sam[0]
+
     def recalc_cols(self):
         self.groups = self.get_groups()
-        stats = {}
+        stats = OrderedDict()
         for name, row in self.rows.items():
             for group, nums in self.groups.items():
                 if group not in stats:
@@ -196,7 +231,7 @@ class LipidAnalysis:
                     num_col = self.area_start + group + '-' + num + ']'
                 stats[group].append(row[num_col])
             for group, val_lst in stats.items():
-                self.rows[name]['GroupArea[' + group + ']'] = numpy.mean(val_lst)
+                self.rows[name]['GroupAVG[' + group + ']'] = numpy.mean(val_lst)
                 self.rows[name]['GroupRSD[' + group + ']'] = numpy.std(val_lst)
 
 

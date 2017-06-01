@@ -41,9 +41,7 @@ class LipidAnalysisForm(Form):
     remove_cols = TextAreaField('Columns to remove (comma seperated)', default =
             ', '.join(cols_to_remove))
     normalize = RadioField('Normalization', choices = [('none', 'None'),
-    ('blank', 'Use blank'), ('values', 'Enter values')], default = 'none')
-    '''normal_c = IntegerField('c', [ElseOptional(attr = 'normalize', val =
-    'values')])'''
+    ('intensity', 'Sum of area intensities'), ('values', 'Enter values')], default = 'none')
     normal_c = StringField('c')
     normal_s1 = StringField('s1')
     normal_s2 = StringField('s2')
