@@ -1,6 +1,7 @@
 import csv
 import os
 import numpy
+from flask import request
 from flask.ext import excel
 from config import Config
 from collections import OrderedDict
@@ -10,6 +11,7 @@ class LipidAnalysis:
         self.paths = paths
         self.area_start = 'Area['
         self.rows = self.get_rows_from_files(self.paths)
+        self.debug = ('debug' in request.args)
 
     def get_rows_from_files(self, paths):
         rows = OrderedDict()
@@ -172,14 +174,21 @@ class LipidAnalysis:
                             group, num = self.get_group_from_col(col)
                             form_name = 'normal_' + group
                             if data[form_name]:
+                                if self.debug:
+                                    normal[name][col + 'old'] = row[col]
+                                    normal[name][col + 'div'] = float(data[form_name])
                                 normal[name][col] = row[col] / float(data[form_name])
                 elif data['normalize'] == 'intensity':
                     intensities = self.calc_intensities(area_cols)
                     for name, row in normal.items():
                         for col in area_cols:
                             sam = self.get_sample_from_col(col)
-                            normal[name][col] = row[col]/intensities[sam]
-                    self.recalc_cols()
+                            if intensities[sam] > 0:
+                                if self.debug:
+                                    normal[name][col + 'old'] = row[col]
+                                    normal[name][col + 'div'] = intensities[sam]
+                                normal[name][col] = row[col]/intensities[sam]
+                self.recalc_cols()
             self.rows = normal
 
     def calc_intensities(self, area_cols):
@@ -193,12 +202,11 @@ class LipidAnalysis:
                 intensities[sam] += row[col]
         for sam, i_sum in intensities.items():
             intensities[sam] = i_sum / cnt
-        print(intensities)
         return intensities
 
 
     def get_groups(self):
-        groups = {}
+        groups = OrderedDict()
         area_cols = self.get_cols(self.area_start)
         for a_col in area_cols:
             group, num = self.get_group_from_col(a_col)
@@ -220,14 +228,14 @@ class LipidAnalysis:
 
     def recalc_cols(self):
         self.groups = self.get_groups()
-        stats = OrderedDict()
         for name, row in self.rows.items():
+            stats = OrderedDict()
             for group, nums in self.groups.items():
                 if group not in stats:
                     stats[group] = []
                 for num in nums:
                     num_col = self.area_start + group + '-' + num + ']'
-                stats[group].append(row[num_col])
+                    stats[group].append(row[num_col])
             for group, val_lst in stats.items():
                 self.rows[name]['GroupAVG[' + group + ']'] = numpy.mean(val_lst)
                 self.rows[name]['GroupRSD[' + group + ']'] = numpy.std(val_lst)

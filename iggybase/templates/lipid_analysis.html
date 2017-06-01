@@ -8,7 +8,7 @@
     <h1>Lipid Analysis</h1>
 {%- endblock content_title %}
 {% block page_content %}
-    <form action="{{ url_for('smallmolecule.lipid_analysis', facility_name = 'smallmolecule') }}" method="POST" name="lipid_analysis_form" class="form_table" enctype="multipart/form-data">
+    <form action="{{ url_for('smallmolecule.lipid_analysis', facility_name = 'smallmolecule', **params) }}" method="POST" name="lipid_analysis_form" class="form_table" enctype="multipart/form-data">
         {{ form.hidden_tag() }}
         <fieldset>
         <legend>Merge results files</legend>

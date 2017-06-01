@@ -58,6 +58,7 @@ def lipid_analysis(facility_name):
     form_data = request.form
     form = LipidAnalysisForm()
     csv = None
+    debug = 'debug' in request.args
     if form.validate_on_submit():
         root_path = Config.UPLOAD_FOLDER + '/lipid_analysis/'
         file1 = request.files[form.file1.name]
@@ -79,6 +80,8 @@ def lipid_analysis(facility_name):
         la.normalize(form.data)
         csv = la.write_csv()
 
-    context = {}
+    context = {'params': {}}
+    if debug:
+        context['params'] = {'debug': True}
     pt = PageTemplate(MODULE_NAME, 'lipid_analysis', getattr(context, 'page_context', None))
     return pt.page_template_context(form=form, csv=csv, **context)
