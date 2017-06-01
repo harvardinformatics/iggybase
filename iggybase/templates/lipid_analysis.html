@@ -11,14 +11,17 @@
     <form action="{{ url_for('smallmolecule.lipid_analysis', facility_name = 'smallmolecule') }}" method="POST" name="lipid_analysis_form" class="form_table" enctype="multipart/form-data">
         {{ form.hidden_tag() }}
         <fieldset>
+        <legend>Merge results files</legend>
+            {{ macros.render_field(form.file1) }}
+            {{ macros.render_field(form.file2) }}
+        </fieldset>
+        <fieldset>
         <legend>Filtering</legend>
             {{ macros.render_field(form.retention_time_filter) }}
             {{ macros.render_field(form.group_pq_filter) }}
             {{ macros.render_field(form.group_sn_filter) }}
             {{ macros.render_field(form.group_area_filter) }}
             {{ macros.render_field(form.group_height_filter) }}
-            {{ macros.render_field(form.file1) }}
-            {{ macros.render_field(form.file2) }}
         </fieldset>
         <fieldset>
         <legend>Blank subtraction (optional)</legend>

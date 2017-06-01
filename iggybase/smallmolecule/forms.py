@@ -15,14 +15,6 @@ class ElseOptional(Optional):
         if getattr(form, self.attr).data != self.val:
             super(ElseOptional, self).__call__(form, field)
 
-'''def file_req(msg = ''):
-    # check for unique name
-    def _file_req(form, field):
-        if name:
-            raise ValidationError('This ' + attr + ' exists please choose a'
-            ' different one. ' + msg)
-    return _unique_field'''
-
 class LipidAnalysisForm(Form):
     cols_to_remove = ['ARatio', 'HRatio', 'ADiff', 'HDiff', 'GroupHeight', 'HeightRSD',
     'Height', 'NormArea', 'NormHeight', 'Hwhm(L)', 'Hwhm(R)', 'AreaScore', 'DataId', 'Scan',
