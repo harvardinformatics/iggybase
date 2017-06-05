@@ -11,7 +11,6 @@ import logging
 
 class InstanceData():
     def __init__(self, *args, **kwargs):
-        print('instance data')
         if not(('table_name' in kwargs and ('name' in kwargs or 'id' in kwargs)) or ('instance' in kwargs)):
             return
 
@@ -63,7 +62,6 @@ class InstanceData():
         self.field_roles = {}
         self.columns = self.set_columns()
         self.modified_columns = {}
-        print('before initialize values')
         self.initialize_values()
         self.instance_id = self.instance.id
         self.old_name = self.instance.name
@@ -133,6 +131,7 @@ class InstanceData():
             else:
                 actions = Action(ActionType.TABLE, action_event=DatabaseEvent.UPDATE)
 
+        logging.info(actions)
         if actions.actions:
             status = actions.execute_table_actions(self._table_data.id, self.modified_columns, self.instance_id)
             self.action_results = actions.results
@@ -232,10 +231,6 @@ class InstanceData():
 
                 if row.fk_fields:
                     self.foreign_keys[row.display_name] = row.fk_fields
-<<<<<<< Updated upstream
-                if row.fk_fields_display:
-                    self.foreign_keys_display[row.display_name] = row.fk_fields_display
-=======
                     if row.fk_fields_display:
                         self.foreign_keys_display[row.display_name] = row.fk_fields_display
                     else:
@@ -246,7 +241,6 @@ class InstanceData():
         if temp_cols:
             for key, row in sorted(temp_cols.items()):
                 cols[row.display_name] = row
->>>>>>> Stashed changes
 
         return cols
 
@@ -276,31 +270,31 @@ class InstanceData():
             self.parent_id = getattr(self.instance, field)
 
     def initialize_values(self):
-        for field, meta_data in self.columns.items():
-            if self.parent_link == meta_data.display_name:
-                setattr(self.instance, meta_data.display_name, self.parent_id)
-            elif meta_data.data_type_id == 3:
-                # default sets booleans to false rather than null
-                if meta_data.default is not None and (meta_data.default.lower == 'true' or
-                                                        meta_data.default == '1' or
-                                                        meta_data.default.lower == 'yes'):
-                    setattr(self.instance, meta_data.display_name, True)
-                else:
-                    setattr(self.instance, meta_data.display_name, False)
-            elif meta_data.default is not None and meta_data.default != '':
-                if meta_data.default == 'user':
-                    print('user')
-                    default = g.user.id
-                elif meta_data.data_type_id == 10 and meta_data.default == 'today':
-                    default = datetime.date.today()
-                elif meta_data.data_type_id == 4 and meta_data.default == 'now':
-                    default = datetime.datetime.utcnow().replace(microsecond=0)
-                elif meta_data.display_name == 'organization_id' and meta_data.default == 'org':
-                    default = session['org_id']['current_org_id']
-                else:
-                    default = meta_data.default
+        if self.new_instance:
+            for field, meta_data in self.columns.items():
+                if self.parent_link == meta_data.display_name:
+                    setattr(self.instance, meta_data.display_name, self.parent_id)
+                elif meta_data.data_type_id == 3:
+                    # default sets booleans to false rather than null
+                    if meta_data.default is not None and (meta_data.default.lower == 'true' or
+                                                          meta_data.default == '1' or
+                                                          meta_data.default.lower == 'yes'):
+                        setattr(self.instance, meta_data.display_name, True)
+                    else:
+                        setattr(self.instance, meta_data.display_name, False)
+                elif meta_data.default is not None and meta_data.default != '':
+                    if meta_data.default == 'user':
+                        default = g.user.id
+                    elif meta_data.data_type_id == 10 and meta_data.default == 'today':
+                        default = datetime.date.today()
+                    elif meta_data.data_type_id == 4 and meta_data.default == 'now':
+                        default = datetime.datetime.utcnow().replace(microsecond=0)
+                    elif meta_data.display_name == 'organization_id' and meta_data.default == 'org':
+                        default = session['org_id']['current_org_id']
+                    else:
+                        default = meta_data.default
 
-                setattr(self.instance, meta_data.display_name, default)
+                    setattr(self.instance, meta_data.display_name, default)
 
     def set_organization_id(self, row_org_id = None):
         if row_org_id is not None:
