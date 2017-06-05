@@ -194,18 +194,25 @@ class InstanceData():
         rac = g_helper.get_role_access_control()
 
         temp_cols = {}
-
+        not_found = 99
         for row in self._table_data.fields:
             field_role = [role for role in row.field_roles if role.role_id == rac.role.id]
             if field_role:
                 self.field_roles[row.display_name] = field_role[0]
                 if field_role[0].order:
                     temp_cols[field_role[0].order] = row
-                else:
+                elif row.order:
                     temp_cols[row.order] = row
+                else:
+                    temp_cols[not_found] = row
+                    not_found += 1
             else:
                 self.field_roles[row.display_name] = None
-                temp_cols[row.order] = row
+                if row.order:
+                    temp_cols[row.order] = row
+                else:
+                    temp_cols[not_found] = row
+                    not_found += 1
 
             if row.fk_fields:
                 self.foreign_keys[row.display_name] = row.fk_fields
@@ -222,11 +229,18 @@ class InstanceData():
                     self.field_roles[row.display_name] = field_role[0]
                     if field_role[0].order:
                         temp_cols[field_role[0].order] = row
-                    else:
+                    elif row.order:
                         temp_cols[row.order] = row
+                    else:
+                        temp_cols[not_found] = row
+                        not_found += 1
                 else:
                     self.field_roles[row.display_name] = None
-                    temp_cols[row.order] = row
+                    if row.order:
+                        temp_cols[row.order] = row
+                    else:
+                        temp_cols[not_found] = row
+                        not_found += 1
 
                 if row.fk_fields:
                     self.foreign_keys[row.display_name] = row.fk_fields

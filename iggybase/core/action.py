@@ -40,6 +40,7 @@ class Action:
         self.actions = self.oac.get_table_object_actions(table_object_name, table_event, active)
 
     def send_mail(self, action_email, **kwargs):
+        self.results['status'] = False
         config = Config()
         if 'instances' in kwargs.keys():
             instances = kwargs['instances']
@@ -65,8 +66,9 @@ class Action:
         if action_email.bcc:
             send_to['bcc'] = action_email.bcc
 
-        logging.info(send_to)
         for index, instance in enumerate(instances):
+            msg = Message(action_email.subject, sender=next(iter(config.ADMINS)), body=action_email.text)
+
             for key, value in send_to.items():
                 if value is None or value == '':
                     continue
@@ -89,13 +91,11 @@ class Action:
 
                     value.replace('<' + position + '>', position_email[:-1].strip())
 
-                send_to[key] = split(', |,| |;|; ', value)
+                logging.info(send_to[key])
+                logging.info(value)
+                logging.info(split(', |,| |;|; ', value))
 
-            msg = Message(action_email.subject)
-            msg.body = action_email.text
-            msg.sender = config.ADMINS
-            for key, values in send_to.items():
-                setattr(msg, key, value)
+                setattr(msg, key, split(', |,| |;|; ', value))
             
             if index < len(attachments):
                 attachment = attachments[index]
@@ -106,6 +106,8 @@ class Action:
                 msg.attachments = attachment
 
             mail.send(msg)
+        self.results['status'] = True
+
 
     def execute_action(self, *args, **kwargs):
         expected_values = ['status']
