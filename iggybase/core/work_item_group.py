@@ -125,18 +125,17 @@ class WorkItemGroup:
     def do_step_actions(self, time = Timing.AFTER):
         # first perform any actions on this step
         # if new then insert work_item_group
-        actions = Action(ActionType.STEP, action_step=self.step.Step.id, action_timing=time)
+        action = Action(ActionType.STEP, action_step=self.step.Step.id, action_timing=time)
 
-        for action in actions:
-            action_status = action.execute_action(workflow_id=self.workflow.id, step_id=self.step.Step.id)
-            if action_status:
-                for key, value in action.results.items():
-                    if key == 'work_item_group_name':
-                        self.name = value
-                    else:
-                        setattr(self, key, value)
-            elif action.results:
-                self.dynamic_params.update(action.results)
+        action_status = action.execute_action(workflow_id=self.workflow.id, step_id=self.step.Step.id)
+        if action_status:
+            for key, value in action.results.items():
+                if key == 'work_item_group_name':
+                    self.name = value
+                else:
+                    setattr(self, key, value)
+        elif action.results:
+            self.dynamic_params.update(action.results)
 
     def set_dynamic_params(self):
         args = []

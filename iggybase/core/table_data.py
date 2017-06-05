@@ -75,20 +75,16 @@ class TableData():
         # return fields
         pass
 
-    def set_collection_data(self, level, parent, link_data, link_type):
+    def set_collection_data(self, level, parent, link_data, link_type, child_link_field):
         self.level = level
         self.parent = parent
         self.link_data = link_data
         self.link_type = link_type
 
-        # if level == 0:
-        #     self.parent_link_field_display_name = None
-        # elif self.extends is None:
-        #     self.parent_link_field_display_name = \
-        #         self.fields.fields_by_id[(self.table_object.id, link_data.child_link_field_id)].Field.display_name
-        # else:
-        #     self.parent_link_field_display_name = \
-        #         self.fields.fields_by_id[(self.extends.id, link_data.child_link_field_id)].Field.display_name
+        if level == 0:
+            self.parent_link_field_display_name = None
+        elif child_link_field is not None:
+            self.parent_link_field_display_name = child_link_field
 
     def get_table(self, table_object = None):
         if table_object is None:

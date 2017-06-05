@@ -6,11 +6,7 @@ table_factory = TableFactory()
 
 tables = table_factory.table_objects()
 for table_data in tables:
-    globals()[table_data.TableObject.name] = table_data.TableObject
-    globals()[table_data.TableObject.name].__module__ = __name__
-
-    if (table_data.TableObject.admin_table is None or table_data.TableObject.admin_table == 0) and \
-                    table_data.TableObject.name not in Base.metadata.tables:
+    if table_data.TableObject.name not in Base.metadata.tables:
         table_object_cols = table_factory.fields(table_data.TableObject.id)
         class_name = TableFactory.to_camel_case(table_data.TableObject.name)
 

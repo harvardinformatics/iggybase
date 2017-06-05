@@ -494,6 +494,7 @@ class RoleAccessControl:
                     table_role_extends = None
 
                 link_tables.append({'parent': table_object.name,
+                                    'child_link_field': row.Field.display_name,
                                     'level': level,
                                     'table_meta_data': table_meta_data,
                                     'table_role_data': table_meta_data_role,
@@ -521,6 +522,7 @@ class RoleAccessControl:
 
                     if table_data:
                         link_tables.append({'parent': table_object.name,
+                                            'child_link_field': row.Field.display_name,
                                             'level': level,
                                             'table_meta_data': table_data,
                                             'table_role_data': None,
@@ -535,8 +537,9 @@ class RoleAccessControl:
         extension = aliased(models.TableObject, name='extension')
         extension_role = aliased(models.TableObjectRole, name='extension_role')
         res = self.session.query(models.TableObjectChildren, models.TableObject, models.TableObjectRole,
-                                 extension, extension_role). \
+                                 extension, extension_role, models.Field). \
             join(models.TableObject, models.TableObjectChildren.child_table_object_id == models.TableObject.id). \
+            join(models.Field, models.TableObjectChildren.child_link_field_id == models.Field.id). \
             join(models.TableObjectRole,
                  models.TableObjectChildren.child_table_object_id == models.TableObjectRole.table_object_id). \
             outerjoin(extension, and_(extension.extends_table_object_id == models.TableObject.id,
@@ -555,10 +558,11 @@ class RoleAccessControl:
         extension_role = aliased(models.TableObjectRole, name='extension_role')
         extended_table = aliased(models.TableObject, name='extended_table')
         ext = self.session.query(models.TableObjectChildren, models.TableObject, models.TableObjectRole,
-                                 extension, extension_role). \
+                                 extension, extension_role, models.Field). \
             join(extended_table,
                  extended_table.extends_table_object_id == models.TableObjectChildren.table_object_id). \
             join(models.TableObject,  models.TableObjectChildren.child_table_object_id == models.TableObject.id). \
+            join(models.Field, models.TableObjectChildren.child_link_field_id == models.Field.id). \
             join(models.TableObjectRole, models.TableObject.id == models.TableObjectRole.table_object_id). \
             outerjoin(extension, and_(extension.extends_table_object_id == models.TableObject.id,
                                       extension.name == models.TableObject.name + '_' + self.facility.table_suffix)). \

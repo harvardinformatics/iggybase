@@ -30,6 +30,7 @@ class FormParser():
 
         errors = {}
         instances = {}
+        required_fields = {}
 
         try:
             self.instances.instance_counter = int(request.form.get('row_counter'))
@@ -81,7 +82,12 @@ class FormParser():
                 if self.instances.table_instances[table_name][instance_name].field_roles[field_name] and \
                                 self.instances.table_instances[table_name][instance_name].field_roles[field_name].required == 1 and \
                                 data == '':
-                    errors[key] = "Field is required"
+                    if instance_name in required_fields.keys():
+                        required_fields[instance_name][key] = "Field is required"
+                    else:
+                        required_fields[instance_name] = {}
+                        required_fields[instance_name][key] = "Field is required"
+
                     logging.info('required field not entered: ' + field_name)
 
                 if field_name == 'name':
@@ -188,6 +194,10 @@ class FormParser():
                 else:
                     self.instances.table_instances[table_name][instance_name].set_value(field_name, data)
 
+        for table_name, tables_instances in self.instances.table_instances.items():
+            for instance_name, instance_data in tables_instances.items():
+                if tables_instances[instance_name].save and instance_name in required_fields.keys():
+                    errors.update(required_fields[instance_name])
         return errors
 
     def save(self):

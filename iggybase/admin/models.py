@@ -82,8 +82,6 @@ class TableObject(Base):
                                  remote_side='TableObject.id',
                                  backref=backref("extended_table"),
                                  lazy='subquery')
-    fields = relationship("Field", primaryjoin="TableObject.id==Field.table_object_id",
-                          back_populates="field_table_object", lazy='subquery')
     referenced_by = relationship("Field", primaryjoin="TableObject.id==Field.foreign_key_table_object_id",
                                  back_populates="fk_table_object")
 
@@ -116,7 +114,10 @@ class Field(Base):
 
     field_roles = relationship("FieldRole", primaryjoin="Field.id==FieldRole.field_id",
                                back_populates="field", lazy='subquery')
-    field_table_object = relationship("TableObject", foreign_keys=[table_object_id], back_populates="fields",
+    field_table_object = relationship("TableObject",
+                                      primaryjoin=('table_object.c.id==field.c.table_object_id'),
+                                      remote_side='TableObject.id',
+                                      backref=backref("fields"),
                                       lazy='subquery')
     fk_table_object = relationship("TableObject", foreign_keys=[foreign_key_table_object_id],
                                    back_populates="referenced_by", lazy='subquery')

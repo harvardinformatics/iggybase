@@ -55,4 +55,5 @@ class TableCollection():
                     self.tables[link_name].set_collection_data(link_data['level'],
                                                                link_data['parent'],
                                                                link_data['link_data'],
-                                                               link_data['link_type'])
+                                                               link_data['link_type'],
+                                                               link_data['child_link_field'])

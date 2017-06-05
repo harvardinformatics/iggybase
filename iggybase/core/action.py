@@ -2,7 +2,8 @@ from iggybase import g_helper
 from flask.ext.mail import Message
 from iggybase.extensions import mail
 from importlib import import_module
-from iggybase.core.constants import ActionType, Timing, DatabaseEvent
+from iggybase.core.constants import ActionType
+from iggybase.core.compare import Compare
 from re import split, findall
 from json import loads
 import logging
@@ -12,7 +13,8 @@ class Action:
     def __init__(self, action_type, **kwargs):
         self.oac = g_helper.get_org_access_control()
         self.results = {}
-        self.action = None
+        self.actions = None
+        self.current_action = None
         self.action_type = None
         if action_type == ActionType.STEP and 'action_step' in kwargs and 'action_timing' in kwargs:
             self.set_step_actions(kwargs['action_step'], kwargs['action_timing'])
@@ -24,17 +26,17 @@ class Action:
     def set_action(self, action_name, active=1):
         self.action_type = ActionType.ACTION_SUMMARY
 
-        self.action = self.oac.get_action(action_name, active)
+        self.current_action = self.oac.get_action(action_name, active)
 
     def set_step_actions(self, step_id, step_timing, active=1):
         self.action_type = ActionType.STEP
 
-        self.action = self.oac.get_step_actions(step_id, step_timing, active)
+        self.current_action = self.oac.get_step_actions(step_id, step_timing, active)
 
-    def set_table_object_actions(self, table_object_name, step_event, active=1):
+    def set_table_object_actions(self, table_object_name, table_event, active=1):
         self.action_type = ActionType.TABLE
 
-        self.action = self.oac.get_table_object_actions(table_object_name, step_event, active)
+        self.actions = self.oac.get_table_object_actions(table_object_name, table_event, active)
 
     def send_mail(self, *args, **kwargs):
         if 'instances' in kwargs.keys():
@@ -95,38 +97,24 @@ class Action:
 
     def execute_action(self, *args, **kwargs):
         expected_values = ['status']
-        action_kwargs = {}
         parameter_not_found = False
         return_values = {}
 
-        logging.info('self.action.Action.name: ' + self.action.Action.name)
-        if self.action.Action.variable_parameters:
-            parameters = split(', |,|;|; ', self.action.Action.variable_parameters)
-            for parameter in parameters:
-                if parameter in kwargs:
-                    action_kwargs[parameter] = kwargs[parameter]
-                else:
-                    parameter_not_found = True
+        if self.current_action.Action.fixed_parameters:
+            kwargs.update(loads(self.current_action.Action.fixed_parameters))
 
-        if self.action.Action.fixed_parameters:
-            action_kwargs.update(loads(self.action.Action.fixed_parameters))
+        if self.current_action.Action.namespace and self.current_action.Action.function and not parameter_not_found:
+            action_module = import_module(self.current_action.Action.namespace)
+            action_method = getattr(action_module, self.current_action.Action.function)
 
-        if self.action_type == ActionType.TABLE and self.action.Action.field_id:
-            action_kwargs['field_id'] = self.action.Action.field_id
-            action_kwargs['field_value'] = self.action.Action.field_value
+            return_values = action_method(*args, **kwargs)
 
-        if self.action.Action.namespace and self.action.Action.function and not parameter_not_found:
-            action_module = import_module(self.action.Action.namespace)
-            action_method = getattr(action_module, self.action.Action.function)
-
-            return_values = action_method(*args, **action_kwargs)
-
-        if self.action.ActionEmail and not parameter_not_found:
-            self.send_mail(self.action.ActionEmail, **action_kwargs)
+        if self.current_action.ActionEmail and not parameter_not_found:
+            self.send_mail(self.current_action.ActionEmail, **kwargs)
 
         temp_values = {}
-        if self.action.Action.return_values and 'status' in return_values.keys() and return_values['status']:
-            expected_values += split(', |,|;|; ', self.action.Action.return_values)
+        if self.current_action.Action.return_values and 'status' in return_values.keys() and return_values['status']:
+            expected_values += split(', |,|;|; ', self.current_action.Action.return_values)
             for value in expected_values:
                 if value in return_values.keys() and return_values['status']:
                     temp_values[value] = return_values[value]
@@ -136,10 +124,34 @@ class Action:
                         return_values['status'] = False
 
                     temp_values[value] = 'Action return value ' + value + ' was not found.'
-        elif self.action.Action.return_values and 'status' not in return_values.keys():
+        elif self.current_action.Action.return_values and 'status' not in return_values.keys():
             temp_values['status'] = False
             temp_values['error'] = 'Status was not returned from function'
 
-        self.results = temp_values
+        self.results.update(temp_values)
 
         return self.results['status']
+
+    def execute_table_actions(self, table_id, modified_columns, instance_id, **kwargs):
+        status = None
+
+        if self.actions is not None:
+            for action in self.actions:
+                self.current_action = action
+                if action.ActionTableObject.field_id is None:
+                    status = action.execute_action(table_id=table_id,
+                                                   field_id=None,
+                                                   values=None,
+                                                   instance_id=instance_id,
+                                                   **kwargs)
+                elif action.ActionTableObject.field_id in modified_columns.keys() and \
+                                action.ActionTableObject.field_value and action.ActionTableObject.field_value != '':
+                    if Compare.evaluate_value(action.Action.field_value,
+                                              modified_columns[action.ActionTableObject.field_id][1]):
+                        status = action.execute_action(table_id=table_id,
+                                                       field_id=action.ActionTableObject.field_id,
+                                                       values=modified_columns[action.ActionTableObject.field_id],
+                                                       instance_id=instance_id,
+                                                       **kwargs)
+
+        return status

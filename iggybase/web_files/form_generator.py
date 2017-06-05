@@ -1,5 +1,5 @@
 from types import new_class
-from flask import request
+from flask import request, g
 from flask.ext.wtf import Form
 from wtforms import HiddenField
 import datetime
@@ -37,7 +37,7 @@ class FormGenerator(PageTemplate):
             for k, v in context.items():
                 self.context[k] = v
 
-    def input_field(self, field_data, field_role, display_name, table_name, row_name, control_id, field_class,
+    def input_field(self, instance, field_name, display_name, control_id, field_class,
                     value=None):
         kwargs = {}
         validators = []
@@ -47,38 +47,41 @@ class FormGenerator(PageTemplate):
 
         # no validators or classes attached to hidden fields, as it could cause issues
         # e.g. an empty hidden required field
-        if not field_role or field_role.visible != constants.VISIBLE:
-            return HiddenField(field_data.display_name, **kwargs)
+        if not instance.field_roles[field_name] or instance.field_roles[field_name].visible != constants.VISIBLE:
+            return HiddenField(instance.columns[field_name].display_name, **kwargs)
 
-        kwargs['instance_name'] = row_name
-        kwargs['table_object'] = table_name
+        kwargs['instance_name'] = instance.instance_name
+        kwargs['table_object'] = instance.table_name
 
-        if field_data.description != "":
-            kwargs['title'] = field_data.description
+        if instance.columns[field_name].description != "":
+            kwargs['title'] = instance.columns[field_name].description
 
-        if field_role.required == constants.REQUIRED:
+        if instance.field_roles[field_name].required == constants.REQUIRED:
             validators.append(DataRequired())
         else:
             validators.append(Optional())
 
-        if field_data.length is not None and field_data.data_type_id == constants.STRING:
-            validators.append(Length(0, field_data.length))
+        if instance.columns[field_name].length is not None and \
+                        instance.columns[field_name].data_type_id == constants.STRING:
+            validators.append(Length(0, instance.columns[field_name].length))
 
-        if "email" in field_data.display_name:
+        if "email" in instance.columns[field_name].display_name:
             validators.append(email())
 
         kwargs['validators'] = validators
         kwargs['iggybase_class'] = field_class
 
-        if ((field_role.permission_id == constants.DEFAULTED and row_name != 'new') or
-                (field_role.permission_id == constants.IMMUTABLE and row_name == 'new') or
-                (field_role.permission_id == constants.READ_WRITE)):
+        if ((instance.field_roles[field_name].permission_id == constants.DEFAULTED and \
+                         instance.instance_name != 'new') or
+                (instance.field_roles[field_name].permission_id == constants.IMMUTABLE and \
+                             instance.instance_name == 'new') or
+                (instance.field_roles[field_name].permission_id == constants.READ_WRITE)):
             kwargs['readonly'] = False
         else:
             kwargs['readonly'] = True
 
-        if field_data.select_list_id is not None:
-            choices = self.organization_access_control.get_select_list(field_data.select_list_id)
+        if instance.columns[field_name].select_list_id is not None:
+            choices = self.organization_access_control.get_select_list(instance.columns[field_name].select_list_id)
 
             if kwargs['readonly']:
                 value = [item for item in choices if item[0] == value]
@@ -92,15 +95,16 @@ class FormGenerator(PageTemplate):
                 kwargs['choices'] = choices
 
                 return IggybaseSelectField(display_name, **kwargs)
-        elif field_data.foreign_key_field_id is not None:
-            if field_data.name not in self.dropdowns:
-                self.dropdowns[field_data.name] = self.organization_access_control.\
-                    get_foreign_key_data(field_data.fk_table_object, field_data.fk_fields)
+        elif instance.columns[field_name].foreign_key_field_id is not None:
+            if instance.columns[field_name].name not in self.dropdowns:
+                self.dropdowns[instance.columns[field_name].name] = self.organization_access_control.\
+                    get_foreign_key_data(instance.columns[field_name].fk_table_object,
+                                         instance.foreign_keys_display[field_name])
 
-            choices = self.dropdowns[field_data.name]
+            choices = self.dropdowns[instance.columns[field_name].name]
 
-            if field_data.drop_down_list_limit:
-                drop_down_limit = field_data.drop_down_list_limit
+            if instance.columns[field_name].drop_down_list_limit:
+                drop_down_limit = instance.columns[field_name].drop_down_list_limit
             else:
                 drop_down_limit = 25
 
@@ -136,25 +140,25 @@ class FormGenerator(PageTemplate):
                     kwargs['default'] = value
 
                 return IggybaseSelectField(display_name, **kwargs)
-        elif field_data.data_type_id == constants.INTEGER:
+        elif instance.columns[field_name].data_type_id == constants.INTEGER:
             return IggybaseIntegerField(display_name, **kwargs)
-        elif field_data.data_type_id == constants.FLOAT:
+        elif instance.columns[field_name].data_type_id == constants.FLOAT:
             return IggybaseFloatField(display_name, **kwargs)
-        elif field_data.data_type_id == constants.DECIMAL:
+        elif instance.columns[field_name].data_type_id == constants.DECIMAL:
             return IggybaseDecimalField(display_name, **kwargs)
-        elif field_data.data_type_id == constants.BOOLEAN:
+        elif instance.columns[field_name].data_type_id == constants.BOOLEAN:
             self.classattr['bool_' + control_id]=HiddenField('bool_' + control_id, default=bool(value))
             return IggybaseBooleanField(display_name, **kwargs)
-        elif field_data.data_type_id == constants.DATE:
+        elif instance.columns[field_name].data_type_id == constants.DATE:
             return IggybaseDateField(display_name, **kwargs)
-        elif field_data.data_type_id == constants.DATETIME:
+        elif instance.columns[field_name].data_type_id == constants.DATETIME:
             return IggybaseDateTimeField(display_name, **kwargs)
-        elif field_data.data_type_id == constants.PASSWORD:
+        elif instance.columns[field_name].data_type_id == constants.PASSWORD:
             return IggybasePasswordField(display_name, **kwargs)
-        elif field_data.data_type_id == constants.FILE:
+        elif instance.columns[field_name].data_type_id == constants.FILE:
             self.classattr['files_' + control_id] = HiddenField('files_' + control_id, default=value)
             return IggybaseFileField(display_name, **kwargs)
-        elif field_data.data_type_id == constants.TEXT_AREA:
+        elif instance.columns[field_name].data_type_id == constants.TEXT_AREA:
             return IggybaseTextAreaField(display_name, **kwargs)
         else:
             return IggybaseStringField(display_name, **kwargs)
@@ -302,9 +306,8 @@ class FormGenerator(PageTemplate):
 
             control_id = 'data_entry-' + control_str + "-" + str(instance.form_index)
 
-            self.classattr[control_id] = self.input_field(field, instance.field_roles[field_name],
+            self.classattr[control_id] = self.input_field(instance, field_name,
                                                           instance.field_display_name(field_name).title(),
-                                                          form_table.table_name, instance.instance.name,
                                                           control_id, field_class, value)
 
             form_table[record_index].add_new_field(control_id, field_class)

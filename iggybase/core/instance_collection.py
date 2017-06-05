@@ -4,6 +4,8 @@ from iggybase.core.instance_data import InstanceData
 from iggybase import g_helper
 from collections import OrderedDict
 from datetime import datetime
+from iggybase.core.constants import ActionType, DatabaseEvent
+from iggybase.core.action import Action
 import logging
 
 
@@ -147,10 +149,11 @@ class InstanceCollection:
 
         for table_name in self.table_instances.keys():
             for instance_name, instance_data in self.table_instances[table_name].items():
+                if not instance_data.save:
+                    continue
+
                 if instance_data.instance.date_created is None and not instance_data.new_instance:
                     self.table_instances[table_name][instance_name].instance.date_created = datetime.utcnow()
-                elif not instance_data.save:
-                    continue
 
                 self.table_instances[table_name][instance_name].instance.last_modified = datetime.utcnow()
 
@@ -173,11 +176,9 @@ class InstanceCollection:
                     table_name = instance_data.table_name
                     if table_name not in actions.keys():
                         if instance_data.new_instance:
-                            actions[table_name] = self.oac.get_table_object_actions(self.tables[table_name].table_id,
-                                                                                    'insert')
+                            actions[table_name] = Action(ActionType.TABLE, action_event=DatabaseEvent.INSERT)
                         else:
-                            actions[table_name] = self.oac.get_table_object_actions(self.tables[table_name].table_id,
-                                                                                    'update')
+                            actions[table_name] = Action(ActionType.TABLE, action_event=DatabaseEvent.UPDATE)
 
                     if actions[table_name]:
                         instance_data.execute_actions(actions[table_name])

@@ -1,5 +1,5 @@
 from iggybase.admin.models import DataType, TableObject, Field
-from sqlalchemy.orm import relationship, aliased
+from sqlalchemy.orm import relationship, aliased, subqueryload
 from sqlalchemy import Column, ForeignKey, UniqueConstraint, or_
 import sqlalchemy
 from iggybase.database import db_session, Base
@@ -143,6 +143,7 @@ class TableFactory:
         res = (self.session.query(TableObject, Extension, Extended).
                outerjoin(Extension, TableObject.extends_table_object_id == Extension.id).
                outerjoin(Extended, TableObject.id == Extended.extends_table_object_id).
+               filter(or_(TableObject.admin_table == 0, TableObject.admin_table is None)).
                filter(TableObject.active==active).
                order_by(TableObject.order)).all()
 

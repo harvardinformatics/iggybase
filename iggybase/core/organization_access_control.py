@@ -74,7 +74,6 @@ class OrganizationAccessControl:
         self.session.rollback()
 
     def commit(self):
-        logging.info('commit')
         try:
             self.session.commit()
             return True, None
@@ -84,7 +83,6 @@ class OrganizationAccessControl:
             return False, {"page_msg": "Commit Error: " + format(e)}
 
     def flush(self):
-        logging.info('flush')
         try:
             self.session.flush()
             return True, None
@@ -235,10 +233,17 @@ class OrganizationAccessControl:
         results = [(-99, '')]
         if fk_field_data is not None:
             fk_table_object = util.get_table(fk_table_data.name)
-            filters = [
-                getattr(fk_table_object, 'organization_id').in_(self.org_ids),
-                getattr(fk_table_object, 'active') == 1
-            ]
+            if fk_table_data.name == 'oganization':
+                filters = [
+                    getattr(fk_table_object, 'id').in_(self.org_ids),
+                    getattr(fk_table_object, 'active') == 1
+                ]
+            else:
+                filters = [
+                    getattr(fk_table_object, 'organization_id').in_(self.org_ids),
+                    getattr(fk_table_object, 'active') == 1
+                ]
+
             if params is None:
                 rows = self.session.query(getattr(fk_table_object, 'id'),
                                           getattr(fk_table_object, fk_field_data.display_name).label('name')). \
@@ -723,7 +728,7 @@ class OrganizationAccessControl:
                 .filter(
                     models.Action.name==action_name,
                     models.Action.active==active
-                ).all())
+                ).first())
 
     def get_step_actions(self, step_id, timing, active = 1):
         return (self.session.query(models.Action, models.ActionStep, models.SelectListItem,
@@ -737,7 +742,7 @@ class OrganizationAccessControl:
                     models.ActionStep.active==active,
                     models.Action.active==active,
                     func.lower(models.SelectListItem.display_name) == func.lower(timing)
-                ).order_by(models.ActionStep.order).all())
+                ).order_by(models.ActionStep.order).first())
 
     def get_table_object_actions(self, table_object_id, event_name, active = 1):
         return (self.session.query(models.Action, models.ActionTableObject, models.SelectListItem,
