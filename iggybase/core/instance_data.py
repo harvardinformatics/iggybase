@@ -127,11 +127,10 @@ class InstanceData():
     def execute_actions(self, actions=None):
         if actions is None:
             if self.new_instance:
-                actions = Action(ActionType.TABLE, action_event=DatabaseEvent.INSERT)
+                actions = Action(ActionType.TABLE, action_table=self.table_data.id, action_event=DatabaseEvent.INSERT)
             else:
-                actions = Action(ActionType.TABLE, action_event=DatabaseEvent.UPDATE)
+                actions = Action(ActionType.TABLE, action_table=self.table_data.id, action_event=DatabaseEvent.UPDATE)
 
-        logging.info(actions)
         if actions.actions:
             status = actions.execute_table_actions(self._table_data.id, self.modified_columns, self.instance_id)
             self.action_results = actions.results

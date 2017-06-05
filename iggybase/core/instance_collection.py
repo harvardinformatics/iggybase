@@ -170,19 +170,28 @@ class InstanceCollection:
         commit_status, commit_msg = self.oac.save_data_instance(instances, background_save_instances)
 
         if commit_status:
-            actions = {}
+            actions = {'insert': {}, 'update': {}}
             for table_name in self.table_instances.keys():
                 for instance_name, instance_data in self.table_instances[table_name].items():
                     table_name = instance_data.table_name
-                    if table_name not in actions.keys():
-                        if instance_data.new_instance:
-                            actions[table_name] = Action(ActionType.TABLE, action_event=DatabaseEvent.INSERT)
-                        else:
-                            actions[table_name] = Action(ActionType.TABLE, action_event=DatabaseEvent.UPDATE)
+                    if instance_data.new_instance:
+                        if table_name not in actions['insert'].keys():
+                            actions['insert'][table_name] = Action(ActionType.TABLE,
+                                                                   action_table=self.tables[table_name].table_id,
+                                                                   action_event=DatabaseEvent.INSERT)
 
-                    if actions[table_name]:
-                        instance_data.execute_actions(actions[table_name])
-                        self.action_results.update(instance_data.action_results)
+                        if actions['insert'][table_name]:
+                            instance_data.execute_actions(actions['insert'][table_name])
+                            self.action_results.update(instance_data.action_results)
+                    else:
+                        if table_name not in actions['update'].keys():
+                            actions['update'][table_name] = Action(ActionType.TABLE,
+                                                                   action_table=self.tables[table_name].table_id,
+                                                                   action_event=DatabaseEvent.UPDATE)
+
+                        if actions['update'][table_name]:
+                            instance_data.execute_actions(actions['update'][table_name])
+                            self.action_results.update(instance_data.action_results)
 
             if self.base_instance.instance.id not in commit_msg.keys():
                 commit_msg[self.base_instance.instance.id] = {'id': self.base_instance.instance.id,

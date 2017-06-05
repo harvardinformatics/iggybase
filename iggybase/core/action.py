@@ -6,6 +6,7 @@ from iggybase.core.constants import ActionType
 from iggybase.core.compare import Compare
 from re import split, findall
 from json import loads
+from config import Config
 import logging
 
 
@@ -21,7 +22,7 @@ class Action:
         elif action_type == ActionType.TABLE and 'action_table' in kwargs and 'action_event' in kwargs:
             self.set_table_object_actions(kwargs['action_table'], kwargs['action_event'])
         elif action_type == ActionType.ACTION_SUMMARY and 'action_name' in kwargs:
-            self.set_table_object_actions(kwargs['action_name'])
+            self.set_action(kwargs['action_name'])
 
     def set_action(self, action_name, active=1):
         self.action_type = ActionType.ACTION_SUMMARY
@@ -38,7 +39,8 @@ class Action:
 
         self.actions = self.oac.get_table_object_actions(table_object_name, table_event, active)
 
-    def send_mail(self, *args, **kwargs):
+    def send_mail(self, action_email, **kwargs):
+        config = Config()
         if 'instances' in kwargs.keys():
             instances = kwargs['instances']
         elif 'instance' in kwargs.keys():
@@ -55,8 +57,15 @@ class Action:
 
         rac = g_helper.get_role_access_control()
 
-        send_to = {'recipitents': args[0].recipitents, 'cc': args[0].cc, 'bcc': args[0].bcc}
+        send_to = {}
+        if action_email.recipients:
+            send_to['recipients'] = action_email.recipients
+        if action_email.cc:
+            send_to['cc'] = action_email.cc
+        if action_email.bcc:
+            send_to['bcc'] = action_email.bcc
 
+        logging.info(send_to)
         for index, instance in enumerate(instances):
             for key, value in send_to.items():
                 if value is None or value == '':
@@ -82,9 +91,12 @@ class Action:
 
                 send_to[key] = split(', |,| |;|; ', value)
 
-            msg = Message(args[0].subject)
-            msg.body = args[0].body
-
+            msg = Message(action_email.subject)
+            msg.body = action_email.text
+            msg.sender = config.ADMINS
+            for key, values in send_to.items():
+                setattr(msg, key, value)
+            
             if index < len(attachments):
                 attachment = attachments[index]
             else:
@@ -100,6 +112,7 @@ class Action:
         parameter_not_found = False
         return_values = {}
 
+        logging.info('execute_action')
         if self.current_action.Action.fixed_parameters:
             kwargs.update(loads(self.current_action.Action.fixed_parameters))
 
@@ -134,7 +147,7 @@ class Action:
 
     def execute_table_actions(self, table_id, modified_columns, instance_id, **kwargs):
         status = None
-
+        logging.info('execute_table_actions')
         if self.actions is not None:
             for action in self.actions:
                 self.current_action = action
@@ -146,9 +159,9 @@ class Action:
                                                    **kwargs)
                 elif action.ActionTableObject.field_id in modified_columns.keys() and \
                                 action.ActionTableObject.field_value and action.ActionTableObject.field_value != '':
-                    if Compare.evaluate_value(action.Action.field_value,
+                    if Compare.evaluate_value(action.ActionTableObject.field_value,
                                               modified_columns[action.ActionTableObject.field_id][1]):
-                        status = action.execute_action(table_id=table_id,
+                        status = self.execute_action(table_id=table_id,
                                                        field_id=action.ActionTableObject.field_id,
                                                        values=modified_columns[action.ActionTableObject.field_id],
                                                        instance_id=instance_id,
