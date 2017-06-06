@@ -52,8 +52,8 @@ class IggyScript(object):
         return val
 
     def pk_exists(self, pk, name, tbl, select = 'id'):
-        #if isinstance(pk, str): python3
-        if isinstance(pk, basestring):
+        if isinstance(pk, str): #python3
+        #if isinstance(pk, basestring):
             where = name + "='" + pk.replace("'","\\\'") + "'"
         else:
             where = name + "=" + str(pk)
