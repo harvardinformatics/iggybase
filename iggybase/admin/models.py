@@ -80,8 +80,7 @@ class TableObject(Base):
     extends_table = relationship("TableObject",
                                  primaryjoin=('table_object.c.id==table_object.c.extends_table_object_id'),
                                  remote_side='TableObject.id',
-                                 backref=backref("extended_table"),
-                                 lazy='subquery')
+                                 backref=backref("extended_table"))
     referenced_by = relationship("Field", primaryjoin="TableObject.id==Field.foreign_key_table_object_id",
                                  back_populates="fk_table_object")
 
@@ -113,26 +112,23 @@ class Field(Base):
     drop_down_list_limit = Column(Integer)
 
     field_roles = relationship("FieldRole", primaryjoin="Field.id==FieldRole.field_id",
-                               back_populates="field", lazy='subquery')
+                               back_populates="field")
     field_table_object = relationship("TableObject",
                                       primaryjoin=('table_object.c.id==field.c.table_object_id'),
                                       remote_side='TableObject.id',
-                                      backref=backref("fields"),
-                                      lazy='subquery')
+                                      backref=backref("fields"))
     fk_table_object = relationship("TableObject", foreign_keys=[foreign_key_table_object_id],
-                                   back_populates="referenced_by", lazy='subquery')
+                                   back_populates="referenced_by")
     fk_fields = relationship("Field",
                              primaryjoin=('field.c.id==field.c.foreign_key_field_id'),
                              remote_side='Field.id',
-                             backref=backref("referenced_by" ),
-                             lazy='subquery')
+                             backref=backref("referenced_by" ))
     fk_fields_display = relationship("Field",
                                      primaryjoin=('field.c.id==field.c.foreign_key_display'),
                                      remote_side='Field.id',
-                                     backref=backref("referenced_by_display" ),
-                                     lazy='subquery')
-    data_type = relationship("DataType", foreign_keys=[data_type_id], back_populates="fields", lazy='subquery')
-    select_list = relationship("SelectList", foreign_keys=[select_list_id], back_populates="fields", lazy='subquery')
+                                     backref=backref("referenced_by_display" ))
+    data_type = relationship("DataType", foreign_keys=[data_type_id], back_populates="fields")
+    select_list = relationship("SelectList", foreign_keys=[select_list_id], back_populates="fields")
 
 
 class DataType(Base):

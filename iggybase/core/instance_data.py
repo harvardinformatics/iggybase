@@ -44,18 +44,28 @@ class InstanceData():
         if 'table_name' in kwargs:
             self._table_name = kwargs['table_name']
 
+            if 'table_object' in kwargs:
+                table_object = kwargs['table_object']
+            else:
+                rac = g_helper.get_role_access_control()
+                table_object = rac.get_table(self._table_name)
+
             if 'name' in kwargs:
-                self.instance = self.oac.get_instance_data(kwargs['table_name'], {'name': [kwargs['name']]})[0]
+                self.instance = self.oac.get_instance_data(table_object, {'name': [kwargs['name']]})[0]
                 self.initialize_name(kwargs['name'])
             else:
-                self.instance = self.oac.get_instance_data(kwargs['table_name'], {'id': [kwargs['id']]})[0]
+                self.instance = self.oac.get_instance_data(table_object, {'id': [kwargs['id']]})[0]
                 self.initialize_name(self.instance.name)
         else:
             self.instance = kwargs['instance']
             self._table_name = kwargs['instance'].__tablename__
             self.initialize_name(self.instance.name)
 
-        self._table_data = self.oac.get_record(TableObject, {'name': self._table_name})
+        if 'table_data' in kwargs:
+            self._table_data = kwargs['table_data']
+        else:
+            self._table_data = self.oac.get_record(TableObject, {'name': self._table_name})
+
         self._history_table_data = None
         self.foreign_keys = {}
         self.foreign_keys_display = {}
@@ -147,6 +157,8 @@ class InstanceData():
         for field_name, field_value in field_values.items():
             self.set_value(field_name, field_value)
 
+        return self.save
+
     def set_value(self, field_name, field_value):
         exclude_list = ['id', 'last_modified', 'date_created']
 
@@ -188,11 +200,15 @@ class InstanceData():
 
             setattr(self.instance, field_name, field_value)
 
+        return self.save
+
     def set_columns(self):
         # http://docs.sqlalchemy.org/en/latest/core/metadata.html
         # http://docs.sqlalchemy.org/en/latest/core/reflection.html
         rac = g_helper.get_role_access_control()
 
+        logging.info(str(self.instance.__mapper_args__))
+        logging.info(str(self.instance.__mapper_args__))
         temp_cols = {}
         not_found = 99
         for row in self._table_data.fields:
@@ -216,6 +232,7 @@ class InstanceData():
 
             if row.fk_fields:
                 self.foreign_keys[row.display_name] = row.fk_fields
+
                 if row.fk_fields_display:
                     self.foreign_keys_display[row.display_name] = row.fk_fields_display
                 else:
@@ -244,6 +261,7 @@ class InstanceData():
 
                 if row.fk_fields:
                     self.foreign_keys[row.display_name] = row.fk_fields
+
                     if row.fk_fields_display:
                         self.foreign_keys_display[row.display_name] = row.fk_fields_display
                     else:

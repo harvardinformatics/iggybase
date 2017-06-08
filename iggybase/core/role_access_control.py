@@ -1,8 +1,9 @@
 from collections import OrderedDict as OrderedDict
-from flask import g, request, session, current_app
+from flask import g, request, session, current_app, abort
 import json
 from iggybase.admin import models
 from iggybase import utilities as util
+from importlib import import_module
 from sqlalchemy import or_, and_, distinct
 from sqlalchemy.orm import aliased
 import logging
@@ -418,6 +419,29 @@ class RoleAccessControl:
                filter(*filters).first())
 
         return rec
+
+    def get_table(self, table, attr='name', active=1):
+        filters = [getattr(models.TableObject, attr) == table,
+                   models.TableObject.active == active,
+                   models.TableObjectRole.role_id == self.role.id,
+                   models.TableObjectRole.active == active]
+
+        row = self.session.query(models.TableObject, models.TableObjectRole). \
+            join(models.TableObjectRole, models.TableObjectRole.table_object_id == models.TableObject.id). \
+            filter(*filters).first()
+
+        try:
+            if hasattr(row.TableObject, 'admin_table') and row.TableObject.admin_table == 1:
+                module_model = import_module('iggybase.admin.models')
+            else:
+                module_model = import_module('iggybase.models')
+            table_object = getattr(module_model, util.to_camel_case(table))
+
+            return table_object
+        except AttributeError:
+            print('Abort' + table)
+            logging.info('abort rac ' + table)
+            abort(403)
 
     def get_menu_items(self, parent_id, active=1):
         items = (self.session.query(models.Menu, models.Route, models.MenuRole, models.Module)

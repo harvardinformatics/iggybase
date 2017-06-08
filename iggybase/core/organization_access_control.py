@@ -2,6 +2,7 @@ from flask import g, current_app, session
 from sqlalchemy import DateTime, func, cast, String, desc, or_, func, and_
 from sqlalchemy.exc import IntegrityError, DataError, SQLAlchemyError, NoForeignKeysError, IdentifierError, \
     NoReferenceError
+from sqlalchemy.orm.exc import NoResultFound
 from iggybase.admin import models
 from iggybase import utilities as util
 from sqlalchemy.orm import aliased, defer
@@ -132,13 +133,7 @@ class OrganizationAccessControl:
                 self.org_ids.append(child_org.id)
         return
 
-    def get_query_count(self, query):
-        count_q = query.statement.with_only_columns([func.count()]).order_by(None)
-        count = self.session.execute(count_q).scalar()
-        return count
-
-    def get_instance_data(self, table_name, criteria):
-        table_object = util.get_table(table_name)
+    def get_instance_data(self, table_object, criteria):
         filters = [getattr(table_object, 'organization_id').in_(self.org_ids)]
 
         if 'name' in criteria and ('new' in criteria['name'][0] or 'empty_row' in criteria['name'][0]):
@@ -147,17 +142,17 @@ class OrganizationAccessControl:
             return [instance]
 
         for field, value in criteria.items():
-            filters.append(getattr(table_object, field).in_(value))
+            if len(value) == 1:
+                filters.append(getattr(table_object, field) == value[0])
+            else:
+                filters.append(getattr(table_object, field).in_(value))
 
-        qry = self.session.query(table_object).filter(*filters)
-        qry_count = self.get_query_count(qry)
+        try:
+            res = self.session.query(table_object).filter(*filters).all()
+        except NoResultFound:
+            res = [table_object()]
 
-        if qry_count == 0:
-            instance = table_object()
-            return [instance]
-        else:
-            res = qry.all()
-            return res
+        return res
 
     def get_users_by_position(self, position, org_id = None, active=1):
         if org_id is None:
@@ -479,17 +474,6 @@ class OrganizationAccessControl:
         return table.query.filter(*filters).order_by(getattr(table, 'name'))
 
     def save_data_instance(self, instances, background_instances):
-        # actions = self.get_table_object_actions()
-        # TODO: remove this and replace with actions
-        # actions may want to be done after the commit which will require change
-        # to insert_row, we can do that as needed
-        # for instance in (new_instances + update_instances):
-            # if (instance.__tablename__ == 'test_smms' and instance.status_id == 34):
-            #     params = '{["test_smms"], "parent":"line_item"}'
-                # func = getattr(bill, 'insert_line_item', None)
-                # if func:
-                #     func(instance)
-
         self.session.add_all(instances + background_instances)
 
         flush_status, flush_err = self.flush()

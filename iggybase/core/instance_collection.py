@@ -22,12 +22,14 @@ class InstanceCollection:
         self.base_instance = None
         self.instance_counter = 1
         self.table_instances = OrderedDict()
+        self.save_table_instances = OrderedDict()
         self.instance_names = {}
         self.action_results = {}
 
         self.tables = TableCollection(instance_data.keys(), depth)
 
         for table_name in self.tables.table_names:
+            self.save_table_instances[table_name] = []
             self.table_instances[table_name] = {}
             self.instance_names[table_name] = {}
 
@@ -58,12 +60,28 @@ class InstanceCollection:
     def values(self, table_name):
         return self.table_instances[table_name].values()
 
+    def reset(self):
+        self.base_instance = None
+        self.instance_counter = 1
+        self.table_instances = OrderedDict()
+        self.save_table_instances = OrderedDict()
+        self.instance_names = {}
+        self.action_results = {}
+
+        for table_name in self.tables.table_names:
+            self.save_table_instances[table_name] = []
+            self.table_instances[table_name] = {}
+            self.instance_names[table_name] = {}
+
     def set_instances(self, instances, parent_id=None, parent_link=None):
         instances_names = []
         
         for row in instances:
-            instance = InstanceData(instance=row, form_index=self.instance_counter, parent_id=parent_id,
-                                    parent_link=parent_link)
+            instance = InstanceData(instance=row,
+                                    form_index=self.instance_counter,
+                                    parent_id=parent_id,
+                                    parent_link=parent_link,
+                                    table_data=self.tables[row.__tablename__].table_object)
 
             if instance.table_name not in self.table_instances.keys():
                 self.table_instances[instance.table_name] = {}
@@ -86,7 +104,7 @@ class InstanceCollection:
     def get_data(self, table_name, instance_dict):
         instances_names = []
 
-        instances = self.oac.get_instance_data(table_name, instance_dict)
+        instances = self.oac.get_instance_data(self.tables[table_name].table_instance, instance_dict)
 
         tmp_instances_names = self.set_instances(instances)
 
@@ -140,7 +158,10 @@ class InstanceCollection:
 
     def set_values(self, table_name, instance_name, field_values):
         for field_name, field_value in field_values.items():
-            self.table_instances[table_name][instance_name].set_value(field_name, field_value)
+            save = self.table_instances[table_name][instance_name].set_value(field_name, field_value)
+
+        if save and instance_name not in self.save_table_instances[table_name]:
+            self.save_table_instances[table_name].append(instance_name)
 
     def commit(self):
         instances = []
@@ -148,9 +169,8 @@ class InstanceCollection:
         instance_names = {}
 
         for table_name in self.table_instances.keys():
-            for instance_name, instance_data in self.table_instances[table_name].items():
-                if not instance_data.save:
-                    continue
+            for instance_name in self.save_table_instances[table_name]:
+                instance_data = self.table_instances[table_name][instance_name]
 
                 if instance_data.instance.date_created is None and not instance_data.new_instance:
                     self.table_instances[table_name][instance_name].instance.date_created = datetime.utcnow()
@@ -172,8 +192,10 @@ class InstanceCollection:
         if commit_status:
             actions = {'insert': {}, 'update': {}}
             for table_name in self.table_instances.keys():
-                for instance_name, instance_data in self.table_instances[table_name].items():
+                for instance_name in self.save_table_instances[table_name]:
+                    instance_data = self.table_instances[table_name][instance_name]
                     table_name = instance_data.table_name
+
                     if instance_data.new_instance:
                         if table_name not in actions['insert'].keys():
                             actions['insert'][table_name] = Action(ActionType.TABLE,
