@@ -97,9 +97,11 @@ class FormGenerator(PageTemplate):
                 return IggybaseSelectField(display_name, **kwargs)
         elif instance.columns[field_name].foreign_key_field_id is not None:
             if instance.columns[field_name].name not in self.dropdowns:
-                self.dropdowns[instance.columns[field_name].name] = self.organization_access_control.\
-                    get_foreign_key_data(instance.columns[field_name].fk_table_object,
-                                         instance.foreign_keys_display[field_name])
+                if field_name in instance.foreign_keys_display.keys():
+                    # case of adding a foriegn key data to a field
+                    self.dropdowns[instance.columns[field_name].name] = self.organization_access_control.\
+                        get_foreign_key_data(instance.columns[field_name].fk_table_object,
+                                             instance.foreign_keys_display[field_name])
 
             choices = self.dropdowns[instance.columns[field_name].name]
 

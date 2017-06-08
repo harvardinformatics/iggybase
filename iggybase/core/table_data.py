@@ -16,7 +16,7 @@ class TableData():
         self.table_object = table_data.TableObject
         self.table_object_role = table_data.TableObjectRole
 
-        self.table_instance = self.get_table()
+        self.table_instance = rac.get_table(table_name)
 
         if self.table_object.extends_table_object_id is None:
             self.extends = None
@@ -26,7 +26,7 @@ class TableData():
             self.extends = table_data.TableObject
             self.extends_role = table_data.TableObjectRole
 
-            self.extends_instance = self.get_table(self.extends)
+            self.extends_instance = rac.get_table(self.extends.name)
 
         self.level = 0
         self.parent_link_field_display_name = None
@@ -85,19 +85,3 @@ class TableData():
             self.parent_link_field_display_name = None
         elif child_link_field is not None:
             self.parent_link_field_display_name = child_link_field
-
-    def get_table(self, table_object = None):
-        if table_object is None:
-            table_object = self.table_object
-
-        try:
-            if hasattr(table_object, 'admin_table') and table_object.admin_table == 1:
-                module_model = import_module('iggybase.admin.models')
-            else:
-                module_model = import_module('iggybase.models')
-
-            return getattr(module_model, self.sqlalchemy_object_name)
-        except AttributeError:
-            print('Abort' + self.table_name)
-            logging.info('abort ' + self.table_name)
-            abort(403)
