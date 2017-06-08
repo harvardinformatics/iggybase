@@ -49,7 +49,7 @@ class LipidAnalysis:
                             # remove trailing newline
                             row[(len(row) - 1)] = row[(len(row) - 1)].strip('\n')
                             row_d = OrderedDict(zip(row_cols, row))
-                            ret_time = self.avg_col_type(row_d, 'GroupTopPos')
+                            ret_time = numpy.mean(self.list_col_type(row_d, 'GroupTopPos'))
                             row_d['ret_time'] = ret_time
                             row_d.move_to_end('ret_time', last=False)
                             name = row_d['LipidIon'] + '_' + str(ret_time)
@@ -76,8 +76,9 @@ class LipidAnalysis:
         return keys
 
     def write_results(self):
-        self.write_csv(self.lipid_results_path, self.get_cols(),
-                self.rows.values())
+        # make sure results are sorted by key
+        res = [x for y, x in sorted(self.rows.items(), key=lambda t: t[0].lower())]
+        self.write_csv(self.lipid_results_path, self.get_cols(), res)
         # create a zip file for lipids and stats
         z = zipfile.ZipFile(self.zip_path, "w")
         z.write(self.lipid_results_path, self.lipid_results_file)
@@ -145,15 +146,12 @@ class LipidAnalysis:
                 clean_selected[name] = new_row
             self.rows = clean_selected
 
-    def avg_col_type(self, row, col_type):
-        avg = 0
-        cnt = 0.0
+    def list_col_type(self, row, col_type):
+        lst = []
         for name, val in row.items():
             if col_type in name:
-                avg += float(val)
-                cnt += 1
-        avg = avg/cnt
-        return avg
+                lst.append(float(val))
+        return lst
 
     def filter_rows(self, ret_time_fil, group_pq_fil, group_sn_fil, group_area_fil,
             group_height_fil):
@@ -170,19 +168,19 @@ class LipidAnalysis:
             return False
         if row['ret_time'] <= ret_time_fil:
             return False
-        group_pq_avg = self.avg_col_type(row, 'GroupPQ')
-        if group_pq_avg <= group_pq_fil:
+        group_pq_max = max(self.list_col_type(row, 'GroupPQ'))
+        if group_pq_max <= group_pq_fil:
             return False
-        group_sn_avg = self.avg_col_type(row, 'GroupS/N')
-        if group_sn_avg <= group_sn_fil:
+        group_sn_max = max(self.list_col_type(row, 'GroupS/N'))
+        if group_sn_max <= group_sn_fil:
             return False
         if group_area_fil > 0: # all values are pos ints, so skip if 0
-            group_area_avg = self.avg_col_type(row, 'GroupArea')
-            if group_area_avg <= group_area_fil:
+            group_area_max = max(self.list_col_type(row, 'GroupArea'))
+            if group_area_max <= group_area_fil:
                 return False
         if group_height_fil > 0: # all values are pos ints, so skip if 0
-            group_height_avg = self.avg_col_type(row, 'GroupHeight')
-            if group_height_avg <= group_height_fil:
+            group_height_max = max(self.list_col_type(row, 'GroupHeight'))
+            if group_height_max <= group_height_fil:
                 return False
         return True
 
@@ -311,15 +309,9 @@ class LipidAnalysis:
         for key in self.groups.keys():
             if key not in grp_info:
                 grp_info[key] = {'cnt': 0, 'grp_areas': []}
-
-            area_cols = self.get_cols(self.area_start + key)
-            present = 0
-            areas = []
-            for col in area_cols:
-                if float(row[col]) > 0.0:
-                    present = 1
-                areas.append(float(row[col]))
-            grp_info[key]['cnt'] += present
+            areas = self.list_col_type(row, self.area_start + key)
+            if max(areas) > 0.0:
+                grp_info[key]['cnt'] += 1
             grp_info[key]['grp_areas'].append(numpy.mean(areas))
         return grp_info
 
