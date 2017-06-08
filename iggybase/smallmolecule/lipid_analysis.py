@@ -1,6 +1,7 @@
 import csv
 import os
 import numpy
+import zipfile
 from flask import request
 from flask.ext import excel
 from config import Config
@@ -10,8 +11,22 @@ class LipidAnalysis:
     def __init__ (self, paths):
         self.paths = paths
         self.area_start = 'Area['
+        self.groups = {}
         self.rows = self.get_rows_from_files(self.paths)
         self.debug = ('debug' in request.args)
+
+        # file paths, eventualy these may not be hardcoded
+        self.root_path = Config.UPLOAD_FOLDER + '/lipid_analysis/'
+        lipid_class_file = 'lipidKey.csv'
+        self.lipid_class_path = self.root_path + lipid_class_file
+        self.lipid_results_file = 'lipid_analysis.csv'
+        self.lipid_results_path = self.root_path + self.lipid_results_file
+        self.subclass_file = 'subclass_stats.csv'
+        self.subclass_path = self.root_path + self.subclass_file
+        self.class_file = 'class_stats.csv'
+        self.class_path = self.root_path + self.class_file
+        zip_file = 'lipid_results.zip'
+        self.zip_path = self.root_path + zip_file
 
     def get_rows_from_files(self, paths):
         rows = OrderedDict()
@@ -60,18 +75,26 @@ class LipidAnalysis:
             keys = [i for i in keys if i.startswith(start)]
         return keys
 
-    def write_csv(self):
+    def write_results(self):
+        self.write_csv(self.lipid_results_path, self.get_cols(),
+                self.rows.values())
+        # create a zip file for lipids and stats
+        z = zipfile.ZipFile(self.zip_path, "w")
+        z.write(self.lipid_results_path, self.lipid_results_file)
+        z.write(self.subclass_path, self.subclass_file)
+        z.write(self.class_path, self.class_file)
+        z.close
+        return self.zip_path
+
+    def write_csv(self, path, cols, rows):
         success = False
         if self.rows:
-            result_path = Config.UPLOAD_FOLDER + '/lipid_analysis/'
-            if not os.path.exists(result_path):
-                os.makedirs(result_path)
-            with open(result_path + 'lipid_analysis.csv','w') as c:
-                w = csv.DictWriter(c, self.get_cols())
+            if not os.path.exists(self.root_path):
+                os.makedirs(self.root_path)
+            with open(path,'w') as c:
+                w = csv.DictWriter(c, cols)
                 w.writeheader()
-                w.writerows(self.rows.values())
-                '''for row in self.rows.values():
-                    w.writerow(row.values())'''
+                w.writerows(rows)
                 success = True
         return success
 
@@ -240,5 +263,76 @@ class LipidAnalysis:
                 self.rows[name]['GroupAVG[' + group + ']'] = numpy.mean(val_lst)
                 self.rows[name]['GroupRSD[' + group + ']'] = numpy.std(val_lst)
 
+    def calc_class_stats(self, class_stats):
+        if class_stats:
+            self.class_key = self.load_lipid_classes()
+            class_stats = {}
+            subclass_stats = {}
+            for name, row in self.rows.items():
+                sc = row['Class']
+                if sc in self.class_key:
+                    cl = self.class_key[sc]['class']
+                    if sc not in subclass_stats:
+                        subclass_stats[sc] = {}
+                        if cl not in class_stats:
+                            class_stats[cl] = {}
+                    subclass_stats[sc] = self.group_stats(row,
+                            subclass_stats[sc])
+                    class_stats[cl] = self.group_stats(row,
+                            class_stats[cl])
+        subclass_cols, subclass_rows = self.format_stats('subclass', subclass_stats)
+        sub_success = self.write_csv(self.subclass_path, subclass_cols, subclass_rows)
+        class_cols, class_rows = self.format_stats('class', class_stats)
+        class_success = self.write_csv(self.class_path, class_cols, class_rows)
+        return sub_success, class_success
 
+    def format_stats(self, cat, stats):
+        rows = []
+        cols = [cat]
+        grps = self.get_groups()
+        for g in grps:
+            cols.append(g + ' cnt')
+            cols.append(g + ' avg')
+            cols.append(g + ' std')
+        for cl, groups in stats.items():
+            row = {}
+            row[cat] = cl
+            for name, info in groups.items():
+                row[name + ' cnt'] = info['cnt']
+                row[name + ' avg'] = numpy.mean(info['grp_areas'])
+                row[name + ' std'] = numpy.std(info['grp_areas'])
+            rows.append(row)
+        return cols, rows
 
+    def group_stats(self, row, grp_info):
+        prefix = 'GroupArea'
+        if not self.groups:
+            self.groups = self.get_groups()
+        for key in self.groups.keys():
+            if key not in grp_info:
+                grp_info[key] = {'cnt': 0, 'grp_areas': []}
+
+            area_cols = self.get_cols(self.area_start + key)
+            present = 0
+            areas = []
+            for col in area_cols:
+                if float(row[col]) > 0.0:
+                    present = 1
+                areas.append(float(row[col]))
+            grp_info[key]['cnt'] += present
+            grp_info[key]['grp_areas'].append(numpy.mean(areas))
+        return grp_info
+
+    def load_lipid_classes(self):
+        classes = {}
+        with open(self.lipid_class_path,'r') as f:
+            for i,ln in enumerate(f):
+                ln = ln.replace('\n', '')
+                ln = ln.rstrip(',')
+                row = ln.split(',')
+                if i == 0:
+                    cols = [x.lower() for x in row]
+                else:
+                    row_dict = dict(zip(cols, row))
+                    classes[row_dict['key']] = row_dict
+        return classes

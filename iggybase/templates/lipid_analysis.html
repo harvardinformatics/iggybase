@@ -49,11 +49,16 @@
                 {{ macros.render_field(form.normal_s10) }}
             </div>
         </fieldset>
+        <fieldset>
+        <legend>Statistics (optional)</legend>
+                {{ macros.render_field(form.class_stats) }}
+        </fieldset>
+        <br>
         <input id="submit" name="submit" type="submit" value="Submit">
     </form>
-    {% if csv %}
+    {% if zip_path %}
         <a href="{{url_for('core.file', facility_name = 'smallmolecule',
-            table_name = 'lipid_analysis', filename = 'lipid_analysis.csv')}}"
+            table_name = 'lipid_analysis', filename = 'lipid_results.zip')}}"
             target="_blank">Download Lipid Analysis File</a>
     {% endif %}
 {% endblock page_content %}

@@ -1,6 +1,6 @@
 from flask_wtf import Form
 from wtforms import (IntegerField, FloatField, StringField,
-    TextAreaField, RadioField)
+    TextAreaField, RadioField, BooleanField)
 from wtforms.validators import Optional
 from flask_wtf.file import FileField, FileRequired
 
@@ -45,7 +45,7 @@ class LipidAnalysisForm(Form):
     normal_s8 = StringField('s8')
     normal_s9 = StringField('s9')
     normal_s10 = StringField('s10')
-
+    class_stats = BooleanField('Class stats', default = True)
 
 
 

@@ -57,7 +57,7 @@ def qc(facility_name):
 def lipid_analysis(facility_name):
     form_data = request.form
     form = LipidAnalysisForm()
-    csv = None
+    zip_path = None
     debug = 'debug' in request.args
     if form.validate_on_submit():
         root_path = Config.UPLOAD_FOLDER + '/lipid_analysis/'
@@ -78,10 +78,11 @@ def lipid_analysis(facility_name):
         la.subtract_blank(form.data['blank'], form.data['mult_factor'])
         la.remove_columns(form.data['remove_cols'])
         la.normalize(form.data)
-        csv = la.write_csv()
+        subclass_stats, class_stats = la.calc_class_stats(form.data['class_stats'])
+        zip_path = la.write_results()
 
     context = {'params': {}}
     if debug:
         context['params'] = {'debug': True}
     pt = PageTemplate(MODULE_NAME, 'lipid_analysis', getattr(context, 'page_context', None))
-    return pt.page_template_context(form=form, csv=csv, **context)
+    return pt.page_template_context(form=form, zip_path=zip_path, **context)
