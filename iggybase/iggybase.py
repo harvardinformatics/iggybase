@@ -1,13 +1,15 @@
 import os
 from collections import OrderedDict
-from flask import Flask, g, send_from_directory, abort, url_for, request
-from wtforms import StringField, SelectField
+from flask import Flask, g, send_from_directory, abort, url_for, request, \
+redirect
+from wtforms import StringField, SelectField, ValidationError
 from wtforms.validators import DataRequired
 from config import config, get_config
 from flask import render_template
 from flask.ext.security import Security, SQLAlchemyUserDatastore, UserMixin, \
 RoleMixin, login_required, current_user, LoginForm, RegisterForm, \
 user_registered, logout_user
+from flask.ext.security.registerable import register_user
 from flask.ext.sqlalchemy import SQLAlchemy
 from werkzeug.wsgi import DispatcherMiddleware
 from iggybase.extensions import mail, lm, bootstrap
@@ -55,27 +57,98 @@ def configure_extensions( app, db ):
     return security, user_datastore
 
 def add_base_routes( app, conf, security, user_datastore ):
-    from iggybase import base_routes
 
-    @user_registered.connect_via(app)
-    def user_registered_sighandler(sender, **extra):
-        # TODO: we should dynamically enter facility based on what's in user
-        # or perhaps we just need to overide some other function in sqlalchemy
-        # for now i'm hardcogin one facility
-        user = extra.get('user')
-        role = user_datastore.find_or_create_role('new_user', facility_id = 2,
-                level_id = 7)
-        user_datastore.add_role_to_user(user, role)
-        db.session.commit()
+    from iggybase import base_routes
+    @security.context_processor
+    def security_context_processor():
+        return security_menu()
+
+    def security_menu():
+        navbar = OrderedDict([('Login', {'title': 'Login', 'url':url_for('security.login')}), ('Register', {'title':'Register', 'url':url_for('register')}),
+            ('Reset Password', {'title':'Reset Password', 'url':url_for('security.forgot_password')}), ('Logout', {'title':'Logout', 'url':url_for('security.logout')})])
+        return dict(navbar = navbar)
+
+    def get_new_name(model):
+        to = (models.TableObject.query.
+                filter_by(name=model.__tablename__).first())
+        return to.get_new_name()
+
+    def populate_model(model_name, form, extra, set_name = True, prefix = ''):
+        obj = getattr(models, model_name)()
+        cols = obj.__table__.columns.keys()
+        # create dict from keys and add form prefix if any
+        # exp for billing address "b_"
+        fields = {k: (prefix + k) for k in cols}
+        for key, val in fields.items():
+            if hasattr(form, val) and hasattr(obj, key):
+                new_val = getattr(form, val).data
+                # QuerySelectFields save objects, we need id
+                if hasattr(new_val, 'id'):
+                    new_val = new_val.id
+                setattr(obj, key, getattr(form, val).data)
+        # add auto name
+        if set_name:
+            setattr(obj, 'name', get_new_name(obj))
+        # add extra non-form values
+        for key, val in extra.items():
+            if hasattr(obj, key):
+                setattr(obj, key, val)
+        return obj
+
+
+    @app.route('/register', methods=['GET', 'POST'])
+    def register():
+        form_class = ExtendedRegisterForm
+        form_data = request.form
+        form = form_class(form_data)
+        if form.validate_on_submit():
+            user_dict = form.to_dict()
+            user_exists = models.User.query.filter_by(name = user_dict['name']).first()
+            org = form.data['organization']
+            user_dict['organization_id'] = org
+            user = register_user(**user_dict)
+            # insert user_org
+            user_org = populate_model('UserOrganization',
+                    form,
+                    {
+                        'user_id': user.id,
+                        'active': 1,
+                        'default_organization': 1,
+                        'user_organization_id': org,
+                        'organization_id': org
+                    }
+            )
+            db.session.add(user_org)
+            # insert role
+            level = models.Level.query.filter_by(name = 'User').first()
+            role = models.Role.query.filter(
+                    models.Role.facility_id == form.facility.data,
+                    models.Role.level_id == level.id).first()
+            user_datastore.add_role_to_user(user, role)
+            db.session.commit()
+            # update user address and role
+            user_role = (models.UserRole.query.filter_by(user_id = user.id, role_id =
+                    role.id).first())
+            user.current_user_role_id = user_role.id
+            db.session.commit()
+            return redirect(url_for('registration_success'))
+        ctx = security_menu()
+        return render_template('security/register_user.html', register_user_form =
+                form, **ctx)
 
     @app.route( '/registration_success' )
     def registration_success():
         logout_user()
-        return render_template( 'registration_sucess.html')
+        ctx = security_menu()
+        return render_template( 'registration_sucess.html', **ctx)
+
+    @app.route( '/welcome' )
+    def welcome():
+        return render_template( 'welcome.html')
 
     @app.after_request
     def remove_session(resp):
-        db_session.remove()
+        db_session.close()
         return resp
 
     @app.route( '/index/' )
@@ -93,12 +166,6 @@ def add_base_routes( app, conf, security, user_datastore ):
         return send_from_directory(os.path.join(app.root_path, 'static'),
         'favicon.ico')
 
-    @security.context_processor
-    def security_context_processor():
-        navbar = OrderedDict([('Login', {'title': 'Login', 'url':url_for('security.login')}), ('Register', {'title':'Register', 'url':url_for('security.register')}),
-            ('Reset Password', {'title':'Reset Password', 'url':url_for('security.forgot_password')}), ('Logout', {'title':'Logout', 'url':url_for('security.logout')})])
-        return dict(navbar = navbar)
-
 def configure_blueprints(app, blueprints):
     for module in blueprints:
         bp = getattr(__import__('iggybase.'+module, fromlist=[module]),module)
@@ -109,11 +176,11 @@ def configure_hook( app ):
     def before_request():
         g.user = current_user
         g.facility = ""
-
         path = request.path.split('/')
 
         # TODO: consider caching this for the session
-        ignore_facility = ['static', 'logout', 'home']
+        ignore_facility = ['static', 'logout', 'home', 'welcome',
+        'registration_success']
         if (current_user.is_authenticated and path and path[1] not in
                 ignore_facility):
             # set module in g
@@ -146,16 +213,30 @@ def configure_error_handlers( app ):
     def server_error_page(error):
         return render_template( "errors/server_error.html" ), 500
 
+# Validators and Forms
+def unique_field(obj, attr = 'name', msg = ''):
+    # check for unique name
+    def _unique_field(form, field):
+        model = getattr(models, obj)
+        col = getattr(model, attr)
+        name = model.query.filter(col ==
+                field.data).first()
+        if name:
+            raise ValidationError('This ' + attr + ' exists please choose a'
+            ' different one. ' + msg)
+    return _unique_field
 
 
 class ExtendedLoginForm(LoginForm):
     email = StringField('Username or email:')
 
 class ExtendedRegisterForm(RegisterForm):
-    name = StringField('Username:', [DataRequired()])
+    name = StringField('Username:', [DataRequired(), unique_field(obj = 'User')])
     first_name = StringField('First Name:', [DataRequired()])
     last_name = StringField('Last Name:', [DataRequired()])
-    email = StringField('Email:', [DataRequired()])
+    msg = 'If your email exists then please reset your password rather than re-register'
+    email = StringField('Email:', [DataRequired(), unique_field(obj = 'User',
+        attr = 'email', msg = msg)])
     organization = StringField('Organization:', [DataRequired()])
     address1 = StringField('Address 1:', [DataRequired()])
     address2 = StringField('Address 2:', [DataRequired()])
