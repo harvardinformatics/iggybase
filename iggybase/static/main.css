@@ -94,3 +94,13 @@ input[type=checkbox].data-control {
     margin-top: -5px!important;
     margin-left: 0px!important;
 }
+table.standard, table.standard th, table.standard td {
+    border: 1px solid black;
+}
+table.standard th, table.standard td {
+    padding: 5px;
+}
+table.standard th {
+    font-weight: bold;
+}
+

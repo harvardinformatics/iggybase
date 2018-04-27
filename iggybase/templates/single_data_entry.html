@@ -37,6 +37,7 @@
     {% if form is defined %}
         {% block page_content -%}
         <div class="page_content">
+
             {%- for field in form %}
                 {% if "startmaintable_" in field.id -%}
                     <div class="col-md-4">
@@ -99,4 +100,44 @@
     {% if form is defined %}
         </form>
     {% endif %}
+    <div class="description">
+        {% if table_name == 'strain' %}
+        <h3>NAMING CONVENTIONS (IMPORTANT, IF YOU WANT TO FIND STRAINS)</h3><br>
+        <div class="col-xs-6">
+        <table class="standard">
+            <tr><th>Genes</th><th>Use</th>
+            </tr>
+            <tr><td>recessive, no allele number</td><td>ura3</td></tr>
+            <tr><td>recessive, no allele number</td><td>ura3-52</td></tr>
+            <tr><td>recessive, deletion</td><td>ura3^1</td></tr>
+            <tr><td>dominant allele</td><td>URA3</td></tr>
+            <tr><td>dominant mutant</td><td>ura3-1,2</td></tr>
+            <tr><td>canavanine resistance</td><td>can1</td></tr>
+            <tr><td>canavanine sensetive</td><td>can1</td></tr>
+            <tr><td>diploid, or disomic markers</td><td>ura3-52/URA3</td></tr>
+            <tr><td>strains lacking 2 micron DNA</td><td>cir0</td></tr>
+            <tr><td>killer plasmids</td><td>kil-o, kil-k, etc.</td></tr>
+            <tr><td>mitochondrial DNA</td><td>rho-, rho+, rho0</td></tr>
+        </table><br>
+        </div>
+        <div class="col-xs-6">
+        <table class="standard">
+            <tr><th>Special Characters</th><th>Use</th></tr>
+            <tr><td>Greek alpha</td><td>x</td></tr>
+            <tr><td>&Delta;, (FOR DELETIONS)</td><td>^</td></tr>
+            <tr><td>Greek letter mu</td><td>mu</td></tr>
+            <tr><td>Greek letter rho</td><td>mu</td></tr>
+            <tr><td>Greek letter case delta</td><td>d</td></tr>
+        </table><br>
+        </div>
+        <div class="col-xs-6">
+        <table class="standard">
+            <tr><th>Mating Type</th><th>Use</th></tr>
+            <tr><td>"a" mating type</td><td>MATa</td></tr>
+            <tr><td>"alpha" mating type</td><td>MATx</td></tr>
+            <tr><td>"a/alpha" non-maters</td><td>MATa/x</td></tr>
+        </table>
+        </div>
+    {% endif %}
+    </div>
 {%- endblock content %}
