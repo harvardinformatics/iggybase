@@ -272,15 +272,19 @@ class RoleAccessControl:
         page_form_buttons['top'] = []
         page_form_buttons['bottom'] = []
 
-        res = self.session.query(models.PageFormButtonRole). \
-            filter_by(role_id=self.role.id).filter_by(active=active). \
+        filters = [
+                models.PageFormButtonRole.role_id==self.role.id,
+                models.PageFormButtonRole.page_form_button_id==models.PageFormButton.id,
+                models.PageFormButton.page_form_id==page_form_id,
+                models.PageFormButton.active==active
+        ]
+        res = self.session.query(models.PageFormButton, models.PageFormButtonRole). \
+            filter(*filters). \
             order_by(models.PageFormButtonRole.order, models.PageFormButtonRole.id).all()
         for row in res:
-            page_form_button = self.session.query(models.PageFormButton).filter_by(id=row.page_form_button_id). \
-                filter_by(page_form_id=page_form_id).filter_by(active=active).first()
+            page_form_button = row.PageFormButton
             if page_form_button is not None and page_form_button.button_location in ['top', 'bottom']:
                 page_form_buttons[page_form_button.button_location].append(page_form_button)
-                break
 
         return page_form_buttons
 
@@ -293,7 +297,7 @@ class RoleAccessControl:
     def has_access(self, auth_type, criteria, active=1):
         table_object = getattr(models, auth_type)
         table_object_role = getattr(models, auth_type + "Role")
-        
+
         filters = [
             getattr(table_object_role, 'role_id') == self.role.id,
             getattr(table_object, 'active') == active
