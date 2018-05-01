@@ -105,7 +105,7 @@ class FormGenerator():
         else:
             return IggybaseStringField(field_data.FieldRole.display_name, **kwargs)
 
-    def default_single_entry_form(self, table_data, row_name='new'):
+    def default_single_entry_form(self, table_data, row_name='new', data = {}):
         self.table_data = table_data
 
         self.classattr = self.row_fields(1, row_name)
@@ -114,9 +114,7 @@ class FormGenerator():
 
         self.classattr['startmaintable_'+str(self.table_data.id)]=\
             HiddenField('startmaintable_'+str(self.table_data.id), default=self.table_data.name)
-
-        self.get_row(fields, row_name, 1)
-
+        self.get_row(fields, row_name, 1, 'data-control', data)
         newclass = new_class('DynamicForm', (Form,), {}, lambda ns: ns.update(self.classattr))
 
         return newclass()
@@ -203,7 +201,7 @@ class FormGenerator():
                 'record_data_table_name_'+str(row_count): table_name_field,
                 'record_data_table_id_'+str(row_count): table_id_field}
 
-    def get_row(self, fields, row_name, row_counter, control_type='data-control'):
+    def get_row(self, fields, row_name, row_counter, control_type='data-control', default_data = {}):
         if row_name != 'new':
             data = self.organization_access_control.get_entry_data(self.table_data.name, {'name': str(row_name)})
             if data:
@@ -227,15 +225,17 @@ class FormGenerator():
                 self.classattr['old_value_'+field.Field.field_name+"_"+str(row_counter)]=\
                     HiddenField('old_value_'+field.Field.field_name+"_"+str(row_counter), default=value)
 
-            if value is None and row_name == 'new' and (field.Field.default is not None and field.Field.default != ''):
+            control_id = 'data_entry_' + field.Field.field_name+"_"+str(row_counter)
+            if value is None and row_name == 'new' and ((field.Field.default is not None and field.Field.default != '') or control_id in default_data):
                 if field.Field.default == 'now':
                     value = datetime.datetime.utcnow()
                 elif field.Field.default == 'user':
                     value = g.user.id
+                elif control_id in default_data and default_data[control_id]:
+                    value = default_data[control_id]
                 elif field.Field.default is not None:
                     value = field.Field.default
 
-            control_id = 'data_entry_' + field.Field.field_name+"_"+str(row_counter)
             self.classattr[control_id] = self.input_field(field, row_name, control_id, control_type, value)
 
         self.classattr['endrow_'+str(row_counter)]=\

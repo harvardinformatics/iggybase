@@ -1,4 +1,4 @@
-from flask import request, jsonify, abort, g
+from flask import request, jsonify, abort, g, redirect, url_for
 from flask.ext.security import login_required
 from flask.ext import excel
 import json
@@ -214,21 +214,41 @@ def change_role(facility_name):
 @core.route('/data_entry/<table_name>/<row_name>/', methods=['GET', 'POST'])
 @login_required
 def data_entry(facility_name, table_name, row_name):
+
     module_name = MODULE_NAME
     rac = util.get_role_access_control()
     table_data = rac.has_access('TableObject', {'name': table_name})
 
     if not table_data:
         abort(403)
+    # data is passed in on clone
+    data = request.values.get('data')
+    if data:
+        data = json.loads(data)
 
     link_data, child_tables = rac.get_child_tables(table_data.id)
-
     fg = form_generator.FormGenerator('mod_' + module_name, table_name)
     if row_name == 'new' or not child_tables:
-        form = fg.default_single_entry_form(table_data, row_name)
+        form = fg.default_single_entry_form(table_data, row_name,
+                data) # for clone, use data to populate
     else:
         form = fg.default_parent_child_form(table_data, child_tables, link_data, row_name)
-
+    if request.values.get('clone') == 'Clone':
+        params = {
+            'table_name': table_name,
+            'row_name': 'new',
+            'facility_name': facility_name,
+        }
+        data = {}
+        # exclude certain fields from the clone
+        exclude = ['data_entry_name_1', 'data_entry_date_created_1',
+                'data_entry_user_id_1',
+                'data_entry_last_modified_1', 'data_entry_user_name_1',
+                'data_entry_id_1', 'data_entry_organization_id_1']
+        for k, v in form.data.items():
+            if 'old_' not in k and 'data_entry' in k and k not in exclude:
+                data[k] = v
+        return redirect(url_for('core.data_entry', **params, data=json.dumps(data)))
     if form.validate_on_submit() and len(form.errors) == 0:
         oac = OrganizationAccessControl()
         row_names = oac.save_form()
