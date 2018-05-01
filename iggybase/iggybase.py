@@ -104,6 +104,8 @@ def add_base_routes( app, conf, security, user_datastore ):
         if form.validate_on_submit():
             user_dict = form.to_dict()
             user_exists = models.User.query.filter_by(name = user_dict['name']).first()
+            # ensure new accounts are verified
+            user_dict['verified'] = 0
             org = form.data['organization']
             user_dict['organization_id'] = org
             user = register_user(**user_dict)
@@ -124,7 +126,17 @@ def add_base_routes( app, conf, security, user_datastore ):
             role = models.Role.query.filter(
                     models.Role.facility_id == form.facility.data,
                     models.Role.level_id == level.id).first()
-            user_datastore.add_role_to_user(user, role)
+            # insert user_role
+            user_role = populate_model('UserRole',
+                    form,
+                    {
+                        'user_id': user.id,
+                        'active': 0,
+                        'organization_id': org,
+                        'role_id': role.id
+                    }
+            )
+            db.session.add(user_role)
             db.session.commit()
             # update user address and role
             user_role = (models.UserRole.query.filter_by(user_id = user.id, role_id =

@@ -567,6 +567,7 @@ class User(Base, UserMixin):
     address_id = Column(Integer, ForeignKey('address.id'))
     home_page = Column(String(50))
     current_user_role_id = Column(Integer, ForeignKey('user_role.id'))
+    verified = Column(Boolean)
 
     user_user_role = relationship("UserRole", foreign_keys=[current_user_role_id])
     user_organization = relationship("Organization", foreign_keys=[organization_id])
@@ -589,6 +590,10 @@ class User(Base, UserMixin):
 
     def get_role(self):
         return ROLE[self.role_id]
+
+    @property
+    def is_active(self):
+        return self.active and self.verified
 
     def __repr__(self):
         return '<User %r>' % (self.name)
