@@ -248,7 +248,8 @@ def data_entry(facility_name, table_name, row_name):
         for k, v in form.data.items():
             if 'old_' not in k and 'data_entry' in k and k not in exclude:
                 data[k] = v
-        return redirect(url_for('core.data_entry', **params, data=json.dumps(data)))
+        params['data'] = json.dumps(data)
+        return redirect(url_for('core.data_entry', **params))
     if form.validate_on_submit() and len(form.errors) == 0:
         oac = OrganizationAccessControl()
         row_names = oac.save_form()
