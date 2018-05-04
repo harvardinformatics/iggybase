@@ -222,7 +222,7 @@ def data_entry(facility_name, table_name, row_name):
     if not table_data:
         abort(403)
     # data is passed in on clone
-    data = request.values.get('data')
+    data = request.values.get('data') or {}
     if data:
         data = json.loads(data)
 
