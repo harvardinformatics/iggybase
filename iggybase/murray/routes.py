@@ -59,7 +59,7 @@ def update_requested(facility_name, table_name):
     hidden_fields = {}
     hidden_fields['column_defaults'] = '{"status":2, "ordered":"now"}'
     hidden_fields['button_text'] = 'Order Selected Oligos'
-    hidden_fields['message_fields'] = '["oligo_name", "sequence"]'
+    hidden_fields['message_fields'] = '["oligo_name", "sequence", "plaintext|0.025"]'
     # if nothing to display then page not found
     if not first_table_query or not first_table_query.fields:
         abort(403)

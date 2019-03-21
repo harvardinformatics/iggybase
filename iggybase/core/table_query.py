@@ -133,7 +133,10 @@ class TableQuery:
             # update
             row_fields = []
             for field in message_fields:
-                row_fields.append(str(self.table_rows[i][str(self.fields.fields[field.replace('_', ' ')].order)]))
+                if field.startswith('plaintext|'):
+                    row_fields.append(str(field.replace('plaintext|', '')))
+                else:
+                    row_fields.append(str(self.table_rows[i][str(self.fields.fields[field.replace('_', ' ')].order)]))
             if row_fields:
                 updated_info.append(', '.join(row_fields))
         return updated_info
